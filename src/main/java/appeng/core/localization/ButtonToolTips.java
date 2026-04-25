@@ -300,7 +300,23 @@ public enum ButtonToolTips implements Localization {
     SuperWirelessToolHideBoundedYesName,
     SuperWirelessToolHideBoundedYesDesc,
     SuperWirelessToolHideBoundedNoName,
-    SuperWirelessToolHideBoundedNoDesc;
+    SuperWirelessToolHideBoundedNoDesc,
+    SuperWirelessKitPinButtonName,
+    SuperWirelessKitPinButtonDesc,
+    SuperWirelessKitMadChameleonRecolorName,
+    SuperWirelessKitMadChameleonRecolorDesc,
+    SuperWirelessKitAE2StuffName,
+    SuperWirelessKitAE2StuffDesc,
+    SuperWirelessKitIncludeConnectorsName,
+    SuperWirelessKitIncludeConnectorsDesc,
+    SuperWirelessKitIncludeHubsName,
+    SuperWirelessKitIncludeHubsDesc,
+    SuperWirelessKitDeleteName,
+    SuperWirelessKitDeleteDesc,
+    SuperWirelessKitBindName,
+    SuperWirelessKitBindDesc,
+    SuperWirelessKitUnbindName,
+    SuperWirelessKitUnbindDesc;
 
     ButtonToolTips() {}
 

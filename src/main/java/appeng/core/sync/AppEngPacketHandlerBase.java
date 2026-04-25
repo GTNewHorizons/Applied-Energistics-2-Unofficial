@@ -56,7 +56,6 @@ import appeng.core.sync.packets.PacketPickBlock;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketRemoteRename;
 import appeng.core.sync.packets.PacketSpatialAction;
-import appeng.core.sync.packets.PacketProgressBar;
 import appeng.core.sync.packets.PacketSuperWirelessToolCommand;
 import appeng.core.sync.packets.PacketSuperWirelessToolData;
 import appeng.core.sync.packets.PacketSwapSlots;

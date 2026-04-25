@@ -69,8 +69,11 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import org.lwjgl.input.Keyboard;
+
 import com.glodblock.github.common.item.ItemFluidDrop;
 import com.glodblock.github.common.item.ItemFluidPacket;
+import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
@@ -177,6 +180,8 @@ public class Platform {
     public static final boolean isMultiPartLoaded = Loader.isModLoaded("ForgeMultipart");
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
+    public static final SyncedKeybind keyBindLCtrl = SyncedKeybind.create(Keyboard.KEY_LCONTROL);
+    public static final SyncedKeybind keyBindTab = SyncedKeybind.create(Keyboard.KEY_TAB);
 
     static {
         BYTE_LIMIT = new double[10];

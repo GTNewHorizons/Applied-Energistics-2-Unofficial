@@ -891,35 +891,35 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.CPUOnlyAllowNonPlayerDesc);
 
             this.registerApp(
-                    16 * 6 + 9,
+                    16 * 7 + 8,
                     Settings.SUPER_WIRELESS_TOOL_GROUP_BY,
                     SuperWirelessToolGroupBy.Single,
                     ButtonToolTips.SuperWirelessToolGroupBySingleName,
                     ButtonToolTips.SuperWirelessToolGroupBySingleDesc);
 
             this.registerApp(
-                    16 * 6 + 10,
+                    16 * 7 + 9,
                     Settings.SUPER_WIRELESS_TOOL_GROUP_BY,
                     SuperWirelessToolGroupBy.Color,
                     ButtonToolTips.SuperWirelessToolGroupByColorName,
                     ButtonToolTips.SuperWirelessToolGroupByColorDesc);
 
             this.registerApp(
-                    16 * 6 + 11,
+                    16 * 7 + 10,
                     Settings.SUPER_WIRELESS_TOOL_GROUP_BY,
                     SuperWirelessToolGroupBy.Network,
                     ButtonToolTips.SuperWirelessToolGroupByNetworkName,
                     ButtonToolTips.SuperWirelessToolGroupByNetworkDesc);
 
             this.registerApp(
-                    16 * 7 + 12,
+                    16 * 6 + 12,
                     Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED,
                     YesNo.YES,
                     ButtonToolTips.SuperWirelessToolHideBoundedYesName,
                     ButtonToolTips.SuperWirelessToolHideBoundedYesDesc);
 
             this.registerApp(
-                    16 * 7 + 11,
+                    16 * 6 + 11,
                     Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED,
                     YesNo.NO,
                     ButtonToolTips.SuperWirelessToolHideBoundedNoName,

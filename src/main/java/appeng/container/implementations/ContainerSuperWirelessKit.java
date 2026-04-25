@@ -20,6 +20,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.collect.ImmutableList;
+
 import appeng.api.AEApi;
 import appeng.api.config.Settings;
 import appeng.api.config.SuperWirelessToolGroupBy;
@@ -27,7 +29,6 @@ import appeng.api.config.YesNo;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
-import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
@@ -36,9 +37,14 @@ import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSuperWirelessToolData;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.helpers.SuperWirelessKitCommand;
+import appeng.helpers.SuperWirelessKitCommand.PinType;
+import appeng.helpers.SuperWirelessKitCommand.SubCommand;
+import appeng.helpers.SuperWirelessKitCommand.SuperWirelessKitCommands;
 import appeng.helpers.SuperWirelessToolDataObject;
 import appeng.items.contents.SuperWirelessKitObject;
 import appeng.tile.networking.TileWirelessBase;
+import appeng.tile.networking.TileWirelessConnector;
 import appeng.tile.networking.TileWirelessHub;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
@@ -150,364 +156,235 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
 
         data.clear();
 
-        for (int i = 0; i < dcl.size(); i++) {
-            if (w.provider.dimensionId == dcl.get(i).getDimension()
-                    && w.getTileEntity(dcl.get(i).x, dcl.get(i).y, dcl.get(i).z) instanceof IGridHost gh) {
-                for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                        .getMachines(TileWirelessBase.class)) { // TODO: Check if getMachines work
+        for (final DimensionalCoord network : dcl) {
+            if (w.provider.dimensionId == network.getDimension()
+                    && w.getTileEntity(network.x, network.y, network.z) instanceof IGridHost gh) {
+                final IGrid grid = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
+                if (grid == null) continue;
+                for (IGridNode gn : grid.getMachines(TileWirelessConnector.class)) { // TODO: Check if getMachines work
                     TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
-                    data.add(wc.getDataForTool(i));
+                    data.add(wc.getDataForTool(network));
                 }
 
                 for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
                         .getMachines(TileWirelessHub.class)) {
                     TileWirelessHub wc = (TileWirelessHub) gn.getMachine();
-                    data.add(wc.getDataForTool(i));
+                    data.add(wc.getDataForTool(network));
                 }
 
             }
         }
 
         NBTTagCompound nbtData = new NBTTagCompound();
-        SuperWirelessToolDataObject.writeToNBTasList(data, nbtData);
-        nbtData.setTag("pins", stash.getTagList("pins", 10));
-        nbtData.setTag("names", stash.getTagList("names", 10));
+        nbtData.setTag("pins", stash.getTag("pins"));
+        nbtData.setTag("names", stash.getTag("names"));
 
         if (!nbtData.hasNoTags()) {
             for (ICrafting crafter : this.crafters) {
                 final EntityPlayerMP emp = (EntityPlayerMP) crafter;
                 try {
-                    NetworkHandler.instance.sendTo(new PacketSuperWirelessToolData(nbtData), emp);
+                    NetworkHandler.instance.sendTo(new PacketSuperWirelessToolData(nbtData, this.data), emp);
                 } catch (IOException ignored) {}
             }
         }
     }
 
-    public void processCommand(NBTTagCompound command) {
+    public void processCommand(SuperWirelessKitCommand command) {
         World w = toolInv.getWorld();
         NBTTagCompound stash = toolInv.getItemStack().getTagCompound().getCompoundTag("super");
-        switch (command.getString("command")) {
-            case "renameSingle" -> {
-                DimensionalCoord cord = DimensionalCoord.readFromNBT(command.getCompoundTag("cord"));
-                TileEntity te = w.getTileEntity(cord.x, cord.y, cord.z);
-                if (te instanceof TileWirelessBase twc) {
-                    twc.setCustomName(command.getString("name"));
-                }
-            }
-            case "renameGroup" -> {
-                String newName = command.getString("name");
-                int network = command.getInteger("network");
-                boolean isByColor = command.hasKey("color");
-                int color = command.getInteger("color");
-
-                NBTTagList names = stash.getTagList("names", 10);
-                boolean noData = true;
-                for (int i = 0; i < names.tagCount(); i++) {
-                    NBTTagCompound name = names.getCompoundTagAt(i);
-                    if (isByColor) {
-                        if (name.hasKey("network") && network == name.getInteger("network")
-                                && name.hasKey("color")
-                                && name.getInteger("color") == color) {
-                            name.setString("colorName", newName);
-                            noData = false;
-                            break;
-                        }
-                    } else {
-                        if (!name.hasKey("color") && name.hasKey("network") && network == name.getInteger("network")) {
-                            name.setString("networkName", newName);
-                            noData = false;
-                            break;
+        switch (command.command) {
+            case RENAME_SINGLE, RENAME_GROUP -> {
+                switch (command.subCommand.groupBy) {
+                    case SINGLE -> {
+                        final DimensionalCoord coord = command.subCommand.coord;
+                        if (w.getTileEntity(coord.x, coord.y, coord.z) instanceof TileWirelessBase twc) {
+                            twc.setCustomName(command.name);
                         }
                     }
-                }
-                if (noData) {
-                    if (command.hasKey("color")) {
-                        NBTTagCompound name = new NBTTagCompound();
-                        name.setInteger("network", network);
-                        name.setInteger("color", color);
-                        name.setString("colorName", newName);
-                        names.appendTag(name);
-                    } else {
-                        NBTTagCompound pin = new NBTTagCompound();
-                        pin.setInteger("network", network);
-                        pin.setString("networkName", newName);
-                        names.appendTag(pin);
+
+                    case COLOR, NETWORK -> {
+                        boolean noData = true;
+                        final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
+                        final NBTTagList names = stash.getTagList("names", 10);
+                        for (int i = 0; i < names.tagCount(); i++) {
+                            final NBTTagCompound name = names.getCompoundTagAt(i);
+
+                            if (!command.subCommand.networkPos
+                                    .equals(DimensionalCoord.readFromNBT(name.getCompoundTag("network"))))
+                                continue;
+
+                            if (isColor) {
+                                if (name.hasKey("color")
+                                        && name.getInteger("color") == command.subCommand.color.ordinal()) {
+                                    name.setString("colorName", command.name);
+                                    noData = false;
+                                    break;
+                                }
+                            } else {
+                                if (!name.hasKey("color")) {
+                                    name.setString("networkName", command.name);
+                                    noData = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (noData) {
+                            final NBTTagCompound pin = new NBTTagCompound();
+                            final NBTTagCompound network = new NBTTagCompound();
+                            command.subCommand.networkPos.writeToNBT(network);
+                            pin.setTag("network", network);
+
+                            if (isColor) {
+                                pin.setInteger("color", command.subCommand.color.ordinal());
+                                pin.setString("colorName", command.name);
+                            } else {
+                                pin.setString("networkName", command.name);
+
+                            }
+
+                            names.appendTag(pin);
+                        }
+                        stash.setTag("names", names);
+                        updateData();
                     }
                 }
-                stash.setTag("names", names);
-                updateData();
             }
-            case "pin" -> {
-                int network = command.getInteger("network");
-                int color = command.getInteger("color");
-                NBTTagCompound cord = command.getCompoundTag("cord");
-                String type = command.getString("type");
-                boolean pinMode = command.getBoolean("pin");
-                NBTTagList tgl = stash.getTagList("pins", 10);
 
-                command.removeTag("command");
-                command.removeTag("pin");
-
-                boolean noTag = true;
+            case PIN -> {
+                final NBTTagList tgl = stash.getTagList("pins", 10);
                 for (int i = 0; i < tgl.tagCount(); i++) {
-                    boolean toBreak = false;
-                    switch (type) {
-                        case "single" -> {
-                            if (pinMode) toBreak = true;
-                            if (tgl.getCompoundTagAt(i).getCompoundTag("cord").equals(cord)) {
+                    final NBTTagCompound tag = tgl.getCompoundTagAt(i);
+                    final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
+
+                    switch (command.subCommand.groupBy) {
+                        case SINGLE -> {
+                            if (DimensionalCoord.readFromNBT(tag.getCompoundTag("coord"))
+                                    .equals(command.subCommand.coord)) {
                                 tgl.removeTag(i);
-                                toBreak = true;
+                                return;
                             }
                         }
-                        case "network" -> {
-                            if (tgl.getCompoundTagAt(i).getInteger("network") == network) {
-                                if (pinMode) {
-                                    tgl.func_150304_a(i, command);
-                                    noTag = false;
-                                } else {
-                                    tgl.removeTag(i);
-                                }
-                                toBreak = true;
-                            }
-                        }
-                        case "color" -> {
-                            if (tgl.getCompoundTagAt(i).getInteger("network") == network
-                                    && tgl.getCompoundTagAt(i).getInteger("color") == color) {
-                                if (pinMode) {
-                                    tgl.func_150304_a(i, command);
-                                    noTag = false;
-                                } else {
-                                    tgl.removeTag(i);
-                                }
-                                toBreak = true;
+                        case NETWORK, COLOR -> {
+                            if (DimensionalCoord.readFromNBT(tag.getCompoundTag("network"))
+                                    .equals(command.subCommand.networkPos)) {
+
+                                if (isColor && tgl.getCompoundTagAt(i).getInteger("color")
+                                        != command.subCommand.color.ordinal())
+                                    continue;
+
+                                tgl.removeTag(i);
+                                return;
                             }
                         }
                     }
-                    if (toBreak) break;
                 }
 
-                if (noTag && pinMode) {
-                    tgl.appendTag(command);
-                }
+                if (command.pin) {
+                    final NBTTagCompound pin = new NBTTagCompound();
+                    final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
 
+                    switch (command.subCommand.groupBy) {
+                        case SINGLE -> {
+                            final NBTTagCompound coord = new NBTTagCompound();
+                            command.subCommand.coord.writeToNBT(coord);
+                            pin.setTag("coord", coord);
+                        }
+
+                        case NETWORK, COLOR -> {
+                            final NBTTagCompound networkPos = new NBTTagCompound();
+                            command.subCommand.networkPos.writeToNBT(networkPos);
+                            pin.setTag("network", networkPos);
+
+                            if (isColor) pin.setInteger("color", command.subCommand.color.ordinal());
+                        }
+                    }
+
+                    pin.setInteger("type", command.subCommand.groupBy.ordinal());
+                    tgl.appendTag(pin);
+                }
             }
-            case "delete" -> {
-                NBTTagList pins = stash.getTagList("pins", 10);
-                int network = command.getInteger("network");
+            case DELETE -> {
+                final NBTTagList pins = stash.getTagList("pins", 10);
 
                 // remove pin
                 for (int i = 0; i < pins.tagCount(); i++) {
-                    int nbt_network = pins.getCompoundTagAt(i).getInteger("network");
-                    if (nbt_network == network) {
+                    final DimensionalCoord network = DimensionalCoord
+                            .readFromNBT(pins.getCompoundTagAt(i).getCompoundTag("network"));
+                    if (network.equals(command.networkPos)) {
                         pins.removeTag(i);
                     }
                 }
 
-                // move pins data according to new subsequence
-                for (int i = 0; i < pins.tagCount(); i++) {
-                    int nbt_network = pins.getCompoundTagAt(i).getInteger("network");
-                    if (nbt_network > network) {
-                        pins.getCompoundTagAt(i).setInteger("network", nbt_network - 1);
-                    }
-                }
+                final List<DimensionalCoord> networks = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
+                networks.removeIf(network -> command.networkPos.equals(network));
 
-                // move names data according to new subsequence
-                NBTTagList names = stash.getTagList("names", 10);
-                for (int i = 0; i < names.tagCount(); i++) {
-                    int nbt_network = names.getCompoundTagAt(i).getInteger("network");
-                    if (nbt_network == network) {
-                        names.removeTag(i);
-                    }
-                }
+                final NBTTagCompound tag = new NBTTagCompound();
+                DimensionalCoord.writeListToNBT(tag, networks);
+                stash.setTag("pos", tag);
 
-                // move network list for keep subsequence
-                for (int i = 0; i < names.tagCount(); i++) {
-                    int nbt_network = names.getCompoundTagAt(i).getInteger("network");
-                    if (nbt_network > network) {
-                        names.getCompoundTagAt(i).setInteger("network", nbt_network - 1);
-                    }
-                }
-
-                NBTTagCompound pos = stash.getCompoundTag("pos");
-                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(pos);
-                for (int i = 0; i < dcl.size(); i++) {
-                    if (i == network) {
-                        dcl.remove(i);
-                        break;
-                    }
-                }
-
-                NBTTagCompound newPos = new NBTTagCompound();
-                DimensionalCoord.writeListToNBT(newPos, dcl);
-                stash.setTag("pos", newPos);
                 updateData();
             }
-            case "recolor" -> {
-                AEColor color = command.getInteger("color") != -1 ? AEColor.values()[command.getInteger("color")]
-                        : null;
-                if (command.hasKey("cords")) {
-                    List<DimensionalCoord> dc = DimensionalCoord
-                            .readAsListFromNBT((NBTTagCompound) command.getTag("cords"));
-                    for (DimensionalCoord sdc : dc) {
-                        TileEntity te = w.getTileEntity(sdc.x, sdc.y, sdc.z);
-                        if (te instanceof TileWirelessBase tw) {
-                            if (color != null) {
-                                tw.recolourBlock(ForgeDirection.UNKNOWN, color, this.getPlayerInv().player);
-                            } else {
-                                tw.madChameleonRecolor();
+            case RECOLOR -> {
+                for (final SubCommand subCommand : command.toBindRow) {
+                    switch (subCommand.groupBy) {
+                        case SINGLE -> {
+                            if (w.getTileEntity(
+                                    subCommand.coord.x,
+                                    subCommand.coord.y,
+                                    subCommand.coord.z) instanceof TileWirelessBase tw) {
+                                if (subCommand.coord != null) {
+                                    tw.recolourBlock(ForgeDirection.UNKNOWN, command.color, this.getPlayerInv().player);
+                                } else {
+                                    tw.madChameleonRecolor();
+                                }
                             }
                         }
-                    }
-                }
 
-                if (command.hasKey("group")) {
-                    NBTTagList tagList = command.getTagList("group", 10);
-                    int[] networksCache = new int[tagList.tagCount()];
-                    AEColor[] colorsCache = new AEColor[tagList.tagCount()];
-                    for (int i = 0; i < tagList.tagCount(); i++) {
-                        NBTTagCompound tag = tagList.getCompoundTagAt(i);
-                        networksCache[i] = tag.getInteger("network");
-                        if (tag.hasKey("color")) {
-                            colorsCache[i] = AEColor.values()[tag.getInteger("color")];
-                        }
-                    }
-
-                    for (SuperWirelessToolDataObject sd : data) {
-                        for (int i = 0; i < networksCache.length; i++) {
-                            if (networksCache[i] == sd.network) {
-                                if (colorsCache[i] != null) {
-                                    if (sd.color == colorsCache[i]) {
+                        case NETWORK, COLOR -> {
+                            final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
+                            for (SuperWirelessToolDataObject sd : data) {
+                                if (subCommand.networkPos.equals(sd.network)) {
+                                    if (isColor) {
+                                        if (sd.color == subCommand.color) {
+                                            TileEntity te = w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z);
+                                            if (te instanceof TileWirelessBase tw) {
+                                                if (subCommand.color != null) {
+                                                    tw.recolourBlock(
+                                                            ForgeDirection.UNKNOWN,
+                                                            command.color,
+                                                            this.getPlayerInv().player);
+                                                } else {
+                                                    tw.madChameleonRecolor();
+                                                }
+                                            }
+                                        }
+                                    } else {
                                         TileEntity te = w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z);
                                         if (te instanceof TileWirelessBase tw) {
-                                            if (color != null) {
+                                            if (subCommand.color != null) {
                                                 tw.recolourBlock(
                                                         ForgeDirection.UNKNOWN,
-                                                        color,
+                                                        command.color,
                                                         this.getPlayerInv().player);
                                             } else {
                                                 tw.madChameleonRecolor();
                                             }
                                         }
                                     }
-                                } else {
-                                    TileEntity te = w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z);
-                                    if (te instanceof TileWirelessBase tw) {
-                                        if (color != null) {
-                                            tw.recolourBlock(ForgeDirection.UNKNOWN, color, this.getPlayerInv().player);
-                                        } else {
-                                            tw.madChameleonRecolor();
-                                        }
-                                    }
                                 }
                             }
                         }
                     }
                 }
+
                 updateData();
             }
-            case "bind" -> {
-                List<DimensionalCoord> networks = DimensionalCoord
-                        .readAsListFromNBT((NBTTagCompound) stash.getTag("pos"));
+            case BIND -> {
+                final ArrayList<TileWirelessBase> twToBind = this.fletchConnectors(false, command.toBindRow, w);
+                final ArrayList<TileWirelessBase> twTarget = this.fletchConnectors(false, command.targetRow, w);
 
-                NBTTagList toBind = command.getTagList("toBind", 10);
-                ArrayList<TileWirelessBase> twToBind = new ArrayList<>();
-                for (int i = 0; i < toBind.tagCount(); i++) {
-                    NBTTagCompound tag = toBind.getCompoundTagAt(i);
-                    if (tag.hasKey("cord")) {
-                        DimensionalCoord dc = DimensionalCoord.readFromNBT(tag.getCompoundTag("cord"));
-                        if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof TileWirelessBase wc) {
-                            twToBind.add(wc);
-                        }
-                    } else {
-                        int network = tag.getInteger("network");
-                        AEColor color = tag.hasKey("color") ? AEColor.values()[tag.getInteger("color")] : null;
-                        if (networks.size() >= network) {
-                            DimensionalCoord dc = networks.get(network);
-                            if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
-                                if (!tag.hasKey("incCon")) {
-                                    for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                            .getMachines(TileWirelessBase.class)) {
-                                        TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
-                                        if (!wc.isLinked()) {
-                                            if (color != null) {
-                                                if (wc.getColor() == color) {
-                                                    twToBind.add(wc);
-                                                }
-                                            } else {
-                                                twToBind.add(wc);
-                                            }
-                                        }
-                                    }
-                                }
-                                if (!tag.hasKey("incHub")) {
-                                    for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                            .getMachines(TileWirelessHub.class)) {
-                                        TileWirelessHub wc = (TileWirelessHub) gn.getMachine();
-                                        if (wc.getFreeSlots() > 0) {
-                                            if (color != null) {
-                                                if (wc.getColor() == color) {
-                                                    twToBind.add(wc);
-                                                }
-                                            } else {
-                                                twToBind.add(wc);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                NBTTagList target = command.getTagList("target", 10);
-                ArrayList<TileWirelessBase> twTarget = new ArrayList<>();
-                for (int i = 0; i < target.tagCount(); i++) {
-                    NBTTagCompound tag = target.getCompoundTagAt(i);
-                    if (tag.hasKey("cord")) {
-                        DimensionalCoord dc = DimensionalCoord.readFromNBT(tag.getCompoundTag("cord"));
-                        if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof TileWirelessBase wc) {
-                            twTarget.add(wc);
-                        }
-                    } else {
-                        int network = tag.getInteger("network");
-                        AEColor color = tag.hasKey("color") ? AEColor.values()[tag.getInteger("color")] : null;
-                        if (networks.size() >= network) {
-                            DimensionalCoord dc = networks.get(network);
-                            if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
-                                if (!tag.hasKey("incCon")) {
-                                    for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                            .getMachines(TileWirelessBase.class)) {
-                                        TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
-                                        if (!wc.isLinked()) {
-                                            if (color != null) {
-                                                if (wc.getColor() == color) {
-                                                    twTarget.add(wc);
-                                                }
-                                            } else {
-                                                twTarget.add(wc);
-                                            }
-                                        }
-                                    }
-                                }
-                                if (!tag.hasKey("incHub")) {
-                                    for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                            .getMachines(TileWirelessHub.class)) {
-                                        TileWirelessHub wc = (TileWirelessHub) gn.getMachine();
-                                        if (wc.getFreeSlots() > 0) {
-                                            if (color != null) {
-                                                if (wc.getColor() == color) {
-                                                    twTarget.add(wc);
-                                                }
-                                            } else {
-                                                twTarget.add(wc);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                if (twToBind.isEmpty() || twTarget.isEmpty()) return;
 
                 int i = 0;
                 int ii = 0;
@@ -526,85 +403,59 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                 }
 
                 // Check if network was absorbed after bind and delete it if
-                ArrayList<IGrid> gList = new ArrayList<>();
-                int deletedCounter = 0;
-                for (int j = 0; j < networks.size(); j++) {
-                    DimensionalCoord dc = networks.get(j);
+                final List<DimensionalCoord> networks = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
+                final ArrayList<IGrid> gList = new ArrayList<>();
+                for (DimensionalCoord dc : networks) {
                     if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
-                        IGrid newG = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
+                        final IGrid newG = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
                         if (newG != null) {
                             if (gList.contains(newG)) {
-                                NBTTagCompound tag = new NBTTagCompound();
-                                tag.setString("command", "delete");
-                                tag.setInteger("network", j - deletedCounter);
-                                processCommand(tag);
-                                deletedCounter++;
+                                final SuperWirelessKitCommand nextCommand = new SuperWirelessKitCommand(
+                                        SuperWirelessKitCommands.DELETE);
+                                nextCommand.setNetworkPos(dc);
+                                processCommand(nextCommand);
                             } else {
                                 gList.add(newG);
                             }
                         }
                     } else {
-                        NBTTagCompound tag = new NBTTagCompound();
-                        tag.setString("command", "delete");
-                        tag.setInteger("network", j - deletedCounter);
-                        processCommand(tag);
-                        deletedCounter++;
+                        final SuperWirelessKitCommand nextCommand = new SuperWirelessKitCommand(
+                                SuperWirelessKitCommands.DELETE);
+                        nextCommand.setNetworkPos(dc);
+                        processCommand(nextCommand);
                     }
                 }
 
                 updateData();
             }
-            case "unbind" -> {
-                List<DimensionalCoord> networks = DimensionalCoord
+            case UNBIND -> {
+                final List<DimensionalCoord> networks = DimensionalCoord
                         .readAsListFromNBT((NBTTagCompound) stash.getTag("pos"));
+                final ArrayList<TileWirelessBase> unbounded = this.fletchConnectors(true, command.toBindRow, w);
 
-                NBTTagList toBind = command.getTagList("toBind", 10);
-                for (int i = 0; i < toBind.tagCount(); i++) {
-                    NBTTagCompound tag = toBind.getCompoundTagAt(i);
-                    if (tag.hasKey("cord")) {
-                        DimensionalCoord dc = DimensionalCoord.readFromNBT(tag.getCompoundTag("cord"));
-                        if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof TileWirelessBase wc) {
-                            wc.doUnlink();
-                        }
-                    } else {
-                        int network = tag.getInteger("network");
-                        AEColor color = tag.hasKey("color") ? AEColor.values()[tag.getInteger("color")] : null;
-                        if (networks.size() >= network) {
-                            DimensionalCoord dc = networks.get(network);
-                            if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
-                                if (!tag.hasKey("incCon")) {
-                                    for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                            .getMachines(TileWirelessBase.class)) {
-                                        TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
-                                        if (color != null) {
-                                            if (wc.getColor() == color) {
-                                                wc.doUnlink();
-                                            }
-                                        } else {
-                                            wc.doUnlink();
-                                        }
-                                    }
+                for (final TileWirelessBase tw : unbounded) {
+                    boolean newNetwork = true;
+                    for (final DimensionalCoord dc : networks) {
+                        if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
+                            try {
+                                final IGrid grid = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
+                                if (tw.getProxy().getGrid().equals(grid)) {
+                                    newNetwork = false;
+                                    break;
                                 }
-                                if (!tag.hasKey("incHub")) {
-                                    for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                            .getMachines(TileWirelessHub.class)) {
-                                        TileWirelessHub wc = (TileWirelessHub) gn.getMachine();
-                                        if (color != null) {
-                                            if (wc.getColor() == color) {
-                                                wc.doUnlink();
-                                            }
-                                        } else {
-                                            wc.doUnlink();
-                                        }
-                                    }
-                                }
-                            }
+                            } catch (Exception ignored) {}
                         }
                     }
+
+                    if (newNetwork) networks.add(tw.getLocation());
                 }
+                final NBTTagCompound tag = new NBTTagCompound();
+                DimensionalCoord.writeListToNBT(tag, networks);
+                stash.setTag("pos", tag);
+
                 updateData();
             }
-            case "ae2stuff_convert" -> {
+            case AE2STUFF_REPLACE -> {
                 if (!isAEStaffLoaded) return;
 
                 List<DimensionalCoord> networks = DimensionalCoord
@@ -627,11 +478,11 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                         }
 
                         SuperWirelessToolDataObject data = new SuperWirelessToolDataObject(
-                                -1,
+                                null,
                                 wc.hasCustomName() ? wc.getCustomName() : null,
                                 wc.getLocation(),
                                 targetDC != null,
-                                targetDC,
+                                targetDC == null ? ImmutableList.of() : ImmutableList.of(targetDC),
                                 wc.getColor(),
                                 -1,
                                 wc.isHub(),
@@ -658,13 +509,22 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                                     AEApi.instance().definitions().blocks().wirelessConnector().maybeBlock().get());
                         }
 
-                        TileEntity te = w.getTileEntity(data.cord.x, data.cord.y, data.cord.z);
-                        if (te instanceof TileWirelessBase newCon) {
+                        if (w.getTileEntity(data.cord.x, data.cord.y, data.cord.z) instanceof TileWirelessBase newCon) {
                             if (data.customName != null) newCon.setCustomName(data.customName);
-                            if (data.isConnected) {
-                                // newCon.injectTarget(data.targetCord); TODO
-                            }
                             newCon.recolourBlock(ForgeDirection.UNKNOWN, data.color, null);
+                        }
+                    }
+
+                    for (SuperWirelessToolDataObject data : dataSet) {
+                        if (w.getTileEntity(data.cord.x, data.cord.y, data.cord.z) instanceof TileWirelessBase newCon) {
+                            for (final DimensionalCoord targetDc : data.targets) {
+                                if (!(w.getTileEntity(
+                                        targetDc.x,
+                                        targetDc.y,
+                                        targetDc.z) instanceof TileWirelessBase target))
+                                    continue;
+                                newCon.doLink(target);
+                            }
                         }
                     }
                 }
@@ -672,5 +532,63 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
             }
             default -> {}
         }
+    }
+
+    private ArrayList<TileWirelessBase> fletchConnectors(final boolean unbind,
+            final ArrayList<SuperWirelessKitCommand.SubCommand> list, final World w) {
+        final ArrayList<TileWirelessBase> connectors = new ArrayList<>();
+        for (final SubCommand subCommand : list) {
+            switch (subCommand.groupBy) {
+                case SINGLE -> {
+                    if (w.getTileEntity(
+                            subCommand.coord.x,
+                            subCommand.coord.y,
+                            subCommand.coord.z) instanceof TileWirelessBase wc) {
+                        if (unbind) {
+                            connectors.addAll(wc.getConnectedTiles());
+                            wc.doUnlink();
+                        }
+                        connectors.add(wc);
+                    }
+                }
+                case NETWORK, COLOR -> {
+                    final DimensionalCoord network = subCommand.networkPos;
+                    final boolean isColor = subCommand.groupBy == PinType.COLOR;;
+                    if (w.getTileEntity(network.x, network.y, network.z) instanceof IGridHost gh) {
+                        if (subCommand.includeConnectors) {
+                            for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
+                                    .getMachines(TileWirelessBase.class)) {
+                                TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
+                                if (!wc.isLinked()) {
+                                    if (isColor && wc.getColor() != subCommand.color) continue;
+                                    if (unbind) {
+                                        connectors.addAll(wc.getConnectedTiles());
+                                        wc.doUnlink();
+                                    }
+                                    connectors.add(wc);
+                                }
+                            }
+                        }
+
+                        if (subCommand.includeHubs) {
+                            for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
+                                    .getMachines(TileWirelessHub.class)) {
+                                TileWirelessHub wc = (TileWirelessHub) gn.getMachine();
+                                if (wc.getFreeSlots() > 0 || unbind) {
+                                    if (isColor && wc.getColor() != subCommand.color) continue;
+                                    if (unbind) {
+                                        connectors.addAll(wc.getConnectedTiles());
+                                        wc.doUnlink();
+                                    }
+                                    connectors.add(wc);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return connectors;
     }
 }

@@ -9,7 +9,7 @@ public class GuiCheckBox extends GuiToggleButton {
     final double scale;
 
     public GuiCheckBox(double scale, int x, int y, String DisplayName, String DisplayHint) {
-        this(scale, x, y, 16 * 6 + 13, 16 * 6 + 12, DisplayName, DisplayHint);
+        this(scale, x, y, 16 * 7 + 12, 16 * 7 + 11, DisplayName, DisplayHint);
     }
 
     public GuiCheckBox(double scale, int x, int y, int iconOn, int iconOff, String DisplayName, String DisplayHint) {

@@ -62,8 +62,14 @@ public final class TileWailaDataProvider implements IWailaDataProvider {
         final IWailaDataProvider quantumBridge = new QuantumBridgeWailaDataProvider();
         final IWailaDataProvider wireless = new WirelessDataProvider();
 
-        this.providers = Lists
-                .newArrayList(charger, energyCell, craftingBlock, craftingMonitor, interfaceBlock, quantumBridge, wireless);
+        this.providers = Lists.newArrayList(
+                charger,
+                energyCell,
+                craftingBlock,
+                craftingMonitor,
+                interfaceBlock,
+                quantumBridge,
+                wireless);
     }
 
     @Override

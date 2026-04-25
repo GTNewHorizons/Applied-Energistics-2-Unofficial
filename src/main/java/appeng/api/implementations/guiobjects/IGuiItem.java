@@ -28,6 +28,6 @@ public interface IGuiItem {
     }
 
     default IGuiItemObject getGuiObject(ItemStack is, World world, EntityPlayer player, int x, int y, int z) {
-        return null;
+        return getGuiObject(is, world, x, y, z);
     }
 }

@@ -116,7 +116,6 @@ import appeng.parts.automation.PartSharedItemBus;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.grindstone.TileGrinder;
-import appeng.tile.misc.TileCellWorkbench;
 import appeng.tile.misc.TileCondenser;
 import appeng.tile.misc.TileCrystalGrowthChamber;
 import appeng.tile.misc.TileInscriber;
@@ -242,8 +241,6 @@ public enum GuiBridge implements IGuiHandler {
     GUI_ORE_FILTER(ContainerOreFilter.class, IOreFilterable.class, GuiHostType.ITEM_OR_WORLD, null),
 
     GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null),
-
-    GUI_PATTERN_ITEM_RENAMER(ContainerPatternItemRenamer.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
 
     GUI_CRYSTAL_GROWTH_CHAMBER(ContainerCrystalGrowthChamber.class, TileCrystalGrowthChamber.class, GuiHostType.WORLD,
             null),

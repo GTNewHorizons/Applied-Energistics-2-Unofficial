@@ -1,95 +1,87 @@
 package appeng.helpers;
 
 import java.util.ArrayList;
-
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import java.util.List;
 
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import io.netty.buffer.ByteBuf;
 
 public class SuperWirelessToolDataObject {
 
-    public int network;
-    public String customName;
-    public DimensionalCoord cord;
+    public final DimensionalCoord network;
+    public final String customName;
+    public final DimensionalCoord cord;
     public boolean isConnected;
-    public DimensionalCoord targetCord;
-    public AEColor color;
-    public int channels;
-    public boolean isHub;
-    public int slots;
+    public final List<DimensionalCoord> targets;
+    public final AEColor color;
+    public final int channels;
+    public final boolean isHub;
+    public final int slots;
 
-    public SuperWirelessToolDataObject(int n, String name, DimensionalCoord cord, boolean isConnected,
-            DimensionalCoord targetCord, AEColor color, int channels, boolean isHub, int slots) {
-        this.network = n;
+    public SuperWirelessToolDataObject(DimensionalCoord network, String name, DimensionalCoord cord,
+            boolean isConnected, List<DimensionalCoord> targets, AEColor color, int channels, boolean isHub,
+            int slots) {
+        this.network = network;
         this.customName = name;
         this.cord = cord;
         this.isConnected = isConnected;
-        this.targetCord = targetCord;
+        this.targets = targets;
         this.color = color;
         this.channels = channels;
         this.isHub = isHub;
         this.slots = slots;
     }
 
-    public void writeToNBT(NBTTagCompound nbt) {
-        nbt.setInteger("network", this.network);
-        nbt.setString("name", this.customName);
+    public void write(ByteBuf buf) {
+        this.network.writeToPacket(buf);
+        ByteBufUtils.writeUTF8String(buf, this.customName);
+        this.cord.writeToPacket(buf);
+        buf.writeBoolean(this.isConnected);
+        buf.writeBoolean(this.isHub);
 
-        NBTTagCompound cordNbt = new NBTTagCompound();
-        this.cord.writeToNBT(cordNbt);
-        nbt.setTag("cord", cordNbt);
+        buf.writeInt(this.targets.size());
+        this.targets.forEach((dc) -> dc.writeToPacket(buf));
 
-        nbt.setBoolean("isConnected", this.isConnected);
-
-        if (this.isConnected && !this.isHub) {
-            NBTTagCompound otherCordNbt = new NBTTagCompound();
-            this.targetCord.writeToNBT(otherCordNbt);
-            nbt.setTag("targetCord", otherCordNbt);
-        }
-
-        nbt.setInteger("color", this.color.ordinal());
-        nbt.setInteger("channels", this.channels);
-        nbt.setBoolean("isHub", this.isHub);
-        nbt.setInteger("slots", this.slots);
+        buf.writeInt(this.color.ordinal());
+        buf.writeInt(this.channels);
+        buf.writeInt(this.slots);
     }
 
-    public static SuperWirelessToolDataObject readFromNBT(NBTTagCompound nbt) {
-        boolean isConnected = nbt.getBoolean("isConnected");
+    public static SuperWirelessToolDataObject read(ByteBuf buf) {
+        final DimensionalCoord network = DimensionalCoord.readFromPacket(buf);
+        final String customName = ByteBufUtils.readUTF8String(buf);
+        final DimensionalCoord coord = DimensionalCoord.readFromPacket(buf);
+        final boolean isConnected = buf.readBoolean();
+        final boolean isHub = buf.readBoolean();
+
+        final int targetsSize = buf.readInt();
+        final List<DimensionalCoord> targets = new ArrayList<>(targetsSize);
+        for (int i = 0; i < targetsSize; i++) targets.add(DimensionalCoord.readFromPacket(buf));
+
         return new SuperWirelessToolDataObject(
-                nbt.getInteger("network"),
-                nbt.getString("name"),
-                DimensionalCoord.readFromNBT(nbt.getCompoundTag("cord")),
+                network,
+                customName,
+                coord,
                 isConnected,
-                isConnected ? DimensionalCoord.readFromNBT(nbt.getCompoundTag("targetCord")) : null,
-                AEColor.values()[nbt.getInteger("color")],
-                nbt.getInteger("channels"),
-                nbt.getBoolean("isHub"),
-                nbt.getInteger("slots"));
+                targets,
+                AEColor.values()[buf.readInt()],
+                buf.readInt(),
+                isHub,
+                buf.readInt());
     }
 
-    public static void writeToNBTasList(ArrayList<SuperWirelessToolDataObject> list, NBTTagCompound nbt) {
-        final NBTTagList dataList = new NBTTagList();
-
-        for (final SuperWirelessToolDataObject d : list) {
-            final NBTTagCompound dn = new NBTTagCompound();
-            d.writeToNBT(dn);
-            dataList.appendTag(dn);
-        }
-
-        nbt.setTag("SWTDO_List", dataList);
+    public static void writeAsList(ArrayList<SuperWirelessToolDataObject> list, ByteBuf buf) {
+        buf.writeInt(list.size());
+        list.forEach(d -> d.write(buf));
     }
 
-    public static ArrayList<SuperWirelessToolDataObject> readFromNBTasList(NBTTagCompound nbt) {
-        final NBTTagList List = nbt.getTagList("SWTDO_List", 10);
-        ArrayList<SuperWirelessToolDataObject> arrayList = new ArrayList<>();
+    public static ArrayList<SuperWirelessToolDataObject> readAsList(ByteBuf buf) {
+        final int size = buf.readInt();
+        final ArrayList<SuperWirelessToolDataObject> arrayList = new ArrayList<>(size);
+        for (int x = 0; x < size; x++) arrayList.add(SuperWirelessToolDataObject.read(buf));
 
-        if (List != null) {
-            for (int x = 0; x < List.tagCount(); x++) {
-                arrayList.add(SuperWirelessToolDataObject.readFromNBT(List.getCompoundTagAt(x)));
-            }
-        }
         return arrayList;
     }
 }

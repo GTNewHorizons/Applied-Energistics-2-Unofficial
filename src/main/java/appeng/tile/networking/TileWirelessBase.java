@@ -305,13 +305,13 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         this.markForUpdate();
     }
 
-    public SuperWirelessToolDataObject getDataForTool(int i) {
+    public SuperWirelessToolDataObject getDataForTool(DimensionalCoord network) {
         return new SuperWirelessToolDataObject(
-                i,
+                network,
                 this.hasCustomName() ? this.getCustomName() : this.getBlockType().getLocalizedName(),
                 getLocation(),
                 isLinked(),
-                getConnectedTiles().stream().map(TileWirelessBase::getLocation).findFirst().orElse(null),
+                getConnectedCoords(),
                 getColor(),
                 getUsedChannels(),
                 isHub(),

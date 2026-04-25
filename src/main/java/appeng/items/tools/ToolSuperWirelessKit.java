@@ -216,7 +216,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
     }
 
     @Override
-    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
+    public IGuiItemObject getGuiObject(ItemStack is, World world, EntityPlayer player, int x, int y, int z) {
         return new SuperWirelessKitObject(is, world);
     }
 }

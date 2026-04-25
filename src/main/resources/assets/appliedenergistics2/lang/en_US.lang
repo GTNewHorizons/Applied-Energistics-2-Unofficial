@@ -466,6 +466,13 @@ gui.appliedenergistics2.ControlButtonValuesDesc2=Negative buttons are mirrored
 gui.appliedenergistics2.SelectColor=Select a Color
 gui.appliedenergistics2.Selected=Selected
 
+gui.appliedenergistics2.GuiSuperWirelessKitColor=Color %s
+gui.appliedenergistics2.GuiSuperWirelessKitNetwork=Net: %s
+gui.appliedenergistics2.GuiSuperWirelessKitSelfPos=I: %s, %s, %s
+gui.appliedenergistics2.GuiSuperWirelessKitTargetPos=T: %s, %s, %s
+gui.appliedenergistics2.GuiSuperWirelessKitChannelsUsage=Channels Usage: %s
+gui.appliedenergistics2.GuiSuperWirelessKitNameFieldDesc=Rename connector in world or group in gui
+
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
 gui.color.appliedenergistics2.SearchboxUnfocused=00000000
@@ -747,6 +754,23 @@ gui.tooltips.appliedenergistics2.SuperWirelessToolHideBoundedYesDesc=Hide connec
 gui.tooltips.appliedenergistics2.SuperWirelessToolHideBoundedNoName=Show bounded
 gui.tooltips.appliedenergistics2.SuperWirelessToolHideBoundedNoDesc=Show connectors with connection and hubs without free slots
 
+gui.tooltips.appliedenergistics2.SuperWirelessKitPinButtonName=Pin
+gui.tooltips.appliedenergistics2.SuperWirelessKitPinButtonDesc=Keep this unit in current row
+gui.tooltips.appliedenergistics2.SuperWirelessKitMadChameleonRecolorName=Mad Chameleon
+gui.tooltips.appliedenergistics2.SuperWirelessKitMadChameleonRecolorDesc=Recolor in color which not allow connect to neighbor wireless`s
+gui.tooltips.appliedenergistics2.SuperWirelessKitaAE2StuffName=AE2Stuff converter
+gui.tooltips.appliedenergistics2.SuperWirelessKitAE2StuffDesc=Replace ae2tuff connectors in networks with AE2 connections (World reload required).
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeConnectorsName=Include hubs
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeConnectorsDesc=Include hubs in manipulations
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeHubsName=Include connectors
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeHubsDesc=Include connectors in manipulations
+gui.tooltips.appliedenergistics2.SuperWirelessKitDeleteName=Delete Network
+gui.tooltips.appliedenergistics2.SuperWirelessKitDeleteDesc=Remove network from list
+gui.tooltips.appliedenergistics2.SuperWirelessKitBindName=Bind
+gui.tooltips.appliedenergistics2.SuperWirelessKitBindDesc=Bind wireless`s in 2nd row to wireless`s in 3rd row
+gui.tooltips.appliedenergistics2.SuperWirelessKitUnbindName=Unbind
+gui.tooltips.appliedenergistics2.SuperWirelessKitUnbindDesc=Break connection for wireless`s in 2nd row
+
 gui.tooltips.appliedenergistics2.PinsSection=Pins section
 gui.tooltips.appliedenergistics2.PinsSectionActive=§6LMB§8 - §7Add player row\n§6RMB§8 - §7Remove player row\n§6CTRL + LMB§8 - §7Add crafting row\n§6CTRL + RMB§8 - §7Remove crafting row\n§6SHIFT + RMB§8 - §7Unpin§r
 gui.tooltips.appliedenergistics2.PinsSectionHint=Hold §6ALT§7 for keybinds
@@ -794,30 +818,6 @@ gui.appliedenergistics2.Green=Green
 gui.appliedenergistics2.Red=Red
 gui.appliedenergistics2.Black=Black
 gui.appliedenergistics2.Fluix=Fluix
-
-#
-gui.appliedenergistics2.GuiSuperWirelessKit.color=Color %s
-gui.appliedenergistics2.GuiSuperWirelessKit.network=Network %s
-gui.appliedenergistics2.GuiSuperWirelessKit.selfpos=I: %s,%s,%s
-gui.appliedenergistics2.GuiSuperWirelessKit.targetpos=T: %s,%s,%s
-gui.appliedenergistics2.GuiSuperWirelessKit.channelsUsage=Channels Usage: %s
-gui.appliedenergistics2.GuiSuperWirelessKit.pinbutton.name=Pin
-gui.appliedenergistics2.GuiSuperWirelessKit.pinbutton.desc=Keep this unit in current row
-gui.appliedenergistics2.GuiSuperWirelessKit.madchameleonrecolor.name=Mad Chameleon
-gui.appliedenergistics2.GuiSuperWirelessKit.madchameleonrecolor.desc=Recolor in color which not allow connect to neighbor wireless`s
-gui.appliedenergistics2.GuiSuperWirelessKit.ae2stuff.name=AE2Stuff converter
-gui.appliedenergistics2.GuiSuperWirelessKit.ae2stuff.desc=Replace ae2tuff connectors in networks with AE2 connections (World reload required).
-gui.appliedenergistics2.GuiSuperWirelessKit.includeconnectors.name=Include hubs
-gui.appliedenergistics2.GuiSuperWirelessKit.includeconnectors.desc=Include hubs in manipulations
-gui.appliedenergistics2.GuiSuperWirelessKit.includehubs.name=Include connectors
-gui.appliedenergistics2.GuiSuperWirelessKit.includehubs.desc=Include connectors in manipulations
-gui.appliedenergistics2.GuiSuperWirelessKit.delete.name=Delete Network
-gui.appliedenergistics2.GuiSuperWirelessKit.delete.desc=Remove network from list
-gui.appliedenergistics2.GuiSuperWirelessKit.bind.name=Bind
-gui.appliedenergistics2.GuiSuperWirelessKit.bind.desc=Bind wireless`s in 2nd row to wireless`s in 3rd row
-gui.appliedenergistics2.GuiSuperWirelessKit.unbind.name=Unbind
-gui.appliedenergistics2.GuiSuperWirelessKit.unbind.desc=Break connection for wireless`s in 2nd row
-gui.appliedenergistics2.GuiSuperWirelessKit.namefield.desc=Rename wireless or network or color
 
 # Waila
 waila.appliedenergistics2.Crafting=Crafting

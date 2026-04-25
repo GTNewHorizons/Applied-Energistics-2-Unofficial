@@ -365,7 +365,14 @@ public enum GuiText implements Localization {
     ReshuffleReportTextColorPositive,
     ReshuffleReportTextColorNegative,
     ReshuffleReportTextColorNeutral,
-    ReshuffleReportTextColorWarning,;
+    ReshuffleReportTextColorWarning,
+
+    GuiSuperWirelessKitColor,
+    GuiSuperWirelessKitNetwork,
+    GuiSuperWirelessKitSelfPos,
+    GuiSuperWirelessKitTargetPos,
+    GuiSuperWirelessKitChannelsUsage,
+    GuiSuperWirelessKitNameFieldDesc;
 
     private final String root;
 

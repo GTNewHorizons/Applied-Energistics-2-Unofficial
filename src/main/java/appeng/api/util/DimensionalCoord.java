@@ -21,6 +21,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+import io.netty.buffer.ByteBuf;
+
 /**
  * Represents a location in the Minecraft Universe
  */
@@ -109,6 +111,37 @@ public class DimensionalCoord extends WorldCoord {
             NBTTagCompound data = tag.getCompoundTag("pos#" + i);
             list.add(readFromNBT(data));
             i++;
+        }
+        return list;
+    }
+
+    public void writeToPacket(final ByteBuf data) {
+        data.writeInt(this.x);
+        data.writeInt(this.y);
+        data.writeInt(this.z);
+        data.writeInt(this.dimId);
+    }
+
+    public static void writeListToPacket(final ByteBuf data, final List<NamedDimensionalCoord> list) {
+        data.writeInt(list == null ? 0 : list.size());
+        if (list == null) {
+            return;
+        }
+
+        for (final DimensionalCoord coord : list) {
+            coord.writeToPacket(data);
+        }
+    }
+
+    public static DimensionalCoord readFromPacket(final ByteBuf data) {
+        return new DimensionalCoord(data.readInt(), data.readInt(), data.readInt(), data.readInt());
+    }
+
+    public static List<DimensionalCoord> readAsListPacket(final ByteBuf data) {
+        final int count = data.readInt();
+        final List<DimensionalCoord> list = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            list.add(readFromPacket(data));
         }
         return list;
     }
