@@ -687,6 +687,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.HIGHLIGHT_INTERFACE,
                     ButtonToolTips.HighlightInterface,
                     "");
+            this.registerApp(70, Settings.ACTIONS, ActionItems.RENAME_INTERFACE, ButtonToolTips.RenameInterface, "");
             this.registerApp(
                     5 * 16 + 10,
                     Settings.INTERFACE_TERMINAL,
