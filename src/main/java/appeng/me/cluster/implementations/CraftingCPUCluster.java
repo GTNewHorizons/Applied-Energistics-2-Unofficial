@@ -1631,8 +1631,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public boolean isMaking(final IAEStack<?> what) {
-        final IAEStack<?> wat = this.waitingFor.findPrecise(what);
-        return wat != null && wat.getStackSize() > 0;
+        return what != null && (this.getStackAmount(what, CraftingItemList.ACTIVE) > 0
+                || this.getStackAmount(what, CraftingItemList.PENDING) > 0);
     }
 
     public void breakCluster() {
