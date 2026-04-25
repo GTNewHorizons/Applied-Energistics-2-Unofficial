@@ -221,9 +221,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         terminalStyleBox = new GuiImgButton(0, 0, Settings.TERMINAL_STYLE, null);
 
-        this.extraOptionsText = new ArrayList<>(3);
+        this.extraOptionsText = new ArrayList<>(4);
         extraOptionsText.add(ButtonToolTips.HighlightInterface.getLocal());
         extraOptionsText.add(ButtonToolTips.HighlightInterfaceDesc.getLocal());
+        extraOptionsText.add(ButtonToolTips.RenameInterface.getLocal());
 
         NEI.searchField.putFormatter(this.searchFieldInputs);
         NEI.searchField.putFormatter(this.searchFieldOutputs);
@@ -865,7 +866,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         /* Draw buttons — Alt switches to hide button, Shift switches to rename button */
         if (viewY + entry.optionsButton.height > 0 && viewY < viewHeight) {
             final boolean altHeld = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
-            final boolean shiftHeld = isShiftKeyDown();
+            final boolean shiftHeld = isShiftKeyDown() && entry.isInPlayerDimension();
             final GuiImgButton activeButton = altHeld ? entry.hideButton
                 : shiftHeld ? entry.renameButton : entry.optionsButton;
             entry.optionsButton.yPosition = viewY + 5;
@@ -1766,6 +1767,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             return this;
         }
 
+        boolean isInPlayerDimension() {
+            return mc != null && mc.thePlayer != null && mc.thePlayer.dimension == this.dim;
+        }
+
         InterfaceTerminalEntry setIcons(ItemStack selfRep, ItemStack dispRep) {
             // Kotlin would make this pretty easy :(
             this.selfRep = selfRep;
@@ -1892,7 +1897,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     return true;
                 }
 
-                if (isShiftKeyDown()) {
+                if (isShiftKeyDown() && isInPlayerDimension()) {
                     renameButton.func_146113_a(mc.getSoundHandler());
                     NetworkHandler.instance.sendToServer(new PacketRemoteRename(x, y, z, dim, side));
                     return true;
