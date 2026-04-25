@@ -118,6 +118,7 @@ public enum ButtonToolTips implements Localization {
     BeSubstitutionsDescDisabled,
     CraftOnly,
     CraftEither,
+    MergeOnlyPlayerRequestedCrafts,
 
     Craft,
     Mod,
