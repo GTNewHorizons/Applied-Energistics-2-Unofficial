@@ -14,7 +14,14 @@
 package appeng.api.config;
 
 public enum YesNo {
+
     YES,
     NO,
-    UNDECIDED
+    UNDECIDED;
+
+    public static final YesNo[] VALUES = values();
+
+    public static YesNo fromOrdinal(int ordinal) {
+        return VALUES[ordinal];
+    }
 }

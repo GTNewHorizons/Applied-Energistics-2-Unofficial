@@ -16,12 +16,17 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+
+import org.lwjgl.input.Keyboard;
 
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.implementations.GuiCraftConfirm;
@@ -33,8 +38,8 @@ import appeng.client.gui.implementations.GuiOptimizePatterns;
 import appeng.client.gui.implementations.GuiPatternTerm;
 import appeng.client.gui.implementations.GuiPatternTermEx;
 import appeng.client.gui.implementations.GuiSkyChest;
-import appeng.client.gui.implementations.GuiWirelessTerm;
 import appeng.core.AEConfig;
+import appeng.core.AppEng;
 import appeng.core.features.AEFeature;
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
@@ -44,19 +49,25 @@ import appeng.integration.modules.NEIHelpers.NEIAEBookmarkContainerHandler;
 import appeng.integration.modules.NEIHelpers.NEIAEShapedRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIAEShapelessRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIAETerminalBookmarkContainerHandler;
+import appeng.integration.modules.NEIHelpers.NEICellSearchFilter;
 import appeng.integration.modules.NEIHelpers.NEICellViewHandler;
 import appeng.integration.modules.NEIHelpers.NEICraftingHandler;
 import appeng.integration.modules.NEIHelpers.NEIFacadeRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGrinderRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGuiHandler;
+import appeng.integration.modules.NEIHelpers.NEIInputHandler;
 import appeng.integration.modules.NEIHelpers.NEIInscriberRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIOreDictionaryFilter;
+import appeng.integration.modules.NEIHelpers.NEIPatternViewHandler;
 import appeng.integration.modules.NEIHelpers.NEISearchField;
 import appeng.integration.modules.NEIHelpers.NEIWorldCraftingHandler;
 import appeng.integration.modules.NEIHelpers.TerminalCraftingSlotFinder;
 import codechicken.nei.BookmarkPanel.BookmarkViewMode;
+import codechicken.nei.ItemPanels;
 import codechicken.nei.ItemsGrid;
 import codechicken.nei.LayoutManager;
+import codechicken.nei.SearchTokenParser.ISearchParserProvider;
+import codechicken.nei.api.API;
 import codechicken.nei.api.IBookmarkContainerHandler;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
@@ -66,6 +77,7 @@ import codechicken.nei.guihook.IContainerObjectHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
 import codechicken.nei.recipe.Recipe;
 import codechicken.nei.recipe.Recipe.RecipeId;
+import cpw.mods.fml.common.event.FMLInterModComms;
 
 public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, IContainerObjectHandler {
 
@@ -75,6 +87,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     public static NEISearchField searchField = new NEISearchField();
 
     private final Class<?> apiClass;
+    private final boolean hasItemPanels;
 
     // recipe handler...
     private Method registerRecipeHandler;
@@ -93,11 +106,22 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.IUsageHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.api.IBookmarkContainerHandler.class);
 
+        boolean itemPanelsExists = false;
+        try {
+            Class.forName("codechicken.nei.ItemPanels");
+            itemPanelsExists = true;
+        } catch (ClassNotFoundException e) {
+            itemPanelsExists = false;
+        }
+        this.hasItemPanels = itemPanelsExists;
+
         this.apiClass = Class.forName("codechicken.nei.api.API");
     }
 
     @Override
     public void init() throws Throwable {
+        API.addKeyBind("gui.pattern_view", Keyboard.KEY_P);
+
         this.registerRecipeHandler = this.apiClass
                 .getDeclaredMethod("registerRecipeHandler", codechicken.nei.recipe.ICraftingHandler.class);
         this.registerUsageHandler = this.apiClass
@@ -112,6 +136,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         this.registerRecipeHandler(new NEIWorldCraftingHandler());
 
         this.registerUsageHandler.invoke(this.apiClass, new NEICellViewHandler());
+        this.registerUsageHandler.invoke(this.apiClass, new NEIPatternViewHandler());
 
         if (AEConfig.instance.isFeatureEnabled(AEFeature.GrindStone)) {
             this.registerRecipeHandler(new NEIGrinderRecipeHandler());
@@ -129,9 +154,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
                                                                                                        // Terminal
         this.registerBookmarkContainerHandler
                 .invoke(apiClass, GuiMEMonitorable.class, new NEIAETerminalBookmarkContainerHandler()); // Terminal
-        this.registerBookmarkContainerHandler
-                .invoke(apiClass, GuiWirelessTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Wireless
-                                                                                                       // Terminal
+
         this.registerBookmarkContainerHandler
                 .invoke(apiClass, GuiPatternTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Pattern
                                                                                                       // terminal
@@ -158,6 +181,20 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         final Constructor<NEICraftingHandler> defaultConstructor = defaultHandler.getConstructor(int.class, int.class);
         registrar.invoke(this.apiClass, GuiCraftingTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
         registrar.invoke(this.apiClass, GuiPatternTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
+
+        final Method registerSearchProvider = this.apiClass
+                .getDeclaredMethod("addSearchProvider", ISearchParserProvider.class);
+        registerSearchProvider.invoke(this.apiClass, new NEICellSearchFilter());
+
+        GuiContainerManager.addInputHandler(new NEIInputHandler());
+        sendHandler(
+                "appeng.integration.modules.NEIHelpers.NEIPatternViewHandler",
+                "appliedenergistics2:item.ItemEncodedPattern",
+                66);
+        sendHandler(
+                "appeng.integration.modules.NEIHelpers.NEICellViewHandler",
+                "appliedenergistics2:item.ItemBasicStorageCell.64k",
+                160);
     }
 
     public void registerRecipeHandler(final Object o)
@@ -271,5 +308,34 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         } else {
             LayoutManager.bookmarkPanel.addGroup(missing, BookmarkViewMode.DEFAULT, false);
         }
+    }
+
+    @Nullable
+    public ItemStack getDraggingPhantomItem() {
+        if (!this.hasItemPanels) return null;
+
+        ItemStack is = ItemPanels.bookmarkPanel.draggedStack;
+        if (is != null) return is.copy();
+
+        is = ItemPanels.itemPanel.draggedStack;
+        if (is != null) return is.copy();
+
+        return null;
+    }
+
+    private static void sendHandler(String name, String itemStack, int handlerHeight) {
+        NBTTagCompound aNBT = new NBTTagCompound();
+        aNBT.setString("handler", name);
+        aNBT.setString("modName", AppEng.MOD_NAME);
+        aNBT.setString("modId", AppEng.MOD_ID);
+        aNBT.setBoolean("modRequired", true);
+        aNBT.setString("itemName", itemStack);
+        aNBT.setInteger("yShift", 0);
+        aNBT.setInteger("handlerHeight", handlerHeight);
+        aNBT.setBoolean("multipleWidgetsAllowed", false);
+        aNBT.setBoolean("showFavoritesButton", false);
+        aNBT.setBoolean("showOverlayButton", false);
+        aNBT.setBoolean("showBadge", false);
+        FMLInterModComms.sendMessage("NotEnoughItems", "registerHandlerInfo", aNBT);
     }
 }

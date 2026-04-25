@@ -14,13 +14,16 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Vec3;
 
+import appeng.api.AEApi;
 import appeng.api.networking.events.MENetworkBootingStatusChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
+import appeng.api.parts.IInterfaceTerminal;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.util.Platform;
 
-public class PartInterfaceTerminal extends AbstractPartDisplay {
+public class PartInterfaceTerminal extends AbstractPartDisplay implements IInterfaceTerminal, IPrimaryGuiIconProvider {
 
     private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartInterfaceTerm_Bright;
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartInterfaceTerm_Dark;
@@ -78,5 +81,10 @@ public class PartInterfaceTerminal extends AbstractPartDisplay {
         if (!event.isBooting) {
             this.needsUpdate = true;
         }
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().interfaceTerminal().maybeStack(1).orNull();
     }
 }

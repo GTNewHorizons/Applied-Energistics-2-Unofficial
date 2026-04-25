@@ -1,5 +1,7 @@
 package appeng.items.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.EnumSet;
 import java.util.List;
 
@@ -8,16 +10,21 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.storage.data.IAEStack;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.CellConfig;
+import appeng.items.contents.CellConfigLegacy;
 import appeng.items.contents.CellUpgrades;
+import appeng.me.storage.CellInventoryHandler;
 import appeng.me.storage.VoidCellInventory;
-import appeng.util.Platform;
+import appeng.tile.inventory.IAEStackInventory;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -34,9 +41,10 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
             final boolean displayMoreInfo) {
         lines.add(GuiText.VoidCellTooltip.getLocal());
         lines.add(0 + " " + GuiText.Of.getLocal() + " \u00A7k9999\u00A77 " + GuiText.BytesUsed.getLocal());
-        VoidCellInventory inv = (VoidCellInventory) VoidCellInventory.getCell(stack);
-        if (inv != null && stack.getItem() instanceof ItemVoidStorageCell cell) {
-            if (inv.isPreformatted()) {
+        if (stack.getItem() instanceof ItemVoidStorageCell cell) {
+            CellInventoryHandler<?> inv = (CellInventoryHandler<?>) VoidCellInventory
+                    .getCell(stack, cell.getStackType());
+            if (inv != null && inv.isPreformatted()) {
                 String filter = cell.getOreFilter(stack);
                 if (filter.isEmpty()) {
                     final String list = (inv.getWhitelist() == IncludeExclude.WHITELIST ? GuiText.Included
@@ -48,8 +56,8 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
                     }
                     if (GuiScreen.isShiftKeyDown()) {
                         lines.add(GuiText.Filter.getLocal() + ": ");
-                        for (int i = 0; i < cell.getConfigInventory(stack).getSizeInventory(); ++i) {
-                            ItemStack s = cell.getConfigInventory(stack).getStackInSlot(i);
+                        for (int i = 0; i < cell.getConfigAEInventory(stack).getSizeInventory(); ++i) {
+                            final IAEStack<?> s = cell.getConfigAEInventory(stack).getAEStackInSlot(i);
                             if (s != null) lines.add(s.getDisplayName());
                         }
                     }
@@ -75,6 +83,11 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
 
     @Override
     public IInventory getConfigInventory(ItemStack is) {
+        return new CellConfigLegacy(new CellConfig(is), ITEM_STACK_TYPE);
+    }
+
+    @Override
+    public IAEStackInventory getConfigAEInventory(ItemStack is) {
         return new CellConfig(is);
     }
 
@@ -85,16 +98,16 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
 
     @Override
     public void setFuzzyMode(ItemStack is, FuzzyMode fzMode) {
-        Platform.openNbtData(is).setString("FuzzyMode", fzMode.name());
+        ItemStackNBT.setString(is, "FuzzyMode", fzMode.name());
     }
 
     @Override
     public String getOreFilter(ItemStack is) {
-        return Platform.openNbtData(is).getString("OreFilter");
+        return ItemStackNBT.getString(is, "OreFilter");
     }
 
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        Platform.openNbtData(is).setString("OreFilter", filter);
+        ItemStackNBT.setString(is, "OreFilter", filter);
     }
 }

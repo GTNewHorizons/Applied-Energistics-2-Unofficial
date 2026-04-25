@@ -10,9 +10,12 @@
 
 package appeng.me.storage;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
+
+import org.jetbrains.annotations.NotNull;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
@@ -21,8 +24,10 @@ import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
 import appeng.util.prioitylist.DefaultPriorityList;
@@ -43,11 +48,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     protected boolean isSticky;
     protected boolean isExtractFilterActive;
 
-    public MEInventoryHandler(final IMEInventory<T> i, final StorageChannel channel) {
+    public MEInventoryHandler(final IMEInventory<T> i, final IAEStackType<T> type) {
         if (i instanceof IMEInventoryHandler) {
             this.internal = (IMEInventoryHandler<T>) i;
         } else {
-            this.internal = new MEPassThrough<>(i, channel);
+            this.internal = new MEPassThrough<>(i, type);
         }
 
         this.myPriority = 0;
@@ -118,6 +123,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
+        return this.getAvailableItems(out, iteration, Optional.empty());
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
@@ -125,9 +135,12 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         if (out instanceof ItemFilterList) return getAvailableItemsFilter(out, iteration);
 
         if (this.isExtractFilterActive() && !this.myExtractPartitionList.isEmpty()) {
-            return this.filterAvailableItems(out, iteration);
+            Predicate<T> extractFilter = this.getExtractFilterCondition();
+            Predicate<T> effectiveFilter = preFilter.map(extractFilter::and).orElse(extractFilter);
+            return this.internal.getAvailableItems(out, iteration, Optional.of(effectiveFilter));
         } else {
-            return this.internal.getAvailableItems(out, iteration);
+            return !preFilter.isPresent() ? this.internal.getAvailableItems(out, iteration)
+                    : this.internal.getAvailableItems(out, iteration, preFilter);
         }
     }
 
@@ -135,18 +148,6 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         boolean bool = this.internal instanceof MEMonitorIInventory inv && inv.getMode() == StorageFilter.NONE;
         if (this.internal instanceof MEMonitorPassThrough inv && inv.getMode() == StorageFilter.NONE) bool = true;
         return bool;
-    }
-
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
-        final IItemList<T> allAvailableItems = this.internal
-                .getAvailableItems((IItemList<T>) this.internal.getChannel().createList(), iteration);
-        Predicate<T> filterCondition = this.getExtractFilterCondition();
-        for (T item : allAvailableItems) {
-            if (filterCondition.test(item)) {
-                out.add(item);
-            }
-        }
-        return out;
     }
 
     protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration) {
@@ -194,6 +195,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     }
 
     @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return this.internal.getStackType();
+    }
+
+    @Override
     public AccessRestriction getAccess() {
         return this.cachedAccessRestriction;
     }
@@ -204,6 +210,10 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
             return this.myPartitionList.isListed(input) || this.internal.isPrioritized(input);
         }
         return false;
+    }
+
+    public boolean isPreformatted() {
+        return !getPartitionList().isEmpty();
     }
 
     @Override
@@ -245,6 +255,16 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         return isSticky || this.internal.getSticky();
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public IMENetworkInventory<T> getExternalNetworkInventory() {
+        if (internal instanceof IMENetworkInventory<?>networkInventory) {
+            return (IMENetworkInventory<T>) networkInventory;
+        }
+        return this.internal.getExternalNetworkInventory();
+    }
+
+    @Override
     public IMEInventory<T> getInternal() {
         return this.internal;
     }

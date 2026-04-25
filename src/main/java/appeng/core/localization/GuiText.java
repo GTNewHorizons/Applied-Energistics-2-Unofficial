@@ -26,6 +26,10 @@ public enum GuiText implements Localization {
     SpatialIOPort,
     LevelEmitter,
     Terminal,
+    SpatialChamber,
+
+    TeleportInside,
+    TeleportOutside,
 
     Interface,
     Config,
@@ -46,6 +50,9 @@ public enum GuiText implements Localization {
     Types,
     QuantumLinkChamber,
     PortableCell,
+    CraftName,
+    Remains,
+    Progress,
 
     NetworkTool,
     AdvancedNetworkTool,
@@ -117,6 +124,11 @@ public enum GuiText implements Localization {
     Yes,
     No,
     EncodedBy,
+    PatternView,
+    TunnelPatternInfo1,
+    TunnelPatternInfo2,
+    TunnelPatternInfo3,
+    TunnelPatternInfo4,
 
     MolecularAssembler,
 
@@ -141,6 +153,8 @@ public enum GuiText implements Localization {
     Stores,
     Next,
     SelectAmount,
+    IncreaseAmount,
+    DecreaseAmount,
     Lumen,
     Empty,
 
@@ -152,6 +166,8 @@ public enum GuiText implements Localization {
     RemainingOperations,
     AddToBookmark,
     Cancel,
+    Suspend,
+    Resume,
     ETA,
     ETAFormat,
     SwitchCraftingSimulationDisplayMode,
@@ -234,6 +250,7 @@ public enum GuiText implements Localization {
 
     HoldShiftForTooltip,
     HoldShiftClick_HIGHLIGHT_INTERFACE,
+    Accepts,
 
     // Used in a ME Interface when no appropriate TileEntity was detected near it
     Nothing,
@@ -271,8 +288,84 @@ public enum GuiText implements Localization {
     ItemsPerByte,
     FluidsPerByte,
     BytesPerType,
+    ControlButtonValuesDesc1,
+    ControlButtonValuesDesc2,
 
-    CellView;
+    CellView,
+    EncodedPattern,
+
+    Inputs,
+    Outputs,
+    BlankPatternInNetwork,
+    CPUAllowMode,
+    CPUAllowAll,
+    CPUOnlyAllowNonPlayer,
+    CPUOnlyAllowPlayer,
+    CPUSourcePlayer,
+    CPUSourceMachineRequested,
+
+    ReshuffleTooltipDesc1,
+    ReshuffleTooltipDesc2,
+    ReshuffleTooltipDesc3,
+
+    ReshuffleStatusLabel,
+    ReshuffleStatusIdle,
+    ReshuffleStatusBeforeSnapshot,
+    ReshuffleStatusAfterSnapshot,
+    ReshuffleStatusExtracting,
+    ReshuffleStatusInjecting,
+    ReshuffleStatusComplete,
+    ReshuffleStatusFailed,
+    ReshuffleStatusCancelled,
+
+    StorageReshuffle,
+    ReshuffleReport,
+    ReshuffleStart,
+    ReshuffleCancel,
+
+    ReshuffleReportTitle,
+    ReshuffleReportTime,
+    ReshuffleReportMode,
+    ReshuffleReportModeNone,
+    ReshuffleReportSubnetsLabel,
+    ReshuffleReportSubnetsOn,
+    ReshuffleReportSubnetsOff,
+    ReshuffleTotalTypes,
+    ReshuffleReportExtracted,
+    ReshuffleReportInjected,
+    ReshuffleReportLabelTypes,
+    ReshuffleReportLabelStacks,
+    ReshuffleReportSectionCantExtract,
+    ReshuffleReportSectionCantInject,
+    ReshuffleReportNetChanged,
+    ReshuffleReportIntegrityOk,
+
+    ReshuffleScan,
+    ReshuffleLocate,
+    ReshuffleTooltipCoords,
+    ReshuffleTooltipCoordsNoSlot,
+
+    ReshufflePartitionScanner,
+    ReshuffleScanDuplicatesTitle,
+    ReshuffleScanEmpty,
+    ReshuffleScanDuplicatePartition,
+
+    ReshuffleHealthTitle,
+    ReshuffleHealthTooltipBytes,
+    ReshuffleHealthTooltipTypes,
+    ReshuffleHealthTopItems,
+    ReshuffleHealthTopItemEntry,
+    ReshuffleReportNoMatchingCells,
+
+    // styles
+    ReshuffleScanDuplicatePartitionStackNameStyle,
+    ReshuffleScanDuplicatePartitionTargetNameColor,
+    ReshuffleReportTextColorMain,
+    ReshuffleReportTextColorValues,
+    ReshuffleReportTextColorPositive,
+    ReshuffleReportTextColorNegative,
+    ReshuffleReportTextColorNeutral,
+    ReshuffleReportTextColorWarning,;
 
     private final String root;
 

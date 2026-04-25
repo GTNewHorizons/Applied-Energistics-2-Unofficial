@@ -27,13 +27,26 @@ import appeng.tile.inventory.InvOperation;
 
 public abstract class AEBaseInvTile extends AEBaseTile implements ISidedInventory, IAEAppEngInventory {
 
+    private final boolean inventoryPersistent;
+
+    protected AEBaseInvTile() {
+        this(true);
+    }
+
+    protected AEBaseInvTile(boolean inventoryPersistent) {
+        super();
+        this.inventoryPersistent = inventoryPersistent;
+    }
+
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_AEBaseInvTile(final net.minecraft.nbt.NBTTagCompound data) {
-        final IInventory inv = this.getInternalInventory();
-        final NBTTagCompound opt = data.getCompoundTag("inv");
-        for (int x = 0; x < inv.getSizeInventory(); x++) {
-            final NBTTagCompound item = opt.getCompoundTag("item" + x);
-            inv.setInventorySlotContents(x, ItemStack.loadItemStackFromNBT(item));
+        if (this.inventoryPersistent) {
+            final IInventory inv = this.getInternalInventory();
+            final NBTTagCompound opt = data.getCompoundTag("inv");
+            for (int x = 0; x < inv.getSizeInventory(); x++) {
+                final NBTTagCompound item = opt.getCompoundTag("item" + x);
+                inv.setInventorySlotContents(x, ItemStack.loadItemStackFromNBT(item));
+            }
         }
     }
 
@@ -41,17 +54,19 @@ public abstract class AEBaseInvTile extends AEBaseTile implements ISidedInventor
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_AEBaseInvTile(final net.minecraft.nbt.NBTTagCompound data) {
-        final IInventory inv = this.getInternalInventory();
-        final NBTTagCompound opt = new NBTTagCompound();
-        for (int x = 0; x < inv.getSizeInventory(); x++) {
-            final NBTTagCompound item = new NBTTagCompound();
-            final ItemStack is = this.getStackInSlot(x);
-            if (is != null) {
-                is.writeToNBT(item);
+        if (this.inventoryPersistent) {
+            final IInventory inv = this.getInternalInventory();
+            final NBTTagCompound opt = new NBTTagCompound();
+            for (int x = 0; x < inv.getSizeInventory(); x++) {
+                final NBTTagCompound item = new NBTTagCompound();
+                final ItemStack is = this.getStackInSlot(x);
+                if (is != null) {
+                    is.writeToNBT(item);
+                }
+                opt.setTag("item" + x, item);
             }
-            opt.setTag("item" + x, item);
+            data.setTag("inv", opt);
         }
-        data.setTag("inv", opt);
     }
 
     @Override

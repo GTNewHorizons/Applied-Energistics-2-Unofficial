@@ -57,12 +57,14 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.ICLApi;
 import appeng.me.GridConnection;
 import appeng.util.Platform;
+import codechicken.multipart.TileMultipart;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public class CableBusContainer extends CableBusStorage implements AEMultiTile, ICableBusContainer {
 
+    private static final ForgeDirection[] FORGE_DIRECTIONS = ForgeDirection.values();
     private static final ThreadLocal<Boolean> IS_LOADING = new ThreadLocal<>();
     private final EnumSet<LayerFlags> myLayerFlags = EnumSet.noneOf(LayerFlags.class);
     private YesNo hasRedstone = YesNo.UNDECIDED;
@@ -137,6 +139,11 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
                 } else if (!(bp instanceof IPartCable) && side != ForgeDirection.UNKNOWN) {
                     final IPart cable = this.getPart(ForgeDirection.UNKNOWN);
                     if (cable != null && !bp.canBePlacedOn(((IPartCable) cable).supportsBuses())) {
+                        return false;
+                    }
+
+                    if (Platform.isMultiPartLoaded && bp instanceof PartBasicState
+                            && this.getTile() instanceof TileMultipart) {
                         return false;
                     }
 
@@ -323,7 +330,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     @Override
     public SelectedPart selectPart(final Vec3 pos) {
-        for (final ForgeDirection side : ForgeDirection.values()) {
+        for (final ForgeDirection side : FORGE_DIRECTIONS) {
             final IPart p = this.getPart(side);
             if (p != null) {
                 final List<AxisAlignedBB> boxes = new LinkedList<>();
@@ -401,7 +408,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
     @Override
     public boolean isEmpty() {
         final IFacadeContainer fc = this.getFacadeContainer();
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = this.getPart(s);
             if (part != null) {
                 return false;
@@ -528,7 +535,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
         this.inWorld = false;
 
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = this.getPart(s);
             if (part != null) {
                 part.removeFromWorld();
@@ -574,7 +581,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     @Override
     public void securityBreak() {
-        for (final ForgeDirection d : ForgeDirection.values()) {
+        for (final ForgeDirection d : FORGE_DIRECTIONS) {
             final IPart p = this.getPart(d);
             if (p instanceof IGridHost) {
                 ((IGridHost) p).securityBreak();
@@ -587,7 +594,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         final List<AxisAlignedBB> boxes = new LinkedList<>();
 
         final IFacadeContainer fc = this.getFacadeContainer();
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPartCollisionHelper bch = new BusCollisionHelper(boxes, s, e, visual);
 
             final IPart part = this.getPart(s);
@@ -600,7 +607,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
             }
 
             if (AEApi.instance().partHelper().getCableRenderMode().opaqueFacades || !visual) {
-                if (includeFacades && s != null && s != ForgeDirection.UNKNOWN) {
+                if (includeFacades && s != ForgeDirection.UNKNOWN) {
                     final IFacadePart fp = fc.getFacade(s);
                     if (fp != null) {
                         fp.getBoxes(bch, e);
@@ -637,7 +644,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     @Override
     public void onEntityCollision(final Entity entity) {
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = this.getPart(s);
             if (part != null) {
                 part.onEntityCollision(entity);
@@ -657,8 +664,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
     @Override
     public void onNeighborChanged() {
         this.hasRedstone = YesNo.UNDECIDED;
-
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = this.getPart(s);
             if (part != null) {
                 part.onNeighborChanged();
@@ -685,7 +691,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     @Override
     public boolean isLadder(final EntityLivingBase entity) {
-        for (final ForgeDirection side : ForgeDirection.values()) {
+        for (final ForgeDirection side : FORGE_DIRECTIONS) {
             final IPart p = this.getPart(side);
             if (p != null) {
                 if (p.isLadder(entity)) {
@@ -693,13 +699,12 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
                 }
             }
         }
-
         return false;
     }
 
     @Override
     public void randomDisplayTick(final World world, final int x, final int y, final int z, final Random r) {
-        for (final ForgeDirection side : ForgeDirection.values()) {
+        for (final ForgeDirection side : FORGE_DIRECTIONS) {
             final IPart p = this.getPart(side);
             if (p != null) {
                 p.randomDisplayTick(world, x, y, z, r);
@@ -711,7 +716,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
     public int getLightValue() {
         int light = 0;
 
-        for (final ForgeDirection d : ForgeDirection.values()) {
+        for (final ForgeDirection d : FORGE_DIRECTIONS) {
             final IPart p = this.getPart(d);
             if (p != null) {
                 light = Math.max(p.getLightLevel(), light);
@@ -808,7 +813,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         data.setInteger("hasRedstone", this.hasRedstone.ordinal());
 
         final IFacadeContainer fc = this.getFacadeContainer();
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             fc.writeToNBT(data);
 
             final IPart part = this.getPart(s);
@@ -841,7 +846,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     public void readFromNBT(final NBTTagCompound data) {
         if (data.hasKey("hasRedstone")) {
-            this.hasRedstone = YesNo.values()[data.getInteger("hasRedstone")];
+            this.hasRedstone = YesNo.fromOrdinal(data.getInteger("hasRedstone"));
         }
 
         for (int x = 0; x < 7; x++) {
@@ -890,8 +895,8 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         this.getFacadeContainer().readFromNBT(data);
     }
 
-    public List getDrops(final List drops) {
-        for (final ForgeDirection s : ForgeDirection.values()) {
+    public List<ItemStack> getDrops(final List<ItemStack> drops) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = this.getPart(s);
             if (part != null) {
                 drops.add(part.getItemStack(PartItemStack.Break));
@@ -909,8 +914,8 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         return drops;
     }
 
-    public List getNoDrops(final List drops) {
-        for (final ForgeDirection s : ForgeDirection.values()) {
+    public List<ItemStack> getNoDrops(final List<ItemStack> drops) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = this.getPart(s);
             if (part != null) {
                 part.getDrops(drops, false);

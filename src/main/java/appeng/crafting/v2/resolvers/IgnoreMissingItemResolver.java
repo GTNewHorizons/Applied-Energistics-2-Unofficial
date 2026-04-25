@@ -7,7 +7,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import appeng.api.config.CraftingMode;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.localization.GuiText;
 import appeng.crafting.MECraftingInventory;
@@ -17,13 +17,13 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
-public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEItemStack> {
+public class IgnoreMissingItemResolver implements CraftingRequestResolver {
 
-    public static class IgnoreMissingItemTask extends CraftingTask<IAEItemStack> {
+    public static class IgnoreMissingItemTask extends CraftingTask {
 
         private long fulfilled = 0;
 
-        public IgnoreMissingItemTask(CraftingRequest<IAEItemStack> request) {
+        public IgnoreMissingItemTask(CraftingRequest request) {
             super(request, Integer.MIN_VALUE + 200);
         }
 
@@ -71,10 +71,8 @@ public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEIte
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
-            if (fulfilled > 0 && request.stack instanceof IAEItemStack) {
-                targetPlan.addRequestable(request.stack.copy().setCountRequestable(fulfilled));
-            }
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
+            if (fulfilled > 0) targetPlan.addRequestable(request.stack.copy().setCountRequestable(fulfilled));
         }
 
         @Override
@@ -98,6 +96,11 @@ public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEIte
         }
 
         @Override
+        public boolean isSimulated() {
+            return true;
+        }
+
+        @Override
         public String getTooltipText() {
             return GuiText.Missing.getLocal() + ": " + fulfilled;
         }
@@ -105,7 +108,7 @@ public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEIte
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<IAEItemStack> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest request,
             @Nonnull CraftingContext context) {
         if (request.craftingMode == CraftingMode.IGNORE_MISSING && request.allowSimulation) {
             return Collections.singletonList(new IgnoreMissingItemTask(request));

@@ -42,6 +42,7 @@ import appeng.block.misc.BlockQuartzGrowthAccelerator;
 import appeng.block.misc.BlockQuartzTorch;
 import appeng.block.misc.BlockSecurity;
 import appeng.block.misc.BlockSkyCompass;
+import appeng.block.misc.BlockStorageReshuffle;
 import appeng.block.misc.BlockTinyTNT;
 import appeng.block.misc.BlockVibrationChamber;
 import appeng.block.networking.BlockCableBus;
@@ -67,6 +68,8 @@ import appeng.block.solids.OreQuartz;
 import appeng.block.solids.OreQuartzCharged;
 import appeng.block.spatial.BlockMatrixFrame;
 import appeng.block.spatial.BlockSpatialIOPort;
+import appeng.block.spatial.BlockSpatialLinkChamber;
+import appeng.block.spatial.BlockSpatialNetworkRelay;
 import appeng.block.spatial.BlockSpatialPylon;
 import appeng.block.stair.ChiseledQuartzStairBlock;
 import appeng.block.stair.FluixStairBlock;
@@ -112,10 +115,13 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition charger;
     private final IBlockDefinition tinyTNT;
     private final ITileDefinition security;
+    private final ITileDefinition storageReshuffle;
     private final ITileDefinition quantumRing;
     private final ITileDefinition quantumLink;
     private final ITileDefinition spatialPylon;
     private final ITileDefinition spatialIOPort;
+    private final ITileDefinition spatialLinkChamber;
+    private final ITileDefinition spatialNetworkRelay;
     private final ITileDefinition multiPart;
     private final ITileDefinition controller;
     private final ITileDefinition creativeEnergyController;
@@ -213,10 +219,13 @@ public final class ApiBlocks implements IBlocks {
         this.charger = constructor.registerTileDefinition(new BlockCharger());
         this.tinyTNT = constructor.registerBlockDefinition(new BlockTinyTNT());
         this.security = constructor.registerTileDefinition(new BlockSecurity());
+        this.storageReshuffle = constructor.registerTileDefinition(new BlockStorageReshuffle());
         this.quantumRing = constructor.registerTileDefinition(new BlockQuantumRing());
         this.quantumLink = constructor.registerTileDefinition(new BlockQuantumLinkChamber());
         this.spatialPylon = constructor.registerTileDefinition(new BlockSpatialPylon());
         this.spatialIOPort = constructor.registerTileDefinition(new BlockSpatialIOPort());
+        this.spatialLinkChamber = constructor.registerTileDefinition(new BlockSpatialLinkChamber());
+        this.spatialNetworkRelay = constructor.registerTileDefinition(new BlockSpatialNetworkRelay());
         this.multiPart = constructor.registerTileDefinition(new BlockCableBus());
         this.controller = constructor.registerTileDefinition(new BlockController());
         this.creativeEnergyController = constructor.registerTileDefinition(new BlockCreativeEnergyController());
@@ -516,6 +525,11 @@ public final class ApiBlocks implements IBlocks {
     }
 
     @Override
+    public ITileDefinition storageReshuffle() {
+        return this.storageReshuffle;
+    }
+
+    @Override
     public ITileDefinition quantumRing() {
         return this.quantumRing;
     }
@@ -533,6 +547,16 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition spatialIOPort() {
         return this.spatialIOPort;
+    }
+
+    @Override
+    public ITileDefinition spatialLinkChamber() {
+        return this.spatialLinkChamber;
+    }
+
+    @Override
+    public ITileDefinition spatialNetworkRelay() {
+        return this.spatialNetworkRelay;
     }
 
     @Override

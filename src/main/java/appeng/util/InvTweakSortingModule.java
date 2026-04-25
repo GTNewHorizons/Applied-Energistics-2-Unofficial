@@ -32,7 +32,7 @@ public class InvTweakSortingModule {
 
     private static InvTweaksItemTree tree = null;
     public static final File MINECRAFT_DIR = Minecraft.getMinecraft().mcDataDir;
-    public static final File MINECRAFT_CONFIG_DIR = new File(MINECRAFT_DIR, "config/");
+    public static final File MINECRAFT_CONFIG_DIR = new File(MINECRAFT_DIR, "config/AppliedEnergistics2");
     public static final File CONFIG_TREE_FILE = new File(MINECRAFT_CONFIG_DIR, "InvTweaksTree.txt");
 
     public static void init() {

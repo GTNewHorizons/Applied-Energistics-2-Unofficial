@@ -15,13 +15,32 @@ package appeng.api.storage.data;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.StatCollector;
+import net.minecraft.world.World;
+
+import org.jetbrains.annotations.NotNull;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
+import appeng.core.AELog;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public interface IAEStack<StackType extends IAEStack> {
+
+    String ST_NULL = "";
+    String ST_ITEM = "item";
+    String ST_FLUID = "fluid";
 
     /**
      * add two stacks together
@@ -154,6 +173,79 @@ public interface IAEStack<StackType extends IAEStack> {
     void writeToNBT(NBTTagCompound i);
 
     /**
+     * write to a NBTTagCompound with StackType.
+     * 
+     * @param tag to be written data
+     */
+    default void writeToNBTGeneric(@Nonnull NBTTagCompound tag) {
+        tag.setString("StackType", this.getStackType().getId());
+        this.writeToNBT(tag);
+    }
+
+    /**
+     * @return NBTTagCompound with StackType
+     */
+    @Nonnull
+    default NBTTagCompound toNBTGeneric() {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("StackType", this.getStackType().getId());
+        this.writeToNBT(tag);
+        return tag;
+    }
+
+    /**
+     *
+     * @param tag empty or include StackType
+     * @return stack for StackType. null if {@code tag} has no tags.
+     */
+    @Nullable
+    static IAEStack<?> fromNBTGeneric(@Nonnull NBTTagCompound tag) {
+        if (tag.hasNoTags()) return null;
+
+        String id = tag.getString("StackType");
+        if (id.isEmpty()) {
+            AELog.warn("Cannot deserialize generic stack from nbt %s because key 'StackType' is missing.", tag);
+            return null;
+        }
+
+        IAEStackType<?> type = AEStackTypeRegistry.getType(id);
+        if (type == null) {
+            AELog.warn("Cannot deserialize generic stack from nbt %s because stack type is missing.", tag);
+            return null;
+        }
+        return type.loadStackFromNBT(tag);
+    }
+
+    /**
+     * Slower for disk saving, but smaller/more efficient for packets.
+     *
+     * @param data to be written data
+     * @throws IOException
+     */
+    void writeToPacket(ByteBuf data) throws IOException;
+
+    static void writeToPacketGeneric(@NotNull ByteBuf buffer, @Nullable IAEStack<?> stack) throws IOException {
+        if (stack == null) {
+            buffer.writeByte(AEStackTypeRegistry.NULL_NETWORK_ID);
+        } else {
+            buffer.writeByte(AEStackTypeRegistry.getNetworkId(stack.getStackType()));
+            stack.writeToPacket(buffer);
+        }
+    }
+
+    static IAEStack<?> fromPacketGeneric(ByteBuf buffer) throws IOException {
+        final byte id = buffer.readByte();
+        if (id == AEStackTypeRegistry.NULL_NETWORK_ID) return null;
+
+        IAEStackType<?> type = AEStackTypeRegistry.getTypeFromNetworkId(id);
+        if (type == null) {
+            AELog.warn("Cannot deserialize generic stack from ByteBuf because stack type %s is missing.", id);
+            return null;
+        }
+        return type.loadStackFromByte(buffer);
+    }
+
+    /**
      * Compare stacks using precise logic.
      * <p>
      * a IAEItemStack to another AEItemStack or a ItemStack.
@@ -178,14 +270,6 @@ public interface IAEStack<StackType extends IAEStack> {
      * @return true if two stacks are equal based on AE Fuzzy Comparison.
      */
     boolean fuzzyComparison(Object st, FuzzyMode mode);
-
-    /**
-     * Slower for disk saving, but smaller/more efficient for packets.
-     *
-     * @param data to be written data
-     * @throws IOException
-     */
-    void writeToPacket(ByteBuf data) throws IOException;
 
     /**
      * Clone the Item / Fluid Stack
@@ -222,4 +306,61 @@ public interface IAEStack<StackType extends IAEStack> {
      * @return ITEM or FLUID
      */
     StorageChannel getChannel();
+
+    /**
+     * @return Display name of item
+     */
+    String getLocalizedName();
+
+    boolean isSameType(StackType stack);
+
+    boolean isSameType(Object stack);
+
+    String getUnlocalizedName();
+
+    String getDisplayName();
+
+    default IChatComponent getChatComponent() {
+        final String unlocalizedName = this.getUnlocalizedName();
+        if (unlocalizedName != null && !unlocalizedName.isEmpty()) {
+            final String translationKey = this.isItem() ? unlocalizedName + ".name" : unlocalizedName;
+            if (StatCollector.canTranslate(translationKey)) {
+                return new ChatComponentTranslation(translationKey);
+            }
+        }
+
+        return new ChatComponentText(this.getDisplayName());
+    }
+
+    String getModId();
+
+    void setTagCompound(NBTTagCompound tag);
+
+    boolean hasTagCompound();
+
+    @Nullable
+    ItemStack getItemStackForNEI();
+
+    @Nullable
+    default ItemStack getItemStackForNEI(int amount) {
+        long currentAmount = this.getStackSize();
+        this.setStackSize(amount);
+        ItemStack result = this.getItemStackForNEI();
+        this.setStackSize(currentAmount);
+        return result;
+    }
+
+    @SideOnly(Side.CLIENT)
+    void drawInGui(Minecraft mc, int x, int y);
+
+    @SideOnly(Side.CLIENT)
+    void drawOverlayInGui(Minecraft mc, int x, int y, boolean showAmount, boolean showAmountAlways,
+            boolean showCraftableText, boolean showCraftableIcon);
+
+    @SideOnly(Side.CLIENT)
+    void drawOnBlockFace(World world);
+
+    int getAmountPerUnit();
+
+    IAEStackType<StackType> getStackType();
 }

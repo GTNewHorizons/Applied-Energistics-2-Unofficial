@@ -14,12 +14,13 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -27,13 +28,14 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.util.DimensionalCoord;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
@@ -41,16 +43,17 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.me.ItemRepo;
-import appeng.client.me.SlotME;
-import appeng.client.render.BlockPosHighlighter;
+import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
+import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 
 public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
@@ -59,23 +62,25 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final int rows = 4;
     private GuiImgButton units;
     private GuiImgButton cell;
+    private GuiImgButton tReshuffle;
     private int tooltip = -1;
     private final DecimalFormat df;
     private final boolean isAdvanced;
     private boolean isConsume;
-    private final StringBuilder sb;
-    private final String Equal;
-    private final String Minus;
     private double totalBytes;
     private double usedBytes;
     private final int counterNumberGap = 20;
+    private static final int BAR_TEXTURE_X = 12;
+    private static final int BAR_EMPTY_TEXTURE_Y = 183;
+    private static final int BAR_FULL_TEXTURE_Y = 190;
+    private static final int BAR_WIDTH = 131;
+    private static final int BAR_HEIGHT = 7;
     private GuiContextMenu menu;
 
     public GuiNetworkStatus(final InventoryPlayer inventoryPlayer, final INetworkTool te) {
         super(new ContainerNetworkStatus(inventoryPlayer, te));
         final GuiScrollbar scrollbar = new GuiScrollbar();
 
-        this.sb = new StringBuilder();
         this.df = new DecimalFormat("#.##");
         this.setScrollBar(scrollbar);
         this.repo = new ItemRepo(scrollbar, this);
@@ -84,8 +89,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.repo.setRowSize(5);
         this.isAdvanced = te.getSize() != 3;
         this.isConsume = true;
-        this.Equal = "=";
-        this.Minus = "-";
         menu = new GuiContextMenu(5) {
 
             @Override
@@ -123,15 +126,19 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     protected void mouseClicked(int xCoord, int yCoord, int btn) {
 
-        // Check if the context menu is active and handle it
         if (menu.mouseClick(xCoord, yCoord, btn)) {
             return;
         }
 
-        final ItemStack is;
+        ItemStack is = null;
         if (tooltip > -1) {
-            is = repo.getReferenceItem(tooltip).getItemStack();
-        } else is = null;
+            final IAEStack<?> aeStack = repo.getReferenceStack(tooltip);
+
+            if (aeStack instanceof IAEItemStack ais) {
+                is = ais.getItemStack();
+            }
+
+        }
 
         if (is == null || !is.hasTagCompound()) {
             super.mouseClicked(xCoord, yCoord, btn);
@@ -143,13 +150,18 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             case 0 -> {
                 if (!isShiftKeyDown()) break;
                 // show all blocks in the world
-                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(tag);
-                BlockPosHighlighter.highlightBlocks(
-                        mc.thePlayer,
-                        dcl,
-                        is.getDisplayName(),
-                        PlayerMessages.MachineHighlighted.getUnlocalized(),
-                        PlayerMessages.MachineInOtherDim.getUnlocalized());
+                List<NamedDimensionalCoord> dcl = NamedDimensionalCoord.readAsListFromNBTNamed(tag);
+                Map<NamedDimensionalCoord, String[]> namedCoordsMessage = new HashMap<>(dcl.size());
+                for (NamedDimensionalCoord dc : dcl) {
+                    namedCoordsMessage.put(
+                            dc,
+                            dc.getCustomName().isEmpty()
+                                    ? new String[] { PlayerMessages.MachineHighlighted.getUnlocalized(),
+                                            PlayerMessages.MachineInOtherDim.getUnlocalized() }
+                                    : new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                            PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
+                }
+                BlockPosHighlighter.highlightNamedBlocks(mc.thePlayer, namedCoordsMessage, is.getDisplayName());
                 mc.thePlayer.closeScreen();
             }
 
@@ -183,6 +195,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             } else {
                 this.isConsume = !this.isConsume;
             }
+        } else if (btn == this.tReshuffle) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         }
 
         if (oldConsume != this.isConsume) {
@@ -210,6 +228,13 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     Settings.CELL_TYPE,
                     AEConfig.instance.selectedCellType());
             this.buttonList.add(this.cell);
+
+            this.tReshuffle = new GuiImgButton(
+                    this.guiLeft - 18,
+                    this.guiTop + 48,
+                    Settings.ACTIONS,
+                    ActionItems.OPEN_RESHUFFLE_ON);
+            this.buttonList.add(this.tReshuffle);
         }
     }
 
@@ -223,7 +248,9 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
 
         int y = 0;
         int x = 0;
-        for (int z = 0; z <= 4 * 5; z++) {
+        final int viewEnd = Math.min(5 * 4, this.repo.size());
+
+        for (int z = 0; z < viewEnd; z++) {
             final int minX = gx + 14 + x * 31;
             final int minY = gy + 41 + y * 18;
 
@@ -242,7 +269,14 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             }
         }
 
+        if (this.tReshuffle != null) {
+            this.tReshuffle.set(
+                    ((ContainerNetworkStatus) this.inventorySlots).reshufflePresent ? ActionItems.OPEN_RESHUFFLE_ON
+                            : ActionItems.OPEN_RESHUFFLE_OFF);
+        }
+
         super.drawScreen(mouseX, mouseY, btn);
+
         menu.draw(mouseX, mouseY);
     }
 
@@ -265,10 +299,10 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
     }
 
-    public void postUpdate(final List<IAEItemStack> list) {
+    public void postUpdate(final List<IAEStack<?>> list) {
         this.repo.clear();
 
-        for (final IAEItemStack is : list) {
+        for (final IAEStack<?> is : list) {
             this.repo.postUpdate(is);
         }
 
@@ -280,61 +314,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final int size = this.repo.size();
         this.getScrollBar().setTop(39).setLeft(175).setHeight(78);
         this.getScrollBar().setRange(0, (size + 4) / 5 - this.rows, 1);
-    }
-
-    // @Override - NEI
-    public List<String> handleItemTooltip(final ItemStack stack, final int mouseX, final int mouseY,
-            final List<String> currentToolTip) {
-        if (stack != null) {
-            final Slot s = this.getSlot(mouseX, mouseY);
-            if (s instanceof SlotME) {
-                IAEItemStack myStack = null;
-
-                try {
-                    final SlotME theSlotField = (SlotME) s;
-                    myStack = theSlotField.getAEStack();
-                } catch (final Throwable ignore) {}
-
-                if (myStack != null) {
-                    while (currentToolTip.size() > 1) {
-                        currentToolTip.remove(1);
-                    }
-                }
-            }
-        }
-        return currentToolTip;
-    }
-
-    // Vanilla version...
-    protected void drawItemStackTooltip(final ItemStack stack, final int x, final int y) {
-        final Slot s = this.getSlot(x, y);
-        if (s instanceof SlotME && stack != null) {
-            IAEItemStack myStack = null;
-
-            try {
-                final SlotME theSlotField = (SlotME) s;
-                myStack = theSlotField.getAEStack();
-            } catch (final Throwable ignore) {}
-
-            if (myStack != null) {
-                final List<String> currentToolTip = stack
-                        .getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
-
-                while (currentToolTip.size() > 1) {
-                    currentToolTip.remove(1);
-                }
-
-                currentToolTip.add(
-                        GuiText.Installed.getLocal() + ": "
-                                + NumberFormat.getNumberInstance(Locale.US).format(myStack.getStackSize()));
-                currentToolTip.add(
-                        GuiText.EnergyDrain.getLocal() + ": "
-                                + Platform.formatPowerLong(myStack.getCountRequestable(), true));
-
-                this.drawTooltip(x, y, currentToolTip.toArray(new String[0]));
-            }
-        }
-        // super.drawItemStackTooltip( stack, x, y );
     }
 
     @Override
@@ -453,8 +432,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         int toolPosY = 0;
 
         for (int z = viewStart; z < Math.min(viewEnd, this.repo.size()); z++) {
-            final IAEItemStack refStack = this.repo.getReferenceItem(z);
-            if (refStack != null) {
+            final IAEStack<?> aes = this.repo.getReferenceStack(z);
+            if (aes instanceof IAEItemStack refStack) {
                 GL11.glPushMatrix();
                 GL11.glScaled(0.5, 0.5, 0.5);
 
@@ -519,16 +498,16 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         }
     }
 
-    private String getProgressBar(final double percentage) {
-        int count = (int) Math.round(percentage / 5d);
-        sb.setLength(0);
-        sb.append('<');
-        for (int i = 0; i < 20; i++) {
-            if (i < count) sb.append(this.Equal);
-            else sb.append(this.Minus);
+    private void drawProgressBar(final int x, final int y, final double percentage) {
+        this.bindTexture("guis/networkstatus.png");
+        GL11.glColor4f(1, 1, 1, 1);
+        this.drawTexturedModalRect(x, y, BAR_TEXTURE_X, BAR_EMPTY_TEXTURE_Y, BAR_WIDTH, BAR_HEIGHT);
+
+        double clamped = Double.isNaN(percentage) ? 0d : Math.max(0d, Math.min(percentage, 100d));
+        int filledWidth = (int) Math.round(BAR_WIDTH * clamped / 100d);
+        if (filledWidth > 0) {
+            this.drawTexturedModalRect(x, y, BAR_TEXTURE_X, BAR_FULL_TEXTURE_Y, filledWidth, BAR_HEIGHT);
         }
-        sb.append('>');
-        return sb.toString();
     }
 
     private void drawItemInfo() {
@@ -558,11 +537,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 - 20,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 - 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 - 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 - 10, getCorrespondingColor(tempDouble).getColor());
 
         // Item type status
         tempDouble = ns.getItemTypesUsed() * 100d / ns.getItemTypesTotal();
@@ -572,11 +548,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 + 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 + 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 + 10, getCorrespondingColor(tempDouble).getColor());
 
         this.drawItemRepo();
     }
@@ -608,11 +581,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 - 20,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 - 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 - 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 - 10, getCorrespondingColor(tempDouble).getColor());
 
         // Fluid type status
         tempDouble = ns.getFluidTypesUsed() * 100d / ns.getFluidTypesTotal();
@@ -622,11 +592,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 + 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 + 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 + 10, getCorrespondingColor(tempDouble).getColor());
 
         this.drawItemRepo();
     }
@@ -662,11 +629,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 - 20,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 - 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 - 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 - 10, getCorrespondingColor(tempDouble).getColor());
 
         // Essentia type status
         tempDouble = ns.getEssentiaTypesUsed() * 100d / ns.getEssentiaTypesTotal();
@@ -676,11 +640,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 + 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 + 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 + 10, getCorrespondingColor(tempDouble).getColor());
 
         this.drawItemRepo();
     }

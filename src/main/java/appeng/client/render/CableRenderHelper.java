@@ -27,6 +27,7 @@ import appeng.parts.CableBusContainer;
 
 public class CableRenderHelper {
 
+    private static final ForgeDirection[] FORGE_DIRECTIONS = ForgeDirection.values();
     private static final CableRenderHelper INSTANCE = new CableRenderHelper();
 
     public static CableRenderHelper getInstance() {
@@ -41,11 +42,9 @@ public class CableRenderHelper {
             busRenderHelper.setPass(0);
         }
 
-        if (renderer.blockAccess == null) {
-            renderer.blockAccess = Minecraft.getMinecraft().theWorld;
-        }
+        renderer.blockAccess = Minecraft.getMinecraft().theWorld;
 
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = cableBusContainer.getPart(s);
             if (part != null) {
                 this.setSide(s);
@@ -68,16 +67,15 @@ public class CableRenderHelper {
              */
             final List<AxisAlignedBB> boxes = new ArrayList<>();
 
-            for (final ForgeDirection s : ForgeDirection.values()) {
+            for (final ForgeDirection s : FORGE_DIRECTIONS) {
                 final IPart part = cableBusContainer.getPart(s);
                 if (part != null) {
                     this.setSide(s);
-                    final BusRenderHelper brh = busRenderHelper;
                     final BusCollisionHelper bch = new BusCollisionHelper(
                             boxes,
-                            brh.getWorldX(),
-                            brh.getWorldY(),
-                            brh.getWorldZ(),
+                            busRenderHelper.getWorldX(),
+                            busRenderHelper.getWorldY(),
+                            busRenderHelper.getWorldZ(),
                             null,
                             true);
                     part.getBoxes(bch);
@@ -146,6 +144,7 @@ public class CableRenderHelper {
             renderer.setTexture(null);
             renderer.setCalculations(true);
         }
+        renderer.blockAccess = null;
     }
 
     private void setSide(final ForgeDirection s) {
@@ -199,7 +198,7 @@ public class CableRenderHelper {
             final double z) {
         final RenderBlocksWorkaround renderer = BusRenderer.INSTANCE.getRenderer();
         final BusRenderHelper busRenderHelper = BusRenderHelper.instances.get();
-        for (final ForgeDirection s : ForgeDirection.values()) {
+        for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = cableBusContainer.getPart(s);
 
             if (part != null) {

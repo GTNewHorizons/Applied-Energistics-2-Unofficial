@@ -13,17 +13,20 @@
 
 package appeng.api.networking.crafting;
 
+import static appeng.util.Platform.stackConvert;
+
 import javax.annotation.Nullable;
 
 import appeng.api.config.CraftingAllow;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.CraftCancelListener;
 import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
 
-public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
+public interface ICraftingCPU extends IBaseMonitor {
 
     /**
      * @return true if the CPU currently has a job.
@@ -61,8 +64,14 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
      * @return final output of the current crafting operation, or null if not crafting
      */
     @Nullable
-    default IAEItemStack getFinalOutput() {
+    default IAEStack<?> getFinalMultiOutput() {
         return null;
+    }
+
+    @Deprecated
+    @Nullable
+    default IAEItemStack getFinalOutput() {
+        return stackConvert(getFinalMultiOutput());
     }
 
     /**
@@ -128,5 +137,13 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
      */
     public default long getElapsedTime() {
         return 0l;
+    }
+
+    default boolean isSuspended() {
+        return false;
+    }
+
+    default String getSourcePlayer() {
+        return null;
     }
 }

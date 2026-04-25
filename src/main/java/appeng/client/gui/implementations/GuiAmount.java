@@ -1,42 +1,37 @@
 package appeng.client.gui.implementations;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
-import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.client.gui.AEBaseGui;
-import appeng.client.gui.widgets.GuiTabButton;
+import appeng.client.gui.GuiSub;
+import appeng.client.gui.widgets.GuiQuantityButton;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.container.AEBaseContainer;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.helpers.Reflected;
+import appeng.util.ReadableNumberConverter;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
-public abstract class GuiAmount extends AEBaseGui {
+public abstract class GuiAmount extends GuiSub {
 
     protected MEGuiTextField amountTextField;
-    protected GuiTabButton originalGuiBtn;
 
     protected GuiButton nextBtn;
 
-    protected GuiButton plus1;
-    protected GuiButton plus10;
-    protected GuiButton plus100;
-    protected GuiButton plus1000;
-    protected GuiButton minus1;
-    protected GuiButton minus10;
-    protected GuiButton minus100;
-    protected GuiButton minus1000;
-
-    protected GuiBridge originalGui;
-    protected ItemStack myIcon;
+    protected GuiQuantityButton plus1;
+    protected GuiQuantityButton plus10;
+    protected GuiQuantityButton plus100;
+    protected GuiQuantityButton plus1000;
+    protected GuiQuantityButton minus1;
+    protected GuiQuantityButton minus10;
+    protected GuiQuantityButton minus100;
+    protected GuiQuantityButton minus1000;
 
     @Reflected
     public GuiAmount(final Container container) {
@@ -48,54 +43,139 @@ public abstract class GuiAmount extends AEBaseGui {
     public void initGui() {
         super.initGui();
 
+        this.refreshAmountButtons();
+
+        this.buttonList.add(
+                this.nextBtn = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));
+
+        this.amountTextField = new MEGuiTextField(61, 12) {
+
+            @Override
+            public void onTextChange(final String oldText) {
+                GuiAmount.this.updateTextFieldTooltip();
+            }
+        };
+        this.amountTextField.x = this.guiLeft + 60;
+        this.amountTextField.y = this.guiTop + 55;
+        this.amountTextField.setMaxStringLength(16);
+        this.amountTextField.setFocused(true);
+        this.amountTextField.setUnfocusWithEnter(false);
+        this.updateTextFieldTooltip();
+    }
+
+    protected int getButtonQtyByIndex(int index) {
+        return AEConfig.instance.craftItemsByStackAmounts(index);
+    }
+
+    protected void refreshAmountButtons() {
+        this.removeAmountButtons();
+
         final int a = this.getButtonQtyByIndex(0);
         final int b = this.getButtonQtyByIndex(1);
         final int c = this.getButtonQtyByIndex(2);
         final int d = this.getButtonQtyByIndex(3);
 
-        this.buttonList.add(this.plus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 26, 22, 20, "+" + a));
-        this.buttonList.add(this.plus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 26, 28, 20, "+" + b));
-        this.buttonList.add(this.plus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 26, 32, 20, "+" + c));
-        this.buttonList.add(this.plus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 26, 38, 20, "+" + d));
-
-        this.buttonList.add(this.minus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 75, 22, 20, "-" + a));
-        this.buttonList.add(this.minus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 75, 28, 20, "-" + b));
-        this.buttonList.add(this.minus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 75, 32, 20, "-" + c));
-        this.buttonList.add(this.minus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 75, 38, 20, "-" + d));
+        this.buttonList.add(
+                this.plus1 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 26,
+                        22,
+                        20,
+                        GuiText.IncreaseAmount,
+                        a,
+                        "+%s"));
+        this.buttonList.add(
+                this.plus10 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 26,
+                        28,
+                        20,
+                        GuiText.IncreaseAmount,
+                        b,
+                        "+%s"));
+        this.buttonList.add(
+                this.plus100 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 26,
+                        32,
+                        20,
+                        GuiText.IncreaseAmount,
+                        c,
+                        "+%s"));
+        this.buttonList.add(
+                this.plus1000 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 26,
+                        38,
+                        20,
+                        GuiText.IncreaseAmount,
+                        d,
+                        "+%s"));
 
         this.buttonList.add(
-                this.nextBtn = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));
-
-        final Object target = ((AEBaseContainer) this.inventorySlots).getTarget();
-
-        this.setOriginGUI(target);
-        if (this.originalGui != null && myIcon != null) {
-            this.buttonList.add(
-                    this.originalGuiBtn = new GuiTabButton(
-                            this.guiLeft + 154,
-                            this.guiTop,
-                            this.myIcon,
-                            this.myIcon.getDisplayName(),
-                            itemRender));
-        }
-
-        this.amountTextField = new MEGuiTextField(61, 12);
-        this.amountTextField.x = this.guiLeft + 60;
-        this.amountTextField.y = this.guiTop + 55;
-        this.amountTextField.setMaxStringLength(16);
-        this.amountTextField.setFocused(true);
+                this.minus1 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 75,
+                        22,
+                        20,
+                        GuiText.DecreaseAmount,
+                        -a,
+                        "-%s"));
+        this.buttonList.add(
+                this.minus10 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 75,
+                        28,
+                        20,
+                        GuiText.DecreaseAmount,
+                        -b,
+                        "-%s"));
+        this.buttonList.add(
+                this.minus100 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 75,
+                        32,
+                        20,
+                        GuiText.DecreaseAmount,
+                        -c,
+                        "-%s"));
+        this.buttonList.add(
+                this.minus1000 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 75,
+                        38,
+                        20,
+                        GuiText.DecreaseAmount,
+                        -d,
+                        "-%s"));
     }
 
-    protected abstract void setOriginGUI(Object target);
-
-    protected int getButtonQtyByIndex(int index) {
-        return AEConfig.instance.craftItemsByStackAmounts(index);
+    protected void removeAmountButtons() {
+        this.buttonList.remove(this.plus1);
+        this.buttonList.remove(this.plus10);
+        this.buttonList.remove(this.plus100);
+        this.buttonList.remove(this.plus1000);
+        this.buttonList.remove(this.minus1);
+        this.buttonList.remove(this.minus10);
+        this.buttonList.remove(this.minus100);
+        this.buttonList.remove(this.minus1000);
     }
 
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.bindTexture(getBackground());
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
+        if (this.isAmountTextFieldVisible()) {
+            this.handleTooltip(mouseX, mouseY, this.amountTextField);
+        }
     }
 
     @Override
@@ -118,9 +198,6 @@ public abstract class GuiAmount extends AEBaseGui {
     @Override
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
-        if (btn == this.originalGuiBtn) {
-            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.originalGui));
-        }
 
         final boolean isPlus = btn == this.plus1 || btn == this.plus10 || btn == this.plus100 || btn == this.plus1000;
         final boolean isMinus = btn == this.minus1 || btn == this.minus10
@@ -128,13 +205,11 @@ public abstract class GuiAmount extends AEBaseGui {
                 || btn == this.minus1000;
 
         if (isPlus || isMinus) {
-            long resultI = addOrderAmount(this.getQty(btn));
-            this.amountTextField.setText(Long.toString(resultI));
-            amountTextField.setCursorPositionEnd();
+            this.addAmount(this.getQty(btn));
         }
     }
 
-    protected long addOrderAmount(final int i) {
+    protected void addAmount(final int i) {
         long resultL = getAmountLong();
 
         if (resultL == 1 && i > 1) {
@@ -145,7 +220,9 @@ public abstract class GuiAmount extends AEBaseGui {
         if (resultL < 1) {
             resultL = 1;
         }
-        return resultL;
+
+        this.amountTextField.setText(Long.toString(resultL));
+        this.amountTextField.setCursorPositionEnd();
     }
 
     protected int getAmount() {
@@ -167,6 +244,35 @@ public abstract class GuiAmount extends AEBaseGui {
             return 0;
         } else {
             return (long) ArithHelper.round(resultD, 0);
+        }
+    }
+
+    protected boolean isAmountTextFieldVisible() {
+        return true;
+    }
+
+    protected void updateTextFieldTooltip() {
+        final String text = this.amountTextField.getText();
+        final long amount;
+
+        try {
+            amount = this.getAmountLong();
+        } catch (final NumberFormatException e) {
+            this.amountTextField.setMessage("");
+            return;
+        }
+
+        final boolean containsNonDigit = text.chars().anyMatch(ch -> !Character.isDigit(ch));
+        if (amount >= 1 && containsNonDigit) {
+            final String formattedAmount = "= " + NumberFormat.getNumberInstance(Locale.US).format(amount);
+            if (amount > 1_000_000L) {
+                this.amountTextField.setMessage(
+                        formattedAmount + " (" + ReadableNumberConverter.INSTANCE.toWideReadableForm(amount) + ")");
+            } else {
+                this.amountTextField.setMessage(formattedAmount);
+            }
+        } else {
+            this.amountTextField.setMessage("");
         }
     }
 

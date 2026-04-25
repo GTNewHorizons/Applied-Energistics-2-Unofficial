@@ -1,38 +1,40 @@
 package appeng.helpers;
 
-import net.minecraft.item.ItemStack;
-
-import appeng.api.config.PinsState;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.config.PinsRows;
+import appeng.api.storage.data.IAEStack;
+import appeng.items.contents.PinList;
 
 public interface IPinsHandler {
 
     default int getPinCount() {
-        return PinsState.getPinsCount();
+        return PinList.TOTAL_SLOTS;
     }
 
-    default void setPin(ItemStack is, int idx) {
+    default void setPin(IAEStack<?> is, int idx) {
         throw new UnsupportedOperationException("setPin is not supported by this handler");
     }
 
-    default void setAEPins(IAEItemStack[] pins) {
+    default void setAEPins(IAEStack<?>[] pins) {
         throw new UnsupportedOperationException("setAEPins is not supported by this handler");
     }
 
-    default ItemStack getPin(int idx) {
+    default IAEStack<?> getPin(int idx) {
         throw new UnsupportedOperationException("getPin is not supported by this handler");
     }
 
-    default IAEItemStack getAEPin(int idx) {
+    default IAEStack<?> getAEPin(int idx) {
         throw new UnsupportedOperationException("getAEPin is not supported by this handler");
     }
 
-    default PinsState getPinsState() {
-        return PinsState.DISABLED;
+    default PinsRows getCraftingPinsRows() {
+        return PinsRows.DISABLED;
     }
 
-    default void setPinsState(PinsState state) {
-        throw new UnsupportedOperationException("setPinsState is not supported by this handler");
+    default PinsRows getPlayerPinsRows() {
+        return PinsRows.DISABLED;
     }
 
+    default void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
+        throw new UnsupportedOperationException("setPlayerPinsRows is not supported by this handler");
+    }
 }

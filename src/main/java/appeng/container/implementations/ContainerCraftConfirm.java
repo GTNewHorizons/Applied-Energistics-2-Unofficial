@@ -21,7 +21,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 
@@ -37,12 +36,12 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
-import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
+import appeng.container.ContainerSubGui;
+import appeng.container.PrimaryGui;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.AELog;
@@ -50,23 +49,17 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
-import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
-import appeng.helpers.WirelessTerminalGuiObject;
-import appeng.parts.reporting.PartCraftingTerminal;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
-import appeng.parts.reporting.PartTerminal;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
-import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingCPUSelectorContainer {
+public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingCPUSelectorContainer {
 
     private Future<ICraftingJob> job;
-    private ICraftingJob result;
+    protected ICraftingJob result;
 
     @GuiSync(0)
     public long bytesUsed;
@@ -82,6 +75,9 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
     @GuiSync(4)
     public boolean simulation = true;
+
+    @GuiSync(5)
+    public boolean autoStartAndFollow = false;
 
     @GuiSync(6)
     public boolean noCPU = true;
@@ -106,6 +102,16 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     @Override
     public void selectCPU(int cpu) {
         this.cpuTable.selectCPU(cpu);
+    }
+
+    @Override
+    public void setCpuSortMode(int mode) {
+        this.cpuTable.setCpuSortMode(mode);
+    }
+
+    @Override
+    public void setCpuSortDirection(int mode) {
+        this.cpuTable.setCpuSortDirection(mode);
     }
 
     public void onCPUUpdate(ICraftingCPU cpu) {
@@ -144,7 +150,12 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                 if (!this.result.isSimulation()) {
                     this.setSimulation(false);
-                    if (this.isAutoStart()) {
+                    if (this.isAutoStartAndFollow()) {
+                        // Call start job with follow enabled
+                        this.startJob(true);
+                        return;
+                    } else if (this.isAutoStart()) {
+                        // If only Shift is held and not Ctrl then we end up here and start the job with no follow
                         this.startJob();
                         return;
                     }
@@ -159,29 +170,29 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                             ? new PacketMEInventoryUpdate((byte) 2)
                             : null;
 
-                    final IItemList<IAEItemStack> plan = AEApi.instance().storage().createItemList();
+                    final IItemList<IAEStack<?>> plan = AEApi.instance().storage().createAEStackList();
                     this.result.populatePlan(plan);
 
                     this.setUsedBytes(this.result.getByteTotal());
 
-                    for (final IAEItemStack plannedItem : plan) {
+                    for (final IAEStack<?> plannedItem : plan) {
 
-                        IAEItemStack toExtract = plannedItem.copy();
+                        IAEStack<?> toExtract = plannedItem.copy();
                         toExtract.reset();
                         toExtract.setStackSize(plannedItem.getStackSize());
 
-                        final IAEItemStack toCraft = plannedItem.copy();
+                        final IAEStack<?> toCraft = plannedItem.copy();
                         toCraft.reset();
                         toCraft.setStackSize(plannedItem.getCountRequestable());
                         toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
-                        final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
-                        final IMEInventory<IAEItemStack> items = sg.getItemInventory();
+                        final MECraftingInventory storageAtBeginning = this.result.getStorageAtBeginning();
 
-                        IAEItemStack missing = null;
+                        IAEStack<?> missing = null;
                         if (missingUpdate != null && this.result.isSimulation()) {
                             missing = toExtract.copy();
-                            toExtract = items.extractItems(toExtract, Actionable.SIMULATE, this.getActionSource());
+                            toExtract = storageAtBeginning
+                                    .extractItems(toExtract, Actionable.SIMULATE, this.getActionSource());
 
                             if (toExtract == null) {
                                 toExtract = missing.copy();
@@ -193,11 +204,12 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            IAEItemStack availableStack = items
-                                    .getAvailableItem(toExtract, IterationCounter.fetchNewId());
+                            final IAEStack<?> availableStack = storageAtBeginning.extractItems(
+                                    toExtract.copy().setStackSize(Long.MAX_VALUE),
+                                    Actionable.SIMULATE,
+                                    this.getActionSource());
                             long available = (availableStack == null) ? 0 : availableStack.getStackSize();
-                            if (available > 0) toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
-                            else toExtract.setUsedPercent(0f);
+                            toExtract.setUsedPercent(calculateUsedPercent(toExtract.getStackSize(), available));
                         }
 
                         if (toExtract.getStackSize() > 0) {
@@ -248,21 +260,28 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         this.verifyPermissions(SecurityPermissions.CRAFT, false);
     }
 
-    private IGrid getGrid() {
+    private static float calculateUsedPercent(long used, long available) {
+        if (used <= 0 || available <= 0) {
+            return 0f;
+        }
+        double usedPercent = (double) used * 100.0 / (double) available;
+        usedPercent = Math.max(0.0, Math.min(100.0, usedPercent));
+        double nearestInteger = Math.rint(usedPercent);
+        if (Math.abs(usedPercent - nearestInteger) < 1.0e-6) {
+            usedPercent = nearestInteger;
+        }
+        return (float) usedPercent;
+    }
+
+    public IGrid getGrid() {
         final IActionHost h = ((IActionHost) this.getTarget());
         if (h == null || h.getActionableNode() == null) return null;
         return h.getActionableNode().getGrid();
     }
 
-    public IAEItemStack getItemToCraft() {
-        try {
-            ByteBuf deserialized = Unpooled.wrappedBuffer(serializedItemToCraft.getBytes(StandardCharsets.ISO_8859_1));
-            return AEApi.instance().storage().readItemFromPacket(deserialized);
-        } catch (IOException e) {
-            AELog.debug(e);
-            AELog.debug("Deserializing IAEItemStack Failed");
-            return null;
-        }
+    public IAEStack<?> getItemToCraft() {
+        ByteBuf deserialized = Unpooled.wrappedBuffer(serializedItemToCraft.getBytes(StandardCharsets.ISO_8859_1));
+        return Platform.readStackByte(deserialized);
     }
 
     public boolean cpuCraftingSameItem(final CraftingCPUStatus c) {
@@ -282,23 +301,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     }
 
     public void startJob() {
-        if (this.result != null && !this.isSimulation() && getGrid() != null) {
-            final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
-            CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
-            final ICraftingLink g = cc.submitJob(
-                    this.result,
-                    null,
-                    (selected == null) ? null : selected.getServerCluster(),
-                    true,
-                    this.getActionSrc());
-            this.setAutoStart(false);
-            if (g != null) {
-                this.switchToOriginalGUI();
-            }
-        }
+        startJob(false);
     }
 
-    public void startJob(String playerName) {
+    public void startJob(final boolean followCraft) {
         if (this.result != null && !this.isSimulation() && getGrid() != null) {
             final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
             CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
@@ -307,9 +313,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                     null,
                     (selected == null) ? null : selected.getServerCluster(),
                     true,
-                    this.getActionSrc());
-            selected.getServerCluster().togglePlayerFollowStatus(playerName);
+                    this.getActionSrc(),
+                    followCraft);
             this.setAutoStart(false);
+            this.setAutoStartAndFollow(false);
             if (g != null) {
                 this.switchToOriginalGUI();
             }
@@ -320,48 +327,27 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         // only V2 supported
         if (this.result instanceof CraftingJobV2 && !this.isSimulation()
                 && getGrid() != null
-                && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()) {
+                && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()
+                && this.getPlayerInv().player.openContainer instanceof AEBaseContainer baseContainer) {
+            PrimaryGui primaryGui = baseContainer.getPrimaryGui();
             Platform.openGUI(
                     this.getPlayerInv().player,
                     this.getOpenContext().getTile(),
                     this.getOpenContext().getSide(),
-                    GuiBridge.GUI_OPTIMIZE_PATTERNS);
+                    GuiBridge.GUI_OPTIMIZE_PATTERNS,
+                    getTargetSlotIndex());
             if (this.getPlayerInv().player.openContainer instanceof ContainerOptimizePatterns cop) {
                 cop.setResult(this.result);
+                cop.setPrimaryGui(primaryGui);
             }
         }
     }
 
     public void switchToOriginalGUI() {
-        GuiBridge originalGui = null;
-
-        final IActionHost ah = this.getActionHost();
-        if (ah instanceof WirelessTerminalGuiObject) {
-            originalGui = GuiBridge.GUI_WIRELESS_TERM;
-        }
-
-        if (ah instanceof PartTerminal) {
-            originalGui = GuiBridge.GUI_ME;
-        }
-
-        if (ah instanceof PartCraftingTerminal) {
-            originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-        }
-
-        if (ah instanceof PartPatternTerminal) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
-        if (ah instanceof PartPatternTerminalEx) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
-
-        if (originalGui != null && this.getOpenContext() != null) {
-            NetworkHandler.instance
-                    .sendTo(new PacketSwitchGuis(originalGui), (EntityPlayerMP) this.getInventoryPlayer().player);
-
-            final TileEntity te = this.getOpenContext().getTile();
-            Platform.openGUI(this.getInventoryPlayer().player, te, this.getOpenContext().getSide(), originalGui);
+        if (this.getInventoryPlayer().player.openContainer instanceof AEBaseContainer bc) {
+            final PrimaryGui pGui = bc.getPrimaryGui();
+            assert pGui != null;
+            pGui.open(this.getInventoryPlayer().player);
         }
     }
 
@@ -395,8 +381,16 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         return this.autoStart;
     }
 
+    public boolean isAutoStartAndFollow() {
+        return this.autoStartAndFollow;
+    }
+
     public void setAutoStart(final boolean autoStart) {
         this.autoStart = autoStart;
+    }
+
+    public void setAutoStartAndFollow(final boolean autoStartAndFollow) {
+        this.autoStartAndFollow = autoStartAndFollow;
     }
 
     public long getUsedBytes() {
@@ -459,14 +453,9 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         this.job = job;
     }
 
-    public void setItemToCraft(@Nonnull final IAEItemStack itemToCraft) {
-        try {
-            ByteBuf serialized = Unpooled.buffer();
-            itemToCraft.writeToPacket(serialized);
-            this.serializedItemToCraft = serialized.toString(StandardCharsets.ISO_8859_1);
-        } catch (IOException e) {
-            AELog.debug(e);
-            AELog.debug("Deserializing IAEItemStack Failed");
-        }
+    public void setItemToCraft(@Nonnull final IAEStack<?> itemToCraft) {
+        ByteBuf serialized = Unpooled.buffer();
+        Platform.writeStackByte(itemToCraft, serialized);
+        this.serializedItemToCraft = serialized.toString(StandardCharsets.ISO_8859_1);
     }
 }

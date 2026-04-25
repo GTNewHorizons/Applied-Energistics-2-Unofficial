@@ -10,44 +10,71 @@
 
 package appeng.client.gui.implementations;
 
-import java.io.IOException;
-import java.util.List;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import java.io.IOException;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
+import net.minecraftforge.common.MinecraftForge;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.api.AEApi;
+import appeng.api.config.ActionItems;
 import appeng.api.config.CraftingStatus;
-import appeng.api.config.PinsState;
+import appeng.api.config.PinSectionOrder;
+import appeng.api.config.PinsRows;
+import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
+import appeng.api.config.TerminalFontSize;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
-import appeng.api.implementations.guiobjects.IPortableCell;
-import appeng.api.implementations.tiles.IMEChest;
 import appeng.api.implementations.tiles.IViewCellStorage;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
+import appeng.api.storage.ITerminalTypeFilterProvider;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IDisplayRepo;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.ActionKey;
-import appeng.client.gui.AEBaseMEGui;
+import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.slots.VirtualMEMonitorableSlot;
+import appeng.client.gui.slots.VirtualMEPatternSlot;
+import appeng.client.gui.slots.VirtualMEPinSlot;
+import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.client.me.InternalSlotME;
+import appeng.client.gui.widgets.TypeToggleButton;
 import appeng.client.me.ItemRepo;
-import appeng.client.me.PinSlotME;
+import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
@@ -61,29 +88,39 @@ import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketInventoryAction;
+import appeng.core.sync.packets.PacketMonitorableAction;
+import appeng.core.sync.packets.PacketMonitorableTypeFilter;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IPinsHandler;
-import appeng.helpers.WirelessTerminalGuiObject;
+import appeng.helpers.InventoryAction;
+import appeng.helpers.MonitorableAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.storage.ItemViewCell;
-import appeng.parts.reporting.AbstractPartTerminal;
-import appeng.tile.misc.TileSecurity;
 import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
-public class GuiMEMonitorable extends AEBaseMEGui
+public class GuiMEMonitorable extends AEBaseGui
         implements ISortSource, IConfigManagerHost, IDropToFillTextField, IPinsHandler {
 
     public static int craftingGridOffsetX;
     public static int craftingGridOffsetY;
 
+    // Keybind use can be keyboard or mouse, both redirect to this.handleVirtualSlotClick
+    // if key/mouseButton == this.mc.gameSettings.keyBindPickBlock.getKeyCode()
+    public static final int keyBindPickBlockAction = 1_000_101;
+
     private static String memoryText = "";
     private final IDisplayRepo repo;
-    private final int offsetX = 9;
+    protected int offsetRepoX = 9;
+    protected int offsetRepoY = 18;
     private final int MAGIC_HEIGHT_NUMBER = 114 + 1;
     private final int lowerTextureOffset = 0;
     private final IConfigManager configSrc;
@@ -92,12 +129,12 @@ public class GuiMEMonitorable extends AEBaseMEGui
     private final ContainerMEMonitorable monitorableContainer;
     private GuiTabButton craftingStatusBtn;
     private GuiImgButton craftingStatusImgBtn;
-    private final MEGuiTextField searchField;
+    protected final MEGuiTextField searchField;
     private GuiText myName;
     private int perRow = 9;
     private int reservedSpace = 0;
     private boolean customSortOrder = true;
-    private int rows = 0;
+    protected int rows = 0;
     private int standardSize;
     private GuiImgButton ViewBox;
     private GuiImgButton SortByBox;
@@ -105,13 +142,21 @@ public class GuiMEMonitorable extends AEBaseMEGui
     private GuiImgButton searchBoxSettings;
     private GuiImgButton terminalStyleBox;
     private GuiImgButton searchStringSave;
-    private GuiImgButton typeFilter;
     private GuiImgButton pinsStateButton;
-    private boolean isAutoFocus = false;
-    private int currentMouseX = 0;
-    private int currentMouseY = 0;
-    private PinsState pinsState;
+    private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
+    private boolean canBeAutoFocused = false;
+    private boolean isAutoFocused = false;
+    protected int currentMouseX = 0;
+    protected int currentMouseY = 0;
+    private PinsRows craftingPinsRows;
+    private PinsRows playerPinsRows;
     public final boolean hasPinHost;
+    private boolean enableShiftPause = true;
+
+    protected VirtualMEPinSlot[] pinSlots = null;
+    protected VirtualMEMonitorableSlot[] monitorableSlots = null;
+    @Nullable
+    protected Reference2BooleanMap<IAEStackType<?>> typeFilters;
 
     public GuiMEMonitorable(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         this(inventoryPlayer, te, new ContainerMEMonitorable(inventoryPlayer, te));
@@ -133,23 +178,14 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         this.configSrc = ((IConfigurableObject) this.inventorySlots).getConfigManager();
 
-        pinsState = (PinsState) configSrc.getSetting(Settings.PINS_STATE);
+        craftingPinsRows = PinsRows.DISABLED;
+        playerPinsRows = PinsRows.DISABLED;
 
         (this.monitorableContainer = (ContainerMEMonitorable) this.inventorySlots).setGui(this);
 
         this.viewCell = te instanceof IViewCellStorage;
 
-        if (te instanceof TileSecurity) {
-            this.myName = GuiText.Security;
-        } else if (te instanceof WirelessTerminalGuiObject) {
-            this.myName = GuiText.WirelessTerminal;
-        } else if (te instanceof IPortableCell) {
-            this.myName = GuiText.PortableCell;
-        } else if (te instanceof IMEChest) {
-            this.myName = GuiText.Chest;
-        } else if (te instanceof AbstractPartTerminal) {
-            this.myName = GuiText.Terminal;
-        }
+        this.myName = te.getName();
 
         hasPinHost = te instanceof ITerminalPins;
 
@@ -158,17 +194,21 @@ public class GuiMEMonitorable extends AEBaseMEGui
             @Override
             public void onTextChange(final String oldText) {
                 final String text = getText();
-                repo.setSearchString(text);
+                repo.setSearchString(text.trim());
                 repo.updateView();
                 setScrollBar();
             }
         };
 
         NEI.searchField.putFormatter(this.searchField);
+
+        if (te instanceof ITerminalTypeFilterProvider) {
+            this.typeFilters = MonitorableTypeFilter.createDefaultMap();
+        }
     }
 
-    public void postUpdate(final List<IAEItemStack> list) {
-        for (final IAEItemStack is : list) {
+    public void postUpdate(final List<IAEStack<?>> list) {
+        for (final IAEStack<?> is : list) {
             this.repo.postUpdate(is);
         }
 
@@ -177,76 +217,143 @@ public class GuiMEMonitorable extends AEBaseMEGui
     }
 
     private void setScrollBar() {
-        this.getScrollBar().setTop(18).setLeft(175).setHeight(this.rows * 18 - 2);
+        this.getScrollBar().setTop(this.offsetRepoY).setLeft(166 + this.offsetRepoX).setHeight(this.rows * 18 - 2);
+        int totalPinRows = craftingPinsRows.ordinal() + playerPinsRows.ordinal();
         this.getScrollBar().setRange(
                 0,
-                (this.repo.size() + pinsState.ordinal() * 9 + this.perRow - 1) / this.perRow - this.rows,
+                (this.repo.size() + totalPinRows * 9 + this.perRow - 1) / this.perRow - this.rows,
                 Math.max(1, this.rows / 6));
     }
 
     @Override
     protected void actionPerformed(final GuiButton btn) {
+        if (btn instanceof final TypeToggleButton tbtn) {
+            final IAEStackType<?> type = this.typeToggleButtons.get(tbtn);
+            if (type != null && this.typeFilters != null) {
+                // Optimistic client-side feedback; server will sync authoritative state shortly.
+                final boolean next = !this.typeFilters.getBoolean(type);
+                this.typeFilters.put(type, next);
+                tbtn.setEnabled(next);
+                this.repo.updateView();
+
+                try {
+                    NetworkHandler.instance
+                            .sendToServer(new PacketMonitorableTypeFilter(this.typeFilters, this.inventorySlots.windowId));
+                } catch (final IOException e) {
+                    AELog.debug(e);
+                }
+            }
+            return;
+        }
+
+        if (actionPerformedCustomButtons(btn)) return;
 
         if (btn == this.craftingStatusBtn || btn == this.craftingStatusImgBtn) {
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CRAFTING_STATUS));
         }
 
-        if (btn instanceof GuiImgButton iBtn) {
-            if (iBtn.getSetting() != Settings.ACTIONS) {
-                final Enum cv = iBtn.getCurrentValue();
-                final boolean backwards = Mouse.isButtonDown(1);
-                final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
-
-                if (btn == this.terminalStyleBox) {
-                    AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-                } else if (btn == this.searchBoxSettings) {
-                    AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-                } else if (btn == this.searchStringSave) {
-                    AEConfig.instance.preserveSearchBar = next == YesNo.YES;
-                } else if (btn == this.pinsStateButton) {
-                    try {
-                        if (next.ordinal() >= rows) return; // ignore to avoid hiding terminal inventory
-
-                        final PacketPinsUpdate p = new PacketPinsUpdate((PinsState) next);
-                        NetworkHandler.instance.sendToServer(p);
-                    } catch (final IOException e) {
-                        AELog.debug(e);
-                    }
+        if (btn == this.pinsStateButton) {
+            try {
+                boolean rmb = Mouse.isButtonDown(1);
+                boolean ctrl = GuiScreen.isCtrlKeyDown();
+                int maxC = AEConfig.instance.maxCraftingPinRows;
+                int maxP = AEConfig.instance.maxPlayerPinRows;
+                int c = Math.min(craftingPinsRows.ordinal(), maxC);
+                int p = Math.min(playerPinsRows.ordinal(), maxP);
+                if (ctrl) {
+                    if (rmb) c = Math.max(0, c - 1);
+                    else c = Math.min(maxC, c + 1);
                 } else {
-                    try {
-                        NetworkHandler.instance
-                                .sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
-                    } catch (final IOException e) {
-                        AELog.debug(e);
-                    }
+                    if (rmb) p = Math.max(0, p - 1);
+                    else p = Math.min(maxP, p + 1);
                 }
+                if (c + p >= rows) return;
+                NetworkHandler.instance.sendToServer(new PacketPinsUpdate(
+                        PinsRows.fromOrdinal(c), PinsRows.fromOrdinal(p)));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+            reinitalize();
+            return;
+        }
 
-                iBtn.set(next);
+        if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
 
-                if (next.getClass() == SearchBoxMode.class || next.getClass() == TerminalStyle.class) {
-                    memoryText = this.searchField.getText();
-                    this.reinitalize();
-                }
+        final Enum cv = iBtn.getCurrentValue();
+        final boolean backwards = Mouse.isButtonDown(1);
+        final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
+
+        if (btn == this.terminalStyleBox) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchBoxSettings) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchStringSave) {
+            AEConfig.instance.preserveSearchBar = next == YesNo.YES;
+        } else {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
+            } catch (final IOException e) {
+                AELog.debug(e);
             }
         }
+
+        iBtn.set(next);
+
+        if (next.getClass() == SearchBoxMode.class || next.getClass() == TerminalStyle.class) {
+            this.reinitalize();
+        }
+    }
+
+    private int createPinSection(int slotIdx, int sectionRows, int pinsPerRow, int rowOffset, boolean isCrafting) {
+        int baseIndex = isCrafting ? 0 : appeng.items.contents.PinList.PLAYER_OFFSET;
+        for (int y = 0; y < sectionRows; y++) {
+            for (int x = 0; x < pinsPerRow; x++) {
+                VirtualMEPinSlot slot = new VirtualMEPinSlot(
+                        this.offsetRepoX + x * 18,
+                        (rowOffset + y) * 18 + this.offsetRepoY,
+                        this.repo,
+                        baseIndex + y * pinsPerRow + x,
+                        this::checkTypeFilter,
+                        isCrafting);
+                this.pinSlots[slotIdx++] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+        return slotIdx;
     }
 
     private void adjustPinsSize() {
         final int pinMaxSize = rows - 1;
-        if (pinsState.ordinal() <= pinMaxSize) return;
+        int craft = Math.min(craftingPinsRows.ordinal(), AEConfig.instance.maxCraftingPinRows);
+        int player = Math.min(playerPinsRows.ordinal(), AEConfig.instance.maxPlayerPinRows);
+        int totalPinRows = craft + player;
+        if (totalPinRows <= pinMaxSize) return;
 
         try {
-            PinsState newState = PinsState.fromOrdinal(pinMaxSize);
-            final PacketPinsUpdate p = new PacketPinsUpdate(newState);
-            NetworkHandler.instance.sendToServer(p);
+            if (player > pinMaxSize) {
+                player = pinMaxSize;
+                craft = 0;
+            } else {
+                craft = Math.min(craft, pinMaxSize - player);
+            }
+            NetworkHandler.instance
+                    .sendToServer(new PacketPinsUpdate(PinsRows.fromOrdinal(craft), PinsRows.fromOrdinal(player)));
         } catch (final IOException e) {
             AELog.debug(e);
         }
     }
 
     private void reinitalize() {
-        this.buttonList.clear();
-        this.initGui();
+        memoryText = this.searchField.getText();
+        if (!MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Pre(this, this.buttonList))) {
+            this.buttonList.clear();
+            this.initGui();
+        }
+        MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Post(this, this.buttonList));
+    }
+
+    private boolean checkTypeFilter(IAEStackType<?> type) {
+        return this.typeFilters == null || this.typeFilters.getBoolean(type);
     }
 
     @Override
@@ -257,27 +364,48 @@ public class GuiMEMonitorable extends AEBaseMEGui
                 : 9 + ((this.width - this.standardSize) / 18);
         this.rows = calculateRowsCount();
 
-        this.getMeSlots().clear();
-
         // make sure we have space at least for one row of normal slots, because pins not adjusted by scroll bar
         adjustPinsSize();
 
-        int pinsRows = pinsState.ordinal();
-        for (int y = 0; y < pinsRows; y++) {
-            for (int x = 0; x < this.perRow; x++) {
-                this.getMeSlots()
-                        .add(new PinSlotME(this.repo, x + y * this.perRow, this.offsetX + x * 18, y * 18 + 18));
+        super.initGui();
+
+        int maxCrafting = AEConfig.instance.maxCraftingPinRows;
+        int maxPlayer = AEConfig.instance.maxPlayerPinRows;
+        int craftingRows = Math.min(craftingPinsRows.ordinal(), maxCrafting);
+        int playerRows = Math.min(playerPinsRows.ordinal(), maxPlayer);
+        int pinMaxSize = Math.max(0, this.rows - 1);
+        int totalRequested = craftingRows + playerRows;
+        if (totalRequested > pinMaxSize) {
+            if (playerRows > pinMaxSize) {
+                playerRows = pinMaxSize;
+                craftingRows = 0;
+            } else {
+                craftingRows = Math.min(craftingRows, pinMaxSize - playerRows);
             }
         }
+        int pinsRows = craftingRows + playerRows;
+        final int pinsPerRow = 9;
+        this.pinSlots = new VirtualMEPinSlot[craftingRows * pinsPerRow + playerRows * pinsPerRow];
+        int slotIdx = 0;
+        boolean playerFirst = AEConfig.instance.pinSectionOrder == PinSectionOrder.PLAYER_FIRST;
+        int firstRows = playerFirst ? playerRows : craftingRows;
+        int secondRows = playerFirst ? craftingRows : playerRows;
+        boolean firstIsCrafting = !playerFirst;
+        slotIdx = createPinSection(slotIdx, firstRows, pinsPerRow, 0, firstIsCrafting);
+        slotIdx = createPinSection(slotIdx, secondRows, pinsPerRow, firstRows, !firstIsCrafting);
 
-        for (int y = 0; y < this.rows - pinsRows; y++) {
+        int normalSlotRows = Math.max(0, this.rows - pinsRows);
+        this.monitorableSlots = new VirtualMEMonitorableSlot[normalSlotRows * this.perRow];
+        for (int y = 0; y < normalSlotRows; y++) {
             for (int x = 0; x < this.perRow; x++) {
-                this.getMeSlots().add(
-                        new InternalSlotME(
-                                this.repo,
-                                x + y * this.perRow,
-                                this.offsetX + x * 18,
-                                18 + y * 18 + pinsRows * 18));
+                VirtualMEMonitorableSlot slot = new VirtualMEMonitorableSlot(
+                        this.offsetRepoX + x * 18,
+                        this.offsetRepoY + y * 18 + pinsRows * 18,
+                        this.repo,
+                        y * this.perRow + x,
+                        this::checkTypeFilter);
+                this.monitorableSlots[y * this.perRow + x] = slot;
+                this.registerVirtualSlots(slot);
             }
         }
 
@@ -287,7 +415,6 @@ public class GuiMEMonitorable extends AEBaseMEGui
             this.xSize = this.standardSize;
         }
 
-        super.initGui();
         // full size : 204
         // extra slots : 72
         // slot 18
@@ -300,6 +427,8 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         buttonList.clear();
 
+        initTypeToggleButtons(this.guiLeft - 36, offset);
+
         if (this.customSortOrder) {
             this.buttonList.add(
                     this.SortByBox = new GuiImgButton(
@@ -310,22 +439,13 @@ public class GuiMEMonitorable extends AEBaseMEGui
             offset += 20;
         }
 
-        if (this.viewCell || this instanceof GuiWirelessTerm) {
+        if (this.viewCell) {
             this.buttonList.add(
                     this.ViewBox = new GuiImgButton(
                             this.guiLeft - 18,
                             offset,
                             Settings.VIEW_MODE,
                             this.configSrc.getSetting(Settings.VIEW_MODE)));
-            offset += 20;
-        }
-        if (!AEApi.instance().registries().itemDisplay().getItemFilters().isEmpty()) {
-            this.buttonList.add(
-                    this.typeFilter = new GuiImgButton(
-                            this.guiLeft - 18,
-                            offset,
-                            Settings.TYPE_FILTER,
-                            this.configSrc.getSetting(Settings.TYPE_FILTER)));
             offset += 20;
         }
 
@@ -353,7 +473,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
                         AEConfig.instance.preserveSearchBar ? YesNo.YES : YesNo.NO));
         offset += 20;
 
-        if (!(this instanceof GuiMEPortableCell) || this instanceof GuiWirelessTerm) {
+        if (!(this instanceof GuiMEPortableCell)) {
             this.buttonList.add(
                     this.terminalStyleBox = new GuiImgButton(
                             this.guiLeft - 18,
@@ -363,7 +483,9 @@ public class GuiMEMonitorable extends AEBaseMEGui
             offset += 20;
         }
 
-        if (this.viewCell || this instanceof GuiWirelessTerm) {
+        initCustomButtons(this.guiLeft - 18, offset);
+
+        if (this.viewCell) {
             if (AEConfig.instance.getConfigManager().getSetting(Settings.CRAFTING_STATUS)
                     .equals(CraftingStatus.BUTTON)) {
                 this.buttonList.add(
@@ -387,19 +509,21 @@ public class GuiMEMonitorable extends AEBaseMEGui
         if (hasPinHost) {
             this.buttonList.add(
                     this.pinsStateButton = new GuiImgButton(
-                            this.guiLeft + 178,
-                            this.guiTop + 18 + (rows * 18) + 25,
-                            Settings.PINS_STATE,
-                            configSrc.getSetting(Settings.PINS_STATE)));
+                            getPinButtonX(),
+                            getPinButtonY(),
+                            Settings.ACTIONS,
+                            ActionItems.PINS));
+            this.repo.setVisiblePinRows(this.craftingPinsRows.ordinal(), this.playerPinsRows.ordinal());
         }
 
         // Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
         final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
-        this.isAutoFocus = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
+        this.canBeAutoFocused = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
 
-        this.searchField.x = this.guiLeft + Math.max(80, this.offsetX);
+        this.searchField.x = this.guiLeft + this.offsetRepoX + 71;
         this.searchField.y = this.guiTop + 4;
-        this.searchField.setFocused(this.isAutoFocus);
+        this.searchField.setFocused(this.canBeAutoFocused);
+        this.isAutoFocused = this.canBeAutoFocused;
 
         if (this.isSubGui()) {
             this.searchField.setText(memoryText);
@@ -432,6 +556,28 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         craftingGridOffsetX -= 25;
         craftingGridOffsetY -= 6;
+
+        this.enableShiftPause = AEConfig.instance.settings.getSetting(Settings.PAUSE_WHEN_HOLDING_SHIFT) == YesNo.YES;
+    }
+
+    private void initTypeToggleButtons(final int x, final int yStart) {
+        this.typeToggleButtons.clear();
+        if (this.typeFilters == null) return;
+
+        int y = yStart;
+        for (final IAEStackType<?> type : AEStackTypeRegistry.getSortedTypes()) {
+            final ResourceLocation texture = type.getButtonTexture();
+            final IIcon icon = type.getButtonIcon();
+            if (texture == null || icon == null) continue;
+
+            final TypeToggleButton btn = new TypeToggleButton(x, y, texture, icon, type.getDisplayName());
+
+            btn.setEnabled(this.typeFilters.getBoolean(type));
+            this.typeToggleButtons.put(btn, type);
+            this.buttonList.add(btn);
+
+            y += 20;
+        }
     }
 
     protected int calculateRowsCount() {
@@ -444,6 +590,14 @@ public class GuiMEMonitorable extends AEBaseMEGui
         final int extraSpace = this.height - MAGIC_HEIGHT_NUMBER - NEIPadding - this.reservedSpace;
 
         return Math.max(3, Math.min(this.getMaxRows(), (int) Math.floor(extraSpace / 18)));
+    }
+
+    protected int getPinButtonX() {
+        return this.guiLeft + 178;
+    }
+
+    protected int getPinButtonY() {
+        return this.guiTop + 18 + (rows * 18) + 25;
     }
 
     @Override
@@ -459,15 +613,153 @@ public class GuiMEMonitorable extends AEBaseMEGui
                 this.ySize - 96 + 3,
                 GuiColors.MEMonitorableInventory.getColor());
 
+        VirtualMEPinSlot.drawSlotsBackground(this.pinSlots, this.mc, this.zLevel);
+
         this.currentMouseX = mouseX;
         this.currentMouseY = mouseY;
+
+        VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+        if (slot != null) {
+            List<String> lines = new ArrayList<>();
+            slot.addTooltip(lines);
+            if (!lines.isEmpty()) {
+                this.drawTooltip(mouseX - guiLeft, mouseY - guiTop, lines.toArray(new String[0]));
+            }
+        }
+    }
+
+    @Override
+    public List<String> handleItemTooltip(ItemStack stack, int mouseX, int mouseY, List<String> currentToolTip) {
+        super.handleItemTooltip(stack, mouseX, mouseY, currentToolTip);
+        VirtualMESlot hoveredSlot = this.getVirtualMESlotUnderMouse();
+
+        final boolean isMonitorableSlot = hoveredSlot instanceof VirtualMEMonitorableSlot;
+        if (isMonitorableSlot || hoveredSlot instanceof VirtualMEPatternSlot) {
+            IAEStack<?> aes = hoveredSlot.getAEStack();
+            final int threshold = AEConfig.instance.getTerminalFontSize() == TerminalFontSize.SMALL ? 9999 : 999;
+            if (aes != null && aes.getStackSize() > threshold) {
+                final String local = isMonitorableSlot ? ButtonToolTips.ItemsStored.getLocal()
+                        : ButtonToolTips.ItemCount.getLocal();
+                final String formattedAmount = NumberFormat.getNumberInstance(Locale.US).format(aes.getStackSize());
+                currentToolTip.add(EnumChatFormatting.GRAY + String.format(local, formattedAmount));
+            }
+        }
+
+        return currentToolTip;
     }
 
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         searchField.mouseClicked(xCoord, yCoord, btn);
+        isAutoFocused = false;
+
         if (handleViewCellClick(xCoord, yCoord, btn)) return;
+
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    private void sendAction(MonitorableAction action, @Nullable IAEStack<?> stack, int custom) {
+        ((AEBaseContainer) this.inventorySlots).setTargetStack(stack);
+        final PacketMonitorableAction p = new PacketMonitorableAction(action, custom);
+        NetworkHandler.instance.sendToServer(p);
+    }
+
+    @Override
+    protected boolean handleVirtualSlotClick(VirtualMESlot virtualSlot, final int mouseButton) {
+        if (this.handleMonitorableSlotClick(virtualSlot, mouseButton)) return true;
+        else return super.handleVirtualSlotClick(virtualSlot, mouseButton);
+    }
+
+    private boolean handleMonitorableSlotClick(VirtualMESlot virtualSlot, final int mouseButton) {
+        if (!(virtualSlot instanceof VirtualMEMonitorableSlot slot)) return false;
+        IAEItemStack slotStack = slot.getAEStack() instanceof IAEItemStack ais ? ais : null;
+
+        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+            if (slotStack != null) {
+                this.sendAction(MonitorableAction.MOVE_REGION, slotStack, -1);
+                return true;
+            }
+            return false;
+        }
+
+        final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+
+        final boolean isLShiftDown = isShiftKeyDown();
+        final boolean isLControlDown = isCtrlKeyDown();
+        final boolean nonItemInteraction = isLControlDown
+                || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
+
+        switch (mouseButton) {
+            case 0 -> { // left click
+                if (slot instanceof VirtualMEPinSlot pinSlot) {
+                    if (this.handleSetPinAction(pinSlot)) {
+                        return true;
+                    }
+                }
+
+                if (nonItemInteraction) {
+                    this.sendAction(
+                            isLShiftDown ? MonitorableAction.FILL_CONTAINERS : MonitorableAction.FILL_SINGLE_CONTAINER,
+                            slot.getAEStack(),
+                            -1);
+                    return true;
+                }
+
+                if (isLShiftDown) {
+                    this.sendAction(MonitorableAction.SHIFT_CLICK, slotStack, -1);
+                    return true;
+                }
+
+                if (slot.getAEStack() != null && slot.getAEStack().getStackSize() == 0
+                        && player.inventory.getItemStack() == null) {
+                    this.sendAction(MonitorableAction.AUTO_CRAFT, slot.getAEStack(), -1);
+                    return true;
+                }
+                this.sendAction(MonitorableAction.PICKUP_OR_SET_DOWN, slotStack, -1);
+                return true;
+            }
+            case 1 -> { // right click
+                if (slot instanceof VirtualMEPinSlot pinSlot) {
+                    if (isLShiftDown && player.inventory.getItemStack() == null) {
+                        this.sendAction(MonitorableAction.UNSET_PIN, null, slot.getSlotIndex());
+                        return true;
+                    }
+
+                    if (this.handleSetPinAction(pinSlot)) {
+                        return true;
+                    }
+                }
+
+                if (nonItemInteraction) {
+                    this.sendAction(
+                            isLShiftDown ? MonitorableAction.DRAIN_CONTAINERS
+                                    : MonitorableAction.DRAIN_SINGLE_CONTAINER,
+                            slot.getAEStack(),
+                            -1);
+                    return true;
+                }
+
+                if (isLShiftDown) {
+                    this.sendAction(MonitorableAction.PICKUP_SINGLE, slotStack, -1);
+                    return true;
+                }
+
+                this.sendAction(MonitorableAction.SPLIT_OR_PLACE_SINGLE, slotStack, -1);
+                return true;
+            }
+            case keyBindPickBlockAction -> {
+                if (slot.getAEStack() != null && slot.getAEStack().isCraftable()) {
+                    this.sendAction(MonitorableAction.AUTO_CRAFT, slot.getAEStack(), -1);
+                    return true;
+                } else if (player.capabilities.isCreativeMode) {
+                    this.sendAction(MonitorableAction.CREATIVE_DUPLICATE, slotStack, -1);
+                    return true;
+                }
+            }
+            default -> {}
+        }
+
+        return false;
     }
 
     private boolean handleViewCellClick(final int xCoord, final int yCoord, final int btn) {
@@ -495,6 +787,30 @@ public class GuiMEMonitorable extends AEBaseMEGui
     }
 
     @Override
+    protected boolean mouseWheelEvent(int x, int y, int wheel) {
+        VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+        if (!isShiftKeyDown() || !(slot instanceof VirtualMEMonitorableSlot)) return false;
+
+        final MonitorableAction direction = wheel > 0 ? MonitorableAction.ROLL_DOWN : MonitorableAction.ROLL_UP;
+        if (direction == MonitorableAction.ROLL_DOWN
+                && Minecraft.getMinecraft().thePlayer.inventory.getItemStack() == null) {
+            return false;
+        }
+        if (direction == MonitorableAction.ROLL_UP && !(slot.getAEStack() instanceof IAEItemStack)) {
+            return false;
+        }
+
+        ((AEBaseContainer) this.inventorySlots).setTargetStack(slot.getAEStack());
+        final int times = Math.abs(wheel);
+        for (int i = 0; i < times; i++) {
+            final PacketMonitorableAction p = new PacketMonitorableAction(direction, -1);
+            NetworkHandler.instance.sendToServer(p);
+        }
+
+        return true;
+    }
+
+    @Override
     public void onGuiClosed() {
         super.onGuiClosed();
         Keyboard.enableRepeatEvents(false);
@@ -509,7 +825,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, x_width, 18);
 
         if (this.viewCell || (this instanceof GuiSecurity)) {
-            this.drawTexturedModalRect(offsetX + x_width, offsetY, x_width, 0, 46, 128);
+            this.drawTexturedModalRect(offsetX + x_width, offsetY, x_width, 0, 47, 128);
         }
 
         for (int x = 0; x < this.rows; x++) {
@@ -524,6 +840,16 @@ public class GuiMEMonitorable extends AEBaseMEGui
                 x_width,
                 99 + this.reservedSpace - this.lowerTextureOffset);
 
+        this.searchField.drawTextBox();
+
+        this.updateViewCells();
+    }
+
+    protected String getBackground() {
+        return "guis/terminal.png";
+    }
+
+    protected void updateViewCells() {
         if (this.viewCell) {
             boolean update = false;
 
@@ -538,20 +864,9 @@ public class GuiMEMonitorable extends AEBaseMEGui
                 this.repo.setViewCell(this.myCurrentViewCells);
             }
         }
-
-        searchField.drawTextBox();
     }
 
-    protected String getBackground() {
-        return "guis/terminal.png";
-    }
-
-    @Override
-    protected boolean isPowered() {
-        return this.repo.hasPower();
-    }
-
-    int getMaxRows() {
+    protected int getMaxRows() {
         return AEConfig.instance.getConfigManager().getSetting(Settings.TERMINAL_STYLE) == TerminalStyle.SMALL
                 ? AEConfig.instance.MEMonitorableSmallSize
                 : Integer.MAX_VALUE;
@@ -563,22 +878,38 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
     @Override
     protected void keyTyped(final char character, final int key) {
-        if (!isAutoFocus) {
-            keyTypedResolver(character, key, false);
-        } else if (!this.checkHotbarKeys(key)) {
-            keyTypedResolver(character, key, true);
+        if (!searchField.isFocused() && (!NEI.searchField.existsSearchField() || !NEI.searchField.focused())
+                && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
+            searchField.setFocused(true);
+            return;
         }
-    }
 
-    private void keyTypedResolver(final char character, final int key, boolean hotBarCheckPassed) {
         if (NEI.searchField.existsSearchField()) {
-
             if ((NEI.searchField.focused() || searchField.isFocused())
                     && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
                 final boolean focused = searchField.isFocused();
                 searchField.setFocused(!focused);
                 NEI.searchField.setFocus(focused);
+                isAutoFocused = false;
                 return;
+            }
+
+            if (CommonHelper.proxy.isActionKey(ActionKey.SEARCH_CONNECTED_INVENTORIES, key)
+                    && !(NEI.searchField.focused() || searchField.isFocused())) {
+                VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+                if (slot instanceof VirtualMEMonitorableSlot monitorableSlot) {
+                    IAEStack<?> stack = monitorableSlot.getAEStack();
+                    this.monitorableContainer.setTargetStack(stack);
+                    if (stack != null) {
+                        final PacketInventoryAction p = new PacketInventoryAction(
+                                InventoryAction.FIND_ITEMS,
+                                this.getInventorySlots().size(),
+                                0);
+                        NetworkHandler.instance.sendToServer(p);
+                        this.mc.thePlayer.closeScreen();
+                        return;
+                    }
+                }
             }
 
             if (NEI.searchField.focused()) {
@@ -586,26 +917,31 @@ public class GuiMEMonitorable extends AEBaseMEGui
             }
         }
 
-        if (searchField.isFocused() && key == Keyboard.KEY_RETURN) {
+        if (searchField.isFocused() && (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER)) {
             searchField.setFocused(false);
+            isAutoFocused = false;
             return;
         }
 
-        if (character == ' ' && searchField.getText().isEmpty()) {
+        boolean skipHotbarCheck = searchField.isFocused()
+                && (AEConfig.instance.searchBoxFocusPriority == SearchBoxFocusPriority.ALWAYS
+                        || (AEConfig.instance.searchBoxFocusPriority == SearchBoxFocusPriority.NO_AUTOSEARCH
+                                && !isAutoFocused));
+
+        if (!skipHotbarCheck && checkHotbarKeys(key)) {
             return;
         }
 
         final boolean mouseInGui = this
                 .isPointInRegion(0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY);
 
-        if (this.isAutoFocus && !searchField.isFocused() && mouseInGui) {
+        if (this.canBeAutoFocused && !searchField.isFocused() && mouseInGui) {
             searchField.setFocused(true);
+            isAutoFocused = true;
         }
 
         if (!searchField.textboxKeyTyped(character, key)) {
-            if (hotBarCheckPassed || !this.checkHotbarKeys(key)) {
-                super.keyTyped(character, key);
-            }
+            super.keyTyped(character, key);
         }
     }
 
@@ -626,8 +962,9 @@ public class GuiMEMonitorable extends AEBaseMEGui
     }
 
     @Override
-    public Enum getTypeFilter() {
-        return this.configSrc.getSetting(Settings.TYPE_FILTER);
+    @Nullable
+    public Reference2BooleanMap<IAEStackType<?>> getTypeFilter() {
+        return this.typeFilters;
     }
 
     @Override
@@ -649,15 +986,20 @@ public class GuiMEMonitorable extends AEBaseMEGui
             this.ViewBox.set(this.configSrc.getSetting(Settings.VIEW_MODE));
         }
 
-        if (this.typeFilter != null) {
-            this.typeFilter.set(this.configSrc.getSetting(Settings.TYPE_FILTER));
+        this.repo.updateView();
+    }
+
+    public void updateTypeFilters(Reference2BooleanMap<IAEStackType<?>> map) {
+        if (this.typeFilters == null) return;
+
+        for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
+            this.typeFilters.put(entry.getKey(), entry.getBooleanValue());
         }
 
-        if (this.pinsStateButton != null) {
-            pinsState = (PinsState) this.configSrc.getSetting(Settings.PINS_STATE);
-            this.pinsStateButton.set(pinsState);
-
-            initGui();
+        // Update Buttons
+        for (final Map.Entry<TypeToggleButton, IAEStackType<?>> entry : this.typeToggleButtons.entrySet()) {
+            final boolean enabled = this.typeFilters.getBoolean(entry.getValue());
+            entry.getKey().setEnabled(enabled);
         }
 
         this.repo.updateView();
@@ -672,11 +1014,11 @@ public class GuiMEMonitorable extends AEBaseMEGui
                 && pointY < rectY + rectHeight + 1;
     }
 
-    int getReservedSpace() {
+    protected int getReservedSpace() {
         return this.reservedSpace;
     }
 
-    void setReservedSpace(final int reservedSpace) {
+    protected void setReservedSpace(final int reservedSpace) {
         this.reservedSpace = reservedSpace;
     }
 
@@ -712,14 +1054,36 @@ public class GuiMEMonitorable extends AEBaseMEGui
     }
 
     @Override
-    protected void handleMouseClick(Slot p_146984_1_, int p_146984_2_, int p_146984_3_, int p_146984_4_) {
+    protected void handleMouseClick(Slot slot, int slotIdx, int clickedButton, int clickType) {
 
         // Hack for view cells, because they are outside the container
-        if (p_146984_1_ != null && p_146984_4_ == 4 && p_146984_1_.xDisplayPosition > this.xSize) {
-            p_146984_4_ = 0;
+        if (slot != null && clickType == 4 && slot.xDisplayPosition > this.xSize) {
+            clickType = 0;
         }
 
-        super.handleMouseClick(p_146984_1_, p_146984_2_, p_146984_3_, p_146984_4_);
+        super.handleMouseClick(slot, slotIdx, clickedButton, clickType);
+    }
+
+    @Override
+    protected boolean handleClickOrDragSlot(@NotNull Slot slot, @org.jetbrains.annotations.Nullable ItemStack stack,
+            int mouseButton) {
+
+        if (isCtrlKeyDown() && mouseButton == 0
+                && stack == null
+                && slot instanceof AppEngSlot appEngSlot
+                && appEngSlot.isPlayerSide()) {
+            ItemStack stackInSlot = appEngSlot.getStack();
+            if (stackInSlot != null) {
+                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                    if (type.isContainerItemForType(stackInSlot)) {
+                        this.sendAction(MonitorableAction.CONTAINER_QUICK_TRANSFER, null, slot.slotNumber);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return super.handleClickOrDragSlot(slot, stack, mouseButton);
     }
 
     @Override
@@ -727,7 +1091,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
         super.handleKeyboardInput();
 
         // Pause the terminal when holding shift
-        this.repo.setPaused(hasShiftDown());
+        if (enableShiftPause) this.repo.setPaused(isShiftKeyDown());
     }
 
     public boolean hideItemPanelSlot(int tx, int ty, int tw, int th) {
@@ -756,17 +1120,60 @@ public class GuiMEMonitorable extends AEBaseMEGui
         return false;
     }
 
-    private boolean hasShiftDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
-    }
-
     @Override
-    public void setAEPins(IAEItemStack[] pins) {
+    public void setAEPins(IAEStack<?>[] pins) {
         repo.setAEPins(pins);
     }
 
     @Override
-    public void setPinsState(PinsState state) {
-        configSrc.putSetting(Settings.PINS_STATE, state);
+    public void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
+        if (this.pinsStateButton != null) {
+            if (craftingRows != craftingPinsRows || playerRows != playerPinsRows) {
+                craftingPinsRows = craftingRows;
+                playerPinsRows = playerRows;
+                reinitalize();
+            }
+        }
+    }
+
+    /**
+     * @return true if this click was handled as a pin-setting action, false if normal slot handling should continue
+     */
+    private boolean handleSetPinAction(VirtualMEPinSlot pinSlot) {
+        ItemStack itemStack = this.getStackFromHand();
+
+        if (itemStack == null) return false;
+
+        final boolean isRealItem = this.mc.thePlayer.inventory.getItemStack() != null;
+        final boolean nonItemInteraction = isCtrlKeyDown()
+                || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
+
+        if (nonItemInteraction) {
+            for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                if (type.isContainerItemForType(itemStack)) {
+                    IAEStack<?> stackInContainer = type.getStackFromContainerItem(itemStack);
+                    IAEStack<?> stackInSlot = pinSlot.getAEStack();
+
+                    if (isRealItem && stackInSlot != null
+                            && stackInSlot.getStackType() == type
+                            && (stackInContainer == null || stackInSlot.equals(stackInContainer))) {
+                        return false;
+                    }
+
+                    if (stackInContainer == null) return true;
+
+                    this.sendAction(MonitorableAction.SET_PIN, stackInContainer, pinSlot.getSlotIndex());
+                    return true;
+                }
+            }
+            return true;
+        } else {
+            IAEStack<?> stackInSlot = pinSlot.getAEStack();
+            if (isRealItem && stackInSlot instanceof IAEItemStack ais && ais.getItemStack().isItemEqual(itemStack)) {
+                return false;
+            }
+            this.sendAction(MonitorableAction.SET_PIN, AEItemStack.create(itemStack), pinSlot.getSlotIndex());
+            return true;
+        }
     }
 }

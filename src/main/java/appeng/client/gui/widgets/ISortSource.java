@@ -10,9 +10,13 @@
 
 package appeng.client.gui.widgets;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.SortDir;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
+import appeng.api.storage.data.IAEStackType;
+import appeng.util.MonitorableTypeFilter;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public interface ISortSource {
 
@@ -31,7 +35,8 @@ public interface ISortSource {
      */
     Enum getSortDisplay();
 
-    default Enum getTypeFilter() {
-        return TypeFilter.ALL;
+    @Nullable
+    default Reference2BooleanMap<IAEStackType<?>> getTypeFilter() {
+        return MonitorableTypeFilter.createDefaultMap();
     }
 }

@@ -32,10 +32,13 @@ public enum Settings {
 
     POWER_UNITS(EnumSet.allOf(PowerUnits.class)),
     ACCESS(EnumSet.of(AccessRestriction.READ_WRITE, AccessRestriction.READ, AccessRestriction.WRITE)),
+    EXTRACTION_MODE(EnumSet.allOf(ExtractionMode.class)),
 
     SORT_DIRECTION(EnumSet.allOf(SortDir.class)),
     SORT_BY(EnumSet.allOf(SortOrder.class)),
     CRAFTING_SORT_BY(EnumSet.allOf(CraftingSortOrder.class)),
+    CPU_SORT_BY(EnumSet.allOf(CPUSortBy.class)),
+    CPU_SORT_DIRECTION(EnumSet.allOf(SortDir.class)),
 
     SEARCH_TOOLTIPS(EnumSet.of(YesNo.YES, YesNo.NO)),
     VIEW_MODE(EnumSet.allOf(ViewItems.class)),
@@ -63,7 +66,6 @@ public enum Settings {
     PATTERN_OPTIMIZATION(EnumSet.of(YesNo.YES, YesNo.NO)),
 
     STORAGE_FILTER(EnumSet.allOf(StorageFilter.class)),
-    TYPE_FILTER(EnumSet.allOf(TypeFilter.class)),
     PLACE_BLOCK(EnumSet.of(YesNo.YES, YesNo.NO)),
 
     SCHEDULING_MODE(EnumSet.allOf(SchedulingMode.class)),
@@ -94,15 +96,21 @@ public enum Settings {
 
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class)),
 
+    PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    INCLUDE_SUBNETS(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    INSERT_ORDER(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class)),
+
     WIRELESS_TOOL_TYPE(EnumSet.allOf(WirelessToolType.class)),
 
     ADVANCED_WIRELESS_TOOL_MODE(EnumSet.allOf(AdvancedWirelessToolMode.class)),
 
     SUPER_WIRELESS_TOOL_GROUP_BY(EnumSet.allOf(SuperWirelessToolGroupBy.class)),
 
-    SUPER_WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO)),
-
-    PINS_STATE(EnumSet.allOf(PinsState.class));
+    SUPER_WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO));
 
     private final EnumSet<? extends Enum<?>> values;
 

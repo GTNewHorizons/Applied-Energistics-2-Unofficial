@@ -17,6 +17,8 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Represents a list of items in AE.
  * <p>
@@ -25,6 +27,14 @@ import java.util.Iterator;
  * Construct with Util.createItemList()
  */
 public interface IItemList<StackType extends IAEStack> extends IItemContainer<StackType>, Iterable<StackType> {
+
+    /**
+     * 0 - NULL 1 - IAEItemStack 2 - IAEFluidStack 3 - IAEStack
+     */
+    byte LIST_NUll = 0;
+    byte LIST_ITEM = 1;
+    byte LIST_FLUID = 2;
+    byte LIST_MIXED = 3;
 
     /**
      * add a stack to the list stackSize is used to add to stackSize, this will merge the stack with an item already in
@@ -70,8 +80,14 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
      */
     void resetStatus();
 
+    /** indicates whether elements can be added to the list */
+    default boolean hasWriteAccess() {
+        return true;
+    }
+
     default StackType[] toArray(StackType[] zeroSizedArray) {
         int prevSize = size();
+
         StackType[] output = (StackType[]) Array.newInstance(zeroSizedArray.getClass().getComponentType(), prevSize);
 
         int i = 0;
@@ -81,4 +97,24 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
 
         return i != prevSize ? Arrays.copyOf(output, i) : output;
     }
+
+    /**
+     * @return stack type for list, null for all stack type
+     */
+    @Nullable
+    IAEStackType<StackType> getStackType();
+
+    default public boolean isSorted() {
+        return false;
+    }
+
+    /**
+     * sort this list in nature ordering nothing happens if sorting is not supported
+     * 
+     * @return this
+     */
+    default public IItemList<StackType> toSorted() {
+        return this;
+    }
+
 }

@@ -31,7 +31,6 @@ public enum Upgrades {
     CAPACITY(0),
     REDSTONE(0),
     CRAFTING(0),
-    PATTERN_REFILLER(0),
     STICKY(0),
     VOID_OVERFLOW(0),
     /**

@@ -15,6 +15,7 @@ package appeng.api.storage;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.storage.data.IAEStack;
+import appeng.util.item.PrioritizedNetworkItemList;
 
 /**
  * Thin logic layer that can be swapped with different IMEInventory implementations, used to handle features related to
@@ -94,4 +95,28 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
         return false;
     }
 
+    /** returns internal IMEInventory if it has one */
+    default IMEInventory<StackType> getInternal() {
+        return null;
+    }
+
+    /**
+     * Find the network inventory (if any) that is being accessed. This should only return a value for inventories that
+     * connect two ME networks (= storage bus on interface).
+     *
+     * @return the accessed network inventory
+     */
+    default IMENetworkInventory<StackType> getExternalNetworkInventory() {
+        return null;
+    }
+
+    /**
+     * Find the items in a external network inventory with their priority. This should only be used in hanndlers where
+     * {@link #getExternalNetworkInventory()} returns a non-null value.
+     * 
+     * @return a network item list that supports priority
+     */
+    default PrioritizedNetworkItemList<StackType> getAvailableItemsWithPriority(int iteration) {
+        return null;
+    }
 }

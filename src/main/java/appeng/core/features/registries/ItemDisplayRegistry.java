@@ -48,11 +48,13 @@ public final class ItemDisplayRegistry implements IItemDisplayRegistry {
     }
 
     @Override
+    @Deprecated
     public void addItemFilter(BiPredicate<TypeFilter, IAEItemStack> filter) {
         this.itemFilters.add(filter);
     }
 
     @Override
+    @Deprecated
     public List<BiPredicate<TypeFilter, IAEItemStack>> getItemFilters() {
         return itemFilters;
     }

@@ -22,10 +22,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.VarInsnNode;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -36,7 +34,6 @@ import cpw.mods.fml.relauncher.FMLRelaunchLog;
 @Reflected
 public final class ASMTweaker implements IClassTransformer {
 
-    private static final String[] EXCEPTIONS = new String[0];
     private final Multimap<String, PublicLine> privateToPublicMethods = HashMultimap.create();
 
     @Reflected
@@ -81,25 +78,6 @@ public final class ASMTweaker implements IClassTransformer {
 
                 // CALL VIRTUAL!
                 if (transformedName.equals("net.minecraft.client.gui.inventory.GuiContainer")) {
-                    for (final MethodNode mn : classNode.methods) {
-                        if (mn.name.equals("func_146977_a") || (mn.name.equals("a") && mn.desc.equals("(Lzk;)V"))) {
-                            final MethodNode newNode = new MethodNode(
-                                    Opcodes.ACC_PUBLIC,
-                                    "func_146977_a_original",
-                                    mn.desc,
-                                    mn.signature,
-                                    EXCEPTIONS);
-                            newNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                            newNode.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-                            newNode.instructions.add(
-                                    new MethodInsnNode(Opcodes.INVOKESPECIAL, classNode.name, mn.name, mn.desc, false));
-                            newNode.instructions.add(new InsnNode(Opcodes.RETURN));
-                            this.log(newNode.name + newNode.desc + " - New Method");
-                            classNode.methods.add(newNode);
-                            break;
-                        }
-                    }
-
                     for (final MethodNode mn : classNode.methods) {
                         if (mn.name.equals("func_73863_a") || mn.name.equals("drawScreen")
                                 || (mn.name.equals("a") && mn.desc.equals("(IIF)V"))) {

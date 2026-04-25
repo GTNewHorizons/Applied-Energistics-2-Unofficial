@@ -14,8 +14,6 @@ import java.io.IOException;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 
@@ -24,7 +22,9 @@ import appeng.api.config.CopyMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.implementations.items.IUpgradeModule;
+import appeng.api.implementations.tiles.ICellWorkbench;
+import appeng.api.storage.data.IAEStackType;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerCellWorkbench;
@@ -33,7 +33,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.tile.misc.TileCellWorkbench;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
 
 public class GuiCellWorkbench extends GuiUpgradeable {
@@ -44,8 +44,9 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     private GuiImgButton partition;
     private GuiToggleButton copyMode;
     protected GuiImgButton cellRestriction;
+    private VirtualMEPhantomSlot[] configSlots;
 
-    public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final TileCellWorkbench te) {
+    public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final ICellWorkbench te) {
         super(new ContainerCellWorkbench(inventoryPlayer, te));
         this.workbench = (ContainerCellWorkbench) this.inventorySlots;
         this.ySize = 251;
@@ -84,6 +85,8 @@ public class GuiCellWorkbench extends GuiUpgradeable {
         this.buttonList.add(this.copyMode);
         this.buttonList.add(this.oreFilter);
         this.buttonList.add(this.cellRestriction);
+
+        initVirtualSlots();
     }
 
     @Override
@@ -92,6 +95,12 @@ public class GuiCellWorkbench extends GuiUpgradeable {
 
         this.bindTexture(this.getBackground());
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, 211 - 34, this.ySize);
+
+        final int slotsTextureY = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER) != 0 ? 46 : 28;
+
+        for (int i = 0; i < 7; i++)
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 28 + (18 * i), 7, slotsTextureY, 162, 18);
+
         if (this.drawUpgrades()) {
             if (this.workbench.availableUpgrades() <= 8) {
                 this.drawTexturedModalRect(
@@ -163,27 +172,38 @@ public class GuiCellWorkbench extends GuiUpgradeable {
         }
     }
 
+    private void initVirtualSlots() {
+        this.configSlots = new VirtualMEPhantomSlot[63];
+        final IAEStackInventory inputInv = this.workbench.getConfig();
+        final int xo = 8;
+        final int yo = -133;
+
+        for (int y = 0; y < 7; y++) {
+            for (int x = 0; x < 9; x++) {
+                VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(
+                        xo + x * 18,
+                        yo + y * 18 + 9 * 18,
+                        inputInv,
+                        x + y * 9,
+                        this::acceptType);
+                this.configSlots[x + y * 9] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+    }
+
     @Override
     protected void handleButtonVisibility() {
         this.copyMode.setState(this.workbench.getCopyMode() == CopyMode.CLEAR_ON_REMOVE);
 
-        boolean hasFuzzy = false;
-        boolean hasOreFilter = false;
-        final IInventory inv = this.workbench.getCellUpgradeInventory();
-        for (int x = 0; x < inv.getSizeInventory(); x++) {
-            final ItemStack is = inv.getStackInSlot(x);
-            if (is != null && is.getItem() instanceof IUpgradeModule) {
-                if (((IUpgradeModule) is.getItem()).getType(is) == Upgrades.FUZZY) {
-                    hasFuzzy = true;
-                }
-                if (((IUpgradeModule) is.getItem()).getType(is) == Upgrades.ORE_FILTER) {
-                    hasOreFilter = true;
-                }
-            }
-        }
+        final boolean hasFuzzy = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.FUZZY) != 0;
+        final boolean hasOreFilter = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER) != 0;
+
         this.fuzzyMode.setVisibility(!hasOreFilter && hasFuzzy);
         this.oreFilter.setVisibility(hasOreFilter);
         this.cellRestriction.setVisibility(this.workbench.haveCellRestrictAble());
+
+        for (VirtualMEPhantomSlot configSlot : this.configSlots) configSlot.setHidden(hasOreFilter);
     }
 
     @Override
@@ -197,8 +217,8 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     }
 
     @Override
-    protected GuiText getName() {
-        return GuiText.CellWorkbench;
+    protected String getName() {
+        return GuiText.CellWorkbench.getLocal();
     }
 
     @Override
@@ -223,5 +243,10 @@ public class GuiCellWorkbench extends GuiUpgradeable {
                 super.actionPerformed(btn);
             }
         } catch (final IOException ignored) {}
+    }
+
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        IAEStackType<?> cellType = workbench.getStackType();
+        return cellType == null || type == cellType;
     }
 }

@@ -14,7 +14,10 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.implementations.guiobjects.INetworkTool;
+import appeng.api.implementations.items.INetworkToolItem;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.SlotRestrictedInput;
@@ -22,17 +25,26 @@ import appeng.util.Platform;
 
 public class ContainerNetworkTool extends AEBaseContainer {
 
-    private final INetworkTool toolInv;
+    protected final INetworkTool toolInv;
 
     @GuiSync(1)
     public boolean facadeMode;
 
     public ContainerNetworkTool(final InventoryPlayer ip, final INetworkTool te) {
-        super(ip, null, null);
+        super(ip, te);
         this.toolInv = te;
 
         this.lockPlayerInventorySlot(ip.currentItem);
 
+        if (!(te.getItemStack().getItem() instanceof INetworkToolItem)) {
+            throw new IllegalArgumentException("Item is not a network tool: " + te.getItemStack());
+        }
+
+        setupSlotContainer(ip, te);
+    }
+
+    /** overridden to allow subclasses to change the slot setup */
+    protected void setupSlotContainer(InventoryPlayer ip, INetworkTool te) {
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
                 this.addSlotToContainer(
@@ -45,12 +57,11 @@ public class ContainerNetworkTool extends AEBaseContainer {
                                 this.getInventoryPlayer())));
             }
         }
-
         this.bindPlayerInventory(ip, 0, 166 - /* height of player inventory */ 82);
     }
 
     public void toggleFacadeMode() {
-        final NBTTagCompound data = Platform.openNbtData(this.toolInv.getItemStack());
+        final NBTTagCompound data = ItemStackNBT.get(this.toolInv.getItemStack());
         data.setBoolean("hideFacades", !data.getBoolean("hideFacades"));
         this.detectAndSendChanges();
     }
@@ -59,22 +70,19 @@ public class ContainerNetworkTool extends AEBaseContainer {
     public void detectAndSendChanges() {
         final ItemStack currentItem = this.getPlayerInv().getCurrentItem();
 
-        if (currentItem != this.toolInv.getItemStack()) {
-            if (currentItem != null) {
-                if (Platform.isSameItem(this.toolInv.getItemStack(), currentItem)) {
-                    this.getPlayerInv()
-                            .setInventorySlotContents(this.getPlayerInv().currentItem, this.toolInv.getItemStack());
-                } else {
-                    this.setValidContainer(false);
-                }
+        if (currentItem == null) {
+            this.setValidContainer(false);
+        } else if (currentItem != this.toolInv.getItemStack()) {
+            if (Platform.isSameItem(this.toolInv.getItemStack(), currentItem)) {
+                this.getPlayerInv()
+                        .setInventorySlotContents(this.getPlayerInv().currentItem, this.toolInv.getItemStack());
             } else {
                 this.setValidContainer(false);
             }
         }
 
         if (this.isValidContainer()) {
-            final NBTTagCompound data = Platform.openNbtData(currentItem);
-            this.setFacadeMode(data.getBoolean("hideFacades"));
+            this.setFacadeMode(ItemStackNBT.getBoolean(currentItem, "hideFacades"));
         }
 
         super.detectAndSendChanges();

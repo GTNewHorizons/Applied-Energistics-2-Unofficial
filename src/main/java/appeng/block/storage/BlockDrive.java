@@ -10,10 +10,14 @@
 
 package appeng.block.storage;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -68,5 +72,14 @@ public class BlockDrive extends AEBaseTileBlock {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void addInformation(ItemStack is, EntityPlayer player, List<String> tooltip, boolean advancedItemTooltips) {
+        super.addInformation(is, player, tooltip, advancedItemTooltips);
+        tooltip.addAll(
+                Arrays.asList(
+                        StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.BlockDriveWarning")
+                                .split("\\\\n")));
     }
 }

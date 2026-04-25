@@ -13,6 +13,7 @@ package appeng.tile.misc;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -52,6 +53,7 @@ import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
+import appeng.core.localization.GuiText;
 import appeng.helpers.PlayerSecurityWrapper;
 import appeng.me.GridAccessException;
 import appeng.me.storage.SecurityInventory;
@@ -70,7 +72,6 @@ import io.netty.buffer.ByteBuf;
 public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEAppEngInventory, ILocatable,
         IConfigManagerHost, ISecurityProvider, IColorableTile {
 
-    private static int difference = 0;
     private final AppEngInternalInventory configSlot = new AppEngInternalInventory(this, 1);
     private final IConfigManager cm = new ConfigManager(this);
     private final SecurityInventory inventory = new SecurityInventory(this);
@@ -82,12 +83,8 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
     public TileSecurity() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
         this.getProxy().setIdlePowerUsage(2.0);
-        difference++;
 
-        this.securityKey = System.currentTimeMillis() * 10 + difference;
-        if (difference > 10) {
-            difference = 0;
-        }
+        this.securityKey = UUID.randomUUID().hashCode();
 
         this.cm.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.cm.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
@@ -96,7 +93,11 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
 
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
-            final ItemStack removedStack, final ItemStack newStack) {}
+            final ItemStack removedStack, final ItemStack newStack) {
+        if (mc == InvOperation.markDirty) {
+            this.saveChanges();
+        }
+    }
 
     @Override
     public void getDrops(final World w, final int x, final int y, final int z, final List<ItemStack> drops) {
@@ -119,7 +120,7 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
         this.isActive = data.readBoolean();
 
         final AEColor oldPaintedColor = this.paintedColor;
-        this.paintedColor = AEColor.values()[data.readByte()];
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
 
         return oldPaintedColor != this.paintedColor || wasActive != this.isActive;
     }
@@ -155,7 +156,7 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
     public void readFromNBT_TileSecurity(final NBTTagCompound data) {
         this.cm.readFromNBT(data);
         if (data.hasKey("paintedColor")) {
-            this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
         }
 
         this.securityKey = data.getLong("securityKey");
@@ -305,5 +306,10 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
 
     public AppEngInternalInventory getConfigSlot() {
         return this.configSlot;
+    }
+
+    @Override
+    public GuiText getName() {
+        return GuiText.Security;
     }
 }

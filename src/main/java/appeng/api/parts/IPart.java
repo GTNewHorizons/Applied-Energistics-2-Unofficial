@@ -17,6 +17,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.OverridingMethodsMustInvokeSuper;
+
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -29,12 +33,14 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.capability.CapabilityProvider;
+
 import appeng.api.networking.IGridNode;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
-public interface IPart extends IBoxProvider {
+public interface IPart extends IBoxProvider, CapabilityProvider {
 
     /**
      * get an ItemStack that represents the bus, should contain the settings for whatever, can also be used in
@@ -274,4 +280,10 @@ public interface IPart extends IBoxProvider {
      * @return true if the part can be placed on this support.
      */
     boolean canBePlacedOn(BusSupport what);
+
+    @Override
+    @OverridingMethodsMustInvokeSuper
+    default <T> @Nullable T getCapability(@Nonnull Class<T> capability, @Nonnull ForgeDirection side) {
+        return null;
+    }
 }

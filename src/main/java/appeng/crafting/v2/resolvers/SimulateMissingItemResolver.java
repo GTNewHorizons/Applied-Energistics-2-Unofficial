@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.localization.GuiText;
@@ -17,14 +16,13 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
-public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
-        implements CraftingRequestResolver<StackType> {
+public class SimulateMissingItemResolver implements CraftingRequestResolver {
 
-    public static class ConjureItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
+    public static class ConjureItemTask extends CraftingTask {
 
         private long fulfilled = 0;
 
-        public ConjureItemTask(CraftingRequest<StackType> request) {
+        public ConjureItemTask(CraftingRequest request) {
             super(request, CraftingTask.PRIORITY_SIMULATE); // conjure items for calculations out of thin air as a last
                                                             // resort
         }
@@ -75,10 +73,8 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
-            if (fulfilled > 0 && request.stack instanceof IAEItemStack) {
-                targetPlan.add((IAEItemStack) request.stack.copy().setStackSize(fulfilled));
-            }
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
+            if (fulfilled > 0) targetPlan.add(request.stack.copy().setStackSize(fulfilled));
         }
 
         @Override
@@ -101,6 +97,11 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
         }
 
         @Override
+        public boolean isSimulated() {
+            return true;
+        }
+
+        @Override
         public String getTooltipText() {
             return GuiText.Simulation.getLocal() + "\n " + GuiText.Missing.getLocal() + ": " + fulfilled;
         }
@@ -108,10 +109,10 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest request,
             @Nonnull CraftingContext context) {
         if (request.allowSimulation) {
-            return Collections.singletonList(new ConjureItemTask<>(request));
+            return Collections.singletonList(new ConjureItemTask(request));
         } else {
             return Collections.emptyList();
         }

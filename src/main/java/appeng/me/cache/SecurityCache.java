@@ -140,6 +140,9 @@ public class SecurityCache implements ISecurityGrid {
                     return this.hasPermission(-1, perm);
                 }
             }
+            if (perm == SecurityPermissions.CRAFT && !perms.contains(SecurityPermissions.EXTRACT)) {
+                return false;
+            }
 
             return perms.contains(perm);
         }

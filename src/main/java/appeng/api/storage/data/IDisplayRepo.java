@@ -11,11 +11,23 @@ import appeng.helpers.IPinsHandler;
  */
 public interface IDisplayRepo extends IPinsHandler {
 
+    /**
+     * Set how many pin rows are currently visible (crafting and player). Only pins in these rows hide items from the
+     * main inventory; pins in reduced/hidden rows show in the main list again.
+     */
+    default void setVisiblePinRows(int craftingRows, int playerRows) {}
+
+    @Deprecated
     void postUpdate(final IAEItemStack stack);
+
+    void postUpdate(final IAEStack<?> stack);
 
     void setViewCell(final ItemStack[] filters);
 
+    @Deprecated
     IAEItemStack getReferenceItem(int idx);
+
+    IAEStack<?> getReferenceStack(int idx);
 
     ItemStack getItem(int idx);
 

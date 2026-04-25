@@ -20,15 +20,16 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 
 import com.google.common.base.Optional;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.PowerUnits;
 import appeng.api.implementations.items.IAEItemPowerStorage;
 import appeng.core.localization.GuiText;
 import appeng.items.AEBaseItem;
-import appeng.util.Platform;
 
 public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPowerStorage {
 
@@ -59,10 +60,13 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
 
         lines.add(
                 GuiText.StoredEnergy.getLocal() + ": "
+                        + EnumChatFormatting.GREEN
                         + NumberFormat.getNumberInstance(Locale.US).format(internalCurrentPower)
+                        + " "
                         + PowerUnits.AE.getLocal()
                         + " - "
-                        + MessageFormat.format(" {0,number,#.##%} ", percent));
+                        + MessageFormat.format("{0,number,#.##%} ", percent)
+                        + EnumChatFormatting.RESET);
     }
 
     @Override
@@ -74,12 +78,9 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
         super.getCheckedSubItems(sameItem, creativeTab, itemStacks);
-
         final ItemStack charged = new ItemStack(this, 1);
-        final NBTTagCompound tag = Platform.openNbtData(charged);
-        tag.setDouble("internalCurrentPower", this.getAEMaxPower(charged));
-        tag.setDouble("internalMaxPower", this.getAEMaxPower(charged));
-
+        ItemStackNBT.setDouble(charged, "internalCurrentPower", this.getAEMaxPower(charged));
+        ItemStackNBT.setDouble(charged, "internalMaxPower", this.getAEMaxPower(charged));
         itemStacks.add(charged);
     }
 
@@ -102,14 +103,12 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
     public void setDamage(final ItemStack stack, final int damage) {}
 
     private double getInternalBattery(final ItemStack is, final batteryOperation op, final double adjustment) {
-        final NBTTagCompound data = Platform.openNbtData(is);
-
-        double currentStorage = data.getDouble(POWER_NBT_KEY);
-        final double maxStorage = this.getAEMaxPower(is);
-
         switch (op) {
             case INJECT -> {
+                final NBTTagCompound data = ItemStackNBT.get(is);
+                double currentStorage = data.getDouble(POWER_NBT_KEY);
                 currentStorage += adjustment;
+                final double maxStorage = this.getAEMaxPower(is);
                 if (currentStorage > maxStorage) {
                     final double diff = currentStorage - maxStorage;
                     data.setDouble(POWER_NBT_KEY, maxStorage);
@@ -119,6 +118,8 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
                 return 0;
             }
             case EXTRACT -> {
+                final NBTTagCompound data = ItemStackNBT.get(is);
+                double currentStorage = data.getDouble(POWER_NBT_KEY);
                 if (currentStorage > adjustment) {
                     currentStorage -= adjustment;
                     data.setDouble(POWER_NBT_KEY, currentStorage);
@@ -129,8 +130,7 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
             }
             default -> {}
         }
-
-        return currentStorage;
+        return ItemStackNBT.getDouble(is, POWER_NBT_KEY);
     }
 
     /**

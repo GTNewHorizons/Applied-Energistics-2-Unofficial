@@ -3,16 +3,17 @@ package appeng.util.inv;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.AdvancedBlockingMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
-import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.util.item.AEItemStack;
@@ -49,26 +50,43 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
     }
 
     @Override
+    public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
+        return addStackToMonitor(toBeAdded, Actionable.MODULATE);
+    }
+
+    @Override
+    public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
+        return addStackToMonitor(toBeSimulated, Actionable.SIMULATE);
+    }
+
+    private IAEStack<?> addStackToMonitor(IAEStack<?> aes, Actionable act) {
+        final DualityInterface dual = interfaceHost.getInterfaceDuality();
+        final IMEMonitor monitor = dual.getMEMonitor(aes.getStackType());
+        if (monitor == null) return aes;
+        return monitor.injectItems(aes, act, dual.getActionSource());
+    }
+
+    @Override
     public boolean containsItems() {
-        DualityInterface dual = interfaceHost.getInterfaceDuality();
-        boolean hasMEItems = false;
+        final DualityInterface dual = interfaceHost.getInterfaceDuality();
         if (dual.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
-            if (dual.getConfigManager().getSetting(Settings.ADVANCED_BLOCKING_MODE) == AdvancedBlockingMode.DEFAULT) {
-                IItemList<IAEItemStack> itemList = dual.getItemInventory().getStorageList();
-                // This works okay, it'll loop as much as (or even less than) a normal inventory because the iterator
-                // hides empty slots or stacks of size 0
-                for (IAEItemStack stack : itemList) {
-                    if (!BlockingModeIgnoreItemRegistry.instance().isIgnored(stack.getItemStack())) {
-                        hasMEItems = true;
-                        break;
+            for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                final IMEMonitor<?> monitor = dual.getMEMonitor(type);
+                if (monitor != null) {
+                    for (final IAEStack<?> aes : monitor.getStorageList()) {
+                        if (aes instanceof AEItemStack ais) {
+                            if (dual.getConfigManager().getSetting(Settings.ADVANCED_BLOCKING_MODE)
+                                    == AdvancedBlockingMode.DEFAULT) {
+                                if (!AEApi.instance().registries().blockingModeIgnoreItem()
+                                        .isIgnored(ais.getItemStack())) {
+                                    return true;
+                                }
+                            } else return true;
+                        } else return true;
                     }
                 }
-            } else {
-                hasMEItems = !dual.getItemInventory().getStorageList().isEmpty();
             }
-            IMEMonitor<IAEFluidStack> dualFluidInventory = dual.getFluidInventory();
-            if (dualFluidInventory != null) hasMEItems |= !dualFluidInventory.getStorageList().isEmpty();
         }
-        return hasMEItems || super.containsItems();
+        return super.containsItems();
     }
 }

@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.util.Platform;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 public enum FuzzyMode {
 
@@ -26,7 +26,9 @@ public enum FuzzyMode {
     PERCENT_99(0),
     PERCENT_75(25),
     PERCENT_50(50),
-    PERCENT_25(75);
+    PERCENT_25(75),
+    PERCENT_10(90),
+    PERCENT_1(99);
 
     public final float breakPoint;
     public final float percentage;
@@ -42,7 +44,7 @@ public enum FuzzyMode {
 
     @Nonnull
     public static FuzzyMode fromItemStack(@Nonnull ItemStack is) {
-        final String fz = Platform.openNbtData(is).getString("FuzzyMode");
+        final String fz = ItemStackNBT.getString(is, "FuzzyMode");
         if (fz == null || fz.isEmpty()) {
             return FuzzyMode.IGNORE_ALL;
         }

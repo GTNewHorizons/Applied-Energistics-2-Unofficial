@@ -10,8 +10,16 @@
 
 package appeng.items.contents;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
@@ -21,24 +29,28 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.implementations.items.IAEItemPowerStorage;
+import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.MEMonitorHandler;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
-import appeng.container.interfaces.IInventorySlotAware;
 import appeng.me.storage.CellInventory;
 import appeng.util.ConfigManager;
-import appeng.util.Platform;
 
-public class PortableCellViewer extends MEMonitorHandler<IAEItemStack> implements IPortableCell, IInventorySlotAware {
+public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitorHandler<StackType>
+        implements IPortableCell {
 
     private final ItemStack target;
     private final IAEItemPowerStorage ips;
     private final int inventorySlot;
+    private final IAEStackType<?> type;
 
-    public PortableCellViewer(final ItemStack is, final int slot) {
-        super(CellInventory.getCell(is, null));
+    public PortableCellViewer(final ItemStack is, final int slot, IAEStackType<?> type) {
+        super((IMEInventoryHandler<StackType>) CellInventory.getCell(is, null, type));
+        this.type = type;
         this.ips = (IAEItemPowerStorage) is.getItem();
         this.target = is;
         this.inventorySlot = slot;
@@ -67,26 +79,34 @@ public class PortableCellViewer extends MEMonitorHandler<IAEItemStack> implement
 
     @Override
     public IMEMonitor<IAEItemStack> getItemInventory() {
-        return this;
+        if (type == ITEM_STACK_TYPE) return (IMEMonitor<IAEItemStack>) this;
+        return null;
     }
 
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
+        if (type == FLUID_STACK_TYPE) return (IMEMonitor<IAEFluidStack>) this;
+        return null;
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        if (this.type == type) {
+            return this;
+        }
         return null;
     }
 
     @Override
     public IConfigManager getConfigManager() {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(PortableCellViewer.this.target);
+            final NBTTagCompound data = ItemStackNBT.get(PortableCellViewer.this.target);
             manager.writeToNBT(data);
         });
-
         out.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(this.target).copy());
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(this.target).copy());
         return out;
     }
 }

@@ -10,9 +10,14 @@
 
 package appeng.container.implementations;
 
+import static appeng.util.Platform.isServer;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
@@ -20,18 +25,30 @@ import appeng.api.config.RedstoneMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
+import appeng.api.parts.ILevelEmitter;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
+import appeng.client.gui.IGuiSub;
+import appeng.client.gui.implementations.GuiLevelEmitter;
 import appeng.client.gui.widgets.MEGuiTextField;
+import appeng.container.PrimaryGui;
 import appeng.container.guisync.GuiSync;
-import appeng.container.slot.SlotFakeTypeOnly;
+import appeng.container.interfaces.IContainerSubGui;
+import appeng.container.interfaces.IVirtualSlotHolder;
+import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.parts.automation.PartLevelEmitter;
+import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerLevelEmitter extends ContainerUpgradeable {
+public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirtualSlotHolder, IContainerSubGui {
 
-    private final PartLevelEmitter lvlEmitter;
+    private final ILevelEmitter lvlEmitter;
 
     @SideOnly(Side.CLIENT)
     private MEGuiTextField textField;
@@ -45,9 +62,18 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
     @GuiSync(4)
     public YesNo cmType;
 
-    public ContainerLevelEmitter(final InventoryPlayer ip, final PartLevelEmitter te) {
+    @GuiSync(10)
+    public AEStackTypeFilter typeFilters;
+    private final IAEStack<?>[] configClientSlot = new IAEStack[1];
+
+    public ContainerLevelEmitter(final InventoryPlayer ip, final ILevelEmitter te) {
         super(ip, te);
         this.lvlEmitter = te;
+        this.typeFilters = new AEStackTypeFilter(this.lvlEmitter.getTypeFilters());
+
+        // sub gui copy paste
+        this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
+        this.addSlotToContainer(this.primaryGuiButtonIcon);
     }
 
     @SideOnly(Side.CLIENT)
@@ -103,9 +129,6 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
                             8 + 18 * 3,
                             this.getInventoryPlayer())).setNotDraggable());
         }
-
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
-        this.addSlotToContainer(new SlotFakeTypeOnly(inv, 0, 17, 42));
     }
 
     @Override
@@ -131,6 +154,10 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
             this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
             this.setRedStoneMode(
                     (RedstoneMode) this.getUpgradeable().getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
+            this.updateVirtualSlots(
+                    StorageName.CONFIG,
+                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG),
+                    this.configClientSlot);
         }
 
         this.standardDetectAndSendChanges();
@@ -145,6 +172,10 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
                 if (String.valueOf(oldValue).equals("-1")) {
                     this.textField.setCursorPositionEnd();
                 }
+            }
+        } else if (field.equals("typeFilters")) {
+            if (Minecraft.getMinecraft().currentScreen instanceof GuiLevelEmitter guiLevelEmitter) {
+                guiLevelEmitter.onUpdateTypeFilters();
             }
         }
     }
@@ -165,5 +196,74 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
 
     private void setLevelMode(final LevelType lvType) {
         this.lvType = lvType;
+    }
+
+    public AEStackTypeFilter getTypeFilters() {
+        return this.typeFilters;
+    }
+
+    public ILevelEmitter getLvlEmitter() {
+        return this.lvlEmitter;
+    }
+
+    public void toggleTypeFilter(String typeId, EntityPlayer player) {
+        if (typeId == null || typeId.isEmpty()) {
+            return;
+        }
+
+        final IAEStackType<?> type = AEStackTypeRegistry.getType(typeId);
+        if (type == null) {
+            return;
+        }
+
+        this.lvlEmitter.getTypeFilters().toggle(type);
+        // Create a new instance so that GuiSync can detect changes
+        this.typeFilters = new AEStackTypeFilter(this.lvlEmitter.getTypeFilters());
+        this.lvlEmitter.onChangeTypeFilters();
+    }
+
+    @Override
+    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
+        for (var entry : slotStacks.int2ObjectEntrySet()) {
+            this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG)
+                    .putAEStackInSlot(entry.getIntKey(), entry.getValue());
+        }
+
+        if (isServer()) {
+            this.updateVirtualSlots(
+                    StorageName.CONFIG,
+                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG),
+                    this.configClientSlot);
+        }
+    }
+
+    // for level terminal
+    // sub gui copypaste
+    private final Slot primaryGuiButtonIcon;
+
+    @SideOnly(Side.CLIENT)
+    private IGuiSub guiLink;
+
+    @Override
+    public void onSlotChange(Slot s) {
+        if (Platform.isClient() && this.primaryGuiButtonIcon == s && this.primaryGuiButtonIcon.getHasStack()) {
+            this.guiLink.initPrimaryGuiButton();
+        }
+    }
+
+    @Override
+    public void setPrimaryGui(PrimaryGui primaryGui) {
+        super.setPrimaryGui(primaryGui);
+        this.primaryGuiButtonIcon.putStack(primaryGui.getIcon());
+    }
+
+    @SideOnly(Side.CLIENT)
+    public ItemStack getPrimaryGuiIcon() {
+        return this.primaryGuiButtonIcon.getStack();
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void setGuiLink(IGuiSub gs) {
+        this.guiLink = gs;
     }
 }

@@ -12,6 +12,7 @@ package appeng.parts.reporting;
 
 import net.minecraft.item.ItemStack;
 
+import appeng.api.AEApi;
 import appeng.client.texture.CableBusTextures;
 
 public class PartTerminal extends AbstractPartTerminal {
@@ -37,5 +38,10 @@ public class PartTerminal extends AbstractPartTerminal {
     @Override
     public CableBusTextures getFrontDark() {
         return FRONT_DARK_ICON;
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().terminal().maybeStack(1).orNull();
     }
 }

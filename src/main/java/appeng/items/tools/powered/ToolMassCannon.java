@@ -10,6 +10,8 @@
 
 package appeng.items.tools.powered;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.List;
@@ -35,6 +37,7 @@ import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.base.Optional;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -43,9 +46,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ICellInventory;
-import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -63,10 +64,12 @@ import appeng.hooks.DispenserMatterCannon;
 import appeng.hooks.TickHandler;
 import appeng.hooks.TickHandler.PlayerColor;
 import appeng.items.contents.CellConfig;
+import appeng.items.contents.CellConfigLegacy;
 import appeng.items.contents.CellUpgrades;
 import appeng.items.misc.ItemPaintBall;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.me.storage.CellInventoryHandler;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TilePaint;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
@@ -93,10 +96,10 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
 
         final IMEInventory<IAEItemStack> cdi = AEApi.instance().registries().cell()
-                .getCellInventory(stack, null, StorageChannel.ITEMS);
+                .getCellInventory(stack, null, ITEM_STACK_TYPE);
 
-        if (cdi instanceof CellInventoryHandler) {
-            final ICellInventory cd = ((ICellInventoryHandler) cdi).getCellInv();
+        if (cdi instanceof CellInventoryHandler<?>handler) {
+            final ICellInventory<?> cd = handler.getCellInv();
             if (cd != null) {
                 lines.add(
                         cd.getUsedBytes() + " "
@@ -126,11 +129,11 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
                 shots += cu.getInstalledUpgrades(Upgrades.SPEED);
             }
 
-            final IMEInventory inv = AEApi.instance().registries().cell()
-                    .getCellInventory(item, null, StorageChannel.ITEMS);
+            final IMEInventory inv = AEApi.instance().registries().cell().getCellInventory(item, null, ITEM_STACK_TYPE);
             if (inv != null) {
-                final IItemList itemList = inv
-                        .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
+                final IItemList itemList = inv.getAvailableItems(
+                        AEApi.instance().storage().createSortedItemList(),
+                        IterationCounter.fetchNewId());
                 IAEStack aeAmmo = itemList.getFirstItem();
                 if (aeAmmo instanceof IAEItemStack) {
                     shots = Math.min(shots, (int) aeAmmo.getStackSize());
@@ -441,6 +444,11 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
     @Override
     public IInventory getConfigInventory(final ItemStack is) {
+        return new CellConfigLegacy(new CellConfig(is), ITEM_STACK_TYPE);
+    }
+
+    @Override
+    public IAEStackInventory getConfigAEInventory(ItemStack is) {
         return new CellConfig(is);
     }
 
@@ -451,7 +459,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
     @Override
     public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {
-        Platform.openNbtData(is).setString("FuzzyMode", fzMode.name());
+        ItemStackNBT.setString(is, "FuzzyMode", fzMode.name());
     }
 
     @Override
@@ -475,13 +483,15 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
     }
 
     @Override
-    public boolean isBlackListed(final ItemStack cellItem, final IAEItemStack requestedAddition) {
-        final float pen = AEApi.instance().registries().matterCannon().getPenetration(requestedAddition.getItemStack());
-        if (pen > 0) {
-            return false;
+    public boolean isBlackListed(final IAEStack<?> requestedAddition) {
+        if (requestedAddition instanceof IAEItemStack ais) {
+            final float pen = AEApi.instance().registries().matterCannon().getPenetration(ais.getItemStack());
+            if (pen > 0) {
+                return false;
+            }
+            return !(ais.getItem() instanceof ItemPaintBall);
         }
-
-        return !(requestedAddition.getItem() instanceof ItemPaintBall);
+        return false;
     }
 
     @Override
@@ -501,11 +511,11 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
     @Override
     public String getOreFilter(ItemStack is) {
-        return Platform.openNbtData(is).getString("OreFilter");
+        return ItemStackNBT.getString(is, "OreFilter");
     }
 
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        Platform.openNbtData(is).setString("OreFilter", filter);
+        ItemStackNBT.setString(is, "OreFilter", filter);
     }
 }

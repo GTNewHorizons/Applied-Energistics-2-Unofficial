@@ -99,6 +99,8 @@ public interface IBlocks {
 
     ITileDefinition security();
 
+    ITileDefinition storageReshuffle();
+
     /*
      * quantum Network Bridge
      */
@@ -112,6 +114,16 @@ public interface IBlocks {
     ITileDefinition spatialPylon();
 
     ITileDefinition spatialIOPort();
+
+    /**
+     * Overworld-side endpoint for linking into a Spatial Storage dimension.
+     */
+    ITileDefinition spatialLinkChamber();
+
+    /**
+     * A network anchor usable inside a spatial storage dimension to join the owning AE network.
+     */
+    ITileDefinition spatialNetworkRelay();
 
     /*
      * Bus / cables

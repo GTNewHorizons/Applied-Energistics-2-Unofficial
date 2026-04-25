@@ -7,8 +7,11 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 
 /**
@@ -104,5 +107,10 @@ public final class LazyItemList<StackType extends IAEStack<StackType>> implement
     @Override
     public Spliterator<StackType> spliterator() {
         return getCachedOrCompute().spliterator();
+    }
+
+    @Override
+    public @Nullable IAEStackType<StackType> getStackType() {
+        return getCachedOrCompute().getStackType();
     }
 }

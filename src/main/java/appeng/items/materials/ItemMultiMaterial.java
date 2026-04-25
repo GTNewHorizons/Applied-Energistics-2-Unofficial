@@ -10,7 +10,6 @@
 
 package appeng.items.materials;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -29,7 +28,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
@@ -40,6 +38,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IUpgradeableHost;
@@ -87,8 +86,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
         }
 
         if (mt == MaterialType.NamePress) {
-            final NBTTagCompound c = Platform.openNbtData(stack);
-            lines.add(c.getString("InscribeName"));
+            lines.add(ItemStackNBT.getString(stack, "InscribeName"));
         }
 
         final Upgrades u = this.getType(stack);
@@ -141,7 +139,6 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
             case CardSuperSpeed -> Upgrades.SUPERSPEED;
             case CardInverter -> Upgrades.INVERTER;
             case CardCrafting -> Upgrades.CRAFTING;
-            case CardPatternRefiller -> Upgrades.PATTERN_REFILLER;
             case CardAdvancedBlocking -> Upgrades.ADVANCED_BLOCKING;
             case CardLockCrafting -> Upgrades.LOCK_CRAFTING;
             case CardSticky -> Upgrades.STICKY;
@@ -159,7 +156,10 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
         boolean enabled = true;
 
         for (final AEFeature f : mat.getFeature()) {
-            enabled = enabled && AEConfig.instance.isFeatureEnabled(f);
+            if (!AEConfig.instance.isFeatureEnabled(f)) {
+                enabled = false;
+                break;
+            }
         }
 
         mat.setStackSrc(new MaterialStackSrc(mat));
@@ -179,6 +179,9 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
         return mat.getStackSrc();
     }
 
+    /**
+     * Iterates over all materials and either registers or removes them if there's a replacement from another mod
+     */
     public void makeUnique() {
         for (final MaterialType mt : ImmutableSet.copyOf(this.dmgToMaterial.values())) {
             if (mt.getOreName() != null) {
@@ -192,7 +195,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
                     }
 
                     final List<ItemStack> options = OreDictionary.getOres(name);
-                    if (options != null && options.size() > 0) {
+                    if (options != null && !options.isEmpty()) {
                         for (final ItemStack is : options) {
                             if (is != null && is.getItem() != null) {
                                 replacement = is.copy();
@@ -248,10 +251,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     @Override
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
-        final List<MaterialType> types = Arrays.asList(MaterialType.values());
-        types.sort(Comparator.comparing(Enum::name));
-
-        for (final MaterialType mat : types) {
+        for (final MaterialType mat : MaterialType.values()) {
             if (mat.getDamageValue() >= 0 && mat.isRegistered() && mat.getItemInstance() == this) {
                 itemStacks.add(new ItemStack(this, 1, mat.getDamageValue()));
             }

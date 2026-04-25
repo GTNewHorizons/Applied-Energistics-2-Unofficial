@@ -10,12 +10,15 @@
 
 package appeng.util.item;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
@@ -56,7 +59,12 @@ public final class FluidList implements IItemList<IAEFluidStack> {
             return Collections.emptyList();
         }
 
-        return Collections.singletonList(this.findPrecise(filter));
+        IAEFluidStack found = this.findPrecise(filter);
+        if (found == null) {
+            return Collections.emptyList();
+        }
+
+        return Collections.singletonList(found);
     }
 
     @Override
@@ -160,5 +168,10 @@ public final class FluidList implements IItemList<IAEFluidStack> {
 
     private void putFluidRecord(final IAEFluidStack fluid) {
         this.records.add(fluid);
+    }
+
+    @Override
+    public IAEStackType<IAEFluidStack> getStackType() {
+        return FLUID_STACK_TYPE;
     }
 }

@@ -62,7 +62,7 @@ public class PacketNEIBookmark extends AppEngPacket {
         final Container con = pmp.openContainer;
 
         if (con instanceof ContainerMEMonitorable monitorable) {
-            final IMEMonitor<IAEItemStack> monitor = monitorable.getMonitor();
+            final IMEMonitor<IAEItemStack> monitor = monitorable.getItemMonitor();
             if (monitor != null) {
                 final IEnergySource energy = monitorable.getPowerSource();
                 final BaseActionSource actionSource = monitorable.getActionSource();

@@ -24,6 +24,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import com.google.common.base.Optional;
@@ -34,16 +35,18 @@ import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
+import appeng.api.parts.IPart;
 import appeng.api.parts.IPartCollisionHelper;
+import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.PartItemStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.AEConfig;
 import appeng.core.localization.PlayerMessages;
 import appeng.me.GridAccessException;
-import appeng.me.cache.P2PCache;
 import appeng.me.cache.helpers.TunnelCollection;
 import appeng.parts.PartBasicState;
+import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -197,17 +200,10 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         }
         output.setLong("freq", this.getFrequency());
 
-        return output;
-    }
+        final ItemStack p2pItem = this.getItemStack(PartItemStack.Wrench);
+        p2pItem.writeToNBT(output);
 
-    public void pasteMemoryCardData(PartP2PTunnel<?> newTunnel, NBTTagCompound data) throws GridAccessException {
-        final long freq = data.getLong("freq");
-        final P2PCache p2p = newTunnel.getProxy().getP2P();
-        p2p.updateFreq(newTunnel, freq);
-        PartP2PTunnel input = p2p.getInput(freq);
-        if (input != null && input.hasCustomName()) {
-            newTunnel.setCustomNameInternal(input.getCustomName());
-        }
+        return output;
     }
 
     @Override
@@ -266,33 +262,97 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final ItemStack is = player.inventory.getCurrentItem();
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
             if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
-
-            long newFreq = this.getFrequency();
-            final boolean wasOutput = this.isOutput();
-            this.setOutput(false);
-
-            if (wasOutput || this.getFrequency() == 0) {
-                newFreq = System.currentTimeMillis();
-            }
-
-            try {
-                this.getProxy().getP2P().updateFreq(this, newFreq);
-            } catch (final GridAccessException e) {
-                // :P
-            }
-            this.onTunnelConfigChange();
-
-            final NBTTagCompound data = this.getMemoryCardData();
-            final ItemStack p2pItem = this.getItemStack(PartItemStack.Wrench);
-            final String type = p2pItem.getUnlocalizedName();
-
-            p2pItem.writeToNBT(data);
-
-            mc.setMemoryCardContents(is, type + ".name", data);
-            mc.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
+            if (Platform.isClient()) return true;
+            PartP2PTunnel<?> tunnel = this.convertToInput(player, null);
+            tunnel.saveInputToMemoryCard(player, mc, is);
             return true;
         }
         return false;
+    }
+
+    public PartP2PTunnel<?> convertToInput(final EntityPlayer player, final ItemStack newType) {
+        if (newType != null && !this.canChangeType(newType)) {
+            return null;
+        }
+        if (Platform.isClient()) return this;
+
+        if (this.isOutput() || this.getFrequency() == 0) {
+            final ItemStack itemStack = newType == null ? this.getItemStack(PartItemStack.Wrench) : newType;
+            final PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
+
+            newTunnel.setOutput(false);
+            newTunnel.copySettings(this);
+            newTunnel.copyContents(this);
+
+            final long freq = System.currentTimeMillis();
+            newTunnel.updateFreq(freq);
+
+            return newTunnel;
+        }
+        return this;
+    }
+
+    public PartP2PTunnel<?> convertToOutput(final EntityPlayer player, final ItemStack newType, final long freq) {
+        if (!this.canChangeType(newType) || freq == 0) {
+            return null;
+        }
+        if (Platform.isClient()) return this;
+
+        final PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, newType);
+        newTunnel.setOutput(true);
+        newTunnel.copyContents(this);
+
+        newTunnel.updateFreq(freq);
+        final PartP2PTunnel<?> input = newTunnel.getInput();
+        newTunnel.copyMeta(input);
+        newTunnel.copySettings(input);
+        return newTunnel;
+    }
+
+    public PartP2PTunnel<?> unbind(final EntityPlayer player) {
+        if (this.getFrequency() == 0) {
+            return this;
+        }
+        if (Platform.isClient()) return this;
+
+        final ItemStack itemStack = this.getItemStack(PartItemStack.Wrench);
+        PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
+        newTunnel.setOutput(false);
+        newTunnel.copyContents(this);
+        newTunnel.updateFreq(0);
+        return newTunnel;
+    }
+
+    private void unbindTunnel() {
+        try {
+            this.getProxy().getP2P().unbind(this);
+        } catch (final GridAccessException ignored) {}
+    }
+
+    protected void copyMeta(final PartP2PTunnel<?> from) {
+        if (from == null) {
+            return;
+        }
+        if (from.hasCustomName()) {
+            this.setCustomNameInternal(from.getCustomName());
+        }
+    }
+
+    private void updateFreq(final long freq) {
+        try {
+            this.getProxy().getP2P().updateFreq(this, freq);
+        } catch (final GridAccessException e) {
+            // :P
+        }
+    }
+
+    protected void saveInputToMemoryCard(final EntityPlayer player, final IMemoryCard mc, final ItemStack is) {
+        final NBTTagCompound data = this.getMemoryCardData();
+        final ItemStack p2pItem = this.getItemStack(PartItemStack.Wrench);
+        final String type = p2pItem.getUnlocalizedName();
+
+        mc.setMemoryCardContents(is, type + ".name", data);
+        mc.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
     }
 
     public void onTunnelConfigChange() {}
@@ -346,4 +406,45 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     void setCustomNameInternal(String name) {
         super.setCustomName(name);
     }
+
+    private boolean canChangeType(final ItemStack newType) {
+        if (newType == null) return false;
+
+        if (newType.getItem() instanceof IPartItem partItem) {
+            final IPart testPart = partItem.createPartFromItemStack(newType);
+            return this.checkIfCompatibleType(testPart);
+        }
+        return false;
+    }
+
+    private PartP2PTunnel<?> replacePartInWorld(final EntityPlayer player, final ItemStack newType) {
+        this.getHost().removePart(this.getSide(), true);
+        this.unbindTunnel();
+
+        final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
+        final IPart newBus = this.getHost().getPart(dir);
+        if (newBus instanceof PartP2PTunnel<?>newTunnel) {
+            return newTunnel;
+        } else throw new RuntimeException();
+    }
+
+    protected void copyContents(final PartP2PTunnel<?> from) {}
+
+    protected void copySettings(final PartP2PTunnel<?> from) {}
+
+    protected PartP2PTunnel<?> applyMemoryCard(final EntityPlayer player, final IMemoryCard memoryCard,
+            final ItemStack is) {
+        final NBTTagCompound data = memoryCard.getData(is);
+        final ItemStack newType = ItemStack.loadItemStackFromNBT(data);
+
+        PartP2PTunnel<?> newTunnel = this.convertToOutput(player, newType, data.getLong("freq"));
+        if (newTunnel == null) {
+            memoryCard.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
+            return null;
+        }
+        memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
+        return newTunnel;
+    }
+
+    protected abstract boolean checkIfCompatibleType(final IPart testPart);
 }

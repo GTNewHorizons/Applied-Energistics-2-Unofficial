@@ -23,6 +23,14 @@ import appeng.tile.events.TileEventType;
 
 public abstract class AENetworkInvTile extends AEBaseInvTile implements IActionHost, IGridProxyable {
 
+    protected AENetworkInvTile() {
+        this(true);
+    }
+
+    protected AENetworkInvTile(boolean inventoryPersistent) {
+        super(inventoryPersistent);
+    }
+
     private final AENetworkProxy gridProxy = new AENetworkProxy(this, "proxy", this.getItemFromTile(this), true);
 
     @TileEvent(TileEventType.WORLD_NBT_READ)

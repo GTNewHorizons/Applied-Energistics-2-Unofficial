@@ -1,0 +1,124 @@
+package appeng.tile.inventory;
+
+import static appeng.util.Platform.readStackNBT;
+import static appeng.util.Platform.writeStackNBT;
+
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants.NBT;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
+import appeng.core.AELog;
+import appeng.util.Platform;
+
+public class IAEStackInventory {
+
+    private final IIAEStackInventory aesInventory;
+    private final IAEStack<?>[] inv;
+    private final int size;
+    private final StorageName storageName;
+
+    public IAEStackInventory(final IIAEStackInventory te, final int size, StorageName storageName) {
+        this.aesInventory = te;
+        this.size = size;
+        this.inv = new IAEStack<?>[size];
+        this.storageName = storageName;
+    }
+
+    public IAEStackInventory(final IIAEStackInventory te, final int size) {
+        this.aesInventory = te;
+        this.size = size;
+        this.inv = new IAEStack<?>[size];
+        this.storageName = StorageName.NONE;
+    }
+
+    public boolean isEmpty() {
+        for (int x = 0; x < this.size; x++) {
+            if (this.getAEStackInSlot(x) != null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public IAEStack<?> getAEStackInSlot(final int n) {
+        return this.inv[n];
+    }
+
+    public void putAEStackInSlot(final int n, IAEStack<?> aes) {
+        this.inv[n] = aes;
+        markDirty();
+    }
+
+    public void writeToNBT(@NotNull ItemStack stack, String name) {
+        if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        this.writeToNBT(stack.getTagCompound(), name);
+        if (stack.getTagCompound().hasNoTags()) {
+            stack.setTagCompound(null);
+        }
+    }
+
+    public void writeToNBT(final NBTTagCompound data, final String name) {
+        final NBTTagCompound c = new NBTTagCompound();
+        this.writeToNBT(c);
+        if (c.hasNoTags()) {
+            data.removeTag(name);
+        } else {
+            data.setTag(name, c);
+        }
+    }
+
+    private void writeToNBT(final NBTTagCompound target) {
+        for (int x = 0; x < this.size; x++) {
+            try {
+                if (this.inv[x] != null) {
+                    final NBTTagCompound c = new NBTTagCompound();
+                    writeStackNBT(this.inv[x], c, true);
+                    target.setTag("#" + x, c);
+                }
+            } catch (final Exception ignored) {}
+        }
+    }
+
+    public void readFromNBT(@Nullable final NBTTagCompound data, final String name) {
+        if (data != null && data.hasKey(name, NBT.TAG_COMPOUND)) {
+            this.readFromNBT(data.getCompoundTag(name));
+        }
+    }
+
+    private void readFromNBT(final NBTTagCompound target) {
+        for (int x = 0; x < this.size; x++) {
+            try {
+                final String key = "#" + x;
+                if (target.hasKey(key, NBT.TAG_COMPOUND)) {
+                    final NBTTagCompound c = target.getCompoundTag(key);
+                    final IAEStack<?> stack = readStackNBT(c, false);
+                    if (stack != null && stack.getStackSize() == 0) stack.setStackSize(c.getInteger("Count"));
+                    this.inv[x] = stack;
+                }
+            } catch (final Exception e) {
+                AELog.debug(e);
+            }
+        }
+    }
+
+    public int getSizeInventory() {
+        return this.size;
+    }
+
+    public void markDirty() {
+        if (this.aesInventory != null && Platform.isServer()) {
+            this.aesInventory.saveAEStackInv();
+        }
+    }
+
+    public StorageName getStorageName() {
+        return storageName;
+    }
+}

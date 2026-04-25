@@ -45,7 +45,7 @@ public class TileCondenser extends AEBaseInvTile implements IFluidHandler, IConf
     private double storedPower = 0;
 
     public TileCondenser() {
-        this.cm.registerSetting(Settings.CONDENSER_OUTPUT, CondenserOutput.TRASH);
+        this.cm.registerSetting(Settings.CONDENSER_OUTPUT, CondenserOutput.SINGULARITY);
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
@@ -157,6 +157,11 @@ public class TileCondenser extends AEBaseInvTile implements IFluidHandler, IConf
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed,
             final ItemStack added) {
+        if (mc == InvOperation.markDirty) {
+            this.saveChanges();
+            return;
+        }
+
         if (slot == 0) {
             final ItemStack is = inv.getStackInSlot(0);
             if (is != null) {

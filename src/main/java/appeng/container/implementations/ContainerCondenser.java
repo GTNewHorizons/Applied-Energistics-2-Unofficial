@@ -33,10 +33,10 @@ public class ContainerCondenser extends AEBaseContainer implements IProgressProv
     public long storedPower = 0;
 
     @GuiSync(2)
-    public CondenserOutput output = CondenserOutput.TRASH;
+    public CondenserOutput output = CondenserOutput.SINGULARITY;
 
     public ContainerCondenser(final InventoryPlayer ip, final TileCondenser condenser) {
-        super(ip, condenser, null);
+        super(ip, condenser);
         this.condenser = condenser;
 
         this.addSlotToContainer(

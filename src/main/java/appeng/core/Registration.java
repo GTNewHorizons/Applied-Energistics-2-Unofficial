@@ -60,9 +60,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.features.DefinitionConverter;
 import appeng.core.features.IAEFeature;
 import appeng.core.features.IFeatureHandler;
-import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.core.features.registries.P2PTunnelRegistry;
-import appeng.core.features.registries.entries.BasicCellHandler;
 import appeng.core.features.registries.entries.CreativeCellHandler;
 import appeng.core.features.registries.entries.VoidCellHandler;
 import appeng.core.localization.GuiText;
@@ -368,6 +366,7 @@ public final class Registration {
         target.partStorageMonitor = this.converter.of(source.storageMonitor());
         target.partThroughputMonitor = this.converter.of(source.throughputMonitor());
         target.partConversionMonitor = this.converter.of(source.conversionMonitor());
+        target.partPatternRepeater = this.converter.of(source.patternRepeater());
     }
 
     /**
@@ -456,6 +455,8 @@ public final class Registration {
         target.itemCellCreative = this.converter.of(source.cellCreative());
         target.itemViewCell = this.converter.of(source.viewCell());
         target.itemEncodedPattern = this.converter.of(source.encodedPattern());
+        target.itemEncodedUltimatePattern = converter.of(source.encodedUltimatePattern());
+        target.itemEncodedTunnelPattern = converter.of(source.encodedTunnelPattern());
 
         target.itemCell1k = this.converter.of(source.cell1k());
         target.itemCell4k = this.converter.of(source.cell4k());
@@ -547,7 +548,7 @@ public final class Registration {
 
         registries.externalStorage().addExternalStorageInterface(new AEExternalHandler());
 
-        registries.cell().addCellHandler(new BasicCellHandler());
+        // BasicCellHandler is built into the Registry, so there is no need to register it here.
         registries.cell().addCellHandler(new CreativeCellHandler());
         registries.cell().addCellHandler(new VoidCellHandler());
 
@@ -639,6 +640,8 @@ public final class Registration {
         Upgrades.REDSTONE.registerItem(parts.importBus(), 1);
         Upgrades.CAPACITY.registerItem(parts.importBus(), 2);
         Upgrades.SPEED.registerItem(parts.importBus(), 4);
+        Upgrades.SUPERSPEED.registerItem(parts.importBus(), 4);
+        Upgrades.SUPERLUMINALSPEED.registerItem(parts.importBus(), 4);
         Upgrades.ORE_FILTER.registerItem(parts.importBus(), 1);
 
         // Export Bus
@@ -646,6 +649,8 @@ public final class Registration {
         Upgrades.REDSTONE.registerItem(parts.exportBus(), 1);
         Upgrades.CAPACITY.registerItem(parts.exportBus(), 2);
         Upgrades.SPEED.registerItem(parts.exportBus(), 4);
+        Upgrades.SUPERSPEED.registerItem(parts.exportBus(), 4);
+        Upgrades.SUPERLUMINALSPEED.registerItem(parts.exportBus(), 4);
         Upgrades.CRAFTING.registerItem(parts.exportBus(), 1);
         Upgrades.ORE_FILTER.registerItem(parts.exportBus(), 1);
 
@@ -774,10 +779,6 @@ public final class Registration {
 
         // Grower
         Upgrades.SPEED.registerItem(blocks.crystalGrowthChamber(), 3);
-
-        // Terminals
-        Upgrades.PATTERN_REFILLER.registerItem(parts.patternTerminal(), 1);
-        Upgrades.PATTERN_REFILLER.registerItem(parts.patternTerminalEx(), 1);
 
         for (final Item wirelessTerminalItem : items.wirelessTerminal().maybeItem().asSet()) {
             registries.wireless().registerWirelessHandler((IWirelessTermHandler) wirelessTerminalItem);
@@ -909,7 +910,7 @@ public final class Registration {
         /**
          * Populate list of items that blocking mode should ignore
          */
-        BlockingModeIgnoreItemRegistry.instance().registerDefault();
+        registries.blockingModeIgnoreItem().registerDefault();
     }
 
     /**

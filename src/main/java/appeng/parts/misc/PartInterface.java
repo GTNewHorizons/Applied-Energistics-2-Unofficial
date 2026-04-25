@@ -13,6 +13,9 @@ package appeng.parts.misc;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -25,8 +28,14 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.google.common.collect.ImmutableSet;
+import org.jetbrains.annotations.NotNull;
 
+import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSource;
+
+import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
@@ -48,13 +57,18 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
+import appeng.capabilities.MEItemIO;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
+import appeng.me.GridAccessException;
 import appeng.parts.PartBasicState;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
@@ -63,8 +77,9 @@ import appeng.util.inv.IInventoryDestination;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartInterface extends PartBasicState implements IGridTickable, IStorageMonitorable, IInventoryDestination,
-        IInterfaceHost, ISidedInventory, IAEAppEngInventory, ITileStorageMonitorable, IPriorityHost {
+public class PartInterface extends PartBasicState
+        implements IGridTickable, IStorageMonitorable, IInventoryDestination, IInterfaceHost, ISidedInventory,
+        IAEAppEngInventory, ITileStorageMonitorable, IPriorityHost, IPrimaryGuiIconProvider {
 
     private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
 
@@ -243,6 +258,11 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     }
 
     @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        return this.duality.getMEMonitor(type);
+    }
+
+    @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
         return this.duality.getTickingRequest(node);
     }
@@ -379,7 +399,7 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     }
 
     @Override
-    public IAEItemStack injectCraftedItems(final ICraftingLink link, final IAEItemStack items, final Actionable mode) {
+    public IAEStack<?> injectCraftedItems(final ICraftingLink link, final IAEStack<?> items, final Actionable mode) {
         return this.duality.injectCraftedItems(link, items, mode);
     }
 
@@ -401,5 +421,27 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     @Override
     public ItemStack getSelfRep() {
         return this.getItemStack();
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().iface().maybeStack(1).orNull();
+    }
+
+    private MEItemIO getItemIO() {
+        try {
+            return new MEItemIO(this);
+        } catch (GridAccessException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public <T> @Nullable T getCapability(@Nonnull Class<T> capability, @Nonnull ForgeDirection side) {
+        if (capability == ItemSource.class || capability == ItemSink.class || capability == ItemIO.class) {
+            return capability.cast(getItemIO());
+        }
+
+        return super.getCapability(capability, side);
     }
 }

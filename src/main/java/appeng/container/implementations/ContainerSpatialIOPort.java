@@ -13,6 +13,7 @@ package appeng.container.implementations;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.config.PowerMultiplier;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.energy.IEnergyGrid;
@@ -42,7 +43,7 @@ public class ContainerSpatialIOPort extends AEBaseContainer {
     private int delay = 40;
 
     public ContainerSpatialIOPort(final InventoryPlayer ip, final TileSpatialIOPort spatialIOPort) {
-        super(ip, spatialIOPort, null);
+        super(ip, spatialIOPort);
 
         if (Platform.isServer()) {
             this.network = spatialIOPort.getGridNode(ForgeDirection.UNKNOWN).getGrid();
@@ -81,7 +82,7 @@ public class ContainerSpatialIOPort extends AEBaseContainer {
                 if (eg != null) {
                     this.setCurrentPower((long) (100.0 * eg.getStoredPower()));
                     this.setMaxPower((long) (100.0 * eg.getMaxStoredPower()));
-                    this.setRequiredPower((long) (100.0 * sc.requiredPower()));
+                    this.setRequiredPower((long) (100.0 * PowerMultiplier.CONFIG.multiply(sc.requiredPower())));
                     this.setEfficency((long) (100.0f * sc.currentEfficiency()));
                 }
             }

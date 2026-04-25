@@ -36,14 +36,15 @@ public class RendererSecurity extends BaseBlockRender<BlockSecurity, TileSecurit
     public void renderInventory(final BlockSecurity block, final ItemStack is, final RenderBlocks renderer,
             final ItemRenderType type, final Object[] obj) {
         renderer.overrideBlockTexture = ExtraBlockTextures.getMissing();
-        this.renderInvBlock(EnumSet.of(ForgeDirection.SOUTH), block, is, Tessellator.instance, 0x000000, renderer);
+        final Tessellator tess = Tessellator.instance;
+        this.renderInvBlock(EnumSet.of(ForgeDirection.SOUTH), block, is, tess, 0x000000, renderer);
 
         renderer.overrideBlockTexture = ExtraBlockTextures.MEChest.getIcon();
         this.renderInvBlock(
                 EnumSet.of(ForgeDirection.UP),
                 block,
                 is,
-                Tessellator.instance,
+                tess,
                 this.adjustBrightness(AEColor.Transparent.whiteVariant, 0.7),
                 renderer);
 
@@ -69,22 +70,23 @@ public class RendererSecurity extends BaseBlockRender<BlockSecurity, TileSecurit
             b = 15 << 20 | 15 << 4;
         }
 
-        Tessellator.instance.setBrightness(b);
-        Tessellator.instance.setColorOpaque_I(0xffffff);
+        final Tessellator tess = Tessellator.instance;
+        tess.setBrightness(b);
+        tess.setColorOpaque_I(0xffffff);
         renderer.setRenderBounds(0, 0, 0, 1, 1, 1);
 
-        Tessellator.instance.setColorOpaque_I(sp.getColor().whiteVariant);
+        tess.setColorOpaque_I(sp.getColor().whiteVariant);
         IIcon ico = sp.isActive() ? ExtraBlockTextures.BlockMESecurityOn_Light.getIcon()
                 : ExtraBlockTextures.MEChest.getIcon();
         this.renderFace(x, y, z, imb, ico, renderer, up);
 
         if (sp.isActive()) {
-            Tessellator.instance.setColorOpaque_I(sp.getColor().mediumVariant);
+            tess.setColorOpaque_I(sp.getColor().mediumVariant);
             ico = sp.isActive() ? ExtraBlockTextures.BlockMESecurityOn_Medium.getIcon()
                     : ExtraBlockTextures.MEChest.getIcon();
             this.renderFace(x, y, z, imb, ico, renderer, up);
 
-            Tessellator.instance.setColorOpaque_I(sp.getColor().blackVariant);
+            tess.setColorOpaque_I(sp.getColor().blackVariant);
             ico = sp.isActive() ? ExtraBlockTextures.BlockMESecurityOn_Dark.getIcon()
                     : ExtraBlockTextures.MEChest.getIcon();
             this.renderFace(x, y, z, imb, ico, renderer, up);

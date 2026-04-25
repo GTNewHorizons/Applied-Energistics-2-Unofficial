@@ -28,11 +28,13 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 import com.google.common.base.Preconditions;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 import appeng.api.AEApi;
 import appeng.api.implementations.items.IItemGroup;
@@ -200,12 +202,11 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         final PartType pt = this.getTypeByStack(is);
 
         if (pt.isCable()) {
-            final AEColor[] variants = AEColor.values();
-
             final int itemDamage = is.getItemDamage();
             final PartTypeWithVariant registeredPartType = this.registered.get(itemDamage);
             if (registeredPartType != null) {
-                return super.getItemStackDisplayName(is) + " - " + variants[registeredPartType.variant].getLocal();
+                return super.getItemStackDisplayName(is) + " - "
+                        + AEColor.fromOrdinal(registeredPartType.variant).getLocal();
             }
         }
 
@@ -243,7 +244,30 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         int damage = stack.getItemDamage();
         PartTypeWithVariant part = this.registered.get(damage);
         if (part != null && part.deprecated) {
-            lines.add(ChatFormatting.RED + GuiText.Deprecated.getLocal());
+            lines.add(EnumChatFormatting.RED + GuiText.Deprecated.getLocal());
+        }
+
+        if (stack.hasTagCompound()) {
+            NBTTagCompound nbt = stack.getTagCompound();
+
+            if (nbt.hasKey("priority")) {
+                int priority = nbt.getInteger("priority");
+                String priorityText = StatCollector
+                        .translateToLocalFormatted("gui.tooltips.appliedenergistics2.PreconfiguredPriority", priority);
+                lines.add(EnumChatFormatting.GRAY + priorityText);
+            }
+        }
+
+        if (part != null) {
+            PartType type = part.part;
+            String tooltipKey = "gui.tooltips.appliedenergistics2." + type.name();
+
+            if (StatCollector.canTranslate(tooltipKey)) {
+                String tooltip = StatCollector.translateToLocal(tooltipKey);
+                for (String line : tooltip.split("\\\\n")) {
+                    lines.add(line);
+                }
+            }
         }
     }
 
@@ -374,7 +398,17 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
 
         @Override
         public int compare(final Entry<Integer, PartTypeWithVariant> o1, final Entry<Integer, PartTypeWithVariant> o2) {
-            return o1.getValue().part.name().compareTo(o2.getValue().part.name());
+            final int base1 = o1.getValue().part.getBaseDamage();
+            final int base2 = o2.getValue().part.getBaseDamage();
+            final int cmp = Integer.compare(base1, base2);
+
+            if (cmp != 0) {
+                return cmp;
+            }
+
+            return o1.getKey() == base1 + 16 ? -1
+                    : o2.getKey() == base2 + 16 ? 1 : Integer.compare(o1.getKey(), o2.getKey());
         }
     }
+
 }

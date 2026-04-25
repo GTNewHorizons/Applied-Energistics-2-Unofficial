@@ -85,27 +85,48 @@ public final class CraftingContext {
 
     public boolean wasSimulated = false;
 
-    public static final class RequestInProcessing<StackType extends IAEStack<StackType>> {
+    public static final class RequestInProcessing {
 
-        public final CraftingRequest<StackType> request;
+        public final CraftingRequest request;
         /**
          * Ordered by priority
          */
         public final ArrayList<CraftingTask> resolvers = new ArrayList<>(4);
+        private boolean isRemainingResolversAllSimulated = true;
 
-        public RequestInProcessing(CraftingRequest<StackType> request) {
+        public RequestInProcessing(CraftingRequest request) {
             this.request = request;
+        }
+
+        void refresh() {
+            isRemainingResolversAllSimulated = isRemainingResolversAllSimulatedSlow();
+        }
+
+        public boolean isRemainingResolversAllSimulated() {
+            return isRemainingResolversAllSimulated;
+        }
+
+        private boolean isRemainingResolversAllSimulatedSlow() {
+            for (CraftingTask resolver : resolvers) {
+                if (!resolver.isSimulated()) return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "RequestInProcessing{" + "request=" + request + ", resolvers=" + resolvers + '}';
         }
     }
 
-    private final List<RequestInProcessing<?>> liveRequests = new ArrayList<>(32);
+    private final List<RequestInProcessing> liveRequests = new ArrayList<>(32);
     private final List<CraftingTask> resolvedTasks = new ArrayList<>();
     private final ArrayDeque<CraftingTask> tasksToProcess = new ArrayDeque<>(64);
     private boolean doingWork = false;
     // State at the point when the last task executed.
     private CraftingTask.State finishedState = CraftingTask.State.FAILURE;
-    private final ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> availablePatterns;
-    private final Map<IAEItemStack, List<ICraftingPatternDetails>> precisePatternCache = new HashMap<>();
+    private final ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> availablePatterns;
+    private final Map<IAEStack<?>, List<ICraftingPatternDetails>> precisePatternCache = new HashMap<>();
     private final Map<ICraftingPatternDetails, IAEItemStack> crafterIconCache = new HashMap<>();
     private final OreListMultiMap<ICraftingPatternDetails> fuzzyPatternCache = new OreListMultiMap<>();
     private final IdentityHashMap<ICraftingPatternDetails, Boolean> isPatternComplexCache = new IdentityHashMap<>();
@@ -117,10 +138,10 @@ public final class CraftingContext {
         this.craftingGrid = meGrid.getCache(ICraftingGrid.class);
         this.actionSource = actionSource;
         final IStorageGrid sg = meGrid.getCache(IStorageGrid.class);
-        this.itemModel = new MECraftingInventory(sg.getItemInventory(), this.actionSource, true, false, true);
+        this.itemModel = new MECraftingInventory(sg, true, false, true);
         this.byproductsInventory = new MECraftingInventory();
-        this.availableCache = new MECraftingInventory(sg.getItemInventory(), this.actionSource, false, false, false);
-        this.availablePatterns = craftingGrid.getCraftingPatterns();
+        this.availableCache = new MECraftingInventory(sg, false, false, false);
+        this.availablePatterns = craftingGrid.getCraftingMultiPatterns();
     }
 
     /**
@@ -136,15 +157,17 @@ public final class CraftingContext {
         return instance;
     }
 
-    public void addRequest(@Nonnull CraftingRequest<?> request) {
+    public void addRequest(@Nonnull CraftingRequest request) {
         if (doingWork) {
             throw new IllegalStateException(
                     "Trying to add requests while inside a CraftingTask handler, return requests in the StepOutput instead");
         }
-        final RequestInProcessing<?> processing = new RequestInProcessing<>(request);
+        final RequestInProcessing processing = new RequestInProcessing(request);
         processing.resolvers.addAll(CraftingCalculations.tryResolveCraftingRequest(request, this));
+        processing.refresh();
         Collections.reverse(processing.resolvers); // We remove from the end for efficient ArrayList usage
         liveRequests.add(processing);
+        request.liveRequest = processing;
         if (processing.resolvers.isEmpty()) {
             throw new IllegalStateException("No resolvers available for request " + request.toString());
         }
@@ -166,7 +189,7 @@ public final class CraftingContext {
         });
     }
 
-    public List<ICraftingPatternDetails> getPrecisePatternsFor(@Nonnull IAEItemStack stack) {
+    public List<ICraftingPatternDetails> getPrecisePatternsFor(@Nonnull IAEStack<?> stack) {
         return precisePatternCache.compute(stack, (key, value) -> {
             if (value == null) {
                 return availablePatterns.getOrDefault(stack, ImmutableList.of());
@@ -176,20 +199,22 @@ public final class CraftingContext {
         });
     }
 
-    public List<ICraftingPatternDetails> getFuzzyPatternsFor(@Nonnull IAEItemStack stack) {
-        if (!fuzzyPatternCache.isPopulated()) {
-            for (final ImmutableList<ICraftingPatternDetails> patternSet : availablePatterns.values()) {
-                for (final ICraftingPatternDetails pattern : patternSet) {
-                    if (pattern.canBeSubstitute()) {
-                        for (final IAEItemStack output : pattern.getOutputs()) {
-                            fuzzyPatternCache.put(output.copy(), pattern);
+    public List<ICraftingPatternDetails> getFuzzyPatternsFor(@Nonnull IAEStack<?> stack) {
+        if (stack instanceof IAEItemStack aiStack) {
+            if (!fuzzyPatternCache.isPopulated()) {
+                for (final ImmutableList<ICraftingPatternDetails> patternSet : availablePatterns.values()) {
+                    for (final ICraftingPatternDetails pattern : patternSet) {
+                        if (pattern.canBeSubstitute()) {
+                            for (final IAEStack<?> output : pattern.getOutputs()) {
+                                if (output instanceof IAEItemStack ais) fuzzyPatternCache.put(ais.copy(), pattern);
+                            }
                         }
                     }
                 }
+                fuzzyPatternCache.freeze();
             }
-            fuzzyPatternCache.freeze();
-        }
-        return fuzzyPatternCache.get(stack);
+            return fuzzyPatternCache.get(aiStack);
+        } else return getPrecisePatternsFor(stack);
     }
 
     /**
@@ -205,8 +230,8 @@ public final class CraftingContext {
             return cached;
         }
 
-        final IAEItemStack[] inputs = pattern.getInputs();
-        final IAEItemStack[] mcOutputs = simulateComplexCrafting(inputs, pattern);
+        final IAEStack<?>[] inputs = pattern.getAEInputs();
+        final IAEItemStack[] mcOutputs = simulateComplexCrafting((IAEItemStack[]) inputs, pattern);
 
         final boolean isComplex = Arrays.stream(mcOutputs).anyMatch(Objects::nonNull);
         isPatternComplexCache.put(pattern, isComplex);
@@ -215,7 +240,7 @@ public final class CraftingContext {
 
     /**
      * Simulates doing 1 craft with a crafting table.
-     * 
+     *
      * @param inputSlots 3x3 crafting matrix contents
      * @return What remains in the 3x3 crafting matrix
      */
@@ -294,8 +319,9 @@ public final class CraftingContext {
         if (!out.extraInputsRequired.isEmpty()) {
             final Set<ICraftingPatternDetails> parentPatterns = frontTask.request.patternParents;
             // Last pushed gets resolved first, so iterate in reverse order to maintain array ordering
+            // this block propagates parent's patterns used to child
             for (int ri = out.extraInputsRequired.size() - 1; ri >= 0; ri--) {
-                final CraftingRequest<?> request = out.extraInputsRequired.get(ri);
+                final CraftingRequest request = out.extraInputsRequired.get(ri);
                 request.patternParents.addAll(parentPatterns);
                 this.addRequest(request);
             }
@@ -317,7 +343,7 @@ public final class CraftingContext {
     /**
      * Gets the list of tasks that have finished executing, sorted topologically (dependencies before the tasks that
      * require them)
-     * 
+     *
      * @return An unmodifiable list of resolved tasks.
      */
     public List<CraftingTask> getResolvedTasks() {
@@ -326,16 +352,20 @@ public final class CraftingContext {
 
     /**
      * Gets all requests that have been added to the context.
-     * 
+     *
      * @return An unmodifiable list of the requests.
      */
-    public List<RequestInProcessing<?>> getLiveRequests() {
+    public List<RequestInProcessing> getLiveRequests() {
         return Collections.unmodifiableList(liveRequests);
+    }
+
+    public RequestInProcessing getLiveRequest(CraftingRequest request) {
+        return request.liveRequest;
     }
 
     @Override
     public String toString() {
-        final Set<CraftingTask<?>> processed = Collections.newSetFromMap(new IdentityHashMap<>());
+        final Set<CraftingTask> processed = Collections.newSetFromMap(new IdentityHashMap<>());
         return getResolvedTasks().stream().map(rt -> {
             boolean isNew = processed.add(rt);
             return (isNew ? "  " : "  [duplicate] ") + rt.toString();
@@ -345,11 +375,12 @@ public final class CraftingContext {
     /**
      * @return If a task was added
      */
-    private boolean queueNextTaskOf(RequestInProcessing<?> request, boolean addResolverTask) {
+    private boolean queueNextTaskOf(RequestInProcessing request, boolean addResolverTask) {
         if (request.request.remainingToProcess <= 0 || request.resolvers.isEmpty()) {
             return false;
         }
         CraftingTask nextResolver = request.resolvers.remove(request.resolvers.size() - 1);
+        request.refresh();
         if (addResolverTask && !request.resolvers.isEmpty()) {
             tasksToProcess.addFirst(new CheckOtherResolversTask(request));
         }
@@ -364,11 +395,11 @@ public final class CraftingContext {
      * A task to call queueNextTaskOf after a resolver gets computed to check if more resolving is needed for the same
      * request-in-processing.
      */
-    private final class CheckOtherResolversTask<T extends IAEStack<T>> extends CraftingTask<T> {
+    private final class CheckOtherResolversTask extends CraftingTask {
 
-        private final RequestInProcessing<?> myRequest;
+        private final RequestInProcessing myRequest;
 
-        public CheckOtherResolversTask(RequestInProcessing<T> myRequest) {
+        public CheckOtherResolversTask(RequestInProcessing myRequest) {
             super(myRequest.request, 0); // priority doesn't matter as this task is never a resolver output
             this.myRequest = myRequest;
         }
@@ -381,9 +412,26 @@ public final class CraftingContext {
             } else if (myRequest.request.remainingToProcess <= 0) {
                 this.state = State.SUCCESS;
             } else {
-                this.state = State.FAILURE;
+                // if any of the parent request still have alternative paths, return success to explore it
+                // even if we didn't actually queue anything
+                if (hasConcreteResolversLeft()) {
+                    this.state = State.SUCCESS;
+                } else {
+                    this.state = State.FAILURE;
+                }
             }
             return new StepOutput();
+        }
+
+        private boolean hasConcreteResolversLeft() {
+            for (RequestInProcessing maybeParentRequest : liveRequests) {
+                if (request.parentRequests.contains(maybeParentRequest.request)) {
+                    if (!maybeParentRequest.isRemainingResolversAllSimulated()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         @Override
@@ -398,7 +446,7 @@ public final class CraftingContext {
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
             // no-op
         }
 
@@ -406,6 +454,11 @@ public final class CraftingContext {
         public void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
                 MECraftingInventory craftingInv) {
             // no-op
+        }
+
+        @Override
+        public boolean isSimulated() {
+            return myRequest.resolvers.stream().allMatch(CraftingTask::isSimulated);
         }
 
         @Override

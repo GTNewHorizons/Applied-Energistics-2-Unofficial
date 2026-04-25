@@ -7,97 +7,107 @@ import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 
-import appeng.api.config.PinsState;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.config.PinsRows;
+import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPinsUpdate;
-import appeng.tile.inventory.AppEngInternalAEInventory;
 
 public class PinsHandler {
 
     private final PinsHolder holder;
-    private final AppEngInternalAEInventory pinsInv;
-    private PinsState pinsState;
+    private final PinList pinsInv;
+    private PinsRows craftingPinsRows;
+    private PinsRows playerPinsRows;
     private final EntityPlayer player;
 
     private boolean needUpdate = true;
 
-    IAEItemStack[] cache = new IAEItemStack[0];
+    IAEStack<?>[] cache = new IAEStack<?>[0];
 
     public PinsHandler(PinsHolder holder, EntityPlayer player) {
         this.holder = holder;
         this.pinsInv = this.holder.getPinsInv(player);
         this.player = player;
-        setPinsState(this.holder.getPinsState(player));
+        this.craftingPinsRows = this.holder.getCraftingPinsRows(player);
+        this.playerPinsRows = this.holder.getPlayerPinsRows(player);
     }
 
-    public void setPin(int idx, ItemStack stack) {
+    public void setPin(int idx, IAEStack<?> stack) {
         if (stack != null) {
             stack = stack.copy();
-            stack.stackSize = 0;
-            for (int i = 0; i < pinsInv.getSizeInventory(); i++) {
-                if (pinsInv.getAEStackInSlot(i) != null && pinsInv.getAEStackInSlot(i).isSameType(stack)) {
-                    pinsInv.setInventorySlotContents(i, pinsInv.getStackInSlot(idx)); // swap the pin
+            stack.setStackSize(0);
+            for (int i = 0; i < pinsInv.size(); i++) {
+                if (pinsInv.getPin(i) != null && pinsInv.getPin(i).isSameType(stack)) {
+                    // pinsInv.setInventorySlotContents(i, pinsInv.getStackInSlot(idx)); // swap the pin
+                    pinsInv.setPin(i, pinsInv.getPin(idx));
                     break;
                 }
             }
         }
-
-        pinsInv.setInventorySlotContents(idx, stack);
+        // pinsInv.setInventorySlotContents(idx, stack); // set the pin
+        pinsInv.setPin(idx, stack);
         needUpdate = true;
         holder.markDirty();
     }
 
-    public ItemStack getPin(int idx) {
-        return pinsInv.getStackInSlot(idx);
+    public IAEStack<?> getPin(int idx) {
+        return pinsInv.getPin(idx);
     }
 
-    public void addItemsToPins(Iterable<IAEItemStack> pinsList) {
-        Iterator<IAEItemStack> it = pinsList.iterator();
+    // Adds crafted items only to the crafting pin section (indices 0 to craftingRows*9-1).
+    public void addItemsToPins(Iterable<IAEStack<?>> pinsList) {
+        int maxCraftingSlots = craftingPinsRows.getSlotCount();
+        if (maxCraftingSlots <= 0) return;
 
-        final ArrayList<IAEItemStack> checkCache = new ArrayList<>();
-        for (int i = 0; i < pinsInv.getSizeInventory(); i++) {
-            IAEItemStack ais = pinsInv.getAEStackInSlot(i);
+        Iterator<IAEStack<?>> it = pinsList.iterator();
+
+        final ArrayList<IAEStack<?>> checkCache = new ArrayList<>();
+        for (int i = 0; i < maxCraftingSlots; i++) {
+            IAEStack<?> ais = pinsInv.getPin(i);
             if (ais != null) checkCache.add(ais);
         }
 
-        ItemStack itemStack = null;
-        for (int i = 0; i < pinsInv.getSizeInventory(); i++) {
-            IAEItemStack AEis;
+        IAEStack<?> itemStack = null;
+        for (int i = 0; i < maxCraftingSlots; i++) {
+            IAEStack<?> AEis;
             while (itemStack == null && it.hasNext()) {
                 AEis = it.next();
                 if (AEis != null && !checkCache.contains(AEis)) {
-                    itemStack = AEis.getItemStack();
-                    itemStack.stackSize = 0;
+                    itemStack = AEis.copy();
+                    itemStack.setStackSize(0);
                     break;
                 }
             }
 
-            if (itemStack == null) break; // no more items to add
-            if (pinsInv.getAEStackInSlot(i) != null) continue; // skip if slot already has a item
-            pinsInv.setInventorySlotContents(i, itemStack);
+            if (itemStack == null) break;
+            if (pinsInv.getPin(i) != null) continue;
+            pinsInv.setPin(i, itemStack);
             itemStack = null;
         }
         needUpdate = true;
         holder.markDirty();
     }
 
-    public void setPinsState(PinsState state) {
-        if (pinsState == state) return;
-        pinsState = state;
-        holder.setPinsState(player, state);
-        update(false);
+    public void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
+        if (craftingPinsRows == craftingRows && playerPinsRows == playerRows) return;
+        craftingPinsRows = craftingRows;
+        playerPinsRows = playerRows;
+        holder.setPinsRows(player, craftingRows, playerRows);
+        update(true);
     }
 
-    public PinsState getPinsState() {
-        return pinsState;
+    public PinsRows getCraftingPinsRows() {
+        return craftingPinsRows;
     }
 
-    /** return an array of enabled pins, according to the current state */
-    public IAEItemStack[] getEnabledPins() {
+    public PinsRows getPlayerPinsRows() {
+        return playerPinsRows;
+    }
+
+    /** Returns the full pins array (TOTAL_SLOTS) for the client. */
+    public IAEStack<?>[] getEnabledPins() {
         if (needUpdate) update();
         return cache;
     }
@@ -112,17 +122,17 @@ public class PinsHandler {
 
     public void update(boolean forceSendPacket) {
         needUpdate = false;
-        final IAEItemStack[] newPins = new IAEItemStack[pinsState.ordinal() * 9];
-        // fetch lines according to the setting
-        for (int i = 0; i < pinsState.ordinal() * 9; i++) {
-            newPins[i] = pinsInv.getAEStackInSlot(i);
+        final IAEStack<?>[] newPins = new IAEStack<?>[PinList.TOTAL_SLOTS];
+        for (int i = 0; i < PinList.TOTAL_SLOTS; i++) {
+            newPins[i] = pinsInv.getPin(i);
         }
+
         if (!forceSendPacket && Arrays.equals(cache, newPins)) return;
         cache = newPins;
 
         if (player instanceof EntityPlayerMP mp) {
             try {
-                NetworkHandler.instance.sendTo(new PacketPinsUpdate(newPins, pinsState), mp);
+                NetworkHandler.instance.sendTo(new PacketPinsUpdate(newPins, craftingPinsRows, playerPinsRows), mp);
             } catch (IOException e) {
                 AELog.debug(e);
             }

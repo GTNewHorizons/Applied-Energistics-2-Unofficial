@@ -16,8 +16,9 @@ import java.util.List;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.PowerMultiplier;
 import appeng.block.AEBaseItemBlock;
@@ -28,7 +29,6 @@ import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.features.AEFeature;
 import appeng.helpers.AEGlassMaterial;
 import appeng.tile.networking.TileEnergyCell;
-import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -66,12 +66,9 @@ public class BlockEnergyCell extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     public void getCheckedSubBlocks(final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks) {
         super.getCheckedSubBlocks(item, tabs, itemStacks);
-
         final ItemStack charged = new ItemStack(this, 1);
-        final NBTTagCompound tag = Platform.openNbtData(charged);
-        tag.setDouble("internalCurrentPower", this.getMaxPower());
-        tag.setDouble("internalMaxPower", this.getMaxPower());
-
+        ItemStackNBT.setDouble(charged, "internalCurrentPower", this.getMaxPower());
+        ItemStackNBT.setDouble(charged, "internalMaxPower", this.getMaxPower());
         itemStacks.add(charged);
     }
 

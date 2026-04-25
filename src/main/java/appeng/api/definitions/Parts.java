@@ -101,4 +101,6 @@ public class Parts {
     public AEItemDefinition partThroughputMonitor;
 
     public AEItemDefinition partConversionMonitor;
+
+    public AEItemDefinition partPatternRepeater;
 }

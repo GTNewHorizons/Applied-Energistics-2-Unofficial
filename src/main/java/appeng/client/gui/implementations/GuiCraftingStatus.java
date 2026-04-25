@@ -19,19 +19,15 @@ import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 import org.lwjgl.input.Mouse;
 
-import appeng.api.AEApi;
 import appeng.api.config.Settings;
 import appeng.api.config.TerminalStyle;
-import appeng.api.definitions.IDefinitions;
-import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.client.gui.IGuiSub;
 import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiCraftingCPUTable;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -42,26 +38,18 @@ import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.helpers.WirelessTerminalGuiObject;
-import appeng.parts.reporting.PartCraftingTerminal;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
-import appeng.parts.reporting.PartTerminal;
 
-public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder {
+public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder, IGuiSub {
 
     private final ContainerCraftingStatus status;
     private GuiButton selectCPU;
     private GuiAeButton follow;
     private final GuiCraftingCPUTable cpuTable;
 
-    private GuiTabButton originalGuiBtn;
-    private GuiBridge originalGui;
-    private ItemStack myIcon = null;
+    protected GuiTabButton originalGuiBtn;
     private boolean tallMode;
     private GuiImgButton switchTallMode;
     private List<String> playersFollowingCurrentCraft = new ArrayList<>();
@@ -70,49 +58,11 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
         super(new ContainerCraftingStatus(inventoryPlayer, te));
 
         this.status = (ContainerCraftingStatus) this.inventorySlots;
+        this.status.setGuiLink(this);
         this.tallMode = AEConfig.instance.getConfigManager().getSetting(Settings.TERMINAL_STYLE) == TerminalStyle.TALL;
         recalculateScreenSize();
 
-        final Object target = this.status.getTarget();
-        final IDefinitions definitions = AEApi.instance().definitions();
-        final IParts parts = definitions.parts();
-
         cpuTable = new GuiCraftingCPUTable(this, this.status.getCPUTable(), c -> false);
-
-        if (target instanceof WirelessTerminalGuiObject) {
-            for (final ItemStack wirelessTerminalStack : definitions.items().wirelessTerminal().maybeStack(1).asSet()) {
-                this.myIcon = wirelessTerminalStack;
-            }
-
-            this.originalGui = GuiBridge.GUI_WIRELESS_TERM;
-        }
-
-        if (target instanceof PartTerminal) {
-            for (final ItemStack stack : parts.terminal().maybeStack(1).asSet()) {
-                this.myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_ME;
-        }
-
-        if (target instanceof PartCraftingTerminal) {
-            for (final ItemStack stack : parts.craftingTerminal().maybeStack(1).asSet()) {
-                this.myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-        }
-
-        if (target instanceof PartPatternTerminal) {
-            for (final ItemStack stack : parts.patternTerminal().maybeStack(1).asSet()) {
-                this.myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-        if (target instanceof PartPatternTerminalEx) {
-            for (final ItemStack stack : parts.patternTerminalEx().maybeStack(1).asSet()) {
-                this.myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
     }
 
     @Override
@@ -127,6 +77,10 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
         final boolean leftClick = Mouse.isButtonDown(0);
         final boolean rightClick = Mouse.isButtonDown(1);
 
+        if (cpuTable.actionPerformed(btn, rightClick)) {
+            return;
+        }
+
         if (btn == this.selectCPU) {
             cpuTable.cycleCPU(rightClick);
         } else if (btn == this.follow) {
@@ -137,7 +91,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
                 AELog.debug(e);
             }
         } else if (btn == this.originalGuiBtn) {
-            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.originalGui));
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
         } else if (btn == this.switchTallMode) {
             tallMode = !tallMode;
             AEConfig.instance.getConfigManager()
@@ -145,8 +99,6 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
             switchTallMode.set(tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL);
             recalculateScreenSize();
             this.setWorldAndResolution(mc, width, height);
-        } else if (btn == this.toggleHideStored) {
-            this.setScrollBar();
         }
     }
 
@@ -154,13 +106,14 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
     public void initGui() {
         recalculateScreenSize();
         super.initGui();
-        this.setScrollBar();
+
+        if (status.getPrimaryGuiIcon() != null) initPrimaryGuiButton();
 
         this.selectCPU = new GuiButton(
                 0,
                 this.guiLeft + 8,
                 this.guiTop + this.ySize - 25,
-                100,
+                50,
                 20,
                 GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs);
         this.buttonList.add(this.selectCPU);
@@ -175,27 +128,18 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
                 ButtonToolTips.ToFollow.getLocal());
         this.buttonList.add(this.follow);
 
-        if (this.myIcon != null) {
-            this.buttonList.add(
-                    this.originalGuiBtn = new GuiTabButton(
-                            this.guiLeft + 213,
-                            this.guiTop - 4,
-                            this.myIcon,
-                            this.myIcon.getDisplayName(),
-                            itemRender));
-            this.originalGuiBtn.setHideEdge(13);
-        }
         this.switchTallMode = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + this.ySize - 18,
                 Settings.TERMINAL_STYLE,
                 tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL);
         this.buttonList.add(switchTallMode);
+        this.cpuTable.addButtons(this.buttonList, this.guiLeft, this.guiTop);
     }
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
-        this.follow.enabled = !this.visual.isEmpty();
+        this.follow.enabled = this.hasVisualEntries();
         this.cpuTable.drawScreen();
         this.updateCPUButtonText();
         this.updateFollowButtonText();
@@ -311,22 +255,9 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
         GuiCraftingCPUTable.CPU_TABLE_HEIGHT = this.rows * GuiCraftingCPUTable.CPU_TABLE_SLOT_HEIGHT + 27;
     }
 
-    private void setScrollBar() {
-        int size;
-        if (this.hideStored) {
-            size = this.visualHiddenStored.size();
-        } else {
-            size = this.visual.size();
-        }
-
-        this.getScrollBar().setTop(SCROLLBAR_TOP).setLeft(SCROLLBAR_LEFT).setHeight(ySize - 47);
-        this.getScrollBar().setRange(0, (size + 2) / 3 - this.rows, 1);
-    }
-
     @Override
-    public void postUpdate(List<IAEItemStack> list, byte ref) {
-        super.postUpdate(list, ref);
-        setScrollBar();
+    protected int getScrollBarHeight() {
+        return this.ySize - 47;
     }
 
     public void postUpdate(final NBTTagCompound playerNameListNBT) {
@@ -335,5 +266,16 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
         for (int index = 0; index < tagList.tagCount(); index++) {
             this.playersFollowingCurrentCraft.add(tagList.getStringTagAt(index));
         }
+    }
+
+    public void initPrimaryGuiButton() {
+        this.buttonList.add(
+                this.originalGuiBtn = new GuiTabButton(
+                        this.guiLeft + this.xSize - 25,
+                        this.guiTop - 4,
+                        status.getPrimaryGuiIcon(),
+                        status.getPrimaryGuiIcon().getDisplayName(),
+                        itemRender));
+        this.originalGuiBtn.setHideEdge(13);
     }
 }

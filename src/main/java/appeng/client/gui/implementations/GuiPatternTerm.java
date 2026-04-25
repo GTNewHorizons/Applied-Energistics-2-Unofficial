@@ -10,31 +10,52 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.IOException;
+import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
+import com.gtnewhorizon.gtnhlib.util.numberformatting.options.FormatOptions;
+
+import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.ItemSubstitution;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
+import appeng.client.gui.slots.VirtualMEPatternSlot;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
+import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.slot.AppEngSlot;
+import appeng.container.slot.SlotRestrictedInput;
+import appeng.core.AELog;
+import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketInventoryAction;
+import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.helpers.InventoryAction;
+import appeng.tile.inventory.IAEStackInventory;
 
 public class GuiPatternTerm extends GuiMEMonitorable {
 
@@ -44,34 +65,50 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     private static final String CRAFTMODE_CRFTING = "1";
     private static final String CRAFTMODE_PROCESSING = "0";
 
+    private static final FormatOptions FORMAT_OPTIONS = new FormatOptions().disableExponentialFormatting();
+
     private final ContainerPatternTerm container;
 
     private GuiTabButton tabCraftButton;
     private GuiTabButton tabProcessButton;
-    private GuiImgButton substitutionsEnabledBtn;
-    private GuiImgButton substitutionsDisabledBtn;
-    private GuiImgButton beSubstitutionsEnabledBtn;
-    private GuiImgButton beSubstitutionsDisabledBtn;
+    protected GuiImgButton substitutionsEnabledBtn;
+    protected GuiImgButton substitutionsDisabledBtn;
+    protected GuiImgButton beSubstitutionsEnabledBtn;
+    protected GuiImgButton beSubstitutionsDisabledBtn;
     private GuiImgButton encodeBtn;
-    private GuiImgButton clearBtn;
-    private GuiImgButton doubleBtn;
+    protected GuiImgButton clearBtn;
+    protected GuiImgButton doubleBtn;
+
+    protected VirtualMEPatternSlot[] craftingSlots;
+    protected VirtualMEPatternSlot[] outputSlots;
+    private boolean craftingMode;
+    @NotNull
+    private IAEItemStack blankPatternView = ContainerPatternTerm.BLANK_PATTERN.copy().setStackSize(0);
+
+    public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te,
+            final ContainerPatternTerm containerPatternTerm) {
+        super(inventoryPlayer, te, containerPatternTerm);
+        this.container = (ContainerPatternTerm) this.inventorySlots;
+        this.craftingMode = this.container.isCraftingMode();
+        this.setReservedSpace(81);
+    }
 
     public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
-        super(inventoryPlayer, te, new ContainerPatternTerm(inventoryPlayer, te));
-        this.container = (ContainerPatternTerm) this.inventorySlots;
-        this.setReservedSpace(81);
+        this(inventoryPlayer, te, new ContainerPatternTerm(inventoryPlayer, te, true));
     }
 
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
 
         if (btn == 2 && doubleBtn.mousePressed(this.mc, xCoord, yCoord)) { //
-            InventoryAction action = InventoryAction.SET_PATTERN_MULTI;
-
-            final PacketInventoryAction p = new PacketInventoryAction(action, 0, 0);
-            NetworkHandler.instance.sendToServer(p);
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_PATTERN_MULTI));
         } else super.mouseClicked(xCoord, yCoord, btn);
 
+    }
+
+    @Override
+    protected boolean shouldShiftClickFillVirtualPhantomSlot(final Slot slot) {
+        return false;
     }
 
     @Override
@@ -80,6 +117,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
         try {
             if (this.tabCraftButton == btn || this.tabProcessButton == btn) {
+                this.craftingMode = this.tabProcessButton == btn;
+                updateSlotVisibility();
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
                                 "PatternTerminal.CraftMode",
@@ -108,29 +147,30 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                         .sendToServer(new PacketValueConfig("PatternTerminal.Double", String.valueOf(val)));
             }
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            AELog.error(e);
         }
     }
 
     @Override
     public void initGui() {
         super.initGui();
-        this.tabCraftButton = new GuiTabButton(
-                this.guiLeft + 173,
-                this.guiTop + this.ySize - 177,
-                new ItemStack(Blocks.crafting_table),
-                GuiText.CraftingPattern.getLocal(),
-                itemRender);
-        this.buttonList.add(this.tabCraftButton);
+        if (this.container.getCraftingModeSupport()) {
+            this.tabCraftButton = new GuiTabButton(
+                    this.guiLeft + 173,
+                    this.guiTop + this.ySize - 177,
+                    new ItemStack(Blocks.crafting_table),
+                    GuiText.CraftingPattern.getLocal(),
+                    itemRender);
+            this.buttonList.add(this.tabCraftButton);
 
-        this.tabProcessButton = new GuiTabButton(
-                this.guiLeft + 173,
-                this.guiTop + this.ySize - 177,
-                new ItemStack(Blocks.furnace),
-                GuiText.ProcessingPattern.getLocal(),
-                itemRender);
-        this.buttonList.add(this.tabProcessButton);
+            this.tabProcessButton = new GuiTabButton(
+                    this.guiLeft + 173,
+                    this.guiTop + this.ySize - 177,
+                    new ItemStack(Blocks.furnace),
+                    GuiText.ProcessingPattern.getLocal(),
+                    itemRender);
+            this.buttonList.add(this.tabProcessButton);
+        }
 
         this.substitutionsEnabledBtn = new GuiImgButton(
                 this.guiLeft + 84,
@@ -186,18 +226,119 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                 ActionItems.DOUBLE);
         this.doubleBtn.setHalfSize(true);
         this.buttonList.add(this.doubleBtn);
+        this.updateButtonVisibility();
+
+        this.initVirtualSlots();
+    }
+
+    protected int getInputSlotOffsetX() {
+        return 18;
+    }
+
+    protected int getInputSlotOffsetY() {
+        return 39;
+    }
+
+    protected int getOutputSlotOffsetX() {
+        return 110;
+    }
+
+    protected int getOutputSlotOffsetY() {
+        return 39;
+    }
+
+    private void initVirtualSlots() {
+        final int inputSlotRow = container.getPatternInputsHeigh();
+        final int inputSlotPerRow = container.getPatternInputsWidth();
+        final int inputPage = container.getPatternInputPages();
+        this.craftingSlots = new VirtualMEPatternSlot[inputSlotPerRow * inputSlotRow * inputPage];
+        final IAEStackInventory inputInv = container.getPatternTerminal()
+                .getAEInventoryByName(StorageName.CRAFTING_INPUT);
+        for (int y = 0; y < inputSlotRow * inputPage; y++) {
+            for (int x = 0; x < inputSlotPerRow; x++) {
+                VirtualMEPatternSlot slot = new VirtualMEPatternSlot(
+                        getInputSlotOffsetX() + 18 * x,
+                        this.rows * 18 + getInputSlotOffsetY() + 18 * (y % (inputSlotRow)),
+                        inputInv,
+                        x + y * inputSlotPerRow,
+                        this::acceptType);
+                this.craftingSlots[x + y * inputSlotPerRow] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+
+        final int outputSlotRow = container.getPatternOutputsHeigh();
+        final int outputSlotPerRow = container.getPatternOutputsWidth();
+        final int outputPage = container.getPatternOutputPages();
+        this.outputSlots = new VirtualMEPatternSlot[outputSlotPerRow * outputSlotRow * outputPage];
+        final IAEStackInventory outputInv = container.getPatternTerminal()
+                .getAEInventoryByName(StorageName.CRAFTING_OUTPUT);
+        for (int y = 0; y < outputSlotRow * outputPage; y++) {
+            for (int x = 0; x < outputSlotPerRow; x++) {
+                VirtualMEPatternSlot slot = new VirtualMEPatternSlot(
+                        getOutputSlotOffsetX() + 18 * x,
+                        this.rows * 18 + getOutputSlotOffsetY() + 18 * (y % outputSlotRow),
+                        outputInv,
+                        x + y * outputSlotPerRow,
+                        this::acceptType);
+                this.outputSlots[x + y * outputSlotPerRow] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+        updateSlotVisibility();
+    }
+
+    protected void updateSlotVisibility() {
+        if (this.craftingMode) {
+            for (VirtualMEPatternSlot slot : craftingSlots) {
+                slot.setShowAmount(false);
+            }
+            for (VirtualMEPhantomSlot outputSlot : outputSlots) {
+                outputSlot.setHidden(true);
+            }
+        } else {
+            for (VirtualMEPatternSlot slot : craftingSlots) {
+                slot.setShowAmount(true);
+            }
+            for (VirtualMEPhantomSlot outputSlot : outputSlots) {
+                outputSlot.setHidden(false);
+            }
+        }
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        if (!this.container.isCraftingMode()) {
-            this.tabCraftButton.visible = false;
-            this.tabProcessButton.visible = true;
-            this.doubleBtn.visible = true;
-        } else {
-            this.tabCraftButton.visible = true;
-            this.tabProcessButton.visible = false;
-            this.doubleBtn.visible = false;
+        this.updateButtonVisibility();
+
+        if (this.craftingMode != this.container.isCraftingMode()) {
+            this.craftingMode = this.container.isCraftingMode();
+            this.updateSlotVisibility();
+        }
+
+        super.drawFG(offsetX, offsetY, mouseX, mouseY);
+
+        drawTitle();
+    }
+
+    protected void drawTitle() {
+        this.fontRendererObj.drawString(
+                GuiText.PatternTerminal.getLocal(),
+                8,
+                this.ySize - 96 + 2 - this.getReservedSpace(),
+                GuiColors.PatternTerminalTitle.getColor());
+    }
+
+    private void updateButtonVisibility() {
+        if (this.tabCraftButton != null) {
+            if (!this.container.isCraftingMode()) {
+                this.tabCraftButton.visible = false;
+                this.tabProcessButton.visible = true;
+                this.doubleBtn.visible = true;
+            } else {
+                this.tabCraftButton.visible = true;
+                this.tabProcessButton.visible = false;
+                this.doubleBtn.visible = false;
+            }
         }
 
         if (this.container.substitute) {
@@ -210,13 +351,6 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
         this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
         this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
-
-        super.drawFG(offsetX, offsetY, mouseX, mouseY);
-        this.fontRendererObj.drawString(
-                GuiText.PatternTerminal.getLocal(),
-                8,
-                this.ySize - 96 + 2 - this.getReservedSpace(),
-                GuiColors.PatternTerminalTitle.getColor());
     }
 
     @Override
@@ -234,5 +368,88 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         } else {
             s.yDisplayPosition = s.getY() + this.ySize - 78 - 3;
         }
+    }
+
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        if (slot.getStorageName() == StorageName.CRAFTING_INPUT && this.craftingMode) {
+            return type == ITEM_STACK_TYPE;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public List<String> handleItemTooltip(ItemStack stack, int mouseX, int mouseY, List<String> lines) {
+        super.handleItemTooltip(stack, mouseX, mouseY, lines);
+
+        VirtualMESlot hoveredSlot = this.getVirtualMESlotUnderMouse();
+        if (hoveredSlot instanceof VirtualMEPatternSlot) {
+            IAEStack<?> stackInSlot = hoveredSlot.getAEStack();
+            if (stackInSlot != null) {
+                lines.add(ButtonToolTips.ChangeAmount.getLocal());
+            }
+            if (stackInSlot instanceof IAEItemStack) {
+                lines.add(ButtonToolTips.RenameItem.getLocal());
+            }
+        }
+
+        Slot s = getSlot(mouseX, mouseY);
+        if (s instanceof SlotRestrictedInput slot
+                && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
+                && !slot.getHasStack()) {
+            lines.add(GuiText.BlankPatternInNetwork.getLocal());
+            lines.add(
+                    EnumChatFormatting.GRAY + String.format(
+                            ButtonToolTips.ItemsStored.getLocal(),
+                            NumberFormatUtil.formatNumber(this.blankPatternView.getStackSize(), FORMAT_OPTIONS)));
+        }
+
+        return lines;
+    }
+
+    @Override
+    public void postUpdate(List<IAEStack<?>> list) {
+        super.postUpdate(list);
+        for (IAEStack<?> stack : list) {
+            if (stack instanceof IAEItemStack ais
+                    && AEApi.instance().definitions().materials().blankPattern().isSameAs(ais.getItemStack())) {
+                this.blankPatternView = ais;
+            }
+        }
+    }
+
+    @Override
+    public void func_146977_a(Slot s) {
+        if (s instanceof SlotRestrictedInput slot
+                && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
+                && !slot.getHasStack()) {
+            this.blankPatternView.drawInGui(this.mc, slot.xDisplayPosition, slot.yDisplayPosition);
+            this.blankPatternView
+                    .drawOverlayInGui(this.mc, slot.xDisplayPosition, slot.yDisplayPosition, true, true, true, true);
+        } else {
+            super.func_146977_a(s);
+        }
+    }
+
+    @Override
+    public ItemStack getHoveredStack() {
+        Slot s = getSlot(this.currentMouseX, this.currentMouseY);
+        if (s instanceof SlotRestrictedInput slot
+                && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
+                && !slot.getHasStack()) {
+            if (this.blankPatternView.getStackSize() > 0) {
+                return this.blankPatternView.getItemStackForNEI();
+            } else {
+                return this.blankPatternView.getItemStackForNEI(1);
+            }
+        }
+        return super.getHoveredStack();
+    }
+
+    /**
+     * Used in addon
+     */
+    public VirtualMEPatternSlot[] getCraftingSlots() {
+        return craftingSlots;
     }
 }

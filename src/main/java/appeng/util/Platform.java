@@ -10,6 +10,7 @@
 
 package appeng.util;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
@@ -63,13 +64,13 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
-import org.lwjgl.input.Keyboard;
-
-import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
+import com.glodblock.github.common.item.ItemFluidDrop;
+import com.glodblock.github.common.item.ItemFluidPacket;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
@@ -100,15 +101,16 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
-import appeng.client.me.SlotME;
+import appeng.container.AEBaseContainer;
 import appeng.container.slot.SlotFake;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -120,14 +122,18 @@ import appeng.core.sync.GuiHostType;
 import appeng.hooks.TickHandler;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
+import appeng.integration.abstraction.IGT;
 import appeng.me.GridAccessException;
 import appeng.me.GridNode;
 import appeng.me.helpers.AENetworkProxy;
+import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.AESharedNBT;
+import appeng.util.item.AEStack;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
+import baubles.api.BaublesApi;
 import buildcraft.api.tools.IToolWrench;
 import cofh.api.item.IToolHammer;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -136,6 +142,7 @@ import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import io.netty.buffer.ByteBuf;
 
 /**
  * @author AlgorithmX2
@@ -165,8 +172,11 @@ public class Platform {
     private static final double[] BYTE_LIMIT;
     private static final int DIVISION_BASE = 1000;
     private static final DecimalFormat df = new DecimalFormat("#.##");
-    public static final SyncedKeybind keyBindLCtrl = SyncedKeybind.create(Keyboard.KEY_LCONTROL);
-    public static final SyncedKeybind keyBindTab = SyncedKeybind.create(Keyboard.KEY_TAB);
+    public static final boolean isAE2FCLoaded = Loader.isModLoaded("ae2fc");
+    public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
+    public static final boolean isMultiPartLoaded = Loader.isModLoaded("ForgeMultipart");
+    public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
+    public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
 
     static {
         BYTE_LIMIT = new double[10];
@@ -330,8 +340,16 @@ public class Platform {
         return e == SearchBoxMode.NEI_MANUAL_SEARCH && !IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI);
     }
 
+    // xCord game limit
+    public final static int itemGuiSlotOffset = 30_000_001;
+
     public static void openGUI(@Nonnull final EntityPlayer p, @Nullable final TileEntity tile,
             @Nullable final ForgeDirection side, @Nonnull final GuiBridge type) {
+        openGUI(p, tile, side, type, Integer.MIN_VALUE);
+    }
+
+    public static void openGUI(@Nonnull final EntityPlayer p, @Nullable final TileEntity tile,
+            @Nullable final ForgeDirection side, @Nonnull final GuiBridge type, int slotIndex) {
         if (isClient()) {
             return;
         }
@@ -345,14 +363,16 @@ public class Platform {
             z = tile.zCoord;
         }
 
-        if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p)) {
-            if (tile == null && type.getType() == GuiHostType.ITEM) {
+        slotIndex = slotIndex == Integer.MIN_VALUE ? p.inventory.currentItem : slotIndex;
+
+        if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p, slotIndex)) {
+            if (tile == null && type.getType() != GuiHostType.WORLD) {
                 p.openGui(
                         AppEng.instance(),
                         type.ordinal() << 5 | (1 << 4),
                         p.getEntityWorld(),
-                        p.inventory.currentItem,
-                        0,
+                        itemGuiSlotOffset + slotIndex,
+                        p.openContainer instanceof AEBaseContainer abc ? abc.getSwitchAbleGuiNext() : Integer.MIN_VALUE,
                         0);
             } else if (tile == null || type.getType() == GuiHostType.ITEM) {
                 p.openGui(AppEng.instance(), type.ordinal() << 5 | (1 << 3), p.getEntityWorld(), x, y, z);
@@ -633,16 +653,18 @@ public class Platform {
         }
     }
 
-    /*
-     * Creates / or loads previous NBT Data on items, used for editing items owned by AE.
+    /**
+     * This method is deprecated because it adds a NBT tag unconditionally to ItemStacks. To manipulate NBT data of
+     * ItemStack do it manually by checking if the tag exists or use the
+     * {@link com.gtnewhorizon.gtnhlib.item.ItemStackNBT} util class.
      */
-    public static NBTTagCompound openNbtData(final ItemStack i) {
+    @Nonnull
+    @Deprecated
+    public static NBTTagCompound openNbtData(@Nonnull final ItemStack i) {
         NBTTagCompound compound = i.getTagCompound();
-
         if (compound == null) {
             i.setTagCompound(compound = new NBTTagCompound());
         }
-
         return compound;
     }
 
@@ -783,7 +805,7 @@ public class Platform {
             return "** Null";
         }
 
-        final String n = ((AEItemStack) is).getModID();
+        final String n = ((AEItemStack) is).getModId();
         return n == null ? "** Null" : n;
     }
 
@@ -793,8 +815,8 @@ public class Platform {
         }
 
         ItemStack itemStack = null;
-        if (o instanceof AEItemStack) {
-            final String n = ((AEItemStack) o).getDisplayName();
+        if (o instanceof AEStack<?>aes) {
+            final String n = aes.getDisplayName();
             return n == null ? "** Null" : n;
         } else if (o instanceof ItemStack) {
             itemStack = (ItemStack) o;
@@ -1240,26 +1262,53 @@ public class Platform {
         return 0;
     }
 
-    public static <StackType extends IAEStack> StackType poweredExtraction(final IEnergySource energy,
-            final IMEInventory<StackType> cell, final StackType request, final BaseActionSource src) {
+    /**
+     * Tries to extract items using available power.
+     *
+     * @return the extracted stack, or {@code null} if nothing can be extracted
+     */
+    @Nullable
+    public static <StackType extends IAEStack> StackType poweredExtraction(@Nonnull final IEnergySource energy,
+            @Nonnull final IMEInventory<StackType> cell, @Nonnull final StackType request,
+            @Nonnull final BaseActionSource src) {
+        return poweredExtraction(energy, cell, request, src, Actionable.MODULATE);
+    }
+
+    /**
+     * Tries to extract items using available power.
+     *
+     * @return the extracted stack, or {@code null} if nothing can be extracted
+     */
+    @Nullable
+    public static <StackType extends IAEStack> StackType poweredExtraction(@Nonnull final IEnergySource energy,
+            @Nonnull final IMEInventory<StackType> cell, @Nonnull final StackType request,
+            @Nonnull final BaseActionSource src, @Nonnull final Actionable mode) {
         final StackType possible = cell.extractItems((StackType) request.copy(), Actionable.SIMULATE, src);
+        if (possible == null) return null;
 
-        long retrieved = 0;
-        if (possible != null) {
-            retrieved = possible.getStackSize();
-        }
+        final long retrieved = possible.getStackSize();
+        final int typeMultiplier = request.getAmountPerUnit();
 
-        final double availablePower = energy.extractAEPower(retrieved, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+        final double availablePower = energy.extractAEPower(
+                Platform.ceilDiv(retrieved, typeMultiplier),
+                Actionable.SIMULATE,
+                PowerMultiplier.CONFIG);
 
-        final long itemToExtract = Math.min((long) (availablePower + 0.9), retrieved);
+        final long itemToExtract = Math.min((long) (availablePower * typeMultiplier + 0.9), retrieved);
 
         if (itemToExtract > 0) {
-            energy.extractAEPower(retrieved, Actionable.MODULATE, PowerMultiplier.CONFIG);
-
             possible.setStackSize(itemToExtract);
-            final StackType ret = cell.extractItems(possible, Actionable.MODULATE, src);
 
-            if (ret != null && src.isPlayer()) {
+            if (mode == Actionable.MODULATE) {
+                energy.extractAEPower(
+                        Platform.ceilDiv(retrieved, typeMultiplier),
+                        Actionable.MODULATE,
+                        PowerMultiplier.CONFIG);
+            }
+
+            final StackType ret = cell.extractItems(possible, mode, src);
+
+            if (mode == Actionable.MODULATE && ret != null && src.isPlayer()) {
                 Stats.ItemsExtracted.addToPlayer(((PlayerSource) src).player, (int) ret.getStackSize());
             }
 
@@ -1269,15 +1318,34 @@ public class Platform {
         return null;
     }
 
-    public static <StackType extends IAEStack> StackType poweredInsert(final IEnergySource energy,
-            final IMEInventory<StackType> cell, final StackType input, final BaseActionSource src) {
+    /**
+     * Tries to insert items using available power.
+     *
+     * @return the remaining stack that could not be inserted, or {@code null} if everything was inserted
+     */
+    @Nullable
+    public static <StackType extends IAEStack> StackType poweredInsert(@Nonnull final IEnergySource energy,
+            @Nonnull final IMEInventory<StackType> cell, @Nonnull final StackType input,
+            @Nonnull final BaseActionSource src) {
+        return poweredInsert(energy, cell, input, src, Actionable.MODULATE);
+    }
+
+    /**
+     * Tries to insert items using available power.
+     *
+     * @return the remaining stack that could not be inserted, or {@code null} if everything was inserted
+     */
+    @Nullable
+    public static <StackType extends IAEStack> StackType poweredInsert(@Nonnull final IEnergySource energy,
+            @Nonnull final IMEInventory<StackType> cell, @Nonnull final StackType input,
+            @Nonnull final BaseActionSource src, @Nonnull final Actionable mode) {
         final StackType possible = cell.injectItems((StackType) input.copy(), Actionable.SIMULATE, src);
 
         long stored = input.getStackSize();
         if (possible != null) {
             stored -= possible.getStackSize();
         }
-        long typeMultiplier = input instanceof IAEFluidStack ? 1000 : 1;
+        final int typeMultiplier = input.getAmountPerUnit();
 
         final double availablePower = energy
                 .extractAEPower(Platform.ceilDiv(stored, typeMultiplier), Actionable.SIMULATE, PowerMultiplier.CONFIG);
@@ -1285,19 +1353,23 @@ public class Platform {
         final long itemToAdd = Math.min((long) (availablePower * typeMultiplier + 0.9), stored);
 
         if (itemToAdd > 0) {
-            energy.extractAEPower(
-                    Platform.ceilDiv(stored, typeMultiplier),
-                    Actionable.MODULATE,
-                    PowerMultiplier.CONFIG);
+            if (mode == Actionable.MODULATE) {
+                energy.extractAEPower(
+                        Platform.ceilDiv(stored, typeMultiplier),
+                        Actionable.MODULATE,
+                        PowerMultiplier.CONFIG);
+            }
 
             if (itemToAdd < input.getStackSize()) {
                 final long original = input.getStackSize();
                 final StackType split = (StackType) input.copy();
-                split.decStackSize(itemToAdd);
-                input.setStackSize(itemToAdd);
-                split.add(cell.injectItems(input, Actionable.MODULATE, src));
+                final StackType toInsert = mode == Actionable.MODULATE ? input : (StackType) input.copy();
 
-                if (src.isPlayer()) {
+                split.decStackSize(itemToAdd);
+                toInsert.setStackSize(itemToAdd);
+                split.add(cell.injectItems(toInsert, mode, src));
+
+                if (mode == Actionable.MODULATE && src.isPlayer()) {
                     final long diff = original - split.getStackSize();
                     Stats.ItemsInserted.addToPlayer(((PlayerSource) src).player, (int) diff);
                 }
@@ -1305,9 +1377,9 @@ public class Platform {
                 return split;
             }
 
-            final StackType ret = cell.injectItems(input, Actionable.MODULATE, src);
+            final StackType ret = cell.injectItems(input, mode, src);
 
-            if (src.isPlayer()) {
+            if (mode == Actionable.MODULATE && src.isPlayer()) {
                 final long diff = ret == null ? input.getStackSize() : input.getStackSize() - ret.getStackSize();
                 Stats.ItemsInserted.addToPlayer(((PlayerSource) src).player, (int) diff);
             }
@@ -1318,54 +1390,42 @@ public class Platform {
         return input;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void postChanges(final IStorageGrid gs, final ItemStack removed, final ItemStack added,
             final BaseActionSource src) {
-        final IItemList<IAEItemStack> itemChanges = AEApi.instance().storage().createItemList();
-        final IItemList<IAEFluidStack> fluidChanges = AEApi.instance().storage().createFluidList();
-        IMEInventory<IAEItemStack> myItems = null;
-        IMEInventory<IAEFluidStack> myFluids = null;
-        if (removed != null) {
-            myItems = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.ITEMS);
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            IItemList changeList = null;
 
-            if (myItems != null) {
-                for (final IAEItemStack is : myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId())) {
-                    is.setStackSize(-is.getStackSize());
+            if (removed != null) {
+                IMEInventory<?> inventory = AEApi.instance().registries().cell().getCellInventory(removed, null, type);
+                if (inventory != null) {
+                    changeList = type.createPrimitiveList();
+                    for (final Object obj : inventory.getAvailableItems(changeList, IterationCounter.fetchNewId())) {
+                        IAEStack<?> aes = (IAEStack<?>) obj;
+                        aes.setStackSize(-aes.getStackSize());
+                    }
                 }
             }
 
-            myFluids = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.FLUIDS);
-
-            if (myFluids != null) {
-                for (final IAEFluidStack is : myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId())) {
-                    is.setStackSize(-is.getStackSize());
+            if (added != null) {
+                IMEInventory<?> inventory = AEApi.instance().registries().cell().getCellInventory(added, null, type);
+                if (inventory != null) {
+                    if (changeList == null) {
+                        changeList = type.createPrimitiveList();
+                    }
+                    inventory.getAvailableItems(changeList, IterationCounter.fetchNewId());
                 }
             }
-        }
 
-        if (added != null) {
-            myItems = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.ITEMS);
-
-            if (myItems != null) {
-                myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId());
+            if (changeList != null) {
+                gs.postAlterationOfStoredItems(type, changeList, src);
             }
-
-            myFluids = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.FLUIDS);
-
-            if (myFluids != null) {
-                myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId());
-            }
-        }
-        if (myItems == null) {
-            gs.postAlterationOfStoredItems(StorageChannel.FLUIDS, fluidChanges, src);
-        } else {
-            gs.postAlterationOfStoredItems(StorageChannel.ITEMS, itemChanges, src);
         }
     }
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
-            final IMEMonitorHandlerReceiver<T> meMonitorPassthrough, final BaseActionSource source) {
-        final LinkedList<T> changes = new LinkedList<>();
+            final IMEMonitorHandlerReceiver meMonitorPassthrough, final BaseActionSource source) {
+        final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
         for (final T is : before) {
             is.setStackSize(-is.getStackSize());
@@ -1393,7 +1453,11 @@ public class Platform {
 
         int hash = target.hashCode();
 
-        if (target instanceof ITileStorageMonitorable) {
+        final IGT gt = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.GT);
+
+        if (gt != null && gt.isGTMachine(target)) {
+            return gt.getGTMachineHash(target);
+        } else if (target instanceof ITileStorageMonitorable) {
             return 0;
         } else if (target instanceof TileEntityChest chest) {
             chest.checkForAdjacentChests();
@@ -1833,10 +1897,6 @@ public class Platform {
             return null;
         }
 
-        if (slot instanceof SlotME) {
-            return ((SlotME) slot).getAEStack();
-        }
-
         if (slot instanceof SlotFake) {
             return ((SlotFake) slot).getAEStack();
         }
@@ -1912,5 +1972,190 @@ public class Platform {
         assert slimResult.length() <= width;
 
         return slimResult + postFix;
+    }
+
+    public static void writeStackByte(IAEStack<?> stack, ByteBuf buffer) {
+        try {
+            IAEStack.writeToPacketGeneric(buffer, stack);
+        } catch (RuntimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static IAEStack<?> readStackByte(ByteBuf buffer) {
+        try {
+            return IAEStack.fromPacketGeneric(buffer);
+        } catch (RuntimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag) {
+        return writeStackNBT(stack, tag, false);
+    }
+
+    public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag, boolean isModern) {
+        if (stack != null) {
+            if (isModern) {
+                stack.writeToNBTGeneric(tag);
+            } else if (stack instanceof AEItemStack) {
+                stack.writeToNBT(tag);
+            } else if (stack instanceof AEFluidStack) {
+                stackConvert(stack).writeToNBT(tag);
+            } else {
+                throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
+            }
+        }
+        return tag;
+    }
+
+    public static NBTTagList writeAEStackListNBT(final IItemList<?> myList) {
+        return writeAEStackListNBT(myList, new NBTTagList());
+    }
+
+    public static NBTTagList writeAEStackListNBT(final IItemList<?> myList, NBTTagList out) {
+        for (final IAEStack<?> ais : myList) {
+            NBTTagCompound tag = new NBTTagCompound();
+            writeStackNBT(ais, tag, true);
+            out.appendTag(tag);
+        }
+
+        return out;
+    }
+
+    public static IAEStack<?> readStackNBT(NBTTagCompound tag) {
+        return readStackNBT(tag, false);
+    }
+
+    public static IAEStack<?> readStackNBT(NBTTagCompound tag, boolean convert) {
+        if (tag == null) return null;
+        if (tag.hasKey("StackType", NBT.TAG_BYTE)) {
+            // For old experimental compatibility
+            final byte stackType = tag.getByte("StackType");
+            return switch (stackType) {
+                case 0 -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
+                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment TODO remove this kind of things on
+                                                                 // 3.0 / 3.1
+                case 1 -> AEItemStack.loadItemStackFromNBT(tag);
+                case 2 -> AEFluidStack.loadFluidStackFromNBT(tag);
+                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
+            };
+        } else {
+            String stackType = tag.getString("StackType");
+            if (stackType.isEmpty()) {
+                return convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
+                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment
+            }
+            return IAEStack.fromNBTGeneric(tag);
+        }
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(final NBTTagList tag) {
+        return readAEStackListNBT(tag, false);
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(final NBTTagList tag, boolean convert) {
+        final IItemList<IAEStack<?>> out = AEApi.instance().storage().createAEStackList();
+
+        if (tag != null) {
+            for (int x = 0; x < tag.tagCount(); x++) {
+                final IAEStack<?> ais = readStackNBT(tag.getCompoundTagAt(x), convert);
+                if (ais != null) out.add(ais);
+            }
+        }
+
+        return out;
+    }
+
+    public static IAEItemStack stackConvert(IAEStack stack) {
+        if (stack == null) return null;
+        if (isAE2FCLoaded && stack instanceof IAEFluidStack ifs) {
+            IAEItemStack ais;
+            if (ifs.getStackSize() <= 0) {
+                ais = ItemFluidDrop.newAeStack(ifs.copy().setStackSize(1)).setStackSize(ifs.getStackSize());
+            } else {
+                ais = ItemFluidDrop.newAeStack(ifs);
+            }
+
+            if (ais == null) {
+                return null;
+            }
+            ais.setCraftable(stack.isCraftable());
+            ais.setCountRequestable(stack.getCountRequestable());
+            ais.setCountRequestableCrafts(stack.getCountRequestableCrafts());
+            ais.setUsedPercent(stack.getUsedPercent());
+            return ais;
+        }
+        return stack instanceof IAEItemStack ais ? ais : null;
+    }
+
+    public static IAEStack convertStack(IAEItemStack stack) {
+        if (isAE2FCLoaded && stack != null && stack.getItem() instanceof ItemFluidDrop) {
+            return ItemFluidDrop.getAeFluidStack(stack);
+        }
+        return stack;
+    }
+
+    @Nullable
+    public static IAEItemStack stackConvertPacket(IAEStack<?> stack) {
+        if (stack == null) return null;
+        if (isAE2FCLoaded) {
+            if (stack instanceof IAEItemStack ais && ais.getItem() instanceof ItemFluidDrop) {
+                stack = ItemFluidDrop.getAeFluidStack(ais);
+            }
+            if (stack instanceof IAEFluidStack ifs) {
+                return ItemFluidPacket.newAeStack(ifs.getFluidStack());
+            }
+        }
+
+        return stack instanceof IAEItemStack ais ? ais : null;
+    }
+
+    public static IAEStack<?> convertStackPacket(ItemStack stack) {
+        if (isAE2FCLoaded && stack != null && stack.getItem() instanceof ItemFluidPacket) {
+            return AEFluidStack.create(ItemFluidPacket.getFluidStack(stack));
+        }
+        return AEItemStack.create(stack);
+    }
+
+    public static boolean isStacksIdentical(IAEStack<?> a, IAEStack<?> b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        if (a.equals(b)) return a.getStackSize() == b.getStackSize();
+        return false;
+    }
+
+    public final static int baublesSlotsOffset = 100_012;
+
+    public static ItemStack getItemFromPlayerInventoryBySlotIndex(final EntityPlayer p, final int slotIndex) {
+        if (slotIndex < 0) {
+            return p.inventory.getCurrentItem();
+        } else if (isBaublesLoaded && slotIndex >= baublesSlotsOffset) {
+            return BaublesApi.getBaubles(p).getStackInSlot(slotIndex - baublesSlotsOffset);
+        } else if (slotIndex < p.inventory.getSizeInventory()) {
+            return p.inventory.getStackInSlot(slotIndex);
+        }
+
+        return null;
+    }
+
+    public static void setPlayerInventorySlotByIndex(final EntityPlayer p, final int slotIndex, final ItemStack is) {
+        if (isBaublesLoaded && slotIndex >= baublesSlotsOffset) {
+            BaublesApi.getBaubles(p).setInventorySlotContents(slotIndex, is);
+        } else p.inventory.setInventorySlotContents(slotIndex, is);
+    }
+
+    public static int longToInt(long number) {
+        return (int) Math.min(Integer.MAX_VALUE, number);
+    }
+
+    public static ItemStack copyStackWithSize(ItemStack itemStack, int size) {
+        if (size != 0 && itemStack != null) {
+            ItemStack copy = itemStack.copy();
+            copy.stackSize = size;
+            return copy;
+        } else {
+            return null;
+        }
     }
 }

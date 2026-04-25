@@ -5,7 +5,11 @@ import net.minecraft.item.ItemStack;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.InsertionMode;
+import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.me.storage.CellInventory;
 import appeng.tile.storage.TileChest;
 import appeng.util.item.AEItemStack;
@@ -57,6 +61,31 @@ public class AdaptorMEChest extends AdaptorIInventory {
         IAEItemStack result = (IAEItemStack) meChest.getItemInventory()
                 .injectItems(AEItemStack.create(toBeSimulated), Actionable.SIMULATE, meChest.getActionSource());
         return result == null ? null : result.getItemStack();
+    }
+
+    @Override
+    public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
+        return addStackToMonitor(toBeAdded, Actionable.MODULATE);
+    }
+
+    @Override
+    public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
+        return addStackToMonitor(toBeSimulated, Actionable.SIMULATE);
+    }
+
+    private IAEStack<?> addStackToMonitor(IAEStack<?> aes, Actionable act) {
+        final IMEMonitor monitor = meChest.getMEMonitor(aes.getStackType());
+        if (monitor == null) return aes;
+        return monitor.injectItems(aes, act, meChest.getActionSource());
+    }
+
+    @Override
+    public boolean containsItems() {
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            final IMEMonitor<?> monitor = meChest.getMEMonitor(type);
+            if (monitor != null && !monitor.getStorageList().isEmpty()) return true;
+        }
+        return false;
     }
 
     private ItemStack addCell(final ItemStack cell, final boolean modulate) {

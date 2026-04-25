@@ -17,16 +17,17 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import com.google.common.base.Optional;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.util.IConfigManager;
@@ -34,6 +35,7 @@ import appeng.core.AEConfig;
 import appeng.core.AppEng;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.GuiBridge;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
@@ -43,8 +45,15 @@ import baubles.api.expanded.IBaubleExpanded;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-@cpw.mods.fml.common.Optional.Interface(iface = "baubles.api.expanded.IBaubleExpanded", modid = "Baubles|Expanded")
+@cpw.mods.fml.common.Optional.InterfaceList(
+        value = { @cpw.mods.fml.common.Optional.Interface(iface = "baubles.api.IBauble", modid = "Baubles"),
+                @cpw.mods.fml.common.Optional.Interface(
+                        iface = "baubles.api.expanded.IBaubleExpanded",
+                        modid = "Baubles|Expanded") })
 public class ToolWirelessTerminal extends AEBasePoweredItem implements IWirelessTermHandler, IBauble, IBaubleExpanded {
+
+    public static String infinityBoosterCard = "infinityBoosterCard";
+    public static String infinityEnergyCard = "InfinityEnergyCard";
 
     public ToolWirelessTerminal() {
         super(AEConfig.instance.wirelessTerminalBattery, Optional.absent());
@@ -69,17 +78,12 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean displayMoreInfo) {
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
-
         if (stack.hasTagCompound()) {
-            final NBTTagCompound tag = Platform.openNbtData(stack);
-            if (tag != null) {
-                final String encKey = tag.getString("encryptionKey");
-
-                if (encKey == null || encKey.isEmpty()) {
-                    lines.add(GuiText.Unlinked.getLocal());
-                } else {
-                    lines.add(GuiText.Linked.getLocal());
-                }
+            final String encKey = ItemStackNBT.getString(stack, "encryptionKey");
+            if (encKey == null || encKey.isEmpty()) {
+                lines.add(EnumChatFormatting.RED + GuiText.Unlinked.getLocal() + EnumChatFormatting.RESET);
+            } else {
+                lines.add(EnumChatFormatting.GREEN + GuiText.Linked.getLocal() + EnumChatFormatting.RESET);
             }
         } else {
             lines.add(GuiText.Unlinked.getLocal());
@@ -104,35 +108,33 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     @Override
     public IConfigManager getConfigManager(final ItemStack target) {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(target);
+            final NBTTagCompound data = ItemStackNBT.get(target);
             manager.writeToNBT(data);
         });
-
         out.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        out.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
-
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(target).copy());
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(target).copy());
         return out;
     }
 
     @Override
     public String getEncryptionKey(final ItemStack item) {
-        final NBTTagCompound tag = Platform.openNbtData(item);
-        return tag.getString("encryptionKey");
+        return ItemStackNBT.getString(item, "encryptionKey");
     }
 
     @Override
     public void setEncryptionKey(final ItemStack item, final String encKey, final String name) {
-        final NBTTagCompound tag = Platform.openNbtData(item);
-        tag.setString("encryptionKey", encKey);
-        tag.setString("name", name);
+        ItemStackNBT.of(item).setString("encryptionKey", encKey).setString("name", name);
     }
 
     @Override
     public String[] getBaubleTypes(ItemStack itemstack) {
         return new String[] { AppEng.BAUBLESLOT };
+    }
+
+    public void openGui(final ItemStack is, final World w, final EntityPlayer player, final Object mode) {
+        Platform.openGUI(player, null, null, GuiBridge.GUI_ME);
     }
 
     @Override

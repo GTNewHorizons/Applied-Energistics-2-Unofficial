@@ -45,13 +45,13 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartDenseCable extends PartCable {
+public class PartDenseCable extends PartCable implements IUsedChannelProvider {
 
     @Reflected
     public PartDenseCable(final ItemStack is) {
         super(is);
 
-        this.getProxy().setFlags(GridFlags.DENSE_CAPACITY, GridFlags.PREFERRED);
+        this.getProxy().setFlags(GridFlags.DENSE_CAPACITY);
     }
 
     @Override

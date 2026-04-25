@@ -16,7 +16,7 @@ import appeng.api.config.Actionable;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingRequester;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 public class CraftingLink implements ICraftingLink {
 
@@ -142,7 +142,7 @@ public class CraftingLink implements ICraftingLink {
         }
     }
 
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode) {
+    public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable mode) {
         if (this.tie == null || this.tie.getRequest() == null || this.tie.getRequest().getRequester() == null) {
             return input;
         }

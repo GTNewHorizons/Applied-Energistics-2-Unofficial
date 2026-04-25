@@ -1,5 +1,7 @@
 package appeng.test.mockme;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,9 +17,11 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
+import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.helpers.PatternHelper;
@@ -45,7 +49,7 @@ public class MockAESystem implements ICellProvider {
 
     public MockAESystem addStoredItem(ItemStack stack) {
         final IAEItemStack aeStack = AEItemStack.create(stack);
-        this.itemStorage.injectItems(aeStack, Actionable.MODULATE, dummyActionSource);
+        this.itemStorage.injectItems(aeStack, Actionable.MODULATE);
         this.sgCache.postAlterationOfStoredItems(
                 StorageChannel.ITEMS,
                 Collections.singletonList(aeStack),
@@ -78,6 +82,7 @@ public class MockAESystem implements ICellProvider {
         public final List<ItemStack> outputs = new ArrayList<>(9);
         public boolean canUseSubstitutes = false;
         public boolean canBeSubstitute = false;
+        public int priority = 0;
 
         private PatternBuilder(boolean isCrafting) {
             this.isCrafting = isCrafting;
@@ -113,6 +118,11 @@ public class MockAESystem implements ICellProvider {
             return this;
         }
 
+        public PatternBuilder setPriority(int priority) {
+            this.priority = priority;
+            return this;
+        }
+
         public void buildAndAdd() {
             final ItemStack encodedPattern = AEApi.instance().definitions().items().encodedPattern().maybeStack(1)
                     .get();
@@ -141,15 +151,16 @@ public class MockAESystem implements ICellProvider {
             patternTags.setTag("out", outs);
             encodedPattern.setTagCompound(patternTags);
             PatternHelper helper = new PatternHelper(encodedPattern, world);
+            helper.setPriority(priority);
             cgCache.addCraftingOption(new MockCraftingMedium(), helper);
         }
     }
 
     // Simulated inventories
     private final MECraftingInventory itemStorage = new MECraftingInventory();
-    private final IMEInventoryHandler<IAEItemStack> storageHandler = new MEPassThrough<>(
-            itemStorage,
-            StorageChannel.ITEMS);
+    private final IMEInventoryHandler<IAEStack> storageHandler = new MEPassThrough<>(
+            (IMEInventory) itemStorage,
+            ITEM_STACK_TYPE);
 
     @Override
     public List<IMEInventoryHandler> getCellArray(StorageChannel channel) {

@@ -12,27 +12,46 @@ package appeng.me.storage;
 
 import javax.annotation.Nonnull;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
+import appeng.me.cache.NetworkMonitor;
 
 public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
-    private final StorageChannel wrappedChannel;
+    private final IAEStackType<T> wrappedStackType;
     private IMEInventory<T> internal;
 
-    public MEPassThrough(final IMEInventory<T> i, final StorageChannel channel) {
-        this.wrappedChannel = channel;
+    public MEPassThrough(final IMEInventory<T> i, final IAEStackType<T> type) {
+        this.wrappedStackType = type;
         this.setInternal(i);
     }
 
-    protected IMEInventory<T> getInternal() {
+    @Override
+    public IMEInventory<T> getInternal() {
         return this.internal;
+    }
+
+    /**
+     * Get Connected grid if applicable
+     * 
+     * @return Connected grid
+     */
+    public IGrid getGrid() {
+        if (this.internal instanceof NetworkMonitor networkMonitor) {
+            return networkMonitor.getGrid();
+        }
+        return null;
     }
 
     public void setInternal(final IMEInventory<T> i) {
@@ -65,6 +84,11 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
     }
 
     @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return this.internal.getStackType();
+    }
+
+    @Override
     public AccessRestriction getAccess() {
         return AccessRestriction.READ_WRITE;
     }
@@ -94,7 +118,19 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
         return true;
     }
 
-    StorageChannel getWrappedChannel() {
-        return this.wrappedChannel;
+    @Override
+    @SuppressWarnings("unchecked")
+    public IMENetworkInventory<T> getExternalNetworkInventory() {
+        if (internal instanceof IMENetworkInventory<?>networkInventory) {
+            return (IMENetworkInventory<T>) networkInventory;
+        }
+        if (internal instanceof IMEInventoryHandler<?>inventoryHandler) {
+            return (IMENetworkInventory<T>) inventoryHandler.getExternalNetworkInventory();
+        }
+        return null;
+    }
+
+    IAEStackType<T> getWrappedChannel() {
+        return this.wrappedStackType;
     }
 }

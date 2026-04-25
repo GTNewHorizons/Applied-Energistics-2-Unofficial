@@ -8,13 +8,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.config.LockCraftingMode;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.core.localization.WailaText;
 import appeng.helpers.IInterfaceHost;
 import appeng.integration.modules.waila.BaseWailaDataProvider;
-import appeng.util.item.AEItemStack;
+import appeng.util.Platform;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 
@@ -40,10 +41,10 @@ public final class InterfaceDataProvider extends BaseWailaDataProvider {
                         currentToolTip.add(WailaText.CraftingLockedUntilResult.getLocal());
 
                         if (accessor.getNBTData().hasKey(NBT_LOCK_STACKS)) {
-                            NBTTagList stackList = accessor.getNBTData().getTagList(NBT_LOCK_STACKS, 10);
+                            NBTTagList stackList = accessor.getNBTData().getTagList(NBT_LOCK_STACKS, NBT.TAG_COMPOUND);
                             for (int index = 0; index < stackList.tagCount(); index++) {
                                 NBTTagCompound stackTag = stackList.getCompoundTagAt(index);
-                                AEItemStack stack = (AEItemStack) AEItemStack.loadItemStackFromNBT(stackTag);
+                                IAEStack<?> stack = Platform.readStackNBT(stackTag);
 
                                 if (stack != null) {
                                     currentToolTip.add("> " + stack.getStackSize() + " " + stack.getDisplayName());
@@ -71,12 +72,12 @@ public final class InterfaceDataProvider extends BaseWailaDataProvider {
             tag.setString(NBT_LOCK_REASON, interfaceDuality.getCraftingLockedReason().name());
             LockCraftingMode lock = interfaceDuality.getCraftingLockedReason();
             if (lock == LockCraftingMode.LOCK_UNTIL_RESULT) {
-                List<IAEItemStack> unlockStacks = interfaceDuality.getUnlockStacks();
+                List<IAEStack<?>> unlockStacks = interfaceDuality.getUnlockStacks();
                 if (unlockStacks != null && !unlockStacks.isEmpty()) {
                     NBTTagList stackList = new NBTTagList();
-                    for (IAEItemStack stack : unlockStacks) {
+                    for (IAEStack<?> stack : unlockStacks) {
                         NBTTagCompound stackTag = new NBTTagCompound();
-                        stack.writeToNBT(stackTag);
+                        Platform.writeStackNBT(stack, stackTag, true);
                         stackList.appendTag(stackTag);
                     }
                     tag.setTag(NBT_LOCK_STACKS, stackList);

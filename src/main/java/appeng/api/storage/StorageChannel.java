@@ -44,4 +44,12 @@ public enum StorageChannel {
             return AEApi.instance().storage().createFluidList();
         }
     }
+
+    public IItemList createPrimitiveList() {
+        if (this == ITEMS) {
+            return AEApi.instance().storage().createPrimitiveItemList();
+        } else {
+            return AEApi.instance().storage().createFluidList();
+        }
+    }
 }

@@ -38,6 +38,7 @@ import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.CommonHelper;
 import appeng.core.sync.packets.PacketPaintedEntity;
+import appeng.core.worlddata.WorldData;
 import appeng.entity.EntityFloatingItem;
 import appeng.me.Grid;
 import appeng.me.NetworkList;
@@ -138,6 +139,13 @@ public class TickHandler {
             for (final IGridNode n : toDestroy) {
                 n.destroy();
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onWorldSave(final WorldEvent.Save event) {
+        if (Platform.isServer()) {
+            WorldData.instance().spawnData().flush();
         }
     }
 

@@ -13,7 +13,15 @@
 
 package appeng.api.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
+import java.util.Collections;
 import java.util.List;
+
+import javax.annotation.Nonnull;
+
+import appeng.api.storage.data.IAEStackType;
 
 /**
  * Allows you to provide cells via non IGridHosts directly to the storage system, drives, and similar features should go
@@ -28,8 +36,37 @@ public interface ICellProvider {
      * a Fluid Channel stuffs going to explode, same with the reverse.
      *
      * @return a valid list of handlers, NEVER NULL
+     * @deprecated Use {@link ICellProvider#getCellArray(IAEStackType)} instead
      */
-    List<IMEInventoryHandler> getCellArray(StorageChannel channel);
+    @Deprecated
+    default List<IMEInventoryHandler> getCellArray(StorageChannel channel) {
+        if (channel == StorageChannel.ITEMS) {
+            return this.getCellArray(ITEM_STACK_TYPE);
+        }
+        if (channel == StorageChannel.FLUIDS) {
+            return this.getCellArray(FLUID_STACK_TYPE);
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * Inventory of the tile for use with ME, should always return an valid list, never NULL.
+     * <p>
+     * You must return the correct Handler for the correct type
+     *
+     * @return a valid list of handlers
+     */
+    @Nonnull
+    @SuppressWarnings("rawtypes")
+    default List<IMEInventoryHandler> getCellArray(IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE) {
+            return this.getCellArray(StorageChannel.ITEMS);
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return this.getCellArray(StorageChannel.FLUIDS);
+        }
+        return Collections.emptyList();
+    }
 
     /**
      * the storage's priority.

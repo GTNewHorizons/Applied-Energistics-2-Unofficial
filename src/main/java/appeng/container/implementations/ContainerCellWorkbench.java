@@ -10,6 +10,8 @@
 
 package appeng.container.implementations;
 
+import static appeng.util.Platform.isServer;
+
 import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,29 +21,35 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
+import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.GuiSync;
+import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.OptionalSlotRestrictedInput;
-import appeng.container.slot.SlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.ICellRestriction;
 import appeng.tile.inventory.AppEngNullInventory;
-import appeng.tile.misc.TileCellWorkbench;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
-import appeng.util.iterators.NullIterator;
+import appeng.util.inv.IUpgradeInventory;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerCellWorkbench extends ContainerUpgradeable {
+public class ContainerCellWorkbench extends ContainerUpgradeable implements IVirtualSlotHolder {
 
-    private final TileCellWorkbench workBench;
+    private final ICellWorkbench workBench;
     private final AppEngNullInventory nullInventory = new AppEngNullInventory();
 
     @GuiSync(2)
@@ -50,7 +58,9 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
     private ItemStack prevStack = null;
     private int lastUpgrades = 0;
 
-    public ContainerCellWorkbench(final InventoryPlayer ip, final TileCellWorkbench te) {
+    private final IAEStack<?>[] configClientSlot = new IAEStack[63];
+
+    public ContainerCellWorkbench(final InventoryPlayer ip, final ICellWorkbench te) {
         super(ip, te);
         this.workBench = te;
     }
@@ -88,19 +98,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
                         8,
                         this.getInventoryPlayer()));
 
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
-        final IInventory upgradeInventory = new Upgrades();
-        // null, 3 * 8 );
-
-        int offset = 0;
-        final int x = 8;
-        final int y = 29;
-        for (int w = 0; w < 7; w++) {
-            for (int z = 0; z < 9; z++) {
-                this.addSlotToContainer(new SlotFakeTypeOnly(inv, offset, x + z * 18, y + w * 18));
-                offset++;
-            }
-        }
+        final IInventory upgradeInventory = new WorkbenchUpgradeInventory();
 
         for (int zz = 0; zz < 3; zz++) {
             for (int z = 0; z < 8; z++) {
@@ -117,13 +115,6 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
                                 this.getInventoryPlayer()));
             }
         }
-        /*
-         * if ( supportCapacity() ) { for (int w = 0; w < 2; w++) for (int z = 0; z < 9; z++) addSlotToContainer( new
-         * OptionalSlotFakeTypeOnly( inv, this, offset++, x, y, z, w, 1 ) ); for (int w = 0; w < 2; w++) for (int z = 0;
-         * z < 9; z++) addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, offset++, x, y, z, w + 2, 2 ) ); for
-         * (int w = 0; w < 2; w++) for (int z = 0; z < 9; z++) addSlotToContainer( new OptionalSlotFakeTypeOnly( inv,
-         * this, offset++, x, y, z, w + 4, 3 ) ); }
-         */
     }
 
     @Override
@@ -140,9 +131,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
     public void detectAndSendChanges() {
         final ItemStack is = this.workBench.getInventoryByName("cell").getStackInSlot(0);
         if (Platform.isServer()) {
-            if (this.workBench.getWorldObj()
-                    .getTileEntity(this.workBench.xCoord, this.workBench.yCoord, this.workBench.zCoord)
-                    != this.workBench) {
+            if (!this.workBench.isSame(this.workBench)) {
                 this.setValidContainer(false);
             }
 
@@ -162,6 +151,11 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
 
             this.setCopyMode(this.getWorkBenchCopyMode());
             this.setFuzzyMode(this.getWorkBenchFuzzyMode());
+
+            this.updateVirtualSlots(
+                    StorageName.NONE,
+                    this.workBench.getAEInventoryByName(StorageName.NONE),
+                    this.configClientSlot);
         }
 
         this.prevStack = is;
@@ -197,9 +191,9 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
     }
 
     public void clear() {
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
+        final IAEStackInventory inv = this.workBench.getAEInventoryByName(StorageName.NONE);
         for (int x = 0; x < inv.getSizeInventory(); x++) {
-            inv.setInventorySlotContents(x, null);
+            inv.putAEStackInSlot(x, null);
         }
         this.detectAndSendChanges();
     }
@@ -212,28 +206,28 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         return FuzzyMode.IGNORE_ALL;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void partition() {
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
+        final IAEStackInventory inv = this.workBench.getAEInventoryByName(StorageName.NONE);
+        final ItemStack is = this.getUpgradeable().getInventoryByName("cell").getStackInSlot(0);
 
-        final IMEInventory<IAEItemStack> cellInv = AEApi.instance().registries().cell().getCellInventory(
-                this.getUpgradeable().getInventoryByName("cell").getStackInSlot(0),
-                null,
-                StorageChannel.ITEMS);
+        if (!(is != null && is.getItem() instanceof ICellWorkbenchItem wi)) return;
 
-        Iterator<IAEItemStack> i = new NullIterator<>();
-        if (cellInv != null) {
-            final IItemList<IAEItemStack> list = cellInv
-                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
-            i = list.iterator();
-        }
+        final IMEInventory cellInv = AEApi.instance().registries().cell().getCellInventory(is, null, wi.getStackType());
+
+        if (cellInv == null) return;
+
+        final IItemList<?> list = cellInv
+                .getAvailableItems(cellInv.getStackType().createPrimitiveList(), IterationCounter.fetchNewId());
+        Iterator<?> i = list.iterator();
 
         for (int x = 0; x < inv.getSizeInventory(); x++) {
             if (i.hasNext()) {
-                final ItemStack g = i.next().getItemStack();
-                g.stackSize = 1;
-                inv.setInventorySlotContents(x, g);
+                final IAEStack<?> g = (IAEStack<?>) i.next();
+                g.setStackSize(1);
+                inv.putAEStackInSlot(x, g);
             } else {
-                inv.setInventorySlotContents(x, null);
+                inv.putAEStackInSlot(x, null);
             }
         }
 
@@ -248,7 +242,28 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         this.copyMode = copyMode;
     }
 
-    public class Upgrades implements IInventory {
+    @Override
+    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
+        final IAEStackInventory config = this.workBench.getAEInventoryByName(StorageName.NONE);
+        for (var entry : slotStacks.int2ObjectEntrySet()) {
+            config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
+        }
+
+        if (isServer()) {
+            this.updateVirtualSlots(StorageName.NONE, config, this.configClientSlot);
+        }
+    }
+
+    @Nullable
+    public IAEStackType<?> getStackType() {
+        return this.workBench.getStackType();
+    }
+
+    public IAEStackInventory getConfig() {
+        return this.workBench.getAEInventoryByName(StorageName.NONE);
+    }
+
+    public class WorkbenchUpgradeInventory implements IInventory, IUpgradeInventory {
 
         @Override
         public int getSizeInventory() {
@@ -315,6 +330,15 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         @Override
         public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
             return ContainerCellWorkbench.this.getCellUpgradeInventory().isItemValidForSlot(i, itemstack);
+        }
+
+        @Override
+        public int getMaxInstalled(Upgrades upgrades) {
+            if (ContainerCellWorkbench.this.getCellUpgradeInventory() instanceof IUpgradeInventory upgradeInventory) {
+                return upgradeInventory.getMaxInstalled(upgrades);
+            } else {
+                return 0;
+            }
         }
     }
 }

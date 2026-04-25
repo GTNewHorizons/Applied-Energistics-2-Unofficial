@@ -49,7 +49,7 @@ public class PartDenseCableCovered extends PartCable {
     public PartDenseCableCovered(final ItemStack is) {
         super(is);
 
-        this.getProxy().setFlags(GridFlags.DENSE_CAPACITY, GridFlags.PREFERRED);
+        this.getProxy().setFlags(GridFlags.DENSE_CAPACITY);
     }
 
     @Override

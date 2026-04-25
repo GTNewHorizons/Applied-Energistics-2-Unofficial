@@ -14,12 +14,11 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.config.CraftingAllow;
 import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.util.IWideReadableNumberConverter;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
-import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -40,9 +39,11 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final boolean isBusy;
     private final long totalItems;
     private final long remainingItems;
-    private final IAEItemStack crafting;
+    private final IAEStack<?> crafting;
     private final CraftingAllow allowMode;
     private final long craftingElapsedTime;
+    private final boolean isSuspended;
+    private final String sourcePlayer;
 
     public CraftingCPUStatus() {
         this.serverCluster = null;
@@ -57,6 +58,8 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.crafting = null;
         this.allowMode = CraftingAllow.ALLOW_ALL;
         this.craftingElapsedTime = 0;
+        this.isSuspended = false;
+        this.sourcePlayer = null;
     }
 
     public CraftingCPUStatus(ICraftingCPU cluster, int serial) {
@@ -65,7 +68,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.serial = serial;
         this.isBusy = cluster.isBusy();
         if (isBusy) {
-            crafting = cluster.getFinalOutput();
+            crafting = cluster.getFinalMultiOutput();
             usedStorage = cluster.getUsedStorage();
             totalItems = cluster.getStartItemCount();
             remainingItems = cluster.getRemainingItemCount();
@@ -80,6 +83,8 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.storage = cluster.getAvailableStorage();
         this.coprocessors = cluster.getCoProcessors();
         this.allowMode = cluster.getCraftingAllowMode();
+        this.isSuspended = cluster.isSuspended();
+        this.sourcePlayer = cluster.getSourcePlayer();
     }
 
     public CraftingCPUStatus(NBTTagCompound i) {
@@ -92,10 +97,12 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.isBusy = i.getBoolean("isBusy");
         this.totalItems = i.getLong("totalItems");
         this.remainingItems = i.getLong("remainingItems");
-        this.crafting = i.hasKey("crafting") ? AEItemStack.loadItemStackFromNBT(i.getCompoundTag("crafting")) : null;
+        this.crafting = i.hasKey("crafting") ? IAEStack.fromNBTGeneric(i.getCompoundTag("crafting")) : null;
         this.allowMode = i.hasKey("allowMode") ? CraftingAllow.values()[i.getInteger("allowMode")]
                 : CraftingAllow.ALLOW_ALL;
         this.craftingElapsedTime = i.hasKey("craftingElapsedTime") ? i.getLong("craftingElapsedTime") : 0;
+        this.isSuspended = i.getBoolean("isSuspended");
+        this.sourcePlayer = i.hasKey("sourcePlayer") ? i.getString("sourcePlayer") : null;
     }
 
     public CraftingCPUStatus(ByteBuf packet) throws IOException {
@@ -124,10 +131,14 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         i.setLong("craftingElapsedTime", craftingElapsedTime);
         if (crafting != null) {
             NBTTagCompound stack = new NBTTagCompound();
-            crafting.writeToNBT(stack);
+            crafting.writeToNBTGeneric(stack);
             i.setTag("crafting", stack);
         }
         i.setInteger("allowMode", this.allowMode.ordinal());
+        i.setBoolean("isSuspended", this.isSuspended);
+        if (this.sourcePlayer != null) {
+            i.setString("sourcePlayer", this.sourcePlayer);
+        }
     }
 
     public void writeToPacket(ByteBuf i) throws IOException {
@@ -178,7 +189,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         return remainingItems;
     }
 
-    public IAEItemStack getCrafting() {
+    public IAEStack<?> getCrafting() {
         return crafting;
     }
 
@@ -192,6 +203,14 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
 
     public long getCraftingElapsedTime() {
         return craftingElapsedTime;
+    }
+
+    public boolean isSuspended() {
+        return isSuspended;
+    }
+
+    public String getSourcePlayer() {
+        return sourcePlayer;
     }
 
     @Override

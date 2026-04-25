@@ -10,11 +10,14 @@
 
 package appeng.util.item;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.Collection;
 import java.util.Iterator;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
@@ -151,5 +154,10 @@ public final class HashBasedItemList implements IItemList<IAEItemStack> {
 
     private void putItemRecord(final IAEItemStack itemStack) {
         this.records.add(itemStack);
+    }
+
+    @Override
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

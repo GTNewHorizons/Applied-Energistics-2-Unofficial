@@ -19,6 +19,7 @@ import appeng.api.util.IConfigurableObject;
 import appeng.container.AEBaseContainer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
+import appeng.helpers.IInterfaceHost;
 import appeng.helpers.Reflected;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
@@ -55,12 +56,17 @@ public final class PacketConfigButton extends AppEngPacket {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
         if (sender.openContainer instanceof AEBaseContainer baseContainer) {
             if (baseContainer.getTarget() instanceof IConfigurableObject) {
-                final IConfigManager cm = ((IConfigurableObject) baseContainer.getTarget()).getConfigManager();
+                Object target = baseContainer.getTarget();
+                final IConfigManager cm = ((IConfigurableObject) target).getConfigManager();
                 final Enum<?> newState = Platform.rotateEnum(
                         cm.getSetting(this.option),
                         this.rotationDirection,
                         this.option.getPossibleValues());
                 cm.putSetting(this.option, newState);
+
+                if (target instanceof IInterfaceHost interfaceHost) {
+                    interfaceHost.saveChanges();
+                }
             }
         }
     }

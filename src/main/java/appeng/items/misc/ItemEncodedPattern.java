@@ -10,6 +10,9 @@
 
 package appeng.items.misc;
 
+import static appeng.helpers.PatternHelper.convertToCondensedAEList;
+import static appeng.helpers.UltimatePatternHelper.loadIAEStackFromNBT;
+
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,19 +28,21 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import appeng.api.AEApi;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.render.items.ItemEncodedPatternRenderer;
 import appeng.core.CommonHelper;
 import appeng.core.features.AEFeature;
@@ -47,15 +52,14 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
-import cpw.mods.fml.common.registry.GameRegistry;
+import codechicken.nei.NEIClientConfig;
 import gregtech.common.items.ItemIntegratedCircuit;
 
 public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
 
     // rather simple client side caching.
     private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<>();
-    private static Item FLUID_DROP_ITEM;
-    private static boolean checkedCache = false;
+    private static final Map<ItemStack, IAEStack<?>> OUTPUT_STACK_CACHE = new WeakHashMap<>();
     private static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     private static final Locale locale = Locale.getDefault();
 
@@ -119,20 +123,20 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final boolean substitute = encodedValue.getBoolean("substitute");
         final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
         final String author = encodedValue.getString("author");
-        IAEItemStack[] inItems;
-        IAEItemStack[] outItems;
+        IAEStack<?>[] inItems;
+        IAEStack<?>[] outItems;
 
         if (details == null) {
             final ItemStack unknownItem = new ItemStack(Blocks.fire);
             unknownItem.setStackDisplayName(GuiText.UnknownItem.getLocal());
 
-            inItems = PatternHelper.convertToCondensedList(
-                    PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), false, unknownItem));
-            outItems = PatternHelper.convertToCondensedList(
-                    PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), false, unknownItem));
+            inItems = convertToCondensedAEList(
+                    loadIAEStackFromNBT(encodedValue.getTagList("in", NBT.TAG_COMPOUND), false, unknownItem));
+            outItems = convertToCondensedAEList(
+                    loadIAEStackFromNBT(encodedValue.getTagList("out", NBT.TAG_COMPOUND), false, unknownItem));
         } else {
-            inItems = details.getCondensedInputs();
-            outItems = details.getCondensedOutputs();
+            inItems = details.getCondensedAEInputs();
+            outItems = details.getCondensedAEOutputs();
         }
 
         boolean recipeIsBroken = details == null;
@@ -154,11 +158,12 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final String ingredients = (inItems.length > 1 ? EnumChatFormatting.DARK_GREEN + GuiText.Ingredients.getLocal()
                 : EnumChatFormatting.DARK_GREEN + GuiText.Ingredient.getLocal()) + ": " + EnumChatFormatting.RESET;
         final String holdShift = EnumChatFormatting.GRAY + GuiText.HoldShift.getLocal() + EnumChatFormatting.RESET;
+        final String viewPattern = EnumChatFormatting.GRAY
+                + String.format(GuiText.PatternView.getLocal(), NEIClientConfig.getKeyName("gui.pattern_view"))
+                + EnumChatFormatting.RESET;
 
-        recipeIsBroken = addInformation(player, inItems, in, ingredients, displayMoreInfo, EnumChatFormatting.GREEN)
-                || recipeIsBroken;
-        recipeIsBroken = addInformation(player, outItems, out, result, displayMoreInfo, EnumChatFormatting.AQUA)
-                || recipeIsBroken;
+        recipeIsBroken = recipeIsBroken || addInformation(inItems, in, ingredients);
+        recipeIsBroken = recipeIsBroken || addInformation(outItems, out, result);
 
         if (recipeIsBroken) {
             lines.add(EnumChatFormatting.RED + GuiText.InvalidPattern.getLocal());
@@ -170,6 +175,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 lines.add(holdShift);
             }
 
+            lines.add(viewPattern);
             lines.add(substitutionLabel + canSubstitute);
             lines.add(beSubstitutionLabel + canBeSubstitute);
 
@@ -177,6 +183,16 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 lines.add(
                         EnumChatFormatting.LIGHT_PURPLE + GuiText.EncodedBy.getLocal(author)
                                 + EnumChatFormatting.RESET);
+            }
+        }
+        if (ItemTunnelPattern.isTunnelPattern(stack)) {
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo1.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo2.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo3.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo4.getLocal());
+            final java.util.UUID uuid = ItemTunnelPattern.getTunnelUuid(stack);
+            if (uuid != null) {
+                lines.add(EnumChatFormatting.GRAY + "UUID: " + uuid);
             }
         }
     }
@@ -209,79 +225,83 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             return null;
         }
 
-        SIMPLE_CACHE.put(item, out = details.getCondensedOutputs()[0].getItemStack());
+        final IAEStack<?>[] outputs = details.getCondensedAEOutputs();
+        if (outputs.length == 0) {
+            return null;
+        }
+        final IAEStack<?> output = outputs[0];
+        out = output.getItemStackForNEI();
+        long count = output.getStackSize();
+        if (out != null) out.stackSize = count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) count;
+
+        SIMPLE_CACHE.put(item, out);
         return out;
     }
 
-    private boolean addInformation(final EntityPlayer player, final IAEItemStack[] items, final List<String> lines,
-            String label, final boolean displayMoreInfo, EnumChatFormatting color) {
+    public IAEStack<?> getOutputAE(final ItemStack item) {
+        IAEStack<?> cached = OUTPUT_STACK_CACHE.get(item);
+        if (cached != null) {
+            return cached;
+        }
+
+        final World w = CommonHelper.proxy.getWorld();
+
+        if (w == null) {
+            return null;
+        }
+
+        final ICraftingPatternDetails details = this.getPatternForItem(item, w);
+
+        if (details == null) {
+            return null;
+        }
+
+        final IAEStack<?>[] outputs = details.getCondensedAEOutputs();
+        if (outputs.length == 0) {
+            return null;
+        }
+        final IAEStack<?> output = outputs[0];
+        OUTPUT_STACK_CACHE.put(item, output);
+        return output;
+    }
+
+    private boolean addInformation(final IAEStack<?>[] items, final List<String> lines, String label) {
         final ItemStack unknownItem = new ItemStack(Blocks.fire);
-        boolean recipeIsBroken = false;
         boolean first = true;
-        List<IAEItemStack> itemsList = Arrays.asList(items);
-        List<IAEItemStack> sortedItems = itemsList.stream()
-                .sorted(Comparator.comparingLong(IAEItemStack::getStackSize).reversed()).collect(Collectors.toList());
-        boolean isFluid = false;
-        EnumChatFormatting oldColor = color;
-        final Item fluidDropItem = getFluidDropItem();
+        List<IAEStack<?>> itemsList = Arrays.asList(items);
+        List<IAEStack<?>> sortedItems = itemsList.stream().sorted(Comparator.comparingLong(IAEStack::getStackSize))
+                .collect(Collectors.toList());
 
-        for (final IAEItemStack item : sortedItems) {
-            Long itemCount = item.getStackSize();
+        for (int i = sortedItems.size() - 1; i >= 0; i--) {
+            final IAEStack<?> item = sortedItems.get(i);
+            final IAEStackType<?> type = item.getStackType();
 
-            if (!recipeIsBroken && item.equals(unknownItem)) {
-                recipeIsBroken = true;
-            }
+            if (item.equals(unknownItem)) return true;
 
-            if (fluidDropItem != null && item.getItemStack().getItem() == fluidDropItem) {
-                label = EnumChatFormatting.GOLD + label;
-                color = EnumChatFormatting.GOLD;
-                isFluid = true;
-            } else {
-                label = EnumChatFormatting.RESET + label;
-                color = oldColor;
-                isFluid = false;
-            }
+            final String itemCountText = NumberFormat.getNumberInstance(locale).format(item.getStackSize());
+            final String itemText = isGTLoaded && item instanceof IAEItemStack ais
+                    && ais.getItem() instanceof ItemIntegratedCircuit
+                            ? Platform.getItemDisplayName(item) + " " + ais.getItemStack().getItemDamage()
+                            : Platform.getItemDisplayName(item);
 
-            String itemCountText = NumberFormat.getNumberInstance(locale).format(itemCount);
-            String itemText;
-            if (isGTLoaded) {
-                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
-                        : item.getItem() instanceof ItemIntegratedCircuit
-                                ? Platform.getItemDisplayName(item) + " " + item.getItemStack().getItemDamage()
-                                : Platform.getItemDisplayName(item);
-            } else {
-                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
-                        : Platform.getItemDisplayName(item);
-            }
-            String fullText = "   " + EnumChatFormatting.WHITE
+            final String fullText = "   " + EnumChatFormatting.WHITE
                     + itemCountText
                     + EnumChatFormatting.RESET
-                    + (isFluid ? EnumChatFormatting.WHITE + "L" : " ")
+                    + EnumChatFormatting.WHITE
+                    + type.getDisplayUnit()
+                    + " "
                     + EnumChatFormatting.RESET
-                    + color
+                    + type.getColorDefinition()
                     + itemText;
 
             if (first) {
                 lines.add(label);
-                lines.add(fullText);
-            }
-            if (!first) {
-                lines.add(fullText);
             }
 
+            lines.add(fullText);
             first = false;
         }
 
-        return recipeIsBroken;
-    }
-
-    private static Item getFluidDropItem() {
-        // Use a checked cache variable instead of relying on the item lookup for cache since
-        // we don't want to recheck every time if AE2FC is not installed
-        if (!checkedCache) {
-            FLUID_DROP_ITEM = GameRegistry.findItem("ae2fc", "fluid_drop");
-            checkedCache = true;
-        }
-        return FLUID_DROP_ITEM;
+        return false;
     }
 }

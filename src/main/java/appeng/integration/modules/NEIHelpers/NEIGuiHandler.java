@@ -10,6 +10,7 @@ import appeng.client.gui.implementations.GuiCraftingStatus;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import codechicken.nei.api.INEIGuiAdapter;
+import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.recipe.StackInfo;
 
 public class NEIGuiHandler extends INEIGuiAdapter {
@@ -23,6 +24,8 @@ public class NEIGuiHandler extends INEIGuiAdapter {
             gmm.setTextFieldValue(getItemStackText(draggedStack), mousex, mousey, draggedStack.copy());
 
             return true;
+        } else if (gui instanceof INEIGuiHandler handler) {
+            return handler.handleDragNDrop(gui, mousex, mousey, draggedStack, button);
         }
 
         return super.handleDragNDrop(gui, mousex, mousey, draggedStack, button);

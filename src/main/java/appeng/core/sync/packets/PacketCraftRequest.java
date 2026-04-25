@@ -23,6 +23,7 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingJob;
 import appeng.container.ContainerOpenContext;
+import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.core.AELog;
@@ -36,29 +37,34 @@ public class PacketCraftRequest extends AppEngPacket {
 
     private final long amount;
     private final boolean heldShift;
+    private final boolean heldCtrl;
 
     private final CraftingMode craftingMode;
 
     // automatic.
     public PacketCraftRequest(final ByteBuf stream) {
         this.heldShift = stream.readBoolean();
+        this.heldCtrl = stream.readBoolean();
         this.amount = stream.readLong();
         this.craftingMode = CraftingMode.values()[stream.readByte()];
     }
 
-    public PacketCraftRequest(final int craftAmt, final boolean shift) {
-        this(craftAmt, shift, CraftingMode.STANDARD);
+    public PacketCraftRequest(final int craftAmt, final boolean shift, final boolean control) {
+        this(craftAmt, shift, control, CraftingMode.STANDARD);
     }
 
-    public PacketCraftRequest(final long craftAmt, final boolean shift, final CraftingMode craftingMode) {
+    public PacketCraftRequest(final long craftAmt, final boolean shift, final boolean control,
+            final CraftingMode craftingMode) {
         this.amount = craftAmt;
         this.heldShift = shift;
+        this.heldCtrl = control;
         this.craftingMode = craftingMode;
 
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
         data.writeBoolean(shift);
+        data.writeBoolean(control);
         data.writeLong(this.amount);
         data.writeByte(craftingMode.ordinal());
 
@@ -68,6 +74,7 @@ public class PacketCraftRequest extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         if (player.openContainer instanceof ContainerCraftAmount cca) {
+            final PrimaryGui pg = cca.getPrimaryGui();
             final Object target = cca.getTarget();
             if (target instanceof IGridHost gh) {
                 final IGridNode gn = gh.getGridNode(ForgeDirection.UNKNOWN);
@@ -108,8 +115,10 @@ public class PacketCraftRequest extends AppEngPacket {
                         cca.openConfirmationGUI(player, te);
 
                         if (player.openContainer instanceof ContainerCraftConfirm ccc) {
-                            ccc.setAutoStart(this.heldShift);
+                            ccc.setAutoStart(this.heldShift && !this.heldCtrl);
+                            ccc.setAutoStartAndFollow(!this.heldShift && this.heldCtrl);
                             ccc.setJob(futureJob);
+                            ccc.setPrimaryGui(pg);
                             cca.detectAndSendChanges();
                         }
                     }

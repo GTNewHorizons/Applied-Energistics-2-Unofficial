@@ -27,10 +27,12 @@ import appeng.api.parts.IPart;
 import appeng.helpers.ICustomNameObject;
 import appeng.integration.modules.waila.part.BasePartWailaDataProvider;
 import appeng.integration.modules.waila.part.ChannelWailaDataProvider;
+import appeng.integration.modules.waila.part.IOBusWailaDataProvider;
 import appeng.integration.modules.waila.part.IPartWailaDataProvider;
 import appeng.integration.modules.waila.part.P2PStateWailaDataProvider;
 import appeng.integration.modules.waila.part.PartAccessor;
 import appeng.integration.modules.waila.part.PartInterfaceDataProvider;
+import appeng.integration.modules.waila.part.PartPatternRepeaterDataProvider;
 import appeng.integration.modules.waila.part.PowerStateWailaDataProvider;
 import appeng.integration.modules.waila.part.StorageMonitorWailaDataProvider;
 import appeng.integration.modules.waila.part.Tracer;
@@ -74,8 +76,18 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
         final IPartWailaDataProvider p2pState = new P2PStateWailaDataProvider();
         final IPartWailaDataProvider partStack = new BasePartWailaDataProvider();
         final IPartWailaDataProvider partInterface = new PartInterfaceDataProvider();
+        final IPartWailaDataProvider partPatternRepeater = new PartPatternRepeaterDataProvider();
+        final IPartWailaDataProvider partIOBus = new IOBusWailaDataProvider();
 
-        this.providers = Lists.newArrayList(channel, storageMonitor, powerState, p2pState, partStack, partInterface);
+        this.providers = Lists.newArrayList(
+                channel,
+                storageMonitor,
+                powerState,
+                p2pState,
+                partStack,
+                partInterface,
+                partPatternRepeater,
+                partIOBus);
     }
 
     @Override

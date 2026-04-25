@@ -10,7 +10,6 @@
 
 package appeng.client.render;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
@@ -18,6 +17,7 @@ import java.util.Set;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -37,40 +37,17 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     private boolean isFacade = false;
     private boolean useTextures = true;
     private float opacity = 1.0f;
-    private Field fBrightness = null;
-    private Field fColor = null;
     private LightingCache lightState = new LightingCache();
 
-    private int getCurrentColor() {
-        try {
-            if (this.fColor == null) {
-                try {
-                    this.fColor = Tessellator.class.getDeclaredField("color");
-                } catch (final Throwable t) {
-                    this.fColor = Tessellator.class.getDeclaredField("field_78402_m");
-                }
-                this.fColor.setAccessible(true);
-            }
-            return (Integer) this.fColor.get(Tessellator.instance);
-        } catch (final Throwable t) {
-            return 0;
-        }
+    public static final boolean fixedBottomFaceUV = (boolean) Launch.blackboard
+            .getOrDefault("hodgepodge.FixesConfig.fixBottomFaceUV", Boolean.FALSE);
+
+    private int getCurrentColor(Tessellator tessellator) {
+        return tessellator.color;
     }
 
-    private int getCurrentBrightness() {
-        try {
-            if (this.fBrightness == null) {
-                try {
-                    this.fBrightness = Tessellator.class.getDeclaredField("brightness");
-                } catch (final Throwable t) {
-                    this.fBrightness = Tessellator.class.getDeclaredField("field_78401_l");
-                }
-                this.fBrightness.setAccessible(true);
-            }
-            return (Integer) this.fBrightness.get(Tessellator.instance);
-        } catch (final Throwable t) {
-            return 0;
-        }
+    private int getCurrentBrightness(Tessellator tessellator) {
+        return tessellator.brightness;
     }
 
     void setTexture(final IIcon ico) {
@@ -138,12 +115,12 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         this.colorBlueTopRight = c[11];
     }
 
-    private void saveAO(final int[] z, final float[] c) {
+    private void saveAO(Tessellator tessellator, final int[] z, final float[] c) {
         z[0] = this.brightnessBottomLeft;
         z[1] = this.brightnessBottomRight;
         z[2] = this.brightnessTopLeft;
         z[3] = this.brightnessTopRight;
-        z[4] = this.getCurrentColor();
+        z[4] = this.getCurrentColor(tessellator);
 
         c[0] = this.colorRedTopLeft;
         c[1] = this.colorGreenTopLeft;
@@ -186,7 +163,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
                 return;
             }
 
-            if (this.isFacade()) {
+            if (!RenderBlocksWorkaround.fixedBottomFaceUV && this.isFacade()) {
                 final Tessellator tessellator = Tessellator.instance;
 
                 final double d3 = par8Icon.getInterpolatedU(this.renderMinX * 16.0D);
@@ -221,8 +198,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         } else {
             this.lightState.isAO = this.enableAO;
             this.lightState.rYNeg = par8Icon;
-            this.saveAO(this.lightState.aoYNeg, this.lightState.foYNeg);
-            this.lightState.bYNeg = this.getCurrentBrightness();
+            final Tessellator tessellator = Tessellator.instance;
+            this.saveAO(tessellator, this.lightState.aoYNeg, this.lightState.foYNeg);
+            this.lightState.bYNeg = this.getCurrentBrightness(tessellator);
         }
     }
 
@@ -269,8 +247,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         } else {
             this.lightState.isAO = this.enableAO;
             this.lightState.rYPos = par8Icon;
-            this.saveAO(this.lightState.aoYPos, this.lightState.foYPos);
-            this.lightState.bYPos = this.getCurrentBrightness();
+            final Tessellator tessellator = Tessellator.instance;
+            this.saveAO(tessellator, this.lightState.aoYPos, this.lightState.foYPos);
+            this.lightState.bYPos = this.getCurrentBrightness(tessellator);
         }
     }
 
@@ -317,8 +296,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         } else {
             this.lightState.isAO = this.enableAO;
             this.lightState.rZNeg = par8Icon;
-            this.saveAO(this.lightState.aoZNeg, this.lightState.foZNeg);
-            this.lightState.bZNeg = this.getCurrentBrightness();
+            final Tessellator tessellator = Tessellator.instance;
+            this.saveAO(tessellator, this.lightState.aoZNeg, this.lightState.foZNeg);
+            this.lightState.bZNeg = this.getCurrentBrightness(tessellator);
         }
     }
 
@@ -365,8 +345,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         } else {
             this.lightState.isAO = this.enableAO;
             this.lightState.rZPos = par8Icon;
-            this.saveAO(this.lightState.aoZPos, this.lightState.foZPos);
-            this.lightState.bZPos = this.getCurrentBrightness();
+            final Tessellator tessellator = Tessellator.instance;
+            this.saveAO(tessellator, this.lightState.aoZPos, this.lightState.foZPos);
+            this.lightState.bZPos = this.getCurrentBrightness(tessellator);
         }
     }
 
@@ -413,8 +394,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         } else {
             this.lightState.isAO = this.enableAO;
             this.lightState.rXNeg = par8Icon;
-            this.saveAO(this.lightState.aoXNeg, this.lightState.foXNeg);
-            this.lightState.bXNeg = this.getCurrentBrightness();
+            final Tessellator tessellator = Tessellator.instance;
+            this.saveAO(tessellator, this.lightState.aoXNeg, this.lightState.foXNeg);
+            this.lightState.bXNeg = this.getCurrentBrightness(tessellator);
         }
     }
 
@@ -461,8 +443,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         } else {
             this.lightState.isAO = this.enableAO;
             this.lightState.rXPos = par8Icon;
-            this.saveAO(this.lightState.aoXPos, this.lightState.foXPos);
-            this.lightState.bXPos = this.getCurrentBrightness();
+            final Tessellator tessellator = Tessellator.instance;
+            this.saveAO(tessellator, this.lightState.aoXPos, this.lightState.foXPos);
+            this.lightState.bXPos = this.getCurrentBrightness(tessellator);
         }
     }
 

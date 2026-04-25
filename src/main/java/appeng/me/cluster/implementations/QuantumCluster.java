@@ -246,4 +246,12 @@ public class QuantumCluster implements ILocatable, IAECluster {
     private void setRing(final TileQuantumBridge[] ring) {
         this.Ring = ring;
     }
+
+    public long getOtherSide() {
+        return otherSide;
+    }
+
+    public ConnectionWrapper getConnection() {
+        return connection;
+    }
 }

@@ -13,8 +13,10 @@ package appeng.container.implementations;
 import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -24,23 +26,30 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
-import appeng.container.AEBaseContainer;
-import appeng.container.slot.SlotInaccessible;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
+import appeng.client.gui.widgets.MEGuiTextField;
+import appeng.container.ContainerSubGui;
+import appeng.container.guisync.GuiSync;
 import appeng.core.sync.GuiBridge;
-import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketVirtualSlot;
 import appeng.util.Platform;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
-public class ContainerCraftAmount extends AEBaseContainer {
+public class ContainerCraftAmount extends ContainerSubGui {
 
-    private final Slot craftingItem;
-    private IAEItemStack itemToCreate;
+    @SideOnly(Side.CLIENT)
+    private MEGuiTextField amountField;
+
+    @GuiSync(1)
+    public long initialCraftAmount = -1;
+
+    private IAEStack<?> itemToCreate;
 
     public ContainerCraftAmount(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
-
-        this.craftingItem = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 34, 53);
-        this.addSlotToContainer(this.getCraftingItem());
     }
 
     @Override
@@ -62,20 +71,58 @@ public class ContainerCraftAmount extends AEBaseContainer {
         return new PlayerSource(this.getPlayerInv().player, (IActionHost) this.getTarget());
     }
 
+    // addon
     public Slot getCraftingItem() {
-        return this.craftingItem;
+        return new Slot(null, 0, 0, 0) {
+
+            @Override
+            public void putStack(ItemStack p_75215_1_) {}
+        };
     }
 
-    public IAEItemStack getItemToCraft() {
+    public IAEStack<?> getItemToCraft() {
         return this.itemToCreate;
     }
 
-    public void setItemToCraft(@Nonnull final IAEItemStack itemToCreate) {
+    public void setItemToCraft(@Nonnull final IAEStack<?> itemToCreate) {
         this.itemToCreate = itemToCreate;
+
+        final PacketVirtualSlot p = new PacketVirtualSlot(StorageName.NONE, 0, itemToCreate);
+        NetworkHandler.instance.sendTo(p, (EntityPlayerMP) this.getInventoryPlayer().player);
+    }
+
+    public void setInitialCraftAmount(long initialCraftAmount) {
+        this.initialCraftAmount = initialCraftAmount;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void setAmountField(MEGuiTextField amountField) {
+        this.amountField = amountField;
+        this.amountField.setText(String.valueOf(Math.max(1, this.initialCraftAmount)));
+        this.amountField.setCursorPositionEnd();
+        this.amountField.setSelectionPos(0);
+    }
+
+    @Override
+    public void onUpdate(String field, Object oldValue, Object newValue) {
+        if (field.equals("initialCraftAmount")) {
+            if (this.amountField != null) {
+                this.amountField.setText(String.valueOf(Math.max(1, this.initialCraftAmount)));
+                this.amountField.setCursorPositionEnd();
+                this.amountField.setSelectionPos(0);
+            }
+        }
+
+        super.onUpdate(field, oldValue, newValue);
     }
 
     public void openConfirmationGUI(EntityPlayer player, TileEntity te) {
-        Platform.openGUI(player, te, this.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_CONFIRM);
+        Platform.openGUI(
+                player,
+                te,
+                this.getOpenContext().getSide(),
+                GuiBridge.GUI_CRAFTING_CONFIRM,
+                getTargetSlotIndex());
         setupConfirmationGUI(player);
     }
 

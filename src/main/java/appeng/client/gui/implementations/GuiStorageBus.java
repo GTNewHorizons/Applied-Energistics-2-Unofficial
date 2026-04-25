@@ -19,9 +19,14 @@ import org.lwjgl.input.Mouse;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
+import appeng.api.config.ExtractionMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
+import appeng.api.config.Upgrades;
+import appeng.api.parts.IStorageBus;
+import appeng.api.storage.data.IAEStackType;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerStorageBus;
@@ -33,7 +38,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.parts.misc.PartStorageBus;
+import appeng.tile.inventory.IAEStackInventory;
 
 public class GuiStorageBus extends GuiUpgradeable {
 
@@ -42,9 +47,13 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiTabButton priority;
     private GuiImgButton partition;
     private GuiImgButton clear;
+    private GuiImgButton extractionMode;
+    private VirtualMEPhantomSlot[] configSlots;
+    private final ContainerStorageBus containerStorageBus;
 
-    public GuiStorageBus(final InventoryPlayer inventoryPlayer, final PartStorageBus te) {
+    public GuiStorageBus(final InventoryPlayer inventoryPlayer, final IStorageBus te) {
         super(new ContainerStorageBus(inventoryPlayer, te));
+        this.containerStorageBus = (ContainerStorageBus) inventorySlots;
         this.ySize = 251;
     }
 
@@ -58,19 +67,24 @@ public class GuiStorageBus extends GuiUpgradeable {
                 this.guiTop + 48,
                 Settings.ACCESS,
                 AccessRestriction.READ_WRITE);
-        this.storageFilter = new GuiImgButton(
+        this.extractionMode = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 68,
+                Settings.EXTRACTION_MODE,
+                ExtractionMode.LOOSE);
+        this.storageFilter = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + 88,
                 Settings.STORAGE_FILTER,
                 StorageFilter.EXTRACTABLE_ONLY);
         this.fuzzyMode = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 88,
+                this.guiTop + 108,
                 Settings.FUZZY_MODE,
                 FuzzyMode.IGNORE_ALL);
         this.oreFilter = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 88,
+                this.guiTop + 108,
                 Settings.ACTIONS,
                 ActionItems.ORE_FILTER);
 
@@ -85,9 +99,16 @@ public class GuiStorageBus extends GuiUpgradeable {
         this.buttonList.add(this.storageFilter);
         this.buttonList.add(this.fuzzyMode);
         this.buttonList.add(this.rwMode);
+        this.buttonList.add(this.extractionMode);
         this.buttonList.add(this.partition);
         this.buttonList.add(this.clear);
         this.buttonList.add(this.oreFilter);
+    }
+
+    @Override
+    public void initGui() {
+        super.initGui();
+        initVirtualSlots();
     }
 
     @Override
@@ -113,8 +134,37 @@ public class GuiStorageBus extends GuiUpgradeable {
             if (this.rwMode != null) {
                 this.rwMode.set(csb.getReadWriteMode());
             }
+            if (this.extractionMode != null) {
+                this.extractionMode.set(csb.getExtractionMode());
+
+                if (this.rwMode != null) {
+                    this.extractionMode.setEnabled(csb.getReadWriteMode() == AccessRestriction.READ_WRITE);
+                }
+            }
             if (this.partition != null) {
                 this.partition.set(csb.getPartitionMode());
+            }
+        }
+
+        updateSlotVisibility();
+    }
+
+    @Override
+    public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
+        super.drawBG(offsetX, offsetY, mouseX, mouseY);
+
+        final boolean isOreDict = this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER)
+                > 0;
+        final int capacity = isOreDict ? 0
+                : this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
+
+        for (int i = 0; i < 7; i++) {
+            if (isOreDict || i >= capacity + 2) {
+                // fadeout slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 28 + (18 * i), 7, 46, 162, 18);
+            } else {
+                // normal slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 28 + (18 * i), 7, 28, 162, 18);
             }
         }
     }
@@ -140,6 +190,9 @@ public class GuiStorageBus extends GuiUpgradeable {
                 NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_PRIORITY));
             } else if (btn == this.rwMode) {
                 NetworkHandler.instance.sendToServer(new PacketConfigButton(this.rwMode.getSetting(), backwards));
+            } else if (btn == this.extractionMode) {
+                NetworkHandler.instance
+                        .sendToServer(new PacketConfigButton(this.extractionMode.getSetting(), backwards));
             } else if (btn == this.storageFilter) {
                 NetworkHandler.instance
                         .sendToServer(new PacketConfigButton(this.storageFilter.getSetting(), backwards));
@@ -147,5 +200,40 @@ public class GuiStorageBus extends GuiUpgradeable {
         } catch (final IOException e) {
             AELog.debug(e);
         }
+    }
+
+    private void initVirtualSlots() {
+        this.configSlots = new VirtualMEPhantomSlot[63];
+        final IAEStackInventory inputInv = this.containerStorageBus.getConfig();
+        final int xo = 8;
+        final int yo = -133;
+
+        for (int y = 0; y < 7; y++) {
+            for (int x = 0; x < 9; x++) {
+                VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(
+                        xo + x * 18,
+                        yo + y * 18 + 9 * 18,
+                        inputInv,
+                        x + y * 9,
+                        this::acceptType);
+                this.configSlots[x + y * 9] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+    }
+
+    protected void updateSlotVisibility() {
+        final boolean isOreDict = this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER)
+                > 0;
+        final int capacity = isOreDict ? -2
+                : this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
+
+        for (VirtualMEPhantomSlot slot : this.configSlots) {
+            slot.setHidden(slot.getSlotIndex() >= (18 + (9 * capacity)));
+        }
+    }
+
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        return type == containerStorageBus.getStackType();
     }
 }

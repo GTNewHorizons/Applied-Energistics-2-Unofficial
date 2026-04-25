@@ -23,6 +23,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
+import org.lwjgl.input.Keyboard;
+
+import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
+
 import appeng.api.parts.CableRenderMode;
 import appeng.block.AEBaseBlock;
 import appeng.client.ActionKey;
@@ -36,6 +40,10 @@ import appeng.util.Platform;
 import cpw.mods.fml.common.FMLCommonHandler;
 
 public class ServerHelper extends CommonHelper {
+
+    public static final String KEY_CATEGORY = "key.appliedenergistics2.category";
+    public static final SyncedKeybind CONTAINER_INTERACTION_KEY = SyncedKeybind
+            .createConfigurable("key.container_interaction.desc", KEY_CATEGORY, Keyboard.KEY_LCONTROL);
 
     private EntityPlayer renderModeBased;
 

@@ -88,21 +88,22 @@ public abstract class AbstractPartDisplay extends AbstractPartReporting {
         rh.setBounds(2, 2, 14, 14, 14, 16);
         rh.renderBlock(x, y, z, renderer);
 
+        final Tessellator tess = Tessellator.instance;
         if (this.getLightLevel() > 0) {
             final int l = 13;
-            Tessellator.instance.setBrightness(l << 20 | l << 4);
+            tess.setBrightness(l << 20 | l << 4);
         }
 
         renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = this
                 .getSpin();
 
-        Tessellator.instance.setColorOpaque_I(this.getColor().whiteVariant);
+        tess.setColorOpaque_I(this.getColor().whiteVariant);
         rh.renderFace(x, y, z, this.getFrontBright().getIcon(), ForgeDirection.SOUTH, renderer);
 
-        Tessellator.instance.setColorOpaque_I(this.getColor().mediumVariant);
+        tess.setColorOpaque_I(this.getColor().mediumVariant);
         rh.renderFace(x, y, z, this.getFrontDark().getIcon(), ForgeDirection.SOUTH, renderer);
 
-        Tessellator.instance.setColorOpaque_I(this.getColor().blackVariant);
+        tess.setColorOpaque_I(this.getColor().blackVariant);
         rh.renderFace(x, y, z, this.getFrontColored().getIcon(), ForgeDirection.SOUTH, renderer);
 
         renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
@@ -126,15 +127,15 @@ public abstract class AbstractPartDisplay extends AbstractPartReporting {
 
         if (hasChan) {
             final int l = 14;
-            Tessellator.instance.setBrightness(l << 20 | l << 4);
-            Tessellator.instance.setColorOpaque_I(this.getColor().blackVariant);
+            tess.setBrightness(l << 20 | l << 4);
+            tess.setColorOpaque_I(this.getColor().blackVariant);
         } else if (hasPower) {
             final int l = 9;
-            Tessellator.instance.setBrightness(l << 20 | l << 4);
-            Tessellator.instance.setColorOpaque_I(this.getColor().whiteVariant);
+            tess.setBrightness(l << 20 | l << 4);
+            tess.setColorOpaque_I(this.getColor().whiteVariant);
         } else {
-            Tessellator.instance.setBrightness(0);
-            Tessellator.instance.setColorOpaque_I(0x000000);
+            tess.setBrightness(0);
+            tess.setColorOpaque_I(0x000000);
         }
 
         final IIcon sideStatusLightTexture = CableBusTextures.PartMonitorSidesStatusLights.getIcon();

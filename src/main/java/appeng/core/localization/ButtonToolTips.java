@@ -14,6 +14,7 @@ public enum ButtonToolTips implements Localization {
 
     PowerUnits,
     IOMode,
+    ExtractionMode,
     CondenserOutput,
     RedstoneMode,
     MatchingFuzzy,
@@ -41,6 +42,9 @@ public enum ButtonToolTips implements Localization {
     Write,
     ReadWrite,
     AlwaysActive,
+
+    Strict,
+    Loose,
 
     ActiveWithoutSignal,
     ActiveWithSignal,
@@ -70,6 +74,8 @@ public enum ButtonToolTips implements Localization {
     StoredCraftable,
     Craftable,
 
+    FZPercent_1,
+    FZPercent_10,
     FZPercent_25,
     FZPercent_50,
     FZPercent_75,
@@ -89,7 +95,7 @@ public enum ButtonToolTips implements Localization {
 
     LevelType,
     LevelType_Energy,
-    LevelType_Item,
+    LevelType_Item_Fluid,
     InventoryTweaks,
     TerminalStyle,
     TerminalStyle_Full,
@@ -124,11 +130,6 @@ public enum ButtonToolTips implements Localization {
     ReportInaccessibleItemsYes,
     ReportInaccessibleItemsNo,
 
-    TypeFilter,
-    TypeFilterShowAll,
-    TypeFilterShowItemsOnly,
-    TypeFilterShowFluidsOnly,
-
     BlockPlacement,
     BlockPlacementYes,
     BlockPlacementNo,
@@ -139,6 +140,12 @@ public enum ButtonToolTips implements Localization {
     ItemsRequestable,
     P2PFrequency,
     SearchStringTooltip,
+    ExtractFromNetworkToContainer,
+    InsertFromContainerToNetwork,
+    HoldShiftProcessStack,
+    RegisterContainerContent,
+    ChangeAmount,
+    RenameItem,
 
     SchedulingMode,
     SchedulingModeDefault,
@@ -229,10 +236,60 @@ public enum ButtonToolTips implements Localization {
     SearchGotoNext,
     SearchGotoPrev,
 
+    ControlButtonValues,
+    ControlButtonValuesHint,
+
     CPUAllowMode,
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
     CPUOnlyAllowNonPlayerDesc,
+
+    Suspend,
+    Resume,
+
+    PinsSection,
+    PinsSectionActive,
+    PinsSectionHint,
+
+    ToggleShowOnlySubstitute,
+    ToggleShowOnlySubstituteOnDesc,
+    ToggleShowOnlySubstituteOffDesc,
+
+    CPUName,
+    CPUCrafting,
+    Automation,
+    NumberOfStorageMemory,
+    NumberOfCoProcessors,
+
+    ReshuffleIncludeSubnets,
+    ReshuffleIncludeSubnetsOn,
+    ReshuffleIncludeSubnetsOff,
+    ReshuffleInsertOrder,
+    ReshuffleInsertOrderOn,
+    ReshuffleInsertOrderOff,
+    OpenReshuffle,
+    OpenReshuffleDesc,
+    OpenReshuffleOffDesc,
+    ReshuffleTab,
+    ReshuffleTabHint,
+    ReshuffleTabScan,
+    ReshuffleTabScanHint,
+    ReshuffleHealthTab,
+    ReshuffleHealthTabHint,
+    ReshuffleLocate,
+    CellHealthSortBy,
+    CellHealthSortByFill,
+    CellHealthSortBySize,
+
+    ReshuffleTabReshuffleHint,
+
+    InterfaceTerminalVisibility,
+    InterfaceTerminalVisibilityVisible,
+    InterfaceTerminalVisibilityHidden,
+
+    ToggleShowHiddenInterfaces,
+    ToggleShowHiddenInterfacesOnDesc,
+    ToggleShowHiddenInterfacesOffDesc,
 
     SuperWirelessToolGroupBySingleName,
     SuperWirelessToolGroupBySingleDesc,
@@ -243,15 +300,7 @@ public enum ButtonToolTips implements Localization {
     SuperWirelessToolHideBoundedYesName,
     SuperWirelessToolHideBoundedYesDesc,
     SuperWirelessToolHideBoundedNoName,
-    SuperWirelessToolHideBoundedNoDesc,
-
-    PinsSection,
-    PinsSectionActive,
-    PinsSectionDisabled,
-
-    ToggleShowOnlySubstitute,
-    ToggleShowOnlySubstituteOnDesc,
-    ToggleShowOnlySubstituteOffDesc;
+    SuperWirelessToolHideBoundedNoDesc;
 
     ButtonToolTips() {}
 

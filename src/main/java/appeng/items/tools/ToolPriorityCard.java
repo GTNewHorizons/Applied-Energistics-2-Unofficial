@@ -5,10 +5,11 @@ import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.PriorityCardMode;
 import appeng.api.config.SecurityPermissions;
@@ -67,7 +68,8 @@ public class ToolPriorityCard extends AEBaseItem implements IGuiItem {
     }
 
     @Override
-    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
+    public IGuiItemObject getGuiObject(final ItemStack is, final World world, EntityPlayer p, final int x, final int y,
+            final int z) {
         return new PriorityCardObject(is, x);
     }
 
@@ -142,15 +144,14 @@ public class ToolPriorityCard extends AEBaseItem implements IGuiItem {
     }
 
     public static void setPriority(ItemStack stack, int priority) {
-        Platform.openNbtData(stack).setInteger("priority", priority);
+        ItemStackNBT.setInteger(stack, "priority", priority);
     }
 
     private static PriorityCardMode getMode(ItemStack stack) {
         // Setting is stored via ConfigManager and directly retrieved here
-        NBTTagCompound tagCompound = Platform.openNbtData(stack);
         try {
-            if (tagCompound.hasKey(Settings.PRIORITY_CARD_MODE.name())) {
-                return PriorityCardMode.valueOf(tagCompound.getString(Settings.PRIORITY_CARD_MODE.name()));
+            if (ItemStackNBT.hasKey(stack, Settings.PRIORITY_CARD_MODE.name())) {
+                return PriorityCardMode.valueOf(ItemStackNBT.getString(stack, Settings.PRIORITY_CARD_MODE.name()));
             }
         } catch (final IllegalArgumentException e) {
             AELog.debug(e);

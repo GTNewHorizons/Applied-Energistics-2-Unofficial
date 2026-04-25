@@ -22,13 +22,21 @@ public enum GuiColors implements Localization {
 
     ItemSlotOverlayUnpowered(0x66111111),
     ItemSlotOverlayInvalid(0x66ff6666),
+    ItemSlotOverlayFluidMismatch(0x66FF0000),
 
     CraftConfirmMissingItem(0x1AFF0000),
 
-    CraftingCPUActive(0x5A45A021),
+    CraftingCPUActive(0x5A45F021),
     CraftingCPUInactive(0x5AFFF7AA),
+    CraftingCPUUnsupportedStack(0x5AE07070),
+    CraftingCPUSameNetwork(0x5AE07070),
+    CraftingCPUSomethingStuck(0x5AC9A53A),
+    CraftingCPUNoTarget(0x5AE07070),
 
     InterfaceTerminalMatch(0x2A00FF00),
+
+    CraftingPinSlotBackground(0x38E6731A),
+    PlayerPinSlotBackground(0x00000000),
 
     // RGB Colors: Name and default value
     SearchboxText(0xFFFFFF),
@@ -103,6 +111,8 @@ public enum GuiColors implements Localization {
     AdvancedNetworkToolInventory(0x404040),
 
     OreFilterLabel(0x404040),
+    OreFilterTextLength(0x404040),
+    OreFilterTextLengthFull(0xff0000),
 
     PatternTerminalTitle(0x404040),
     PatternTerminalEx(0x404040),
@@ -143,6 +153,7 @@ public enum GuiColors implements Localization {
 
     NEIGrindstoneRecipeChance(0x000000),
     NEIGrindstoneNoSecondOutput(0x000000),
+    NEICellView(0x000000),
 
     MEMonitorableTitle(0x404040),
     MEMonitorableInventory(0x404040),
@@ -156,7 +167,58 @@ public enum GuiColors implements Localization {
 
     ProcessBarStartColor(0XFFE60A00),
     ProcessBarMiddleColor(0XFFE6E600),
-    ProcessBarEndColor(0XFF0AE600);
+    ProcessBarEndColor(0XFF0AE600),
+
+    ColorSelectBackground(0xFF000000),
+    ColorSelectBorder(0xFFC6C6C6),
+    ColorSelectTitle(0x404040),
+
+    ColorSelectBtnBg(0xFF8B8B8B),
+    ColorSelectBtnBorderSelected(0xFF38de38),
+    ColorSelectBtnBorderHover(0xFFFFFFFF),
+    ColorSelectBtnBorder(0xFF000000),
+    ColorSelectBtnBorderDisabled(0xFF555555),
+
+    ColorSelectBtnOverlayDisabled(0xB0000000),
+    ColorSelectBtnOverlayHover(0x80FFFFFF),
+
+    ColorSelectBtnText(0xFFFFFF),
+
+    ReshuffleTitle(0x404040),
+    ReshuffleStatusIdle(0x404040),
+    ReshuffleStatusBeforeSnapshot(0xDDAA00),
+    ReshuffleStatusAfterSnapshot(0x00AA00),
+    ReshuffleStatusExtracting(0xDDAA00),
+    ReshuffleStatusInjecting(0x00AA00),
+    ReshuffleStatusComplete(0x0055FF),
+    ReshuffleStatusFailed(0xCC0000),
+    ReshuffleStatusCancelled(0xFF6600),
+    ReshuffleReport(0x404040),
+    ReshuffleTotalItems(0x404040),
+    ReshuffleProgressBorder(0xFF333333),
+    ReshuffleProgressBackground(0xFF111111),
+    ReshuffleProgressFillStart(0xFF00FFFF),
+    ReshuffleProgressFillEnd(0xFF00FF00),
+    ReshuffleProgressMarker(0xFFFFFFFF),
+    ReshuffleScanRowHover(0x80FFFF00),
+
+    CellHealthOk(0xFF00CC44),
+    CellHealthWarn(0xFFFFAA00),
+    CellHealthCrit(0xFFFF2222),
+    CellHealthBarBackground(0xFF222222),
+
+    ReshuffleReportHeading(0x404040),
+    ReshuffleReportText(0x404040),
+    ReshuffleReportPositive(0x00AA00),
+    ReshuffleReportNegative(0xCC0000),
+    ReshuffleReportDimmed(0x555555),
+    ReshuffleReportHighlight(0xDDAA00),
+
+    ReshuffleTooltipPrimary(0xFFFFFF),
+    ReshuffleTooltipSecondary(0xAAAAAA),
+    ReshuffleTooltipDimmed(0x555555),
+
+    ReshuffleToggleDisabledOverlay(0x80000000);
 
     private final int color;
 

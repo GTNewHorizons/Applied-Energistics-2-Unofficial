@@ -10,6 +10,8 @@
 
 package appeng.recipes.game;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +33,6 @@ import appeng.api.definitions.IItemDefinition;
 import appeng.api.definitions.IItems;
 import appeng.api.definitions.IMaterials;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
@@ -50,7 +51,7 @@ public final class DisassembleRecipe implements IRecipe {
         final IMaterials mats = definitions.materials();
 
         this.cellMappings = new HashMap<>(8);
-        this.nonCellMappings = new HashMap<>(9);
+        this.nonCellMappings = new HashMap<>(10);
 
         this.cellMappings.put(items.cell1k(), mats.cell1kPart());
         this.cellMappings.put(items.cell4k(), mats.cell4kPart());
@@ -62,6 +63,8 @@ public final class DisassembleRecipe implements IRecipe {
         this.cellMappings.put(items.cell16384k(), mats.cell16384kPart());
 
         this.nonCellMappings.put(items.encodedPattern(), mats.blankPattern());
+        this.nonCellMappings.put(items.encodedUltimatePattern(), mats.blankPattern());
+        this.nonCellMappings.put(items.encodedTunnelPattern(), mats.blankPattern());
         this.nonCellMappings.put(blocks.craftingStorage1k(), mats.cell1kPart());
         this.nonCellMappings.put(blocks.craftingStorage4k(), mats.cell4kPart());
         this.nonCellMappings.put(blocks.craftingStorage16k(), mats.cell16kPart());
@@ -95,10 +98,10 @@ public final class DisassembleRecipe implements IRecipe {
                 for (final ItemStack storageCellStack : this.getCellOutput(stackInSlot).asSet()) {
                     // make sure the storage cell stackInSlot empty...
                     final IMEInventory<IAEItemStack> cellInv = AEApi.instance().registries().cell()
-                            .getCellInventory(stackInSlot, null, StorageChannel.ITEMS);
+                            .getCellInventory(stackInSlot, null, ITEM_STACK_TYPE);
                     if (cellInv != null) {
                         final IItemList<IAEItemStack> list = cellInv
-                                .getAvailableItems(StorageChannel.ITEMS.createList(), IterationCounter.fetchNewId());
+                                .getAvailableItems(ITEM_STACK_TYPE.createList(), IterationCounter.fetchNewId());
                         if (!list.isEmpty()) {
                             return null;
                         }

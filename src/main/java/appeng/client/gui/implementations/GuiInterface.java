@@ -10,8 +10,17 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
+import java.util.Arrays;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -23,6 +32,7 @@ import appeng.api.config.LockCraftingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiSimpleImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
@@ -80,8 +90,8 @@ public class GuiInterface extends GuiUpgradeable {
         this.interfaceMode = new GuiToggleButton(
                 this.guiLeft - 18,
                 this.guiTop + offset,
-                84,
-                85,
+                90,
+                91,
                 GuiText.InterfaceTerminal.getLocal(),
                 GuiText.InterfaceTerminalHint.getLocal());
         this.buttonList.add(this.interfaceMode);
@@ -141,6 +151,8 @@ public class GuiInterface extends GuiUpgradeable {
                 FuzzyMode.IGNORE_ALL);
         this.fuzzyMode.visible = this.bc.getInstalledUpgrades(Upgrades.FUZZY) > 0;
         this.buttonList.add(fuzzyMode);
+
+        initCustomButtons(this.guiLeft - 18, offset);
     }
 
     @Override
@@ -192,19 +204,95 @@ public class GuiInterface extends GuiUpgradeable {
     }
 
     @Override
+    public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
+        super.drawBG(offsetX, offsetY, mouseX, mouseY);
+
+        final int capacity = ((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled();
+        final int fuzzy = ((ContainerInterface) this.cvb).getFuzzyCardsInstalled();
+
+        // config slots
+        if (capacity == -1) {
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 89, 162, 18);
+        } else {
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 71, 162, 18);
+
+            if (fuzzy > 0) {
+                this.drawTexturedModalRect(offsetX + 152, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 134, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 116, offsetY + 15, 8, 54, 16, 16);
+            }
+
+            if (fuzzy > 1) {
+                this.drawTexturedModalRect(offsetX + 98, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 80, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 62, offsetY + 15, 8, 54, 16, 16);
+            }
+
+            if (fuzzy > 2) {
+                this.drawTexturedModalRect(offsetX + 44, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 26, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 8, offsetY + 15, 8, 54, 16, 16);
+            }
+        }
+
+        // pattern slots
+        for (int i = 4; i > 0; i--) {
+            if (i > capacity + 1) {
+                // fadeout slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 89, 162, 18);
+            } else {
+                // normal slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 107, 162, 18);
+            }
+        }
+
+        // highlight pattern slots with unsupported stack types
+        for (final Object obj : this.cvb.inventorySlots) {
+            if (obj instanceof Slot slot && hasInvalidTypeStack(slot.getStack())) {
+                final int sx = offsetX + slot.xDisplayPosition;
+                final int sy = offsetY + slot.yDisplayPosition;
+                drawRect(sx, sy, sx + 16, sy + 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
+            }
+        }
+    }
+
+    private boolean hasInvalidTypeStack(final ItemStack stack) {
+        if (stack == null || stack.getTagCompound() == null) return false;
+        final NBTTagCompound nbt = stack.getTagCompound();
+        if (nbt.getBoolean("InvalidPattern")) return false;
+        IAEStackType<?>[] supportedTypes = ((ContainerInterface) this.cvb).getSupportedStackTypes();
+        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes)
+                || hasInvalidTypeInTagList(nbt.getTagList("out", NBT.TAG_COMPOUND), supportedTypes);
+    }
+
+    private static boolean hasInvalidTypeInTagList(final NBTTagList tagList, IAEStackType<?>[] supportedTypes) {
+        outer: for (int i = 0; i < tagList.tagCount(); i++) {
+            final NBTTagCompound entry = tagList.getCompoundTagAt(i);
+            // Legacy fluid check: patterns created before native liquid support lack StackType
+            if (entry.hasKey("FluidName") && !Arrays.asList(supportedTypes).contains(FLUID_STACK_TYPE)) return true;
+
+            if (entry.hasKey("StackType")) {
+                for (IAEStackType<?> type : supportedTypes) {
+                    if (entry.getString("StackType").equals(type.getId())) {
+                        continue outer;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     protected String getBackground() {
-        return switch (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled()) {
-            case -1 -> "guis/interfacenonenoconfig.png";
-            case 1 -> "guis/interface2.png";
-            case 2 -> "guis/interface3.png";
-            case 3 -> "guis/interface4.png";
-            default -> "guis/interface.png";
-        };
+        return "guis/interface.png";
     }
 
     @Override
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
+
+        if (actionPerformedCustomButtons(btn)) return;
 
         final boolean backwards = Mouse.isButtonDown(1);
 

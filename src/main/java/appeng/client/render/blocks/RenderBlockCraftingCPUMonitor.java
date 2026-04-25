@@ -16,15 +16,13 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.block.crafting.BlockCraftingMonitor;
-import appeng.client.ClientHelper;
 import appeng.core.AELog;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.util.IWideReadableNumberConverter;
@@ -50,7 +48,7 @@ public class RenderBlockCraftingCPUMonitor
     public void renderTile(final BlockCraftingMonitor block, final TileCraftingMonitorTile tile, final Tessellator tess,
             final double x, final double y, final double z, final float f, final RenderBlocks renderer) {
         if (tile != null) {
-            final IAEItemStack ais = tile.getJobProgress();
+            final IAEStack<?> aes = tile.getJobProgress();
 
             if (tile.getDisplayList() == null) {
                 tile.setUpdateList(true);
@@ -62,7 +60,7 @@ public class RenderBlockCraftingCPUMonitor
                 if (tile.isUpdateList()) {
                     tile.setUpdateList(false);
                     GL11.glNewList(tile.getDisplayList(), GL11.GL_COMPILE_AND_EXECUTE);
-                    this.tesrRenderScreen(tess, tile, ais);
+                    this.tesrRenderScreen(tess, tile, aes);
                     GL11.glEndList();
                 } else {
                     GL11.glCallList(tile.getDisplayList());
@@ -73,7 +71,7 @@ public class RenderBlockCraftingCPUMonitor
         }
     }
 
-    private void tesrRenderScreen(final Tessellator tess, final TileCraftingMonitorTile cmt, final IAEItemStack ais) {
+    private void tesrRenderScreen(final Tessellator tess, final TileCraftingMonitorTile cmt, final IAEStack<?> aes) {
         final ForgeDirection side = cmt.getForward();
 
         ForgeDirection walrus = side.offsetY != 0 ? ForgeDirection.SOUTH : ForgeDirection.UP;
@@ -85,7 +83,6 @@ public class RenderBlockCraftingCPUMonitor
             spin++;
             walrus = Platform.rotateAround(walrus, side);
         }
-        max--;
 
         GL11.glTranslated(side.offsetX * 0.69, side.offsetY * 0.69, side.offsetZ * 0.69);
 
@@ -120,9 +117,6 @@ public class RenderBlockCraftingCPUMonitor
         }
 
         try {
-            final ItemStack sis = ais.getItemStack();
-            sis.stackSize = 1;
-
             final int br = 16 << 20 | 16 << 4;
             final int var11 = br % 65536;
             final int var12 = br / 65536;
@@ -133,10 +127,9 @@ public class RenderBlockCraftingCPUMonitor
 
             GL11.glDisable(GL11.GL_LIGHTING);
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-            // RenderHelper.enableGUIStandardItemLighting();
             tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
 
-            ClientHelper.proxy.doRenderItem(sis, cmt.getWorldObj());
+            aes.drawOnBlockFace(cmt.getWorldObj());
         } catch (final Exception e) {
             AELog.debug(e);
         } finally {
@@ -147,7 +140,7 @@ public class RenderBlockCraftingCPUMonitor
         GL11.glTranslatef(0.0f, 0.14f, -0.24f);
         GL11.glScalef(1.0f / 62.0f, 1.0f / 62.0f, 1.0f / 62.0f);
 
-        final long stackSize = ais.getStackSize();
+        final long stackSize = aes.getStackSize();
         final String renderedStackSize = NUMBER_CONVERTER.toWideReadableForm(stackSize);
 
         final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;

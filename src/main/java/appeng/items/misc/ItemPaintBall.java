@@ -53,23 +53,23 @@ public class ItemPaintBall extends AEBaseItem {
             dmg -= DAMAGE_THRESHOLD;
         }
 
-        if (dmg >= AEColor.values().length) {
+        if (dmg >= AEColor.VALUES.length) {
             return AEColor.Transparent;
         }
 
-        return AEColor.values()[dmg];
+        return AEColor.fromOrdinal(dmg);
     }
 
     @Override
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
-        for (final AEColor c : AEColor.values()) {
+        for (final AEColor c : AEColor.VALUES) {
             if (c != AEColor.Transparent) {
                 itemStacks.add(new ItemStack(this, 1, c.ordinal()));
             }
         }
 
-        for (final AEColor c : AEColor.values()) {
+        for (final AEColor c : AEColor.VALUES) {
             if (c != AEColor.Transparent) {
                 itemStacks.add(new ItemStack(this, 1, DAMAGE_THRESHOLD + c.ordinal()));
             }

@@ -18,21 +18,25 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Vec3;
 
-import appeng.api.AEApi;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.tiles.IViewCellStorage;
 import appeng.api.networking.IGrid;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
+import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.items.contents.PinsHandler;
 import appeng.items.contents.PinsHolder;
 import appeng.me.GridAccessException;
@@ -41,7 +45,9 @@ import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 /**
  * Anything resembling an network terminal with view cells can reuse this.
@@ -54,13 +60,15 @@ import appeng.util.Platform;
  * @version rv3
  * @since rv3
  */
-public abstract class AbstractPartTerminal extends AbstractPartDisplay
-        implements ITerminalHost, IConfigManagerHost, IViewCellStorage, IAEAppEngInventory, ITerminalPins {
+public abstract class AbstractPartTerminal extends AbstractPartDisplay implements ITerminalHost, IConfigManagerHost,
+        IViewCellStorage, IAEAppEngInventory, ITerminalPins, IPrimaryGuiIconProvider, ITerminalTypeFilterProvider {
 
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
     private final PinsHolder pinsInv = new PinsHolder(this);
-    private final AppEngInternalInventory upgrades = new RefillerInventory(this);
+
+    @NotNull
+    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
 
     public AbstractPartTerminal(final ItemStack is) {
         super(is);
@@ -68,7 +76,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
         this.cm.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.cm.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.cm.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        this.cm.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
     }
 
     @Override
@@ -80,8 +87,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
                 drops.add(is);
             }
         }
-        ItemStack u = upgrades.getStackInSlot(0);
-        if (u != null) drops.add(u);
     }
 
     @Override
@@ -95,7 +100,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
         this.cm.readFromNBT(data);
         this.viewCell.readFromNBT(data, "viewCell");
         pinsInv.readFromNBT(data, "pins");
-        upgrades.readFromNBT(data, "upgrades");
+        this.typeFilters.readFromNBT(data);
     }
 
     @Override
@@ -104,7 +109,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
         this.cm.writeToNBT(data);
         this.viewCell.writeToNBT(data, "viewCell");
         pinsInv.writeToNBT(data, "pins");
-        upgrades.writeToNBT(data, "upgrades");
+        this.typeFilters.writeToNBT(data);
     }
 
     @Override
@@ -148,6 +153,16 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
     }
 
     @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        try {
+            return this.getProxy().getStorage().getMEMonitor(type);
+        } catch (final GridAccessException e) {
+            // err nope?
+        }
+        return null;
+    }
+
+    @Override
     public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {}
 
     @Override
@@ -171,28 +186,16 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
         this.getHost().markForSave();
     }
 
+    public abstract ItemStack getPrimaryGuiIcon();
+
     @Override
-    public IInventory getInventoryByName(final String name) {
-        if (name.equals("upgrades")) {
-            return this.upgrades;
-        }
-        return super.getInventoryByName(name);
+    @NotNull
+    public Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
+        return this.typeFilters.getFilters(player);
     }
 
-    public boolean hasRefillerUpgrade() {
-        return upgrades.getStackInSlot(0) != null;
-    }
-
-    static class RefillerInventory extends AppEngInternalInventory {
-
-        public RefillerInventory(final IAEAppEngInventory parent) {
-            super(parent, 1, 1);
-            setTileEntity(parent);
-        }
-
-        public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
-            return i == 0 && getStackInSlot(0) == null
-                    && AEApi.instance().definitions().materials().cardPatternRefiller().isSameAs(itemstack);
-        }
+    @Override
+    public void saveTypeFilter() {
+        this.saveChanges();
     }
 }

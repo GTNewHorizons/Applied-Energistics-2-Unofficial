@@ -99,6 +99,14 @@ public enum ExtraBlockTextures {
     BlockMESecurityOn_Light("BlockMESecurityOn_Light"),
     BlockMESecurityOn_Medium("BlockMESecurityOn_Medium"),
     BlockMESecurityOn_Dark("BlockMESecurityOn_Dark"),
+
+    BlockReshuffleFrontAll("BlockReshuffleFrontAll"),
+    BlockReshuffleFrontAllActive("BlockReshuffleFrontAllActive"),
+    BlockReshuffleBack("BlockReshuffleBack"),
+    BlockReshuffleSide("BlockReshuffleSide"),
+    BlockReshuffleTop("BlockReshuffleTop"),
+    BlockReshuffleBottom("BlockReshuffleBottom"),
+
     BlockInscriberInside("BlockInscriberInside"),
 
     BlockQuartzGrowthAcceleratorOn("BlockQuartzGrowthAcceleratorOn"),
@@ -157,7 +165,12 @@ public enum ExtraBlockTextures {
     BlockCraftingFitSolid("BlockCraftingFitSolid"),
 
     BlockPaint2("BlockPaint2"),
-    BlockPaint3("BlockPaint3");
+    BlockPaint3("BlockPaint3"),
+
+    BlockSpatialNetworkRelayConnected("BlockSpatialNetworkRelayConnected"),
+    BlockSpatialLinkChamberFrontFull("BlockSpatialLinkChamberFrontFull"),
+
+    ;
 
     private final String name;
     private IIcon IIcon;

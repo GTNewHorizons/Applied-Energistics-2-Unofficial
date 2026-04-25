@@ -10,6 +10,9 @@
 
 package appeng.tile.crafting;
 
+import static appeng.util.Platform.readStackByte;
+import static appeng.util.Platform.writeStackByte;
+
 import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -17,11 +20,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.tiles.IColorableTile;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
-import appeng.util.item.AEItemStack;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -34,18 +36,18 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
     @SideOnly(Side.CLIENT)
     private boolean updateList;
 
-    private IAEItemStack dspPlay;
+    private IAEStack<?> dspPlay;
     private AEColor paintedColor = AEColor.Transparent;
 
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileCraftingMonitorTile(final ByteBuf data) throws IOException {
         final AEColor oldPaintedColor = this.paintedColor;
-        this.paintedColor = AEColor.values()[data.readByte()];
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
 
         final boolean hasItem = data.readBoolean();
 
         if (hasItem) {
-            this.dspPlay = AEItemStack.loadItemStackFromPacket(data);
+            this.dspPlay = readStackByte(data);
         } else {
             this.dspPlay = null;
         }
@@ -62,14 +64,14 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
             data.writeBoolean(false);
         } else {
             data.writeBoolean(true);
-            this.dspPlay.writeToPacket(data);
+            writeStackByte(dspPlay, data);
         }
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileCraftingMonitorTile(final NBTTagCompound data) {
         if (data.hasKey("paintedColor")) {
-            this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
         }
     }
 
@@ -88,7 +90,7 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
         return true;
     }
 
-    public void setJob(final IAEItemStack is) {
+    public void setJob(final IAEStack<?> is) {
         if ((is == null) != (this.dspPlay == null)) {
             this.dspPlay = is == null ? null : is.copy();
             this.markForUpdate();
@@ -100,8 +102,8 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
         }
     }
 
-    public IAEItemStack getJobProgress() {
-        return this.dspPlay; // AEItemStack.create( new ItemStack( Items.diamond, 64 ) );
+    public IAEStack<?> getJobProgress() {
+        return dspPlay;
     }
 
     @Override

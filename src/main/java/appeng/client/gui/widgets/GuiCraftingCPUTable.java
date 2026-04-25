@@ -3,23 +3,32 @@ package appeng.client.gui.widgets;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 import appeng.api.AEApi;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.config.CPUSortBy;
+import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
@@ -40,8 +49,16 @@ public class GuiCraftingCPUTable {
     public static final int CPU_TABLE_SLOT_YOFF = 0;
     public static final int CPU_TABLE_SLOT_WIDTH = 67;
     public static final int CPU_TABLE_SLOT_HEIGHT = 23;
+    private static final int CPU_SORT_BUTTON_X = -85;
+    private static final int CPU_SORT_BUTTON_Y = 2;
+    private static final int CPU_SORT_DIRECTION_BUTTON_X = CPU_SORT_BUTTON_X + 16;
+    private static final int CPU_SORT_DIRECTION_BUTTON_Y = 2;
 
     private final GuiScrollbar cpuScrollbar;
+    private final GuiImgButton cpuSortButton;
+    private final GuiImgButton cpuSortDirectionButton;
+    private static final CPUSortBy[] CPU_SORT_ORDER = CPUSortBy.values();
+    private static final SortDir[] CPU_SORT_DIRECTION_ORDER = SortDir.values();
 
     private String selectedCPUName = "";
     private static final DecimalFormat DF = new DecimalFormat("#.##");
@@ -66,6 +83,10 @@ public class GuiCraftingCPUTable {
         this.container = container;
         this.jobMergeable = jobMergeable;
         this.cpuScrollbar = new GuiScrollbar();
+        CPUSortBy savedSortMode = (CPUSortBy) AEConfig.instance.settings.getSetting(Settings.CPU_SORT_BY);
+        this.cpuSortButton = new GuiImgButton(0, 0, Settings.CPU_SORT_BY, savedSortMode);
+        SortDir savedSortDirection = (SortDir) AEConfig.instance.settings.getSetting(Settings.CPU_SORT_DIRECTION);
+        this.cpuSortDirectionButton = new GuiImgButton(0, 0, Settings.CPU_SORT_DIRECTION, savedSortDirection);
         this.cpuScrollbar.setLeft(-16);
         this.cpuScrollbar.setTop(19);
         this.cpuScrollbar.setWidth(12);
@@ -85,7 +106,8 @@ public class GuiCraftingCPUTable {
     }
 
     public void drawScreen() {
-        final List<CraftingCPUStatus> cpus = container.getCPUs();
+        updateButtonPositions(parent.getGuiLeft(), parent.getGuiTop());
+        final List<CraftingCPUStatus> cpus = getSortedCPUs();
         final int selectedCpuSerial = container.selectedCpuSerial;
 
         this.selectedCPUName = null;
@@ -101,7 +123,7 @@ public class GuiCraftingCPUTable {
         if (this.cpuScrollbar != null) {
             this.cpuScrollbar.draw(parent);
         }
-        final List<CraftingCPUStatus> cpus = container.getCPUs();
+        final List<CraftingCPUStatus> cpus = getSortedCPUs();
         final int selectedCpuSerial = container.selectedCpuSerial;
         final int firstCpu = this.cpuScrollbar.getCurrentScroll();
         CraftingCPUStatus hoveredCpu = hitCpu(mouseX - guiLeft, mouseY - guiTop);
@@ -162,7 +184,7 @@ public class GuiCraftingCPUTable {
 
                 GL11.glPushMatrix();
                 GL11.glTranslatef(x + 3, y + 11, 0);
-                final IAEItemStack craftingStack = cpu.getCrafting();
+                final IAEStack<?> craftingStack = cpu.getCrafting();
                 if (craftingStack != null) {
                     final int iconIndex = 16 * 11 + 2;
                     parent.bindTexture("guis/states.png");
@@ -185,7 +207,13 @@ public class GuiCraftingCPUTable {
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
                     GL11.glTranslatef(x + CPU_TABLE_SLOT_WIDTH - 19, y + 3, 0);
-                    parent.drawItem(0, 0, craftingStack.getItemStack());
+
+                    GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+                    RenderHelper.enableGUIStandardItemLighting();
+                    GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+                    GL11.glEnable(GL11.GL_DEPTH_TEST);
+                    craftingStack.drawInGui(Minecraft.getMinecraft(), 0, 0);
+                    GL11.glPopAttrib();
 
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
@@ -228,6 +256,10 @@ public class GuiCraftingCPUTable {
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         }
         if (hoveredCpu != null) {
+            EnumChatFormatting green = EnumChatFormatting.GREEN;
+            EnumChatFormatting reset = EnumChatFormatting.RESET;
+            EnumChatFormatting gold = EnumChatFormatting.GOLD;
+
             StringBuilder tooltip = new StringBuilder();
             String name = hoveredCpu.getName();
             if (name != null && !name.isEmpty()) {
@@ -239,52 +271,103 @@ public class GuiCraftingCPUTable {
                 tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getSerial()));
                 tooltip.append('\n');
             }
-            IAEItemStack crafting = hoveredCpu.getCrafting();
+            IAEStack<?> crafting = hoveredCpu.getCrafting();
             if (crafting != null && crafting.getStackSize() > 0) {
+
                 final long elapsedInMilliseconds = TimeUnit.MILLISECONDS
                         .convert(hoveredCpu.getCraftingElapsedTime(), TimeUnit.NANOSECONDS);
                 final String elapsedTimeText = DurationFormatUtils
                         .formatDuration(elapsedInMilliseconds, GuiText.ETAFormat.getLocal());
-
-                double craftingPercentage = 100
+                final double craftingPercentage = 100
                         - (double) (hoveredCpu.getRemainingItems()) / (double) hoveredCpu.getTotalItems() * 100;
-                tooltip.append(GuiText.Crafting.getLocal());
+
+                tooltip.append(green);
+                tooltip.append(GuiText.CraftName.getLocal());
+                tooltip.append(reset);
+                tooltip.append(": ");
+                tooltip.append(crafting.getDisplayName());
+                tooltip.append('\n');
+
+                tooltip.append(green);
+                tooltip.append(GuiText.Remains.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(NumberFormat.getInstance().format(crafting.getStackSize()));
-                tooltip.append(' ');
-                tooltip.append(crafting.getItemStack().getDisplayName());
-                tooltip.append('\n');
-                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getRemainingItems()));
-                tooltip.append(" / ");
-                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
-                tooltip.append(String.format(" %02.2f %%", craftingPercentage));
                 tooltip.append('\n');
 
+                tooltip.append(green);
+                tooltip.append(GuiText.Progress.getLocal());
+                tooltip.append(reset);
+                tooltip.append(": ");
+                tooltip.append(
+                        NumberFormat.getInstance().format(hoveredCpu.getTotalItems() - hoveredCpu.getRemainingItems()));
+                tooltip.append(" / ");
+                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
+                tooltip.append(" (");
+                tooltip.append(gold);
+                tooltip.append(String.format("%02.2f%%", craftingPercentage));
+                tooltip.append(reset);
+                tooltip.append(") ");
+                tooltip.append('\n');
+
+                tooltip.append(green);
                 tooltip.append(GuiText.TimeUsed.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(elapsedTimeText);
+                tooltip.append('\n');
+
+                tooltip.append(green);
+                tooltip.append(GuiText.CPUSourcePlayer.getLocal());
+                tooltip.append(reset);
+                tooltip.append(": ");
+                tooltip.append(gold);
+                if (hoveredCpu.getSourcePlayer() != null) {
+                    tooltip.append(hoveredCpu.getSourcePlayer());
+                } else {
+                    tooltip.append(GuiText.CPUSourceMachineRequested.getLocal());
+                }
                 tooltip.append('\n');
             }
 
             if (hoveredCpu.getUsedStorage() > 0) {
+                tooltip.append(green);
                 tooltip.append(GuiText.BytesUsed.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(hoveredCpu.formatUsedStorage());
                 tooltip.append(" / ");
                 tooltip.append(hoveredCpu.formatStorage());
                 tooltip.append('\n');
             } else if (hoveredCpu.getStorage() > 0) {
+                tooltip.append(green);
                 tooltip.append(GuiText.Bytes.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(hoveredCpu.formatStorage());
                 tooltip.append('\n');
             }
             if (hoveredCpu.getCoprocessors() > 0) {
+                tooltip.append(green);
                 tooltip.append(GuiText.CoProcessors.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(hoveredCpu.formatCoprocessors());
                 tooltip.append('\n');
             }
+
+            // Crafting Allow Mode part
+            tooltip.append(green);
+            tooltip.append(GuiText.CPUAllowMode.getLocal());
+            tooltip.append(reset);
+            tooltip.append(": ");
+            switch (hoveredCpu.allowMode()) {
+                case ALLOW_ALL -> tooltip.append(GuiText.CPUAllowAll.getLocal());
+                case ONLY_NONPLAYER -> tooltip.append(GuiText.CPUOnlyAllowNonPlayer.getLocal());
+                case ONLY_PLAYER -> tooltip.append(GuiText.CPUOnlyAllowPlayer.getLocal());
+            }
+            tooltip.append('\n');
+
             if (tooltip.length() > 0) {
                 parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, tooltip.toString());
             }
@@ -293,19 +376,30 @@ public class GuiCraftingCPUTable {
 
     public void drawBG(int offsetX, int offsetY) {
         parent.bindTexture("guis/cpu_selector.png");
+        final int tableLeft = offsetX - CPU_TABLE_WIDTH;
         if (CPU_TABLE_HEIGHT != 164) {
-            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY, 0, 0, CPU_TABLE_WIDTH, 41);
+            parent.drawTexturedModalRect(tableLeft, offsetY, 0, 0, CPU_TABLE_WIDTH, 41);
             int y = 41;
             int rows = CPU_TABLE_SLOTS;
             for (int row = 1; row < rows - 1; row++) {
-                parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY + y, 0, 41, CPU_TABLE_WIDTH, 23);
+                parent.drawTexturedModalRect(tableLeft, offsetY + y, 0, 41, CPU_TABLE_WIDTH, 23);
                 y += 23;
             }
-            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY + y, 0, 133, CPU_TABLE_WIDTH, 31);
+            parent.drawTexturedModalRect(tableLeft, offsetY + y, 0, 133, CPU_TABLE_WIDTH, 31);
         } else {
-            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY, 0, 0, CPU_TABLE_WIDTH, CPU_TABLE_HEIGHT);
+            parent.drawTexturedModalRect(tableLeft, offsetY, 0, 0, CPU_TABLE_WIDTH, CPU_TABLE_HEIGHT);
         }
+        drawTopBorderFixPixels(tableLeft, offsetY);
         updateScrollBar();
+    }
+
+    // Draws 3 missing pixels
+    private void drawTopBorderFixPixels(int tableLeft, int tableTop) {
+        // Copy (93,0) -> (94,0) and (95,0)
+        parent.drawTexturedModalRect(tableLeft + 94, tableTop, 93, 0, 1, 1);
+        parent.drawTexturedModalRect(tableLeft + 95, tableTop, 93, 0, 1, 1);
+        // Copy (93,1) -> (94,1)
+        parent.drawTexturedModalRect(tableLeft + 94, tableTop + 1, 93, 1, 1, 1);
     }
 
     /**
@@ -318,7 +412,7 @@ public class GuiCraftingCPUTable {
         }
         int scrollOffset = this.cpuScrollbar != null ? this.cpuScrollbar.getCurrentScroll() : 0;
         int cpuId = scrollOffset + (y - 19) / CPU_TABLE_SLOT_HEIGHT;
-        List<CraftingCPUStatus> cpus = container.getCPUs();
+        List<CraftingCPUStatus> cpus = getSortedCPUs();
         return (cpuId >= 0 && cpuId < cpus.size()) ? cpus.get(cpuId) : null;
     }
 
@@ -335,12 +429,74 @@ public class GuiCraftingCPUTable {
         }
     }
 
+    public void addButtons(List<GuiButton> buttonList, int guiLeft, int guiTop) {
+        updateButtonPositions(guiLeft, guiTop);
+        if (!buttonList.contains(this.cpuSortButton)) {
+            buttonList.add(this.cpuSortButton);
+        }
+        if (!buttonList.contains(this.cpuSortDirectionButton)) {
+            buttonList.add(this.cpuSortDirectionButton);
+        }
+    }
+
+    public boolean actionPerformed(GuiButton btn, boolean backwards) {
+        if (btn == this.cpuSortDirectionButton) {
+            cycleSortDirection(backwards);
+            return true;
+        }
+        if (btn == this.cpuSortButton) {
+            cycleSortMode(backwards);
+            return true;
+        }
+        return false;
+    }
+
     public void sendCPUSwitch(int serial) {
         try {
             NetworkHandler.instance.sendToServer(new PacketValueConfig("CPUTable.Cpu.Set", Integer.toString(serial)));
         } catch (final IOException e) {
             AELog.warn(e);
         }
+    }
+
+    private void cycleSortMode(boolean backwards) {
+        CPUSortBy current = (CPUSortBy) this.cpuSortButton.getCurrentValue();
+        int index = 0;
+        for (int i = 0; i < CPU_SORT_ORDER.length; i++) {
+            if (CPU_SORT_ORDER[i] == current) {
+                index = i;
+                break;
+            }
+        }
+        int nextIndex = backwards ? index - 1 : index + 1;
+        if (nextIndex < 0) {
+            nextIndex = CPU_SORT_ORDER.length - 1;
+        } else if (nextIndex >= CPU_SORT_ORDER.length) {
+            nextIndex = 0;
+        }
+        CPUSortBy next = CPU_SORT_ORDER[nextIndex];
+        this.cpuSortButton.set(next);
+        AEConfig.instance.settings.putSetting(Settings.CPU_SORT_BY, next);
+    }
+
+    private void cycleSortDirection(boolean backwards) {
+        SortDir current = (SortDir) this.cpuSortDirectionButton.getCurrentValue();
+        int index = 0;
+        for (int i = 0; i < CPU_SORT_DIRECTION_ORDER.length; i++) {
+            if (CPU_SORT_DIRECTION_ORDER[i] == current) {
+                index = i;
+                break;
+            }
+        }
+        int nextIndex = backwards ? index - 1 : index + 1;
+        if (nextIndex < 0) {
+            nextIndex = CPU_SORT_DIRECTION_ORDER.length - 1;
+        } else if (nextIndex >= CPU_SORT_DIRECTION_ORDER.length) {
+            nextIndex = 0;
+        }
+        SortDir next = CPU_SORT_DIRECTION_ORDER[nextIndex];
+        this.cpuSortDirectionButton.set(next);
+        AEConfig.instance.settings.putSetting(Settings.CPU_SORT_DIRECTION, next);
     }
 
     /**
@@ -377,7 +533,7 @@ public class GuiCraftingCPUTable {
 
     public void cycleCPU(boolean backwards) {
         int current = container.selectedCpuSerial;
-        List<CraftingCPUStatus> cpus = container.getCPUs();
+        List<CraftingCPUStatus> cpus = getSortedCPUs();
         final int next_increment = backwards ? (cpus.size() - 1) : 1;
         if (cpus.isEmpty()) {
             return;
@@ -430,5 +586,21 @@ public class GuiCraftingCPUTable {
         int g = (int) (start[2] + ratio * (end[2] - start[2]));
         int b = (int) (start[3] + ratio * (end[3] - start[3]));
         return (a << 24) | (r << 16) | (g << 8) | (b);
+    }
+
+    private List<CraftingCPUStatus> getSortedCPUs() {
+        List<CraftingCPUStatus> cpus = new ArrayList<>(container.getCPUs());
+        cpus.sort(
+                ContainerCPUTable.getComparatorFor(
+                        (CPUSortBy) this.cpuSortButton.getCurrentValue(),
+                        (SortDir) this.cpuSortDirectionButton.getCurrentValue()));
+        return cpus;
+    }
+
+    private void updateButtonPositions(int guiLeft, int guiTop) {
+        this.cpuSortButton.xPosition = guiLeft + CPU_SORT_BUTTON_X;
+        this.cpuSortButton.yPosition = guiTop + CPU_SORT_BUTTON_Y;
+        this.cpuSortDirectionButton.xPosition = guiLeft + CPU_SORT_DIRECTION_BUTTON_X;
+        this.cpuSortDirectionButton.yPosition = guiTop + CPU_SORT_DIRECTION_BUTTON_Y;
     }
 }

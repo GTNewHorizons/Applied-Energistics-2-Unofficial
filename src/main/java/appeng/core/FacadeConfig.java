@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 import net.minecraft.block.Block;
 import net.minecraftforge.common.config.Configuration;
 
+import appeng.api.parts.IFacadeControl;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
 
@@ -33,6 +34,10 @@ public class FacadeConfig extends Configuration {
 
     public boolean checkEnabled(final Block id, final int metadata, final boolean automatic) {
         if (id == null) {
+            return false;
+        }
+
+        if (id instanceof IFacadeControl facadeControl && !facadeControl.createFacadeForBlock(metadata)) {
             return false;
         }
 

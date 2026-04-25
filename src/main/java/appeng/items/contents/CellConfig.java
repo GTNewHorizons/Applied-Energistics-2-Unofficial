@@ -12,21 +12,20 @@ package appeng.items.contents;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.util.Platform;
+import appeng.tile.inventory.IAEStackInventory;
 
-public class CellConfig extends AppEngInternalInventory {
+public class CellConfig extends IAEStackInventory {
 
-    private final ItemStack is;
+    protected final ItemStack is;
 
     public CellConfig(final ItemStack is) {
         super(null, 63);
         this.is = is;
-        this.readFromNBT(Platform.openNbtData(is), "list");
+        this.readFromNBT(is.getTagCompound(), "list");
     }
 
     @Override
     public void markDirty() {
-        this.writeToNBT(Platform.openNbtData(this.is), "list");
+        this.writeToNBT(this.is, "list");
     }
 }

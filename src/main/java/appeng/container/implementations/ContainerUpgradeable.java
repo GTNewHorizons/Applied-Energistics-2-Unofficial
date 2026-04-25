@@ -26,20 +26,18 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.INetworkTool;
+import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.parts.IPart;
 import appeng.api.util.IConfigManager;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.IOptionalSlotHost;
 import appeng.container.slot.OptionalSlotFake;
-import appeng.container.slot.OptionalSlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.items.tools.ToolAdvancedNetworkTool;
-import appeng.items.tools.ToolNetworkTool;
-import appeng.parts.automation.PartExportBus;
+import appeng.parts.automation.PartBaseExportBus;
 import appeng.util.Platform;
 
-public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSlotHost {
+public abstract class ContainerUpgradeable extends AEBaseContainer implements IOptionalSlotHost {
 
     private final IUpgradeableHost upgradeable;
 
@@ -60,7 +58,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     private INetworkTool tbInventory;
 
     public ContainerUpgradeable(final InventoryPlayer ip, final IUpgradeableHost te) {
-        super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
+        super(ip, te);
         this.upgradeable = te;
 
         World w = null;
@@ -87,12 +85,12 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         for (int x = 0; x < pi.getSizeInventory(); x++) {
             final ItemStack pii = pi.getStackInSlot(x);
             // Add ToolAdvancedNetworkTool recognition
-            if (pii != null
-                    && (pii.getItem() instanceof ToolNetworkTool || pii.getItem() instanceof ToolAdvancedNetworkTool)) {
+            if (pii == null) continue;
+            if (pii.getItem() instanceof INetworkToolItem) {
                 this.lockPlayerInventorySlot(x);
                 this.tbSlot = x;
                 this.tbInventory = (INetworkTool) ((IGuiItem) pii.getItem())
-                        .getGuiObject(pii, w, xCoord, yCoord, zCoord);
+                        .getGuiObject(pii, w, getInventoryPlayer().player, xCoord, yCoord, zCoord);
                 break;
             }
         }
@@ -125,7 +123,11 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     }
 
     public int getToolboxSize() {
-        return this.tbInventory.getSize();
+        return this.hasToolbox() ? this.tbInventory.getSize() : 0;
+    }
+
+    public int getToolboxSizeInventory() {
+        return this.hasToolbox() ? this.tbInventory.getSizeInventory() : 0;
     }
 
     protected int getHeight() {
@@ -134,22 +136,6 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
 
     protected void setupConfig() {
         this.setupUpgrades();
-
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
-        final int y = 40;
-        final int x = 80;
-        this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 0, x, y, 0, 0, 0));
-        if (this.supportCapacity()) {
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 1, x, y, -1, 0, 1));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 2, x, y, 1, 0, 1));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 3, x, y, 0, -1, 1));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 4, x, y, 0, 1, 1));
-
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 5, x, y, -1, -1, 2));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 6, x, y, 1, -1, 2));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 7, x, y, -1, 1, 2));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 8, x, y, 1, 1, 2));
-        }
     }
 
     protected void setupUpgrades() {
@@ -229,28 +215,29 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     protected void loadSettingsFromHost(final IConfigManager cm) {
         this.setFuzzyMode((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE));
         this.setRedStoneMode((RedstoneMode) cm.getSetting(Settings.REDSTONE_CONTROLLED));
-        if (this.getUpgradeable() instanceof PartExportBus) {
+        if (this.getUpgradeable() instanceof PartBaseExportBus<?>) {
             this.setCraftingMode((YesNo) cm.getSetting(Settings.CRAFT_ONLY));
             this.setSchedulingMode((SchedulingMode) cm.getSetting(Settings.SCHEDULING_MODE));
         }
     }
 
     private void checkToolbox() {
-        if (this.hasToolbox()) {
-            final ItemStack currentItem = this.getPlayerInv().getStackInSlot(this.tbSlot);
+        if (!this.hasToolbox()) return;
 
-            if (currentItem != this.tbInventory.getItemStack()) {
-                if (currentItem != null) {
-                    if (Platform.isSameItem(this.tbInventory.getItemStack(), currentItem)) {
-                        this.getPlayerInv().setInventorySlotContents(this.tbSlot, this.tbInventory.getItemStack());
-                    } else {
-                        this.setValidContainer(false);
-                    }
-                } else {
-                    this.setValidContainer(false);
-                }
-            }
+        final ItemStack currentItem = this.getPlayerInv().getStackInSlot(this.tbSlot);
+
+        if (currentItem == null) {
+            this.setValidContainer(false);
+            return;
         }
+
+        if (currentItem == this.tbInventory.getItemStack()) return;
+
+        if (Platform.isSameItem(this.tbInventory.getItemStack(), currentItem)) {
+            this.getPlayerInv().setInventorySlotContents(this.tbSlot, this.tbInventory.getItemStack());
+            return;
+        }
+        this.setValidContainer(false);
     }
 
     protected void standardDetectAndSendChanges() {
@@ -303,7 +290,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         this.schedulingMode = schedulingMode;
     }
 
-    IUpgradeableHost getUpgradeable() {
+    public IUpgradeableHost getUpgradeable() {
         return this.upgradeable;
     }
 }

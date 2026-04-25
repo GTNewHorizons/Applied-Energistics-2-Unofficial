@@ -1,103 +1,78 @@
 package appeng.me.storage;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
-import appeng.me.cache.NetworkMonitor;
 import appeng.util.item.ItemFilterList;
+import appeng.util.item.NetworkItemList;
+import appeng.util.item.PrioritizedNetworkItemList;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
-    private static final ThreadLocal<Map<Integer, Map<NetworkInventoryHandler<?>, IItemList<?>>>> networkItemsForIteration = new ThreadLocal<>();
-
-    public StorageBusInventoryHandler(IMEInventory<T> i, StorageChannel channel) {
-        super(i, channel);
+    public StorageBusInventoryHandler(IMEInventory<T> i, IAEStackType<T> type) {
+        super(i, type);
     }
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
+        return this.getAvailableItems(out, iteration, Optional.empty());
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
+        Predicate<T> filterCondition = preFilter.orElse(null);
+
         if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
-            return this.filterAvailableItems(out, iteration);
+            Predicate<T> extractFilter = this.getExtractFilterCondition();
+            filterCondition = filterCondition == null ? extractFilter : extractFilter.and(filterCondition);
+        }
+
+        final IItemList<T> availableItems = this.getInternal().getAvailableItems(
+                (IItemList<T>) this.getStackType().createList(),
+                iteration,
+                Optional.ofNullable(filterCondition));
+
+        if (availableItems instanceof NetworkItemList) {
+            // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to
+            // avoid modifying the passed in list which belongs to a different network (and would cause double-counting
+            // for triangle-shaped networks)
+            return availableItems;
         } else {
-            return this.getAvailableItems(out, iteration, e -> true);
+            // for non-cross-network dives, we need to honor the "out" contract
+            // and put the results in the passed in list
+            for (T items : availableItems) {
+                out.add(items);
+            }
+            return out;
         }
     }
 
     @Override
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
-        Predicate<T> filterCondition = this.getExtractFilterCondition();
-        getAvailableItems(out, iteration, filterCondition);
-        return out;
+    public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(int iteration) {
+        final Predicate<T> predicate = this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()
+                ? this.getExtractFilterCondition()
+                : e -> true;
+        return this.getAvailableItemsWithPriority(iteration, predicate);
     }
 
-    private IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
-        final IItemList<T> allAvailableItems = this.getAllAvailableItems(iteration);
-        Iterator<T> it = allAvailableItems.iterator();
-        while (it.hasNext()) {
-            T items = it.next();
-            if (filterCondition.test(items)) {
-                out.add(items);
-                // have to remove the item otherwise it could be counted double
-                it.remove();
-            }
-        }
-        return out;
-    }
+    private PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(int iteration, Predicate<T> filterCondition) {
+        final IMENetworkInventory<T> externalNetworkInventory = this.getExternalNetworkInventory();
+        final PrioritizedNetworkItemList<T> available = externalNetworkInventory
+                .getAvailableItemsWithPriority(iteration);
 
-    private IItemList<T> getAllAvailableItems(int iteration) {
-        NetworkInventoryHandler<T> networkInventoryHandler = getNetworkInventoryHandler();
-        if (networkInventoryHandler == null) {
-            return this.getInternal()
-                    .getAvailableItems((IItemList<T>) this.getInternal().getChannel().createList(), iteration);
-        }
-
-        Map<Integer, Map<NetworkInventoryHandler<?>, IItemList<?>>> s = networkItemsForIteration.get();
-        if (s != null && !s.containsKey(iteration)) {
-            s = null;
-        }
-        if (s == null) {
-            s = Collections.singletonMap(iteration, new IdentityHashMap<>());
-            networkItemsForIteration.set(s);
-        }
-        Map<NetworkInventoryHandler<?>, IItemList<?>> networkInventoryItems = s.get(iteration);
-        if (!networkInventoryItems.containsKey(networkInventoryHandler)) {
-            IItemList<T> allAvailableItems = this.getInternal()
-                    .getAvailableItems((IItemList<T>) this.getInternal().getChannel().createList(), iteration);
-            networkInventoryItems.put(networkInventoryHandler, allAvailableItems);
-        }
-
-        return (IItemList<T>) networkInventoryItems.get(networkInventoryHandler);
-    }
-
-    /**
-     * Find the NetworkInventoryHandler for this storage bus
-     */
-    private NetworkInventoryHandler<T> getNetworkInventoryHandler() {
-        return (NetworkInventoryHandler<T>) findNetworkInventoryHandler(this.getInternal());
-    }
-
-    private NetworkInventoryHandler<?> findNetworkInventoryHandler(IMEInventory<?> inventory) {
-        if (inventory instanceof MEPassThrough<?>passThrough) {
-            return findNetworkInventoryHandler(passThrough.getInternal());
-        } else if (inventory instanceof NetworkMonitor<?>networkMonitor) {
-            return findNetworkInventoryHandler(networkMonitor.getHandler());
-        } else if (inventory instanceof NetworkInventoryHandler<?>networkInventoryHandler) {
-            return networkInventoryHandler;
-        } else {
-            return null;
-        }
+        final PrioritizedNetworkItemList<T> copy = new PrioritizedNetworkItemList<>(available);
+        copy.addFilter(filterCondition);
+        return copy;
     }
 }

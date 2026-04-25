@@ -10,47 +10,42 @@
 
 package appeng.client.gui.implementations;
 
-import java.awt.Rectangle;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.input.Mouse;
 
 import appeng.api.config.ActionItems;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.RedstoneMode;
-import appeng.api.config.SchedulingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
+import appeng.api.implementations.items.IUpgradeModule;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerUpgradeable;
-import appeng.container.slot.SlotFake;
+import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
-import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.parts.automation.PartExportBus;
-import appeng.parts.automation.PartImportBus;
-import codechicken.nei.VisiblityData;
-import codechicken.nei.api.INEIGuiHandler;
-import codechicken.nei.api.TaggedInventoryArea;
-import cpw.mods.fml.common.Optional;
+import appeng.items.materials.MaterialType;
+import appeng.util.inv.IUpgradeInventory;
 
-@Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.api.INEIGuiHandler")
-public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
+public abstract class GuiUpgradeable extends AEBaseGui {
+
+    private static final EnumMap<Upgrades, ItemStack> UPGRADE_CARD_CACHE = new EnumMap<>(Upgrades.class);
+    private static boolean UPGRADE_CARD_CACHE_BUILT = false;
 
     protected final ContainerUpgradeable cvb;
     protected final IUpgradeableHost bc;
@@ -58,12 +53,7 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
     protected GuiImgButton redstoneMode;
     protected GuiImgButton fuzzyMode;
     protected GuiImgButton craftMode;
-    protected GuiImgButton schedulingMode;
     protected GuiImgButton oreFilter;
-
-    public GuiUpgradeable(final InventoryPlayer inventoryPlayer, final IUpgradeableHost te) {
-        this(new ContainerUpgradeable(inventoryPlayer, te));
-    }
 
     public GuiUpgradeable(final ContainerUpgradeable te) {
         super(te);
@@ -109,11 +99,6 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
                 Settings.FUZZY_MODE,
                 FuzzyMode.IGNORE_ALL);
         this.craftMode = new GuiImgButton(this.guiLeft - 18, this.guiTop + 48, Settings.CRAFT_ONLY, YesNo.NO);
-        this.schedulingMode = new GuiImgButton(
-                this.guiLeft - 18,
-                this.guiTop + 68,
-                Settings.SCHEDULING_MODE,
-                SchedulingMode.DEFAULT);
         this.oreFilter = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 28,
@@ -123,17 +108,13 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
         this.buttonList.add(this.craftMode);
         this.buttonList.add(this.redstoneMode);
         this.buttonList.add(this.fuzzyMode);
-        this.buttonList.add(this.schedulingMode);
         this.buttonList.add(this.oreFilter);
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(
-                this.getGuiDisplayName(this.getName().getLocal()),
-                8,
-                6,
-                GuiColors.UpgradableTitle.getColor());
+        this.fontRendererObj
+                .drawString(this.getGuiDisplayName(this.getName()), 8, 6, GuiColors.UpgradableTitle.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
@@ -151,10 +132,12 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
         if (this.craftMode != null) {
             this.craftMode.set(this.cvb.getCraftingMode());
         }
+    }
 
-        if (this.schedulingMode != null) {
-            this.schedulingMode.set(this.cvb.getSchedulingMode());
-        }
+    @Override
+    public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        this.handleUpgradeSlotTooltip(mouseX, mouseY);
+        super.drawScreen(mouseX, mouseY, btn);
     }
 
     @Override
@@ -195,18 +178,74 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
         if (this.craftMode != null) {
             this.craftMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.CRAFTING) > 0);
         }
-        if (this.schedulingMode != null) {
-            this.schedulingMode.setVisibility(
-                    this.bc.getInstalledUpgrades(Upgrades.CAPACITY) > 0 && this.bc instanceof PartExportBus);
-        }
+
         if (this.oreFilter != null) {
             this.oreFilter.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ORE_FILTER) > 0);
         }
     }
 
-    protected String getBackground() {
-        return "guis/bus.png";
+    @Override
+    protected void handleUpgradeSlotTooltip(final int mouseX, final int mouseY) {
+        final Slot hoveredSlot = this.getSlot(mouseX, mouseY);
+        if (!(hoveredSlot instanceof SlotRestrictedInput restrictedInput)
+                || restrictedInput.getItemType() != PlacableItemType.UPGRADES
+                || hoveredSlot.getHasStack()
+                || !(restrictedInput.inventory instanceof IUpgradeInventory upgradeInventory)) {
+            return;
+        }
+
+        final List<String> tooltip = new ArrayList<>();
+        tooltip.add(GuiText.Accepts.getLocal());
+
+        for (final Upgrades upgrade : Upgrades.values()) {
+            final int max = upgradeInventory.getMaxInstalled(upgrade);
+            if (max <= 0) {
+                continue;
+            }
+
+            final ItemStack cardStack = this.getUpgradeCardStack(upgrade);
+            if (cardStack == null) {
+                continue;
+            }
+
+            final String cardName = cardStack.getDisplayName();
+            tooltip.add("- " + cardName + (max > 1 ? " (" + max + ")" : ""));
+        }
+
+        if (tooltip.size() <= 1) {
+            return;
+        }
+
+        this.drawTooltip(mouseX, mouseY, tooltip.toArray(new String[0]));
     }
+
+    private ItemStack getUpgradeCardStack(final Upgrades upgrade) {
+        ensureUpgradeCardCache();
+        return UPGRADE_CARD_CACHE.get(upgrade);
+    }
+
+    private static void ensureUpgradeCardCache() {
+        if (UPGRADE_CARD_CACHE_BUILT) {
+            return;
+        }
+
+        for (final MaterialType materialType : MaterialType.values()) {
+            if (!materialType.isRegistered() || materialType.getItemInstance() == null) {
+                continue;
+            }
+
+            final ItemStack stack = materialType.stack(1);
+            if (stack.getItem() instanceof IUpgradeModule upgradeModule) {
+                final Upgrades type = upgradeModule.getType(stack);
+                if (type != null) {
+                    UPGRADE_CARD_CACHE.putIfAbsent(type, stack);
+                }
+            }
+        }
+        UPGRADE_CARD_CACHE_BUILT = true;
+    }
+
+    protected abstract String getBackground();
 
     protected String getAdvancedBackground() {
         return "guis/advanced_toolbox.png";
@@ -216,8 +255,8 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
         return true;
     }
 
-    protected GuiText getName() {
-        return this.bc instanceof PartImportBus ? GuiText.ImportBus : GuiText.ExportBus;
+    protected String getName() {
+        return "";
     }
 
     @Override
@@ -238,65 +277,8 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.fuzzyMode.getSetting(), backwards));
         }
 
-        if (btn == this.schedulingMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.schedulingMode.getSetting(), backwards));
-        }
-
         if (btn == this.oreFilter) {
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_ORE_FILTER));
         }
-    }
-
-    @Override
-    public VisiblityData modifyVisiblity(GuiContainer gui, VisiblityData currentVisibility) {
-        return currentVisibility;
-    }
-
-    @Override
-    public Iterable<Integer> getItemSpawnSlots(GuiContainer gui, ItemStack item) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<TaggedInventoryArea> getInventoryAreas(GuiContainer gui) {
-        return null;
-    }
-
-    @Override
-    public boolean handleDragNDrop(GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button) {
-        List<Pair<SlotFake, Integer>> slots = new ArrayList<>();
-
-        if (this.inventorySlots.inventorySlots.size() > 0) {
-            for (int i = 0; i < this.inventorySlots.inventorySlots.size(); i++) {
-                Object slot = this.inventorySlots.inventorySlots.get(i);
-                if (slot instanceof SlotFake) {
-                    slots.add(Pair.of((SlotFake) slot, i));
-                }
-            }
-        }
-        for (Pair<SlotFake, Integer> fakeSlotPair : slots) {
-            SlotFake fakeSlot = fakeSlotPair.getKey();
-            if (fakeSlot.isEnabled() && getSlotArea(fakeSlot).contains(mouseX, mouseY)) {
-                fakeSlot.putStack(draggedStack);
-                NetworkHandler.instance.sendToServer(new PacketNEIDragClick(draggedStack, fakeSlotPair.getValue()));
-                if (draggedStack != null) {
-                    draggedStack.stackSize = 0;
-                }
-                return true;
-            }
-        }
-        if (draggedStack != null) {
-            draggedStack.stackSize = 0;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
-        return false;
-    }
-
-    private Rectangle getSlotArea(SlotFake slot) {
-        return new Rectangle(guiLeft + slot.getX(), guiTop + slot.getY(), 16, 16);
     }
 }

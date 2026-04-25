@@ -28,6 +28,7 @@ import appeng.parts.automation.PartLevelEmitter;
 import appeng.parts.misc.PartCableAnchor;
 import appeng.parts.misc.PartInterface;
 import appeng.parts.misc.PartInvertedToggleBus;
+import appeng.parts.misc.PartPatternRepeater;
 import appeng.parts.misc.PartStorageBus;
 import appeng.parts.misc.PartToggleBus;
 import appeng.parts.networking.PartCableCovered;
@@ -201,7 +202,8 @@ public enum PartType {
             PartPatternTerminalEx.class),
 
     PartCreativeEnergy(690, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
-            PartCreativeEnergy.class);
+            PartCreativeEnergy.class),
+    PatternRepeater(473, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartPatternRepeater.class),;
 
     public final int baseDamage;
     private final Set<AEFeature> features;

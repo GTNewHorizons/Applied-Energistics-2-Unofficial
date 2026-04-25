@@ -18,6 +18,8 @@ import appeng.api.util.WorldCoord;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 // taken from McJty's McJtyLib
+/** use {@link appeng.client.render.highlighter.BlockPosHighlighter} instead */
+@Deprecated
 public class BlockPosHighlighter {
 
     private static final List<DimensionalCoord> highlightedBlocks = new ArrayList<>();

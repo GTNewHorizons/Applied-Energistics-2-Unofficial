@@ -10,39 +10,44 @@
 
 package appeng.container.implementations;
 
+import static appeng.util.Platform.isServer;
+
 import java.util.HashMap;
 import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
 
-import appeng.api.AEApi;
+import org.apache.commons.lang3.tuple.Pair;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
+import appeng.api.config.ExtractionMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.parts.IStorageBus;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.GuiSync;
-import appeng.container.slot.OptionalSlotFakeTypeOnly;
+import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.me.storage.MEInventoryHandler;
-import appeng.parts.misc.PartStorageBus;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.prioitylist.PrecisePriorityList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerStorageBus extends ContainerUpgradeable {
+public class ContainerStorageBus extends ContainerUpgradeable implements IVirtualSlotHolder {
 
-    private final PartStorageBus storageBus;
+    private final IStorageBus storageBus;
 
     @GuiSync(3)
     public AccessRestriction rwMode = AccessRestriction.READ_WRITE;
@@ -53,15 +58,23 @@ public class ContainerStorageBus extends ContainerUpgradeable {
     @GuiSync(7)
     public YesNo stickyMode = YesNo.NO;
 
-    private static final HashMap<EntityPlayer, IteratorState> PartitionIteratorMap = new HashMap<>();
+    private static final HashMap<EntityPlayer, Pair<IAEStackType<?>, IteratorState>> PartitionIteratorMap = new HashMap<>();
 
     @GuiSync(8)
     public ActionItems partitionMode; // use for icon and tooltip
 
-    public ContainerStorageBus(final InventoryPlayer ip, final PartStorageBus te) {
+    @GuiSync(9)
+    public ExtractionMode extractionMode;
+
+    private final IAEStack<?>[] configClientSlot = new IAEStack[63];
+
+    public ContainerStorageBus(final InventoryPlayer ip, final IStorageBus te) {
         super(ip, te);
         this.storageBus = te;
-        partitionMode = PartitionIteratorMap.containsKey(ip.player) ? ActionItems.NEXT_PARTITION : ActionItems.WRENCH;
+        final Pair<IAEStackType<?>, IteratorState> pair = PartitionIteratorMap.get(ip.player);
+        this.partitionMode = pair != null && pair.getKey() == this.storageBus.getStackType()
+                ? ActionItems.NEXT_PARTITION
+                : ActionItems.WRENCH;
     }
 
     @Override
@@ -71,16 +84,6 @@ public class ContainerStorageBus extends ContainerUpgradeable {
 
     @Override
     protected void setupConfig() {
-        final int xo = 8;
-        final int yo = 23 + 6;
-
-        final IInventory config = this.getUpgradeable().getInventoryByName("config");
-        for (int y = 0; y < 7; y++) {
-            for (int x = 0; x < 9; x++) {
-                this.addSlotToContainer(new OptionalSlotFakeTypeOnly(config, this, y * 9 + x, xo, yo, x, y, y));
-            }
-        }
-
         final IInventory upgrades = this.getUpgradeable().getInventoryByName("upgrades");
         this.addSlotToContainer(
                 (new SlotRestrictedInput(
@@ -134,35 +137,6 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         return 5;
     }
 
-    private int updateFilterTimer = 0;
-
-    /**
-     * @param row      the specific row to send, -1 indicates sending all.
-     * @param upgrades number of installed capacity cards
-     */
-    private void sendRow(int row, int upgrades) {
-        IInventory inv = this.getUpgradeable().getInventoryByName("config");
-        // start at first filter slot or at specific row
-        int from = row <= -1 ? 18 : 9 + (9 * row);
-        // end at last filter slot or at end of specific row
-        int to = row <= -1 ? inv.getSizeInventory() : 18 + (9 * row);
-
-        for (; from < to; from++) {
-            if (upgrades <= (from / 9 - 2)) break;
-
-            ItemStack stack = inv.getStackInSlot(from);
-            if (stack == null) continue;
-
-            for (ICrafting crafter : this.crafters) {
-                if (crafter instanceof EntityPlayerMP playerMP) {
-                    // necessary to ensure that the package is sent correctly
-                    playerMP.isChangingQuantityOnly = false;
-                }
-                crafter.sendSlotContents(this, from, stack);
-            }
-        }
-    }
-
     @Override
     public void detectAndSendChanges() {
         this.verifyPermissions(SecurityPermissions.BUILD, false);
@@ -174,19 +148,11 @@ public class ContainerStorageBus extends ContainerUpgradeable {
             this.setStorageFilter(
                     (StorageFilter) this.getUpgradeable().getConfigManager().getSetting(Settings.STORAGE_FILTER));
             this.setStickyMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.STICKY_MODE));
-        }
-        final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
+            this.setExtractionMode(
+                    (ExtractionMode) this.getUpgradeable().getConfigManager().getSetting(Settings.EXTRACTION_MODE));
 
-        if (upgrades > 0) { // sync filter slots
-            updateFilterTimer++;
-            int updateStep = 4;
-            if (updateFilterTimer % updateStep == 0) {
-                boolean needSync = this.storageBus.needSyncGUI;
-                int row = needSync ? -1 : updateFilterTimer / updateStep;
-                this.storageBus.needSyncGUI = false;
-                if (row >= upgrades) updateFilterTimer = 0;
-                sendRow(row, upgrades);
-            }
+            final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
+            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
         }
 
         this.standardDetectAndSendChanges();
@@ -202,9 +168,9 @@ public class ContainerStorageBus extends ContainerUpgradeable {
     }
 
     public void clear() {
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
+        final IAEStackInventory inv = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
         for (int x = 0; x < inv.getSizeInventory(); x++) {
-            inv.setInventorySlotContents(x, null);
+            inv.putAEStackInSlot(x, null);
         }
         this.detectAndSendChanges();
     }
@@ -220,47 +186,47 @@ public class ContainerStorageBus extends ContainerUpgradeable {
             clearPartitionIterator(player);
             return;
         }
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
+        final IAEStackInventory inv = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
 
-        final MEInventoryHandler<IAEItemStack> cellInv = this.storageBus.getInternalHandler();
+        final MEInventoryHandler cellInv = this.storageBus.getInternalHandler();
 
         if (cellInv == null) {
             clearPartitionIterator(player);
             return;
         }
-        IteratorState it;
-        if (!PartitionIteratorMap.containsKey(player)) {
+        final Pair<IAEStackType<?>, IteratorState> pair = PartitionIteratorMap.get(player);
+        final IteratorState it;
+        if (pair == null || pair.getKey() != this.storageBus.getStackType()) {
             // clear filter for fetching items
-            cellInv.setPartitionList(new PrecisePriorityList<>(AEApi.instance().storage().createItemList()));
-            final IItemList<IAEItemStack> list = cellInv.getAvailableItems(
-                    AEApi.instance().storage().createItemFilterList(),
-                    IterationCounter.fetchNewId());
+            cellInv.setPartitionList(new PrecisePriorityList<>(this.storageBus.getItemList()));
+            final IItemList list = cellInv
+                    .getAvailableItems(this.storageBus.getItemList(), IterationCounter.fetchNewId());
             it = new IteratorState(list.iterator());
-            PartitionIteratorMap.put(player, it);
+            PartitionIteratorMap.put(player, Pair.of(this.storageBus.getStackType(), it));
             partitionMode = ActionItems.NEXT_PARTITION;
         } else {
-            it = PartitionIteratorMap.get(player);
+            it = pair.getValue();
         }
         boolean skip = false;
         for (int x = 0; x < inv.getSizeInventory(); x++) {
             if (skip) {
-                inv.setInventorySlotContents(x, null);
+                inv.putAEStackInSlot(x, null);
                 continue;
             }
             if (this.isSlotEnabled(x / 9)) {
-                IAEItemStack AEis = it.next();
+                IAEStack<?> AEis = it.next();
                 if (AEis != null) {
-                    final ItemStack is = AEis.getItemStack();
-                    is.stackSize = 1;
-                    inv.setInventorySlotContents(x, is);
+                    final IAEStack<?> tempAes = AEis.copy();
+                    tempAes.setStackSize(1);
+                    inv.putAEStackInSlot(x, tempAes);
                 } else {
                     clearPartitionIterator(player);
                     skip = true;
-                    inv.setInventorySlotContents(x, null);
+                    inv.putAEStackInSlot(x, null);
                 }
             } else {
                 skip = true;
-                inv.setInventorySlotContents(x, null);
+                inv.putAEStackInSlot(x, null);
             }
 
         }
@@ -270,6 +236,10 @@ public class ContainerStorageBus extends ContainerUpgradeable {
 
     public AccessRestriction getReadWriteMode() {
         return this.rwMode;
+    }
+
+    public ExtractionMode getExtractionMode() {
+        return this.extractionMode;
     }
 
     public StorageFilter getStorageFilter() {
@@ -300,23 +270,47 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         this.rwMode = rwMode;
     }
 
+    private void setExtractionMode(final ExtractionMode extractionMode) {
+        this.extractionMode = extractionMode;
+    }
+
     private static class IteratorState {
 
-        private final Iterator<IAEItemStack> it;
+        private final Iterator<IAEStack<?>> it;
         private boolean hasNext; // cache hasNext(), call next of internal iterator
 
-        public IteratorState(Iterator<IAEItemStack> it) {
+        public IteratorState(Iterator<IAEStack<?>> it) {
             this.it = it;
             this.hasNext = it.hasNext();
         }
 
-        public IAEItemStack next() {
+        public IAEStack<?> next() {
             if (this.hasNext) {
-                IAEItemStack is = it.next();
+                IAEStack<?> is = it.next();
                 hasNext = it.hasNext();
                 return is;
             }
             return null;
         }
+    }
+
+    @Override
+    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
+        final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
+        for (var entry : slotStacks.int2ObjectEntrySet()) {
+            config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
+        }
+
+        if (isServer()) {
+            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
+        }
+    }
+
+    public IAEStackType<?> getStackType() {
+        return this.storageBus.getStackType();
+    }
+
+    public IAEStackInventory getConfig() {
+        return this.storageBus.getAEInventoryByName(StorageName.CONFIG);
     }
 }

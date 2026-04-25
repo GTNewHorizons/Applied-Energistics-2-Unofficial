@@ -90,6 +90,10 @@ public class Items {
 
     public AEItemDefinition itemEncodedPattern;
 
+    public AEItemDefinition itemEncodedUltimatePattern;
+
+    public AEItemDefinition itemEncodedTunnelPattern;
+
     public AEItemDefinition itemColorApplicator;
 
     public AEColoredItemDefinition itemPaintBall;
