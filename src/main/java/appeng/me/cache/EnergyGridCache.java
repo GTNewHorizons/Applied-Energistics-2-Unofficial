@@ -609,19 +609,19 @@ public class EnergyGridCache implements IEnergyGrid {
         // it's not clear as what this method do, set update to true just in case
         this.updateInfinite = true;
         this.extra /= 2;
-        storageB.setExtraEnergy(this.extra);
+        storageB.dataObject().setDouble("extraEnergy", this.extra);
     }
 
     @Override
     public void onJoin(final IGridStorage storageB) {
         // it's not clear as what this method do, set update to true just in case
         this.updateInfinite = true;
-        this.extra += storageB.getExtraEnergy();
+        this.extra += storageB.dataObject().getDouble("extraEnergy");
     }
 
     @Override
     public void populateGridStorage(final IGridStorage storage) {
-        storage.setExtraEnergy(this.extra);
+        storage.dataObject().setDouble("extraEnergy", this.extra);
     }
 
     public TreeSet<EnergyThreshold> getInterests() {

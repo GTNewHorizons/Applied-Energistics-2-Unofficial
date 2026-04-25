@@ -10,7 +10,6 @@
 
 package appeng.core.worlddata;
 
-import java.io.ByteArrayInputStream;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,8 +18,6 @@ import java.util.WeakHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
@@ -52,41 +49,6 @@ final class StorageData implements IWorldGridStorageData, IOnWorldStartable, IOn
         Preconditions.checkNotNull(settingsFile);
 
         this.config = settingsFile;
-        if (!this.config.get("gridStorageData", "newDataFormat", false).getBoolean()) {
-            convertConfig();
-            this.config.get("gridStorageData", "newDataFormat", false).set(true);
-            this.config.save();
-        }
-    }
-
-    private void convertConfig() {
-        final Iterator<Property> it = this.config.getCategory(GRID_STORAGE_CATEGORY).values().iterator();
-        while (it.hasNext()) {
-            final Property prop = it.next();
-            final String value = prop.getString();
-            // this string is the 0 value
-            if ("H4sIAAAAAAAAAONiYGBj4E6tKClKdM1LLUqvZIABAMP4DdoaAAAA".equals(value)) {
-                it.remove();
-            } else {
-                final double doubleValue = convertToDouble(value);
-                if (doubleValue == 0.0D) {
-                    it.remove();
-                } else {
-                    prop.set(doubleValue);
-                }
-            }
-        }
-    }
-
-    private static double convertToDouble(String value) {
-        try {
-            final byte[] byteData = javax.xml.bind.DatatypeConverter.parseBase64Binary(value);
-            final NBTTagCompound myTag = CompressedStreamTools.readCompressed(new ByteArrayInputStream(byteData));
-            if (myTag != null) {
-                return myTag.getDouble("extraEnergy");
-            }
-        } catch (final Throwable t) {}
-        return 0.0D;
     }
 
     /**
@@ -103,13 +65,8 @@ final class StorageData implements IWorldGridStorageData, IOnWorldStartable, IOn
 
         if (result == null || result.get() == null) {
             final String id = String.valueOf(storageID);
-            final double energy;
-            if (this.config.getCategory(GRID_STORAGE_CATEGORY).containsKey(id)) {
-                energy = this.config.get(GRID_STORAGE_CATEGORY, id, 0.0D).getDouble();
-            } else {
-                energy = 0.0D;
-            }
-            final GridStorage thisStorage = new GridStorage(energy, storageID);
+            final String data = this.config.get("gridstorage", id, "").getString();
+            final GridStorage thisStorage = new GridStorage(data, storageID, gss);
             gss.setGridStorage(new WeakReference<>(thisStorage));
             this.loadedStorage.put(gss, new WeakReference<>(gss));
             return thisStorage;
@@ -126,7 +83,7 @@ final class StorageData implements IWorldGridStorageData, IOnWorldStartable, IOn
     public GridStorage getNewGridStorage() {
         final long storageID = this.nextGridStorage();
         final GridStorageSearch gss = new GridStorageSearch(storageID);
-        final GridStorage newStorage = new GridStorage(storageID);
+        final GridStorage newStorage = new GridStorage(storageID, gss);
         gss.setGridStorage(new WeakReference<>(newStorage));
         this.loadedStorage.put(gss, new WeakReference<>(gss));
 
@@ -144,7 +101,7 @@ final class StorageData implements IWorldGridStorageData, IOnWorldStartable, IOn
     @Override
     public void destroyGridStorage(final long id) {
         final String stringID = String.valueOf(id);
-        this.config.getCategory(GRID_STORAGE_CATEGORY).remove(stringID);
+        this.config.getCategory("gridstorage").remove(stringID);
     }
 
     @Override
@@ -175,13 +132,8 @@ final class StorageData implements IWorldGridStorageData, IOnWorldStartable, IOn
         for (final GridStorageSearch gs : this.loadedStorage.keySet()) {
             final GridStorage thisStorage = gs.getGridStorage().get();
             if (thisStorage != null && thisStorage.getGrid() != null && !thisStorage.getGrid().isEmpty()) {
-                final double value = thisStorage.getValue();
-                final String key = String.valueOf(thisStorage.getID());
-                if (value == 0.0D) {
-                    this.config.getCategory(GRID_STORAGE_CATEGORY).remove(key);
-                } else {
-                    this.config.get(GRID_STORAGE_CATEGORY, key, value).set(value);
-                }
+                final String value = thisStorage.getValue();
+                this.config.get(GRID_STORAGE_CATEGORY, String.valueOf(thisStorage.getID()), value).set(value);
             }
         }
 
