@@ -176,6 +176,7 @@ public enum ButtonToolTips implements Localization {
     ToggleShowOnlyInvalidInterfaceOffDesc,
     HighlightInterface,
     HighlightInterfaceDesc,
+    RenameInterface,
     SearchFieldInputs,
     SearchFieldOutputs,
     SearchFieldNames,
