@@ -17,6 +17,7 @@ public enum WirelessMessages implements Localization {
     empty,
     set,
     mode,
+    mode_toggle,
     mode_simple,
     mode_simple_empty,
     mode_simple_bound,

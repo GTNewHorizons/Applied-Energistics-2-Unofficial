@@ -142,6 +142,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
         IConfigManager cm = getConfigManager(is);
         WirelessToolType currentMode = (WirelessToolType) cm.getSetting(Settings.WIRELESS_TOOL_TYPE);
         lines.add(WirelessMessages.mode.getLocal() + " " + currentMode.getLocal(EnumChatFormatting.YELLOW));
+        lines.add(WirelessMessages.mode_toggle.getLocal());
 
         lines.add(WirelessMessages.clear.getLocal());
 

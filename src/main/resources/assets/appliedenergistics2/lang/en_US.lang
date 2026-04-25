@@ -1082,6 +1082,7 @@ item.appliedenergistics2.ToolSuperWirelessKit.set=Mode changed to %s
 item.appliedenergistics2.ToolSuperWirelessKit.targethubfull=Target Hub is Full
 item.appliedenergistics2.ToolSuperWirelessKit.otherhubfull=Hub at %s,%s,%s is Full
 item.appliedenergistics2.ToolSuperWirelessKit.mode=Mode:
+item.appliedenergistics2.ToolSuperWirelessKit.mode.toggle=Tab + R-Click for toggle mode
 
 item.appliedenergistics2.ToolSuperWirelessKit.mode.simple=Simple
 item.appliedenergistics2.ToolSuperWirelessKit.mode.simple.empty=Click Wireless Connector to bind
