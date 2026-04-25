@@ -161,7 +161,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                     && w.getTileEntity(network.x, network.y, network.z) instanceof IGridHost gh) {
                 final IGrid grid = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
                 if (grid == null) continue;
-                for (IGridNode gn : grid.getMachines(TileWirelessConnector.class)) { // TODO: Check if getMachines work
+                for (IGridNode gn : grid.getMachines(TileWirelessConnector.class)) {
                     TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
                     data.add(wc.getDataForTool(network));
                 }

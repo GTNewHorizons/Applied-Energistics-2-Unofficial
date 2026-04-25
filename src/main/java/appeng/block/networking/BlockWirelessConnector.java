@@ -92,7 +92,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
     public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z, EntityPlayer player) {
         ItemStack is = new ItemStack(this);
         TileEntity te = world.getTileEntity(x, y, z);
-        if (te instanceof TileWirelessConnector twc) {
+        if (te instanceof TileWirelessBase twc) {
             AEColor color = twc.getColor();
             if (color != AEColor.Transparent) {
                 is.setItemDamage(color.ordinal() + 1);
@@ -106,7 +106,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
         int damage = is.getItemDamage();
         if (damage > 0) {
             TileEntity te = w.getTileEntity(x, y, z);
-            if (te instanceof TileWirelessConnector twc) {
+            if (te instanceof TileWirelessBase twc) {
                 twc.recolourBlock(ForgeDirection.UNKNOWN, AEColor.values()[damage - 1], (EntityPlayer) player);
                 w.setBlockMetadataWithNotify(x, y, z, 0, 3);
             }
@@ -117,7 +117,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
 
     @Override
     public void breakBlock(World w, int x, int y, int z, Block a, int b) {
-        ((TileWirelessBase) w.getTileEntity(x, y, z)).doUnlink();
+        if (w.getTileEntity(x, y, z) instanceof TileWirelessBase twc) twc.doUnlink();
         super.breakBlock(w, x, y, z, a, b);
     }
 
