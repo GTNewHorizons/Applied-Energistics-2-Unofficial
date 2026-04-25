@@ -2077,7 +2077,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (tasks.isEmpty()) return true;
             for (Entry<ICraftingPatternDetails, TaskProgress> e : tasks.entrySet()) {
                 for (final IAEStack<?> aes : e.getKey().getCondensedAEInputs()) {
-                    if (aes != null && aes.equals(finalOutput)) {
+                    if (aes.equals(finalOutput)) {
                         if (aes.getStackSize() >= finalOutput.getStackSize()) {
                             return false;
                         } else {
