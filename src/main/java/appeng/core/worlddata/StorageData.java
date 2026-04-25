@@ -11,7 +11,6 @@
 package appeng.core.worlddata;
 
 import java.lang.ref.WeakReference;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
 
