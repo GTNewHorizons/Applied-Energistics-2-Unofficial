@@ -28,12 +28,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntConsumer;
@@ -662,6 +664,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.myLastLink.cancel();
         }
 
+        this.finalizeActiveDiagnosticSessions();
+
         final IItemList<IAEStack<?>> list;
         this.getModernListOfItem(list = AEApi.instance().storage().createAEStackList(), CraftingItemList.ALL);
         for (final IAEStack<?> is : list) {
@@ -1126,6 +1130,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     return whatLink;
                 }
             } else {
+                this.finalizeActiveDiagnosticSessions();
                 this.finalOutput.reset();
                 this.waitingForMissing.resetStatus();
                 this.tasks.clear();
@@ -1136,6 +1141,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         } catch (final CraftBranchFailure e) {
             handleCraftBranchFailure(e, src);
 
+            this.finalizeActiveDiagnosticSessions();
             this.finalOutput.reset();
             this.waitingForMissing.resetStatus();
             this.tasks.clear();
@@ -1752,6 +1758,37 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         return this.diagnostics.hasPendingRecordsForSession(diagnosticSessionId);
+    }
+
+    private Set<CraftingDiagnosticSessionId> collectActiveDiagnosticSessions() {
+        final Set<CraftingDiagnosticSessionId> sessionIds = new LinkedHashSet<>();
+
+        for (final TaskProgress progress : this.tasks.values()) {
+            sessionIds.addAll(progress.diagnosticSessionCrafts);
+        }
+
+        sessionIds.addAll(this.diagnostics.getPendingSessionIds());
+
+        if (this.currentPlanningDiagnosticSessionId != null) {
+            sessionIds.add(this.currentPlanningDiagnosticSessionId);
+        }
+
+        return sessionIds;
+    }
+
+    private void finalizeActiveDiagnosticSessions() {
+        if (this.getGrid() == null) {
+            return;
+        }
+
+        final ICraftingGrid craftingGrid = this.getGrid().getCache(ICraftingGrid.class);
+        if (!(craftingGrid instanceof CraftingGridCache cache)) {
+            return;
+        }
+
+        for (final CraftingDiagnosticSessionId sessionId : this.collectActiveDiagnosticSessions()) {
+            cache.completeDiagnosticSession(sessionId);
+        }
     }
 
     private CraftingDiagnosticSessionId getCurrentDiagnosticSessionId() {

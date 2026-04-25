@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
@@ -126,6 +127,18 @@ final class CraftingCpuDiagnostics {
         }
 
         return false;
+    }
+
+    Set<CraftingDiagnosticSessionId> getPendingSessionIds() {
+        final Set<CraftingDiagnosticSessionId> sessionIds = new TreeSet<>();
+        for (final NavigableSet<CraftingTimingRecord> records : this.outputTimingRecords.values()) {
+            for (final CraftingTimingRecord record : records) {
+                if (record.getDiagnosticSessionId() != null) {
+                    sessionIds.add(record.getDiagnosticSessionId());
+                }
+            }
+        }
+        return sessionIds;
     }
 
     NBTTagList writeToNBT() {
