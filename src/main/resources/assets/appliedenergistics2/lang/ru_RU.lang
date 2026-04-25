@@ -979,3 +979,11 @@ key.container_interaction.desc=Container Item Interaction
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern
+
+# Interface Terminal
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibility=Видимость в терминале интерфейсов
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityVisible=Виден — отображается в терминале интерфейсов
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityHidden=Скрыт — не отображается в терминале интерфейсов
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfaces=Показывать скрытые интерфейсы
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfacesOnDesc=Скрытые интерфейсы отображаются
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfacesOffDesc=Скрытые интерфейсы не отображаются

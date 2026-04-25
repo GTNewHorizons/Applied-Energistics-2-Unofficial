@@ -32,6 +32,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.primitives.Ints;
 
 import appeng.api.AEApi;
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.IInterfaceTerminal;
@@ -41,6 +43,7 @@ import appeng.api.util.IInterfaceViewable;
 import appeng.container.AEBaseContainer;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
+import appeng.helpers.IInterfaceHost;
 import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.AEBasePart;
@@ -53,6 +56,7 @@ import appeng.util.inv.ItemSlot;
 public final class ContainerInterfaceTerminal extends AEBaseContainer {
 
     private int nextId = 0;
+    private boolean forceNextUpdate = false;
 
     private final Map<IInterfaceViewable, InvTracker> tracked = new HashMap<>();
     private final Map<Long, InvTracker> trackedById = new HashMap<>();
@@ -110,18 +114,23 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         }
         this.wasOff = false;
 
-        if (anchor.needsUpdate()) {
+        if (isDirty) {
+            this.dirty.encode();
+            NetworkHandler.instance.sendTo(this.dirty, (EntityPlayerMP) this.getPlayerInv().player);
+            this.dirty = new PacketInterfaceTerminalUpdate();
+            this.isDirty = false;
+        } else if (anchor.needsUpdate() || forceNextUpdate) {
+            forceNextUpdate = false;
             PacketInterfaceTerminalUpdate update = this.updateList();
             if (update != null) {
                 update.encode();
                 NetworkHandler.instance.sendTo(update, (EntityPlayerMP) this.getPlayerInv().player);
             }
-        } else if (isDirty) {
-            this.dirty.encode();
-            NetworkHandler.instance.sendTo(this.dirty, (EntityPlayerMP) this.getPlayerInv().player);
-            this.dirty = new PacketInterfaceTerminalUpdate();
-            this.isDirty = false;
         }
+    }
+
+    public void scheduleUpdate() {
+        this.forceNextUpdate = true;
     }
 
     @Override
@@ -313,13 +322,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                         update.addOverwriteEntry(known.id).setOnline(false);
                     }
 
-                    // the machine should no longer be displayed
-                    // not displayed -> displayed is not possible here, we wouldn't be tracking it
-                    final boolean machineShouldDisplay = machine.shouldDisplay();
-                    if (known.shouldDisplay && !machineShouldDisplay) {
-                        known.shouldDisplay = false;
-                        // don't count the machine as visited, it will be removed
-                        continue;
+                    // visibility changed?
+                    final boolean machineShouldDisplay = getTerminalVisibility(machine);
+                    if (known.shouldDisplay != machineShouldDisplay) {
+                        known.shouldDisplay = machineShouldDisplay;
+                        if (update == null) update = new PacketInterfaceTerminalUpdate();
+                        update.addOverwriteEntry(known.id).setTerminalVisible(machineShouldDisplay);
                     }
 
                     // If the size changed, we need to do a full update of inventory
@@ -343,8 +351,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
 
                     visited.add(machine);
                 } else {
-                    if (!machine.shouldDisplay()) continue;
-                    /* Add a new entry */
+                    /* Add a new entry (always, including hidden ones) */
                     if (update == null) update = new PacketInterfaceTerminalUpdate();
                     InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
                     update.addNewEntry(entry.id, entry.name, entry.online).setSuffix(entry.suffix)
@@ -352,7 +359,11 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep())
                             .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
-                            .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority);
+                            .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority)
+                            .setTerminalVisible(entry.shouldDisplay);
+                    // Ensure the client applies the correct visibility even if PacketAdd state gets corrupted
+                    // client-side. PacketOverwrite handling is known to work reliably.
+                    update.addOverwriteEntry(entry.id).setTerminalVisible(entry.shouldDisplay);
                     tracked.put(machine, entry);
                     trackedById.put(entry.id, entry);
                     visited.add(machine);
@@ -375,6 +386,14 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             update.addRemovalEntry(entry.getValue().id);
         }
         return update;
+    }
+
+    private static boolean getTerminalVisibility(IInterfaceViewable machine) {
+        if (machine instanceof IInterfaceHost interfaceHost) {
+            return interfaceHost.getInterfaceDuality().getConfigManager().getSetting(Settings.INTERFACE_TERMINAL)
+                    == YesNo.YES;
+        }
+        return machine.shouldDisplay();
     }
 
     private boolean isDifferent(final ItemStack a, final ItemStack b) {
@@ -413,7 +432,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             DimensionalCoord location = machine.getLocation();
 
             this.id = id;
-            this.shouldDisplay = machine.shouldDisplay();
+            this.shouldDisplay = getTerminalVisibility(machine);
             this.name = machine.getRawName();
             this.suffix = machine.getNameSuffix();
             this.patterns = machine.getPatterns();
