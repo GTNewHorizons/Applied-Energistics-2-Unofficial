@@ -1966,16 +1966,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.suspended = suspended;
     }
 
-    private boolean isFinalOutputNotIngredient(final IAEStack<?> finalOutput) {
-        if (this.tasks.isEmpty()) return true;
-        for (Entry<ICraftingPatternDetails, TaskProgress> e : this.tasks.entrySet()) {
-            for (final IAEStack<?> aes : e.getKey().getAEInputs()) {
-                if (aes != null && aes.equals(finalOutput)) return false;
-            }
-        }
-        return true;
-    }
-
     private class finalOutput {
 
         boolean fakeCrafting;
@@ -2080,7 +2070,25 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public boolean isFinalOutput(IAEStack<?> aes) {
-            return this.outputs.findPrecise(aes) != null && isFinalOutputNotIngredient(aes);
+            return this.outputs.findPrecise(aes) != null && splitOutputToIngredient(aes);
+        }
+
+        private boolean splitOutputToIngredient(final IAEStack<?> finalOutput) {
+            if (tasks.isEmpty()) return true;
+            for (Entry<ICraftingPatternDetails, TaskProgress> e : tasks.entrySet()) {
+                for (final IAEStack<?> aes : e.getKey().getCondensedAEInputs()) {
+                    if (aes != null && aes.equals(finalOutput)) {
+                        if (aes.getStackSize() >= finalOutput.getStackSize()) {
+                            return false;
+                        } else {
+                            finalOutput.decStackSize(aes.getStackSize());
+                            inventory.injectItems(aes, Actionable.MODULATE);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return true;
         }
 
         public IAEStack<?> findPrecise(IAEStack<?> aes) {
