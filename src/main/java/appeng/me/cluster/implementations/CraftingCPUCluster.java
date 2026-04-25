@@ -2143,7 +2143,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
             }
 
-            @SuppressWarnings("rawtypes")
+            @SuppressWarnings("rawtypes, unchecked")
             final IAEStack available = inventory.findPrecise((IAEStack) output);
             if (available != null) {
                 required -= available.getStackSize();
