@@ -61,14 +61,17 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.IGuiSub;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerInterfaceTerminal;
+import appeng.container.interfaces.IContainerSubGui;
 import appeng.container.slot.AppEngSlot;
 import appeng.core.AEConfig;
 import appeng.core.AppEng;
@@ -82,6 +85,8 @@ import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate.PacketEntry;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketRemoteRename;
+import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.core.sync.packets.PacketToggleInterfaceVisibility;
 import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -106,7 +111,7 @@ import cpw.mods.fml.common.Loader;
  * @author firenoo
  */
 public class GuiInterfaceTerminal extends AEBaseGui
-        implements IDropToFillTextField, IGuiTooltipHandler, IInterfaceTerminalPostUpdate {
+        implements IDropToFillTextField, IGuiTooltipHandler, IInterfaceTerminalPostUpdate, IGuiSub {
 
     public static final int HEADER_HEIGHT = 52;
     public static final int INV_HEIGHT = 98;
@@ -146,6 +151,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     protected static String searchFieldNamesText = "";
 
     protected int offsetY;
+    private GuiTabButton originalGuiBtn;
 
     /*
      * Z-level Map (FLOATS) 0.0 - BACKGROUND 1.0 - ItemStacks 2.0 - Slot color overlays 20.0 - ItemStack overlays 21.0 -
@@ -165,6 +171,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     public GuiInterfaceTerminal(final Container cont) {
         super(cont);
+        if (cont instanceof IContainerSubGui subGui) subGui.setGuiLink(this);
 
         this.setScrollBar(new GuiScrollbar());
         this.xSize = 209;
@@ -288,6 +295,20 @@ public class GuiInterfaceTerminal extends AEBaseGui
         buttonList.add(guiButtonUseSubstitute);
 
         initCustomButtons(this.guiLeft - 18, offset);
+        initPrimaryGuiButton();
+    }
+
+    @Override
+    public void initPrimaryGuiButton() {
+        if (inventorySlots instanceof IContainerSubGui subGui && subGui.getPrimaryGuiIcon() != null) {
+            buttonList.add(
+                    this.originalGuiBtn = new GuiTabButton(
+                            this.guiLeft + this.xSize - 22,
+                            this.guiTop,
+                            subGui.getPrimaryGuiIcon(),
+                            subGui.getPrimaryGuiIcon().getDisplayName(),
+                            itemRender));
+        }
     }
 
     protected void repositionSlots() {
@@ -376,6 +397,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     @Override
     protected void actionPerformed(final GuiButton btn) {
+        if (btn == this.originalGuiBtn) {
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
+            return;
+        }
         if (actionPerformedCustomButtons(btn)) return;
         if (btn == guiButtonAssemblersOnly) {
             onlyMolecularAssemblers = !onlyMolecularAssemblers;
@@ -771,21 +796,37 @@ public class GuiInterfaceTerminal extends AEBaseGui
             }
         }
         tessellator.draw();
-        /* Draw button */
+        /* Draw buttons — Alt switches to hide button, Shift switches to rename button */
         if (viewY + entry.optionsButton.height > 0 && viewY < viewHeight) {
+            final boolean altHeld = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
+            final boolean shiftHeld = isShiftKeyDown();
+            final GuiImgButton activeButton = altHeld ? entry.hideButton
+                : shiftHeld ? entry.renameButton : entry.optionsButton;
             entry.optionsButton.yPosition = viewY + 5;
-            entry.optionsButton.drawButton(mc, relMouseX, relMouseY);
-            if (entry.optionsButton.getMouseIn()
-                    && relMouseY >= Math.max(titleBottom - viewY + entry.optionsButton.yPosition, entry.optionsButton.yPosition)) {
-                // draw a tooltip
-                GL11.glTranslatef(0f, 0f, TOOLTIP_Z);
-                GL11.glDisable(GL11.GL_SCISSOR_TEST);
-                drawHoveringText(extraOptionsText, relMouseX, relMouseY);
-                GL11.glTranslatef(0f, 0f, -TOOLTIP_Z);
-                GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            entry.hideButton.yPosition = altHeld ? viewY + 5 : -1;
+            entry.renameButton.yPosition = shiftHeld && !altHeld ? viewY + 5 : -1;
+            activeButton.drawButton(mc, relMouseX, relMouseY);
+            if (activeButton.getMouseIn()
+                    && relMouseY >= Math.max(titleBottom - viewY + activeButton.yPosition, activeButton.yPosition)) {
+                if (altHeld) {
+                    pendingHideButtonTooltip = buildInterfaceTerminalVisibilityTooltip(entry.hideButton);
+                    pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                    pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                } else if (shiftHeld) {
+                    pendingHideButtonTooltip = Collections.singletonList(
+                            ButtonToolTips.RenameInterface.getLocal());
+                    pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                    pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                } else {
+                    pendingHideButtonTooltip = extraOptionsText;
+                    pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                    pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                }
             }
         } else {
             entry.optionsButton.yPosition = -1;
+            entry.hideButton.yPosition = -1;
+            entry.renameButton.yPosition = -1;
         }
         /* PASS 2: Items */
         outerItems:
@@ -1591,6 +1632,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         String dispName;
         AppEngInternalInventory inv;
         GuiImgButton optionsButton;
+        GuiImgButton hideButton;
+        GuiImgButton renameButton;
         /** Nullable - icon that represents the interface */
         ItemStack selfRep;
         /** Nullable - icon that represents the interface's "target" */
@@ -1627,6 +1670,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.priority = priority;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
+            this.hideButton = new GuiImgButton(2, 0, Settings.INTERFACE_TERMINAL, YesNo.YES);
+            this.hideButton.setHalfSize(true);
+            this.renameButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.RENAME_INTERFACE);
+            this.renameButton.setHalfSize(true);
             this.guiHeight = 18 * rows + 1;
             this.brokenRecipes = new Boolean[rows * rowSize];
             this.useSubstitute = new Boolean[rows * rowSize];
@@ -1762,13 +1809,20 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (mouseX >= optionsButton.xPosition && mouseX < 2 + optionsButton.width
                     && mouseY > optionsButton.yPosition
                     && mouseY <= Math.min(optionsButton.yPosition + optionsButton.height, viewHeight)) {
-                optionsButton.func_146113_a(mc.getSoundHandler());
+                if (altHeld) {
+                    hideButton.func_146113_a(mc.getSoundHandler());
+                    NetworkHandler.instance.sendToServer(new PacketToggleInterfaceVisibility(x, y, z, dim, side));
+                    return true;
+                }
 
                 if (isShiftKeyDown()) {
+                    renameButton.func_146113_a(mc.getSoundHandler());
                     NetworkHandler.instance.sendToServer(new PacketRemoteRename(x, y, z, dim, side));
 
                     return true;
                 }
+
+                optionsButton.func_146113_a(mc.getSoundHandler());
 
                 // When using the highlight from the interface terminal, we want it to only
                 // highlight the interface containing the patterns and not any output p2p interfaces
