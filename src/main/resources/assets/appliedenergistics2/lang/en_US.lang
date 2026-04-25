@@ -635,6 +635,7 @@ gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOnDesc=Showing al
 gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOffDesc=Showing only interfaces with invalid patterns
 gui.tooltips.appliedenergistics2.HighlightInterface=Highlight interface
 gui.tooltips.appliedenergistics2.HighlightInterfaceDesc=§6ALT§8 - §7Toggle interface visibility
+gui.tooltips.appliedenergistics2.RenameInterface=Rename interface
 gui.tooltips.appliedenergistics2.InterfaceTerminalVisibility=Interface Terminal Visibility
 gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityVisible=Visible - shown in interface terminal
 gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityHidden=Hidden - not shown in interface terminal

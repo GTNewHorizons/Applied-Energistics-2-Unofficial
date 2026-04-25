@@ -40,7 +40,9 @@ import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
+import appeng.client.gui.IGuiSub;
 import appeng.container.AEBaseContainer;
+import appeng.container.interfaces.IContainerSubGui;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.helpers.IInterfaceHost;
@@ -52,8 +54,13 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.inv.ItemSlot;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
-public final class ContainerInterfaceTerminal extends AEBaseContainer {
+public final class ContainerInterfaceTerminal extends AEBaseContainer implements IContainerSubGui {
+
+    @SideOnly(Side.CLIENT)
+    private IGuiSub guiLink;
 
     private int nextId = 0;
     private boolean forceNextUpdate = false;
@@ -481,5 +488,17 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                 }
             }
         }
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public ItemStack getPrimaryGuiIcon() {
+        return getPrimaryGui() != null ? getPrimaryGui().getIcon() : null;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void setGuiLink(final IGuiSub gs) {
+        this.guiLink = gs;
     }
 }
