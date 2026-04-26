@@ -83,7 +83,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     protected VirtualMEPatternSlot[] outputSlots;
     private boolean craftingMode;
     @NotNull
-    private IAEItemStack blankPatternView = ContainerPatternTerm.BLANK_PATTERN.copy().setStackSize(0);
+    private IAEItemStack blankPatternView = ContainerPatternTerm.createBlankPattern().setStackSize(0);
 
     public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te,
             final ContainerPatternTerm containerPatternTerm) {
