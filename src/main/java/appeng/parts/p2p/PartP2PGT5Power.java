@@ -32,6 +32,7 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
 
     private TileEntity cachedTarget;
     private boolean isCachedTargetValid;
+    private int mRestRF = 0;
 
     public PartP2PGT5Power(ItemStack is) {
         super(is);
@@ -58,6 +59,7 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
         super.onNeighborChanged();
         this.isCachedTargetValid = false;
         this.cachedTarget = null;
+        this.mRestRF = 0;
     }
 
     @Override
@@ -180,9 +182,15 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
                         }
                     } else if (GregTechAPI.mOutputRF && te instanceof IEnergyReceiver) {
                         int rfOut = (int) (aVoltage * (long) GregTechAPI.mEUtoRF / 100L);
-                        if (((IEnergyReceiver) te).receiveEnergy(oppositeSide, rfOut, true) > 0) {
-                            ((IEnergyReceiver) te).receiveEnergy(oppositeSide, rfOut, false);
-                            return 1L;
+                        long ampsUsed = 0;
+                        if (mRestRF < rfOut) {
+                            mRestRF += rfOut;
+                            ampsUsed = 1;
+                        }
+                        if (((IEnergyReceiver) te).receiveEnergy(oppositeSide, mRestRF, true) > 0) {
+                            int consumed = ((IEnergyReceiver) te).receiveEnergy(oppositeSide, mRestRF, false);
+                            mRestRF -= consumed;
+                            return ampsUsed;
                         }
 
                         if (GregTechAPI.mRFExplosions && GregTechAPI.sMachineExplosions
