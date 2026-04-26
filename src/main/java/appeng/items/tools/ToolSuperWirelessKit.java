@@ -167,7 +167,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
                             WirelessMessages.mode_advanced_next.getLocal(dcl.get(0).x, dcl.get(0).y, dcl.get(0).z));
                 }
                 lines.add(WirelessMessages.mode_advanced_howToggle.getLocal(EnumChatFormatting.ITALIC));
-                // lines.add(WirelessToolMessages.valueOf("mode_advanced_" + modeName + "_hubqols").getLocal());
+                lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_hubqols").getLocal());
             }
             case Super -> {
                 NBTTagCompound stash = is.getTagCompound().getCompoundTag("super");
@@ -194,7 +194,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
                         lines.add(
                                 StatCollector.translateToLocalFormatted(
                                         "item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network",
-                                        customName.isEmpty() ? String.valueOf(i) : customName,
+                                        customName + " ",
                                         dc.x,
                                         dc.y,
                                         dc.z));

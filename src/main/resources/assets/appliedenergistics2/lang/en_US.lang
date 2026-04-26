@@ -1115,7 +1115,7 @@ item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing.targethubfu
 
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super=§eSuper
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklist=Network list:
-item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network=Network "%s" at %s, %s, %s
+item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network=Network %sat %s, %s, %s
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklistempty=There no networks in list
 
 # Commands
