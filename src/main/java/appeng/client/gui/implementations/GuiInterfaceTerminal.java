@@ -568,11 +568,11 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         final float guiScaleX = (float) mc.displayWidth / width;
         final float guiScaleY = (float) mc.displayHeight / height;
-        GL11.glScissor(
-                (int) ((guiLeft + VIEW_LEFT) * guiScaleX),
-                (int) ((height - (guiTop + HEADER_HEIGHT + viewHeight)) * guiScaleY),
-                (int) (VIEW_WIDTH * guiScaleX),
-                (int) (this.viewHeight * guiScaleY));
+        final int scissorX = (int) Math.floor((guiLeft + VIEW_LEFT) * guiScaleX);
+        final int scissorY = (int) Math.floor((height - (guiTop + HEADER_HEIGHT + viewHeight)) * guiScaleY);
+        final int scissorWidth = (int) Math.ceil(VIEW_WIDTH * guiScaleX) + 1;
+        final int scissorHeight = (int) Math.ceil(this.viewHeight * guiScaleY) + 1;
+        GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
         pendingSectionTooltip = null;
