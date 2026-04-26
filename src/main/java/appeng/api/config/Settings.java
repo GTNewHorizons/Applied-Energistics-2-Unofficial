@@ -90,7 +90,13 @@ public enum Settings {
 
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class)),
 
-    PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO));
+    PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    INCLUDE_SUBNETS(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    INSERT_ORDER(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

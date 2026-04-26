@@ -60,8 +60,6 @@ public final class WorldData implements IWorldData {
     private final File spawnDirectory;
     private final File compassDirectory;
 
-    private final Configuration sharedConfig;
-
     private WorldData(@Nonnull final File worldDirectory) {
         Preconditions.checkNotNull(worldDirectory);
         Preconditions.checkArgument(worldDirectory.isDirectory());
@@ -71,11 +69,11 @@ public final class WorldData implements IWorldData {
         this.compassDirectory = new File(this.ae2directory, COMPASS_DIR_NAME);
 
         final File settingsFile = new File(this.ae2directory, SETTING_FILE_NAME);
-        this.sharedConfig = new Configuration(settingsFile, AEConfig.VERSION);
+        final Configuration sharedConfig = new Configuration(settingsFile, AEConfig.VERSION);
 
-        final PlayerData playerData = new PlayerData(this.sharedConfig);
-        final DimensionData dimensionData = new DimensionData(this.sharedConfig);
-        final StorageData storageData = new StorageData(this.sharedConfig);
+        final PlayerData playerData = new PlayerData(sharedConfig);
+        final DimensionData dimensionData = new DimensionData(sharedConfig);
+        final StorageData storageData = new StorageData(sharedConfig);
 
         final ThreadFactory compassThreadFactory = new CompassThreadFactory();
         final CompassService compassService = new CompassService(this.compassDirectory, compassThreadFactory);

@@ -24,10 +24,10 @@ import appeng.core.sync.packets.PacketCompassResponse;
 import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketCraftRequest;
-import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
+import appeng.core.sync.packets.PacketCraftingCPUTableUpdate;
 import appeng.core.sync.packets.PacketCraftingCompleteNotification;
+import appeng.core.sync.packets.PacketCraftingCpuUpdate;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
-import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketGuiDataSync;
 import appeng.core.sync.packets.PacketHighlightBlockStorage;
@@ -57,6 +57,7 @@ import appeng.core.sync.packets.PacketRemoteRename;
 import appeng.core.sync.packets.PacketSpatialAction;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.core.sync.packets.PacketToggleInterfaceVisibility;
 import appeng.core.sync.packets.PacketTransitionEffect;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.core.sync.packets.PacketVirtualSlot;
@@ -116,7 +117,7 @@ public class AppEngPacketHandlerBase {
 
         PACKET_PAINTED_ENTITY(PacketPaintedEntity.class),
 
-        PACKET_CRAFTING_CPUS_UPDATE(PacketCraftingCPUsUpdate.class),
+        PACKET_CRAFTING_CPUS_UPDATE(PacketCraftingCPUTableUpdate.class),
 
         PACKET_CRAFTING_COMPLETE_NOTIFICATION(PacketCraftingCompleteNotification.class),
 
@@ -124,7 +125,7 @@ public class AppEngPacketHandlerBase {
 
         PACKET_PATTERN_VALUE(PacketPatternValueSet.class),
         PACKET_PATTERN_MULTI(PacketPatternMultiSet.class),
-        PACKET_CRAFTING_REMAINING_OPERATIONS(PacketCraftingRemainingOperations.class),
+        PACKET_CRAFTING_CPU_VISUAL_ENTRIES(PacketCraftingCpuUpdate.class),
         PACKET_CRAFTING_ITEM_INTERFACE(PacketCraftingItemInterface.class),
         PACKET_CRAFTING_TREE_DATA(PacketCraftingTreeData.class),
         PACKET_NEI_BOOKMARK(PacketNEIBookmark.class),
@@ -139,7 +140,8 @@ public class AppEngPacketHandlerBase {
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
         PACKET_COLOR_SELECT(PacketColorSelect.class),
         PACKET_REMOTE_RENAME(PacketRemoteRename.class),
-        PACKET_SPATIAL_ACTION(PacketSpatialAction.class);
+        PACKET_SPATIAL_ACTION(PacketSpatialAction.class),
+        PACKET_TOGGLE_INTERFACE_VISIBILITY(PacketToggleInterfaceVisibility.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;

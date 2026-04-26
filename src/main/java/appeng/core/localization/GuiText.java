@@ -296,12 +296,76 @@ public enum GuiText implements Localization {
 
     Inputs,
     Outputs,
+    BlankPatternInNetwork,
     CPUAllowMode,
     CPUAllowAll,
     CPUOnlyAllowNonPlayer,
     CPUOnlyAllowPlayer,
     CPUSourcePlayer,
-    CPUSourceMachineRequested;
+    CPUSourceMachineRequested,
+
+    ReshuffleTooltipDesc1,
+    ReshuffleTooltipDesc2,
+    ReshuffleTooltipDesc3,
+
+    ReshuffleStatusLabel,
+    ReshuffleStatusIdle,
+    ReshuffleStatusBeforeSnapshot,
+    ReshuffleStatusAfterSnapshot,
+    ReshuffleStatusExtracting,
+    ReshuffleStatusInjecting,
+    ReshuffleStatusComplete,
+    ReshuffleStatusFailed,
+    ReshuffleStatusCancelled,
+
+    StorageReshuffle,
+    ReshuffleReport,
+    ReshuffleStart,
+    ReshuffleCancel,
+
+    ReshuffleReportTitle,
+    ReshuffleReportTime,
+    ReshuffleReportMode,
+    ReshuffleReportModeNone,
+    ReshuffleReportSubnetsLabel,
+    ReshuffleReportSubnetsOn,
+    ReshuffleReportSubnetsOff,
+    ReshuffleTotalTypes,
+    ReshuffleReportExtracted,
+    ReshuffleReportInjected,
+    ReshuffleReportLabelTypes,
+    ReshuffleReportLabelStacks,
+    ReshuffleReportSectionCantExtract,
+    ReshuffleReportSectionCantInject,
+    ReshuffleReportNetChanged,
+    ReshuffleReportIntegrityOk,
+
+    ReshuffleScan,
+    ReshuffleLocate,
+    ReshuffleTooltipCoords,
+    ReshuffleTooltipCoordsNoSlot,
+
+    ReshufflePartitionScanner,
+    ReshuffleScanDuplicatesTitle,
+    ReshuffleScanEmpty,
+    ReshuffleScanDuplicatePartition,
+
+    ReshuffleHealthTitle,
+    ReshuffleHealthTooltipBytes,
+    ReshuffleHealthTooltipTypes,
+    ReshuffleHealthTopItems,
+    ReshuffleHealthTopItemEntry,
+    ReshuffleReportNoMatchingCells,
+
+    // styles
+    ReshuffleScanDuplicatePartitionStackNameStyle,
+    ReshuffleScanDuplicatePartitionTargetNameColor,
+    ReshuffleReportTextColorMain,
+    ReshuffleReportTextColorValues,
+    ReshuffleReportTextColorPositive,
+    ReshuffleReportTextColorNegative,
+    ReshuffleReportTextColorNeutral,
+    ReshuffleReportTextColorWarning,;
 
     private final String root;
 

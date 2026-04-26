@@ -20,6 +20,7 @@ import appeng.block.networking.BlockCableBus;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.render.BusRenderHelper;
 import appeng.client.render.BusRenderer;
+import appeng.client.render.RenderBlocksWorkaround;
 import appeng.tile.AEBaseTile;
 import appeng.tile.networking.TileCableBus;
 
@@ -38,14 +39,14 @@ public class RendererCableBus extends BaseBlockRender<BlockCableBus, TileCableBu
     @Override
     public boolean renderInWorld(final BlockCableBus block, final IBlockAccess world, final int x, final int y,
             final int z, final RenderBlocks renderer) {
-        final AEBaseTile t = block.getTileEntity(world, x, y, z);
+        final AEBaseTile tile = block.getTileEntity(world, x, y, z);
 
-        if (t instanceof TileCableBus) {
-            BusRenderer.INSTANCE.getRenderer().renderAllFaces = true;
-            BusRenderer.INSTANCE.getRenderer().blockAccess = renderer.blockAccess;
-            BusRenderer.INSTANCE.getRenderer().overrideBlockTexture = renderer.overrideBlockTexture;
-            ((TileCableBus) t).getCableBus().renderStatic(x, y, z);
-            BusRenderer.INSTANCE.getRenderer().renderAllFaces = false;
+        if (tile instanceof TileCableBus) {
+            final RenderBlocksWorkaround rbw = BusRenderer.INSTANCE.getRenderer();
+            rbw.renderAllFaces = true;
+            rbw.overrideBlockTexture = renderer.overrideBlockTexture;
+            ((TileCableBus) tile).getCableBus().renderStatic(x, y, z);
+            rbw.renderAllFaces = false;
         }
 
         return BusRenderHelper.instances.get().getItemsRendered() > 0;

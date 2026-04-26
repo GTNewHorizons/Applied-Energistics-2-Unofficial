@@ -7,6 +7,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+import cpw.mods.fml.common.network.ByteBufUtils;
+import io.netty.buffer.ByteBuf;
+
 public class NamedDimensionalCoord extends DimensionalCoord {
 
     private final String name;
@@ -73,6 +76,43 @@ public class NamedDimensionalCoord extends DimensionalCoord {
             NBTTagCompound data = tag.getCompoundTag("pos#" + i);
             list.add(readFromNBT(data));
             i++;
+        }
+        return list;
+    }
+
+    public void writeToPacket(final ByteBuf data) {
+        data.writeInt(this.x);
+        data.writeInt(this.y);
+        data.writeInt(this.z);
+        data.writeInt(this.dimId);
+        ByteBufUtils.writeUTF8String(data, this.name == null ? "" : this.name);
+    }
+
+    public static void writeListToPacket(final ByteBuf data, final List<NamedDimensionalCoord> list) {
+        data.writeInt(list == null ? 0 : list.size());
+        if (list == null) {
+            return;
+        }
+
+        for (final NamedDimensionalCoord coord : list) {
+            coord.writeToPacket(data);
+        }
+    }
+
+    public static NamedDimensionalCoord readFromPacket(final ByteBuf data) {
+        return new NamedDimensionalCoord(
+                data.readInt(),
+                data.readInt(),
+                data.readInt(),
+                data.readInt(),
+                ByteBufUtils.readUTF8String(data));
+    }
+
+    public static List<NamedDimensionalCoord> readAsListFromPacket(final ByteBuf data) {
+        final int count = data.readInt();
+        final List<NamedDimensionalCoord> list = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            list.add(readFromPacket(data));
         }
         return list;
     }

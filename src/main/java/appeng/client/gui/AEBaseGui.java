@@ -478,7 +478,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         slot.putStack(stack);
     }
 
-    private ItemStack getStackFromHand() {
+    protected ItemStack getStackFromHand() {
         final ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
                 ? NEI.instance.getDraggingPhantomItem()
                 : null;
@@ -635,11 +635,11 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                             .getValidDestinationSlots(appEngSlot.isPlayerSide(), stackInSlot);
 
                     if (selectedSlots.isEmpty() && appEngSlot.isPlayerSide()
+                            && this.shouldShiftClickFillVirtualPhantomSlot(slot)
                             && baseContainer.getValidDestinationFakeSlot(stackInSlot) == null) {
                         for (VirtualMESlot vmeSlot : this.virtualSlots) {
                             if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.getAEStack() == null) {
                                 vmepSlot.handleMouseClicked(stackInSlot, isCtrlKeyDown(), clickType);
-                                this.handlePhantomSlotInteraction(vmepSlot, clickType);
                                 break;
                             }
                         }
@@ -651,6 +651,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         super.handleMouseClick(slot, slotIdx, clickedButton, clickType);
+    }
+
+    protected boolean shouldShiftClickFillVirtualPhantomSlot(final Slot slot) {
+        return true;
     }
 
     @Override

@@ -32,14 +32,20 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.primitives.Ints;
 
 import appeng.api.AEApi;
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.IInterfaceTerminal;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
+import appeng.client.gui.IGuiSub;
 import appeng.container.AEBaseContainer;
+import appeng.container.interfaces.IContainerSubGui;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
+import appeng.helpers.IInterfaceHost;
 import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.AEBasePart;
@@ -48,10 +54,16 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.inv.ItemSlot;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
-public final class ContainerInterfaceTerminal extends AEBaseContainer {
+public final class ContainerInterfaceTerminal extends AEBaseContainer implements IContainerSubGui {
+
+    @SideOnly(Side.CLIENT)
+    private IGuiSub guiLink;
 
     private int nextId = 0;
+    private boolean forceNextUpdate = false;
 
     private final Map<IInterfaceViewable, InvTracker> tracked = new HashMap<>();
     private final Map<Long, InvTracker> trackedById = new HashMap<>();
@@ -109,18 +121,23 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         }
         this.wasOff = false;
 
-        if (anchor.needsUpdate()) {
+        if (isDirty) {
+            this.dirty.encode();
+            NetworkHandler.instance.sendTo(this.dirty, (EntityPlayerMP) this.getPlayerInv().player);
+            this.dirty = new PacketInterfaceTerminalUpdate();
+            this.isDirty = false;
+        } else if (anchor.needsUpdate() || forceNextUpdate) {
+            forceNextUpdate = false;
             PacketInterfaceTerminalUpdate update = this.updateList();
             if (update != null) {
                 update.encode();
                 NetworkHandler.instance.sendTo(update, (EntityPlayerMP) this.getPlayerInv().player);
             }
-        } else if (isDirty) {
-            this.dirty.encode();
-            NetworkHandler.instance.sendTo(this.dirty, (EntityPlayerMP) this.getPlayerInv().player);
-            this.dirty = new PacketInterfaceTerminalUpdate();
-            this.isDirty = false;
         }
+    }
+
+    public void scheduleUpdate() {
+        this.forceNextUpdate = true;
     }
 
     @Override
@@ -286,12 +303,14 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     InvTracker known = tracked.get(machine);
 
                     /* Name changed? */
-                    String name = machine.getName();
+                    String rawName = machine.getRawName();
+                    String suffix = machine.getNameSuffix();
 
-                    if (!Objects.equals(known.name, name)) {
+                    if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
                         if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addRenamedEntry(known.id, name);
-                        known.name = name;
+                        update.addRenamedEntry(known.id, rawName, suffix);
+                        known.name = rawName;
+                        known.suffix = suffix;
                     }
 
                     /* Status changed? */
@@ -310,13 +329,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                         update.addOverwriteEntry(known.id).setOnline(false);
                     }
 
-                    // the machine should no longer be displayed
-                    // not displayed -> displayed is not possible here, we wouldn't be tracking it
-                    final boolean machineShouldDisplay = machine.shouldDisplay();
-                    if (known.shouldDisplay && !machineShouldDisplay) {
-                        known.shouldDisplay = false;
-                        // don't count the machine as visited, it will be removed
-                        continue;
+                    // visibility changed?
+                    final boolean machineShouldDisplay = getTerminalVisibility(machine);
+                    if (known.shouldDisplay != machineShouldDisplay) {
+                        known.shouldDisplay = machineShouldDisplay;
+                        if (update == null) update = new PacketInterfaceTerminalUpdate();
+                        update.addOverwriteEntry(known.id).setTerminalVisible(machineShouldDisplay);
                     }
 
                     // If the size changed, we need to do a full update of inventory
@@ -331,17 +349,28 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                                 .setSize(known.rows, known.rowSize, known.numSlots);
                     }
 
+                    int priority = machine.getPriority();
+                    if (known.priority != priority) {
+                        known.priority = priority;
+                        if (update == null) update = new PacketInterfaceTerminalUpdate();
+                        update.addOverwriteEntry(known.id).setPriority(priority);
+                    }
+
                     visited.add(machine);
                 } else {
-                    if (!machine.shouldDisplay()) continue;
-                    /* Add a new entry */
+                    /* Add a new entry (always, including hidden ones) */
                     if (update == null) update = new PacketInterfaceTerminalUpdate();
                     InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
-                    update.addNewEntry(entry.id, entry.name, entry.online)
+                    update.addNewEntry(entry.id, entry.name, entry.online).setSuffix(entry.suffix)
                             .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
                             .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep())
-                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput());
+                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
+                            .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority)
+                            .setTerminalVisible(entry.shouldDisplay);
+                    // Ensure the client applies the correct visibility even if PacketAdd state gets corrupted
+                    // client-side. PacketOverwrite handling is known to work reliably.
+                    update.addOverwriteEntry(entry.id).setTerminalVisible(entry.shouldDisplay);
                     tracked.put(machine, entry);
                     trackedById.put(entry.id, entry);
                     visited.add(machine);
@@ -366,6 +395,14 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         return update;
     }
 
+    private static boolean getTerminalVisibility(IInterfaceViewable machine) {
+        if (machine instanceof IInterfaceHost interfaceHost) {
+            return interfaceHost.getInterfaceDuality().getConfigManager().getSetting(Settings.INTERFACE_TERMINAL)
+                    == YesNo.YES;
+        }
+        return machine.shouldDisplay();
+    }
+
     private boolean isDifferent(final ItemStack a, final ItemStack b) {
         if (a == null && b == null) {
             return false;
@@ -383,6 +420,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final long id;
         private boolean shouldDisplay;
         private String name;
+        private String suffix;
         private final IInventory patterns;
         private int rows;
         private int rowSize;
@@ -391,16 +429,19 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final int y;
         private final int z;
         private final int dim;
+        private int priority;
         private final ForgeDirection side;
         private boolean online;
+        private final IAEStackType<?>[] supportedStackTypes;
         private NBTTagList invNbt;
 
         InvTracker(long id, IInterfaceViewable machine, boolean online) {
             DimensionalCoord location = machine.getLocation();
 
             this.id = id;
-            this.shouldDisplay = machine.shouldDisplay();
-            this.name = machine.getName();
+            this.shouldDisplay = getTerminalVisibility(machine);
+            this.name = machine.getRawName();
+            this.suffix = machine.getNameSuffix();
             this.patterns = machine.getPatterns();
             this.rowSize = machine.rowSize();
             this.rows = machine.rows();
@@ -411,6 +452,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             this.dim = location.getDimension();
             this.side = machine instanceof AEBasePart hasSide ? hasSide.getSide() : ForgeDirection.UNKNOWN;
             this.online = online;
+            this.supportedStackTypes = machine.getSupportedStackTypes();
+            this.priority = machine.getPriority();
             this.invNbt = new NBTTagList();
             updateNBT();
         }
@@ -445,5 +488,17 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                 }
             }
         }
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public ItemStack getPrimaryGuiIcon() {
+        return getPrimaryGui() != null ? getPrimaryGui().getIcon() : null;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void setGuiLink(final IGuiSub gs) {
+        this.guiLink = gs;
     }
 }

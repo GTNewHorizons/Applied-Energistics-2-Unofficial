@@ -1,7 +1,9 @@
 package appeng.util.item;
 
 import java.io.IOException;
+import java.util.Objects;
 
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
@@ -200,5 +202,15 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
                 return "FluidIcon";
             }
         };
+    }
+
+    @NotNull
+    private final IAEFluidStack testStack = Objects
+            .requireNonNull(this.getStackFromContainerItem(new ItemStack(Items.water_bucket, 1)));
+
+    @Override
+    @NotNull
+    public IAEFluidStack getTestStack() {
+        return this.testStack.copy();
     }
 }

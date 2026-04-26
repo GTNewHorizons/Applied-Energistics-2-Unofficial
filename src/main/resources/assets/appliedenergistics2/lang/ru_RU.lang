@@ -323,7 +323,7 @@ gui.appliedenergistics2.Range=Дальность
 gui.appliedenergistics2.TransparentFacades=Прозрачные фасады
 gui.appliedenergistics2.TransparentFacadesHint=Контролирует видимость фасадов, когда сетевой инструмент находится на панели инструментов.
 gui.appliedenergistics2.CPUs=ЦП
-gui.appliedenergistics2.NoCraftingJobs=Нет активных заданий создания
+gui.appliedenergistics2.NoCraftingJobs=Inactive
 gui.appliedenergistics2.FacadeCrafting=Создание фасадов
 gui.appliedenergistics2.inWorldCraftingPresses=С помощью метеоритного компаса можно отыскать метеориты, внутри которых можно найти прессы для высекателя
 gui.appliedenergistics2.Included=Принимать
@@ -979,3 +979,11 @@ key.container_interaction.desc=Container Item Interaction
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern
+
+# Interface Terminal
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibility=Видимость в терминале интерфейсов
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityVisible=Виден — отображается в терминале интерфейсов
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityHidden=Скрыт — не отображается в терминале интерфейсов
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfaces=Показывать скрытые интерфейсы
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfacesOnDesc=Скрытые интерфейсы отображаются
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfacesOffDesc=Скрытые интерфейсы не отображаются
