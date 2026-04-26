@@ -29,7 +29,6 @@ import org.lwjgl.input.Mouse;
 import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 import com.gtnewhorizon.gtnhlib.util.numberformatting.options.FormatOptions;
 
-import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.ItemSubstitution;
 import appeng.api.config.PatternBeSubstitution;
@@ -411,8 +410,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     public void postUpdate(List<IAEStack<?>> list) {
         super.postUpdate(list);
         for (IAEStack<?> stack : list) {
-            if (stack instanceof IAEItemStack ais
-                    && AEApi.instance().definitions().materials().blankPattern().isSameAs(ais.getItemStack())) {
+            if (stack instanceof IAEItemStack ais && blankPatternView.equals(ais)) {
                 this.blankPatternView = ais;
             }
         }
