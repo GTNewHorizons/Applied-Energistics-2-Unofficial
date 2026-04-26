@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.Settings;
 import appeng.api.util.DimensionalCoord;
+import appeng.core.AEConfig;
 import appeng.core.localization.GuiColors;
 import appeng.items.tools.ToolNetworkVisualiser;
 import appeng.items.tools.ToolNetworkVisualiser.VLink;
@@ -183,8 +184,8 @@ public class NetworkVisualiserRender {
             GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
 
             if (renderLinksModes.contains(mode)) {
-                renderLinks(dense, 16f);
-                renderLinks(normal, 4f);
+                renderLinks(dense, AEConfig.instance.visualiserWidthDense);
+                renderLinks(normal, AEConfig.instance.visualiserWidthNormal);
             }
 
             GL11.glEndList();

@@ -131,6 +131,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     private double WirelessBoosterExp = 1.5;
     private double WirelessConnectorPowerBase = 1D;
     private double WirelessConnectorPowerDistanceMultiplier = .1D;
+    public float visualiserWidthDense;
+    public float visualiserWidthNormal;
     public int levelEmitterDelay = 40;
     public int craftingCalculatorVersion = 2;
     public int maxCraftingSteps = 2_000_000;
@@ -378,6 +380,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getBoolean(true);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
+        this.visualiserWidthDense = (float) this.get("Client", "visualiserWidthDense", 16f).getDouble(16f);
+        this.visualiserWidthNormal = (float) this.get("Client", "visualiserWidthNormal", 4f).getDouble(4f);
 
         // Pin options (under Client category)
         Property pMaxCraft = this.get("Client", "maxCraftingPinRows", this.maxCraftingPinRows);
