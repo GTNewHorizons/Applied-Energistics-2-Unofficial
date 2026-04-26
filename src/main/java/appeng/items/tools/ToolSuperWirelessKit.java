@@ -154,22 +154,17 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
                 List<DimensionalCoord> dcl = DimensionalCoord
                         .readAsListFromNBT(is.getTagCompound().getCompoundTag("advanced"));
                 String modeName = cm.getSetting(AdvancedWirelessToolMode.class).getMode();
-                lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName).getLocal(EnumChatFormatting.GREEN));
+                lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName).getLocal());
 
                 if (dcl.isEmpty()) {
-                    lines.add(
-                            WirelessMessages.valueOf("mode_advanced_" + modeName + "_empty")
-                                    .getLocal(EnumChatFormatting.BLUE));
+                    lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_empty").getLocal());
                 } else {
                     if (GuiScreen.isShiftKeyDown()) {
-                        lines.add(
-                                WirelessMessages.valueOf("mode_advanced_" + modeName + "_notempty")
-                                        .getLocal(EnumChatFormatting.BLUE));
+                        lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_notempty").getLocal());
                         dcl.forEach(dc -> lines.add(String.format("%d,%d,%d", dc.x, dc.y, dc.z)));
                         return;
                     } else lines.add(
-                            WirelessMessages.mode_advanced_next
-                                    .getLocal(EnumChatFormatting.BLUE, dcl.get(0).x, dcl.get(0).y, dcl.get(0).z));
+                            WirelessMessages.mode_advanced_next.getLocal(dcl.get(0).x, dcl.get(0).y, dcl.get(0).z));
                 }
                 lines.add(WirelessMessages.mode_advanced_howToggle.getLocal(EnumChatFormatting.ITALIC));
                 // lines.add(WirelessToolMessages.valueOf("mode_advanced_" + modeName + "_hubqols").getLocal());

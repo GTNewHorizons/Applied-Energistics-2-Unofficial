@@ -21,8 +21,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -42,10 +40,11 @@ import appeng.core.sync.packets.PacketNetworkVisualiserData;
 import appeng.items.AEBaseItem;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
+import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
+import gregtech.common.tileentities.machines.MTEHatchCraftingInputME;
+import gregtech.common.tileentities.machines.MTEHatchCraftingInputSlave;
 
 public class ToolNetworkVisualiser extends AEBaseItem {
-
-    private boolean needUpdate = true;
 
     public ToolNetworkVisualiser() {
         this.setFeature(EnumSet.of(AEFeature.Core));
@@ -54,7 +53,8 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
     public enum VNodeFlags {
         DENSE,
-        MISSING
+        MISSING,
+        PROXY
     }
 
     public static class VNode {
@@ -74,7 +74,8 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
     public enum VLinkFlags {
         DENSE,
-        COMPRESSED
+        COMPRESSED,
+        PROXY
     }
 
     public static class VLink {
@@ -97,28 +98,35 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         NODES,
         CHANNELS,
         NONUM,
-        P2P;
+        P2P,
+        PROXY
     }
 
     @Override
     public ItemStack onItemRightClick(ItemStack is, World worldIn, EntityPlayer p) {
         if (Platform.isServer()) {
             if (p.isSneaking()) {
-                IConfigManager cm = getConfigManager(is);
-                final Enum<?> newState = Platform.rotateEnum(
-                        cm.getSetting(Settings.NETWORK_VISUALISER),
-                        false,
-                        Settings.NETWORK_VISUALISER.getPossibleValues());
+                final IConfigManager cm = getConfigManager(is);
+                Enum<?> newState = getNextVisualisationMode(cm);
+                if (!Platform.isGTLoaded && newState == VisualisationModes.PROXY)
+                    newState = getNextVisualisationMode(cm);
                 cm.putSetting(Settings.NETWORK_VISUALISER, newState);
                 p.addChatMessage(
                         new ChatComponentTranslation(
                                 "item.appliedenergistics2.ToolNetworkVisualiser.set",
-                                EnumChatFormatting.YELLOW + StatCollector.translateToLocal(
+                                StatCollector.translateToLocal(
                                         "item.appliedenergistics2.ToolNetworkVisualiser.mode."
                                                 + newState.toString().toLowerCase(Locale.US))));
             }
         }
         return is;
+    }
+
+    private Enum<?> getNextVisualisationMode(IConfigManager cm) {
+        return Platform.rotateEnum(
+                cm.getSetting(Settings.NETWORK_VISUALISER),
+                false,
+                Settings.NETWORK_VISUALISER.getPossibleValues());
     }
 
     @Override
@@ -135,16 +143,13 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                                 "item.appliedenergistics2.ToolNetworkVisualiser.bound",
                                 String.valueOf(dc.x),
                                 String.valueOf(dc.y),
-                                String.valueOf(dc.z))
-                                        .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW)));
-                needUpdate = true;
+                                String.valueOf(dc.z)));
                 return true;
             }
         }
         return false;
     }
 
-    ArrayList<IGridConnection> gcListCache = new ArrayList<>();
     ItemStack currItem;
 
     @Override
@@ -155,22 +160,25 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         ItemStack currentItem = player.inventory.getCurrentItem();
         if (currentItem != currItem) {
             currItem = currentItem;
-            needUpdate = true;
         }
-        if (currentItem == null || !(currentItem.getItem() instanceof ToolNetworkVisualiser) || !needUpdate) {
+        if (currentItem == null || !(currentItem.getItem() instanceof ToolNetworkVisualiser)) {
             return;
         }
         currItem = currentItem;
+
         DimensionalCoord dc = DimensionalCoord.readFromNBT(is.getTagCompound());
         if (w.provider.dimensionId != dc.getDimension()) return;
+
+        ArrayList<VLink> vLinks = new ArrayList<>();
+        Map<IGridNode, VNode> vnList = new HashMap<>();
+        ArrayList<VNode> vNodeList = new ArrayList<>();
+
         TileEntity te = w.getTileEntity(dc.x, dc.y, dc.z);
         if (te instanceof IGridHost gh) {
             IGridNode gn = gh.getGridNode(ForgeDirection.UNKNOWN);
             if (gn != null) {
                 IGrid g = gn.getGrid();
                 if (g != null) {
-                    Map<IGridNode, VNode> vnList = new HashMap<>();
-
                     ArrayList<IGridConnection> gcList = new ArrayList<>();
                     for (IGridNode igNode : g.getNodes()) {
                         IGridBlock igb = igNode.getGridBlock();
@@ -184,18 +192,29 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                             if (igNode.hasFlag(GridFlags.DENSE_CAPACITY)) {
                                 flags.add(VNodeFlags.DENSE);
                             }
+
                             vnList.put(igNode, new VNode(loc.x, loc.y, loc.z, flags));
+
+                            if (Platform.isGTLoaded && igb.getMachine() instanceof MTEHatchCraftingInputME crib) {
+                                EnumSet<VNodeFlags> flagsNode = EnumSet.of(VNodeFlags.PROXY);
+                                EnumSet<VLinkFlags> flagsLink = EnumSet.of(VLinkFlags.PROXY);
+                                final VNode node = new VNode(loc.x, loc.y, loc.z, flagsNode);
+                                for (MTEHatchCraftingInputSlave s : crib.getProxyHatches()) {
+                                    final IGregTechTileEntity sb = s.getBaseMetaTileEntity();
+                                    final VNode sbNode = new VNode(
+                                            sb.getXCoord(),
+                                            sb.getYCoord(),
+                                            sb.getZCoord(),
+                                            flagsNode);
+                                    vLinks.add(new VLink(node, sbNode, 0, flagsLink));
+                                    vNodeList.add(sbNode);
+                                }
+
+                                vNodeList.add(node);
+                            }
                         }
                     }
 
-                    if (gcList.equals(gcListCache)) {
-                        needUpdate = false;
-                        return;
-                    }
-
-                    this.gcListCache = gcList;
-
-                    ArrayList<VLink> vLinks = new ArrayList<>();
                     for (IGridConnection c : gcList) {
                         VNode n1 = vnList.get(c.a());
                         VNode n2 = vnList.get(c.b());
@@ -211,16 +230,14 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                             vLinks.add(new VLink(n1, n2, c.getUsedChannels(), flags));
                         }
                     }
-
-                    try {
-                        ArrayList<VNode> vNodeList = new ArrayList<>(vnList.values());
-                        NetworkHandler.instance
-                                .sendTo(new PacketNetworkVisualiserData(vNodeList, vLinks), (EntityPlayerMP) entity);
-                        needUpdate = false;
-                    } catch (IOException ignored) {}
                 }
             }
         }
+
+        try {
+            vNodeList.addAll(vnList.values());
+            NetworkHandler.instance.sendTo(new PacketNetworkVisualiserData(vNodeList, vLinks), player);
+        } catch (IOException ignored) {}
     }
 
     public static IConfigManager getConfigManager(final ItemStack target) {
@@ -240,7 +257,6 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             boolean displayMoreInfo) {
         lines.add(
                 StatCollector.translateToLocal("item.appliedenergistics2.ToolNetworkVisualiser.mode") + " "
-                        + EnumChatFormatting.YELLOW
                         + StatCollector.translateToLocal(
                                 "item.appliedenergistics2.ToolNetworkVisualiser.mode." + getConfigManager(is)
                                         .getSetting(Settings.NETWORK_VISUALISER).toString().toLowerCase(Locale.US)));

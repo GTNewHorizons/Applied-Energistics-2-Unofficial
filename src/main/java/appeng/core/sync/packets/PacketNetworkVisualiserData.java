@@ -20,8 +20,8 @@ import io.netty.buffer.Unpooled;
 
 public class PacketNetworkVisualiserData extends AppEngPacket {
 
-    private ArrayList<VNode> vNodeSet;
-    private ArrayList<VLink> vLinkSet;
+    private final ArrayList<VNode> vNodeSet;
+    private final ArrayList<VLink> vLinkSet;
 
     // automatic.
     public PacketNetworkVisualiserData(final ByteBuf stream) throws IOException {

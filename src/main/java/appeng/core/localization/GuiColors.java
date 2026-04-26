@@ -225,7 +225,18 @@ public enum GuiColors implements Localization {
 
     SuperWirelessKitGood(AEColor.Lime.mediumVariant),
     SuperWirelessKitNeutral(AEColor.Orange.mediumVariant),
-    SuperWirelessKitBad(AEColor.Red.mediumVariant);
+    SuperWirelessKitBad(AEColor.Red.mediumVariant),
+
+    NetworkVisualiserFloatingText(0xffffffff),
+    NetworkVisualiserNodeMissing(0xffff0000),
+    NetworkVisualiserNodeDense(0xffffff00),
+    NetworkVisualiserNodeProxy(0xffffa500),
+    NetworkVisualiserNodeDefault(0xff0000ff),
+
+    NetworkVisualiserLinkCompressed(0xffff00ff),
+    NetworkVisualiserLinkDense(0xffffff00),
+    NetworkVisualiserLinkProxy(0xffffa500),
+    NetworkVisualiserLinkDefault(0xff0000ff);
 
     private final int color;
 

@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.Settings;
 import appeng.api.util.DimensionalCoord;
+import appeng.core.localization.GuiColors;
 import appeng.items.tools.ToolNetworkVisualiser;
 import appeng.items.tools.ToolNetworkVisualiser.VLink;
 import appeng.items.tools.ToolNetworkVisualiser.VLinkFlags;
@@ -45,14 +46,18 @@ public class NetworkVisualiserRender {
     private static final List<DimensionalCoord> wirelessConnections = new ArrayList<>();
     private static DimensionalCoord prevPos;
 
-    List<VisualisationModes> renderNodesModes = Arrays
-            .asList(VisualisationModes.NODES, VisualisationModes.FULL, VisualisationModes.NONUM);
+    final List<VisualisationModes> renderNodesModes = Arrays.asList(
+            VisualisationModes.NODES,
+            VisualisationModes.FULL,
+            VisualisationModes.NONUM,
+            VisualisationModes.PROXY);
 
-    List<VisualisationModes> renderLinksModes = Arrays.asList(
+    final List<VisualisationModes> renderLinksModes = Arrays.asList(
             VisualisationModes.CHANNELS,
             VisualisationModes.FULL,
             VisualisationModes.NONUM,
-            VisualisationModes.P2P);
+            VisualisationModes.P2P,
+            VisualisationModes.PROXY);
 
     public static void networkVisualiser(ArrayList<VNode> vNodeSetNew, ArrayList<VLink> vLinkSetNew) {
         vNodeSet = vNodeSetNew;
@@ -165,6 +170,8 @@ public class NetworkVisualiserRender {
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         if (needListRefresh) {
             needListRefresh = false;
@@ -176,8 +183,8 @@ public class NetworkVisualiserRender {
             GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
 
             if (renderLinksModes.contains(mode)) {
-                renderLinks(dense, 16f, mode == VisualisationModes.P2P);
-                renderLinks(normal, 4f, mode == VisualisationModes.P2P);
+                renderLinks(dense, 16f);
+                renderLinks(normal, 4f);
             }
 
             GL11.glEndList();
@@ -196,7 +203,12 @@ public class NetworkVisualiserRender {
                     double distSq = (viewX - linkX) * (viewX - linkX) + (viewY - linkY) * (viewY - linkY)
                             + (viewZ - linkZ) * (viewZ - linkZ);
                     if (distSq < 256d) { // 16 blocks
-                        renderFloatingText(String.valueOf(link.channels), linkX, linkY, linkZ, 0xffffff);
+                        renderFloatingText(
+                                String.valueOf(link.channels),
+                                linkX,
+                                linkY,
+                                linkZ,
+                                GuiColors.NetworkVisualiserFloatingText.getColor());
                     }
                 }
             }
@@ -210,22 +222,46 @@ public class NetworkVisualiserRender {
         tess.startDrawing(GL11.GL_QUADS);
 
         for (VNode node : vNodeSet) {
-            int[] color = node.flags.contains(VNodeFlags.MISSING) ? new int[] { 255, 0, 0 }
-                    : node.flags.contains(VNodeFlags.DENSE) ? new int[] { 255, 255, 0 } : new int[] { 0, 0, 255 };
+            switch (mode) {
+                case NODES, NONUM -> {
+                    if (node.flags.contains(VNodeFlags.PROXY)) continue;
+                }
 
-            tess.setColorRGBA(color[0], color[1], color[2], 255); // +Y
+                case CHANNELS, P2P -> {
+                    continue;
+                }
+
+                case PROXY -> {
+                    if (!node.flags.contains(VNodeFlags.PROXY)) continue;
+                }
+
+                default -> {}
+            }
+
+            final int color;
+            if (node.flags.contains(VNodeFlags.MISSING)) color = GuiColors.NetworkVisualiserNodeMissing.getColor();
+            else if (node.flags.contains(VNodeFlags.DENSE)) color = GuiColors.NetworkVisualiserNodeDense.getColor();
+            else if (node.flags.contains(VNodeFlags.PROXY)) color = GuiColors.NetworkVisualiserNodeProxy.getColor();
+            else color = GuiColors.NetworkVisualiserNodeDefault.getColor();
+
+            final int alpha = (color >> 24) & 0xFF;
+            final int red = (color >> 16) & 0xFF;
+            final int green = (color >> 8) & 0xFF;
+            final int blue = (color) & 0xFF;
+
+            tess.setColorRGBA(red, green, blue, alpha); // +Y
             tess.addVertex(node.x + 0.5d - SIZE, node.y + 0.5d + SIZE, node.z + 0.5d + SIZE);
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d + SIZE, node.z + 0.5d + SIZE);
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d + SIZE, node.z + 0.5d - SIZE);
             tess.addVertex(node.x + 0.5d - SIZE, node.y + 0.5d + SIZE, node.z + 0.5d - SIZE);
 
-            tess.setColorRGBA(color[0] / 2, color[1] / 2, color[2] / 2, 255); // -Y
+            tess.setColorRGBA(red / 2, green / 2, blue / 2, alpha); // -Y
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d - SIZE, node.z + 0.5d - SIZE);
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d - SIZE, node.z + 0.5d + SIZE);
             tess.addVertex(node.x + 0.5d - SIZE, node.y + 0.5d - SIZE, node.z + 0.5d + SIZE);
             tess.addVertex(node.x + 0.5d - SIZE, node.y + 0.5d - SIZE, node.z + 0.5d - SIZE);
 
-            tess.setColorRGBA(color[0] * 8 / 10, color[1] * 8 / 10, color[2] * 8 / 10, 255); // +/- Z
+            tess.setColorRGBA(red * 8 / 10, green * 8 / 10, blue * 8 / 10, alpha); // +/- Z
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d - SIZE, node.z + 0.5d + SIZE);
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d + SIZE, node.z + 0.5d + SIZE);
             tess.addVertex(node.x + 0.5d - SIZE, node.y + 0.5d + SIZE, node.z + 0.5d + SIZE);
@@ -235,7 +271,7 @@ public class NetworkVisualiserRender {
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d - SIZE, node.z + 0.5d - SIZE);
             tess.addVertex(node.x + 0.5d - SIZE, node.y + 0.5d - SIZE, node.z + 0.5d - SIZE);
 
-            tess.setColorRGBA(color[0] * 6 / 10, color[1] * 6 / 10, color[2] * 6 / 10, 255); // +/- X
+            tess.setColorRGBA(red * 6 / 10, green * 6 / 10, blue * 6 / 10, alpha); // +/- X
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d + SIZE, node.z + 0.5d - SIZE);
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d + SIZE, node.z + 0.5d + SIZE);
             tess.addVertex(node.x + 0.5d + SIZE, node.y + 0.5d - SIZE, node.z + 0.5d + SIZE);
@@ -249,24 +285,49 @@ public class NetworkVisualiserRender {
         tess.draw();
     }
 
-    private void renderLinks(Set<VLink> links, float width, boolean onlyP2P) {
+    private void renderLinks(Set<VLink> links, float width) {
         GL11.glLineWidth(width);
         Tessellator tess = Tessellator.instance;
         tess.startDrawing(GL11.GL_LINES);
 
         for (VLink link : links) {
-            if (!onlyP2P || link.flags.contains(VLinkFlags.COMPRESSED)) {
-                if (link.flags.contains(VLinkFlags.COMPRESSED)) {
-                    tess.setColorRGBA(255, 0, 255, 255);
-                } else if (link.flags.contains(VLinkFlags.DENSE)) {
-                    tess.setColorRGBA(255, 255, 0, 255);
-                } else {
-                    tess.setColorRGBA(0, 0, 255, 255);
+            switch (mode) {
+                case NODES -> {
+                    continue;
                 }
 
-                tess.addVertex(link.node1.x + 0.5d, link.node1.y + 0.5d, link.node1.z + 0.5d);
-                tess.addVertex(link.node2.x + 0.5d, link.node2.y + 0.5d, link.node2.z + 0.5d);
+                case CHANNELS, NONUM -> {
+                    if (link.flags.contains(VLinkFlags.PROXY)) continue;
+                }
+
+                case P2P -> {
+                    if (!link.flags.contains(VLinkFlags.COMPRESSED)) continue;
+                }
+
+                case PROXY -> {
+                    if (!link.flags.contains(VLinkFlags.PROXY)) continue;
+                }
+
+                default -> {}
             }
+
+            final int color;
+            if (link.flags.contains(VLinkFlags.COMPRESSED))
+                color = GuiColors.NetworkVisualiserLinkCompressed.getColor();
+            else if (link.flags.contains(VLinkFlags.DENSE)) color = GuiColors.NetworkVisualiserLinkDense.getColor();
+            else if (link.flags.contains(VLinkFlags.PROXY)) color = GuiColors.NetworkVisualiserLinkProxy.getColor();
+            else color = GuiColors.NetworkVisualiserLinkDefault.getColor();
+
+            final int alpha = (color >> 24) & 0xFF;
+            final int red = (color >> 16) & 0xFF;
+            final int green = (color >> 8) & 0xFF;
+            final int blue = (color) & 0xFF;
+
+            tess.setColorRGBA(red, green, blue, alpha);
+
+            tess.addVertex(link.node1.x + 0.5d, link.node1.y + 0.5d, link.node1.z + 0.5d);
+            tess.addVertex(link.node2.x + 0.5d, link.node2.y + 0.5d, link.node2.z + 0.5d);
+
         }
         tess.draw();
     }

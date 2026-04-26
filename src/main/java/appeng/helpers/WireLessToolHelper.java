@@ -12,8 +12,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.ChatStyle;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -44,7 +42,7 @@ public class WireLessToolHelper {
                 Settings.WIRELESS_TOOL_TYPE.getPossibleValues());
         cm.putSetting(Settings.WIRELESS_TOOL_TYPE, newState);
 
-        p.addChatMessage(WirelessMessages.set.toChat(newState.getLocal(EnumChatFormatting.YELLOW)));
+        p.addChatMessage(WirelessMessages.set.toChat(newState.getLocal()));
     }
 
     public static void nextConnectMode(IConfigManager cm, EntityPlayer p) {
@@ -74,7 +72,7 @@ public class WireLessToolHelper {
                 is.getTagCompound().setTag("super", newTag);
             }
         }
-        if (p != null) p.addChatMessage(WirelessMessages.empty.toChat(EnumChatFormatting.YELLOW + mode.getLocal()));
+        if (p != null) p.addChatMessage(WirelessMessages.empty.toChat(mode.getLocal()));
     }
 
     @Nullable
@@ -84,8 +82,7 @@ public class WireLessToolHelper {
         final TileEntity te = w.getTileEntity(dc.x, dc.y, dc.z);
         if (te instanceof TileWirelessBase twb) return twb;
 
-        if (p != null) p.addChatMessage(
-                WirelessMessages.invalidTarget.toChat().setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+        if (p != null) p.addChatMessage(WirelessMessages.invalidTarget.toChat());
 
         return null;
     }
@@ -149,15 +146,12 @@ public class WireLessToolHelper {
         switch (result) {
             case SUCCESS -> {
                 final DimensionalCoord dc = source.getLocation();
-                if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
-                        WirelessMessages.connected.toChat(dc.x, dc.y, dc.z)
-                                .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));
+                if (actionSource instanceof PlayerSource ps)
+                    ps.player.addChatMessage(WirelessMessages.connected.toChat(dc.x, dc.y, dc.z));
             }
 
             case FAILED, INVALID_TARGET, INVALID_SOURCE -> {
-                if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
-                        WirelessMessages.failed.toChat()
-                                .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+                if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(WirelessMessages.failed.toChat());
             }
         }
 
@@ -188,9 +182,7 @@ public class WireLessToolHelper {
             DimensionalCoord dc = target.getLocation();
             dc.writeToNBT(tag);
             tool.getTagCompound().setTag("simple", tag);
-            p.addChatMessage(
-                    WirelessMessages.bound.toChat(dc.x, dc.y, dc.z)
-                            .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));
+            p.addChatMessage(WirelessMessages.bound.toChat(dc.x, dc.y, dc.z));
             return true;
         }
 
@@ -218,16 +210,12 @@ public class WireLessToolHelper {
         boolean isHub = target.isHub();
 
         if (!target.canAddLink()) {
-            p.addChatMessage(
-                    WirelessMessages.targethubfull.toChat()
-                            .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+            p.addChatMessage(WirelessMessages.targethubfull.toChat());
             return false;
         } else if (!isHub) { // if not a hub, check if not already in the queue
             for (DimensionalCoord loc : locList) {
                 if (targetLoc.isEqual(loc)) {
-                    p.addChatMessage(
-                            WirelessMessages.bound_advanced_filled.toChat()
-                                    .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+                    p.addChatMessage(WirelessMessages.bound_advanced_filled.toChat());
                     return false;
                 }
             }
@@ -239,14 +227,10 @@ public class WireLessToolHelper {
                 locList.add(new DimensionalCoord(target));
                 i++;
             }
-            p.addChatMessage(
-                    WirelessMessages.mode_advanced_queueing_hub.toChat(i)
-                            .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));
+            p.addChatMessage(WirelessMessages.mode_advanced_queueing_hub.toChat(i));
         } else {
             locList.add(new DimensionalCoord(target));
-            p.addChatMessage(
-                    WirelessMessages.mode_advanced_queued.toChat(targetLoc.x, targetLoc.y, targetLoc.z)
-                            .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));
+            p.addChatMessage(WirelessMessages.mode_advanced_queued.toChat(targetLoc.x, targetLoc.y, targetLoc.z));
         }
 
         DimensionalCoord.writeListToNBT(tool.getTagCompound().getCompoundTag("advanced"), locList);
@@ -312,17 +296,13 @@ public class WireLessToolHelper {
             if (TempTe instanceof TileWirelessBase tile) {
                 if (target.getGridNode(ForgeDirection.UNKNOWN).getGrid()
                         == tile.getGridNode(ForgeDirection.UNKNOWN).getGrid()) {
-                    p.addChatMessage(
-                            WirelessMessages.bound_super_failed.toChat()
-                                    .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+                    p.addChatMessage(WirelessMessages.bound_super_failed.toChat());
                     return false;
                 }
             }
         }
         DimensionalCoord targetLoc = target.getLocation();
-        p.addChatMessage(
-                WirelessMessages.bound_super.toChat(targetLoc.x, targetLoc.y, targetLoc.z, locList.size())
-                        .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));
+        p.addChatMessage(WirelessMessages.bound_super.toChat(targetLoc.x, targetLoc.y, targetLoc.z));
         locList.add(targetLoc);
         DimensionalCoord.writeListToNBT(tag, locList);
         return true;
