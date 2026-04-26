@@ -46,6 +46,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
@@ -199,7 +200,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
 
                             player.addChatMessage(notification.createMessage());
-                            player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
+                            ((EntityPlayerMP) player).playerNetServerHandler.sendPacket(
+                                    new S29PacketSoundEffect(
+                                            "random.levelup",
+                                            player.posX,
+                                            player.posY,
+                                            player.posZ,
+                                            1f,
+                                            1f));
                         } else {
                             this.unreadNotifications.computeIfAbsent(playerName, name -> new ArrayList<>())
                                     .add(notification);
