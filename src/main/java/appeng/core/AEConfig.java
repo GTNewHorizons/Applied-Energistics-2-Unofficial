@@ -95,6 +95,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int MEMonitorableSmallSize = 6;
     public int InterfaceTerminalSmallSize = 6;
     public boolean highlightWhenSomethingStuckInInterface = true;
+    public int screenColor = 0xFFFFFF;
 
     /** Max rows for crafting pins section (1-16). Caps the cycle button options. */
     public int maxCraftingPinRows = 16;
@@ -367,6 +368,9 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getBoolean(true);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
+        Property screenColorProperty = this.get("Client", "screenColor", this.screenColor);
+        this.screenColor = this.clampScreenColor(screenColorProperty.getInt(this.screenColor));
+        screenColorProperty.set(this.screenColor);
 
         // Pin options (under Client category)
         Property pMaxCraft = this.get("Client", "maxCraftingPinRows", this.maxCraftingPinRows);
@@ -675,6 +679,20 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public void nextCellType(final boolean backwards) {
         this.selectedCellType = Platform
                 .rotateEnum(this.selectedCellType, backwards, Settings.CELL_TYPE.getPossibleValues());
+    }
+
+    public int getScreenColor() {
+        return this.screenColor;
+    }
+
+    public void setScreenColor(final int color) {
+        this.screenColor = this.clampScreenColor(color);
+        this.get("Client", "screenColor", 0xFFFFFF).set(this.screenColor);
+        this.save();
+    }
+
+    private int clampScreenColor(final int color) {
+        return Math.max(0, Math.min(0xFFFFFF, color));
     }
 
 }

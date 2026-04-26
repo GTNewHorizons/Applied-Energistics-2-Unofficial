@@ -78,6 +78,7 @@ public enum GuiText implements Localization {
     FormationPlane,
     Inscriber,
     QuartzCuttingKnife,
+    Colorizer,
 
     PatternOptimizer,
     StepsPerCraft,

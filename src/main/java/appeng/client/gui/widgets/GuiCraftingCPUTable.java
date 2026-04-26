@@ -26,6 +26,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.ScreenColor;
 import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.AEConfig;
@@ -157,7 +158,7 @@ public class GuiCraftingCPUTable {
                 } else if (jobMergeable.test(cpu)) {
                     GL11.glColor4f(1.0F, 1.0F, 0.7F, 1.0F);
                 } else {
-                    GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+                    ScreenColor.setGuiColor();
                 }
                 parent.bindTexture("guis/cpu_selector.png");
                 parent.drawTexturedModalRect(

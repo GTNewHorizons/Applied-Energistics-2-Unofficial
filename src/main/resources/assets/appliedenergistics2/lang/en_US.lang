@@ -246,6 +246,7 @@ gui.appliedenergistics2.RequiredPower=Required Power
 gui.appliedenergistics2.StoredPower=Stored Power
 gui.appliedenergistics2.MaxPower=Max Power
 gui.appliedenergistics2.QuartzCuttingKnife=Quartz Cutting Knife
+gui.appliedenergistics2.Colorizer=Colorizer
 gui.appliedenergistics2.Inscriber=Inscriber
 gui.appliedenergistics2.Wireless=Wireless Access Point
 gui.appliedenergistics2.WirelessTerminal=Wireless Term
@@ -1002,6 +1003,7 @@ item.appliedenergistics2.ToolMassCannon.name=Matter Cannon
 item.appliedenergistics2.ToolMemoryCard.name=Memory Card
 item.appliedenergistics2.ToolPriorityCard.name=Priority Card
 item.appliedenergistics2.ToolColorApplicator.name=Color Applicator
+item.appliedenergistics2.ToolColorizer.name=Colorizer
 item.appliedenergistics2.ToolWirelessTerminal.name=Wireless Terminal
 item.appliedenergistics2.ToolBiometricCard.name=Biometric Card
 

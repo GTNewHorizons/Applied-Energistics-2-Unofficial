@@ -488,6 +488,7 @@ public final class Registration {
         target.itemChargedStaff = this.converter.of(source.chargedStaff());
         target.itemEntropyManipulator = this.converter.of(source.entropyManipulator());
         target.itemColorApplicator = this.converter.of(source.colorApplicator());
+        target.itemColorizer = this.converter.of(source.colorizer());
 
         target.itemWirelessTerminal = this.converter.of(source.wirelessTerminal());
         target.itemNetworkTool = this.converter.of(source.networkTool());

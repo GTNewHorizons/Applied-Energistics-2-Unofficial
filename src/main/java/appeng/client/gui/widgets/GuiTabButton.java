@@ -20,6 +20,7 @@ import net.minecraft.item.ItemStack;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import appeng.client.gui.ScreenColor;
 import appeng.client.texture.ExtraBlockTextures;
 
 public class GuiTabButton extends GuiButton implements ITooltip {
@@ -69,7 +70,7 @@ public class GuiTabButton extends GuiButton implements ITooltip {
     @Override
     public void drawButton(final Minecraft minecraft, final int x, final int y) {
         if (this.visible) {
-            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            ScreenColor.setGuiColor();
             minecraft.renderEngine.bindTexture(ExtraBlockTextures.GuiTexture("guis/states.png"));
             this.field_146123_n = x >= this.xPosition && y >= this.yPosition
                     && x < this.xPosition + this.width
@@ -80,6 +81,7 @@ public class GuiTabButton extends GuiButton implements ITooltip {
             final int offsetX = this.hideEdge > 0 ? 1 : 0;
 
             this.drawTexturedModalRect(this.xPosition, this.yPosition, uv_x * 16, 0, 25, 22);
+            ScreenColor.resetGuiColor();
 
             if (this.myIcon >= 0) {
                 final int uv_y = (int) Math.floor(this.myIcon / 16);
@@ -116,6 +118,7 @@ public class GuiTabButton extends GuiButton implements ITooltip {
                 this.zLevel = 0.0F;
             }
         }
+        ScreenColor.resetGuiColor();
     }
 
     @Override
