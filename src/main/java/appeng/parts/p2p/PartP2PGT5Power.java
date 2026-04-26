@@ -180,7 +180,7 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
                         }
                     } else if (GregTechAPI.mOutputRF && te instanceof IEnergyReceiver) {
                         int rfOut = (int) (aVoltage * (long) GregTechAPI.mEUtoRF / 100L);
-                        if (((IEnergyReceiver) te).receiveEnergy(oppositeSide, rfOut, true) == rfOut) {
+                        if (((IEnergyReceiver) te).receiveEnergy(oppositeSide, rfOut, true) > 0) {
                             ((IEnergyReceiver) te).receiveEnergy(oppositeSide, rfOut, false);
                             return 1L;
                         }
