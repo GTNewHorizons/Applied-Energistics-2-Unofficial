@@ -1079,18 +1079,18 @@ item.appliedenergistics2.ToolSuperWirelessKit.disconnected=WireLess disconnect
 item.appliedenergistics2.ToolSuperWirelessKit.invalidTarget=§cInvalid target - must be Wireless Connector or Wireless Hub
 item.appliedenergistics2.ToolSuperWirelessKit.failed=§cConnection failed
 item.appliedenergistics2.ToolSuperWirelessKit.empty=List of §e%s mode cleared
-item.appliedenergistics2.ToolSuperWirelessKit.set=§eMode changed to %s
+item.appliedenergistics2.ToolSuperWirelessKit.set=Mode changed to %s
 item.appliedenergistics2.ToolSuperWirelessKit.targethubfull=§cTarget Hub is Full
 item.appliedenergistics2.ToolSuperWirelessKit.otherhubfull=§cHub at %s,%s,%s is Full
 item.appliedenergistics2.ToolSuperWirelessKit.hubtohub=§cHub to Hub connection is not allowed
 item.appliedenergistics2.ToolSuperWirelessKit.mode=Mode:
 item.appliedenergistics2.ToolSuperWirelessKit.mode.toggle=Tab + R-Click for toggle mode
 
-item.appliedenergistics2.ToolSuperWirelessKit.mode.simple=Simple
+item.appliedenergistics2.ToolSuperWirelessKit.mode.simple=§eSimple
 item.appliedenergistics2.ToolSuperWirelessKit.mode.simple.empty=Click Wireless Connector to bind
 item.appliedenergistics2.ToolSuperWirelessKit.mode.simple.bound=Click other Wireless Connector to connect
 
-item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced=Advanced
+item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced=§eAdvanced
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.next=§9Next connector in queue: %s,%s,%s
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.howToggle=Sneak right click to change mode between queuing and binding mode
 
@@ -1113,7 +1113,7 @@ item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing.hub=§a%s h
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.binding.hub=%s hub slots added to queue
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing.targethubfull=All free slots of target hub already queued
 
-item.appliedenergistics2.ToolSuperWirelessKit.mode.super=Super
+item.appliedenergistics2.ToolSuperWirelessKit.mode.super=§eSuper
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklist=Network list:
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network=Network "%s" at %s, %s, %s
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklistempty=There no networks in list
