@@ -632,18 +632,18 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                     GuiColors.CraftingCPUStored.getColor());
             GL11.glPopMatrix();
 
-            int indicatorColor = AEColor.Lime.mediumVariant;
+            int indicatorColor = GuiColors.SuperWirelessKitGood.getColor();
             String str;
             if (data.isHub) {
                 if (data.slots == 0) {
-                    indicatorColor = AEColor.Red.mediumVariant;
+                    indicatorColor = GuiColors.SuperWirelessKitBad.getColor();
                 } else if (data.slots < 32) {
-                    indicatorColor = AEColor.Orange.mediumVariant;
+                    indicatorColor = GuiColors.SuperWirelessKitNeutral.getColor();
                 }
                 str = 32 - data.slots + "/32" + " | " + data.channels;
             } else {
                 if (data.slots == 0) {
-                    indicatorColor = AEColor.Red.mediumVariant;
+                    indicatorColor = GuiColors.SuperWirelessKitBad.getColor();
                 }
                 str = 1 - data.slots + "/1" + " | " + data.channels;
             }
@@ -852,14 +852,14 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                     GuiColors.CraftingCPUStored.getColor());
             GL11.glPopMatrix();
 
-            int indicatorColor = AEColor.Lime.mediumVariant;
+            int indicatorColor = GuiColors.SuperWirelessKitGood.getColor();
             String str = usedSlots + "/" + slots;
 
             if (usedSlots > 0) {
                 if (slots == usedSlots) {
-                    indicatorColor = AEColor.Red.mediumVariant;
+                    indicatorColor = GuiColors.SuperWirelessKitBad.getColor();
                 } else {
-                    indicatorColor = AEColor.Orange.mediumVariant;
+                    indicatorColor = GuiColors.SuperWirelessKitNeutral.getColor();
                 }
             }
 
@@ -1003,7 +1003,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             boolean isFocused = nameField[totalPos].isFocused();
             if (nameField[totalPos].textboxKeyTyped(typedChar, keyCode)) {
                 return true;
-            } else if (isFocused && keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
+            } else if (isFocused && (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER)) {
                 this.renameCommand();
                 return true;
             }

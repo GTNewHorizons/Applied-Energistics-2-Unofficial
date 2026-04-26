@@ -1081,6 +1081,7 @@ item.appliedenergistics2.ToolSuperWirelessKit.empty=List of %s mode cleared
 item.appliedenergistics2.ToolSuperWirelessKit.set=Mode changed to %s
 item.appliedenergistics2.ToolSuperWirelessKit.targethubfull=Target Hub is Full
 item.appliedenergistics2.ToolSuperWirelessKit.otherhubfull=Hub at %s,%s,%s is Full
+item.appliedenergistics2.ToolSuperWirelessKit.hubtohub=Hub to Hub connection is not allowed
 item.appliedenergistics2.ToolSuperWirelessKit.mode=Mode:
 item.appliedenergistics2.ToolSuperWirelessKit.mode.toggle=Tab + R-Click for toggle mode
 

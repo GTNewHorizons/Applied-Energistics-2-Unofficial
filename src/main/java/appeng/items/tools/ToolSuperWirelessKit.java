@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -52,15 +51,17 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
     }
 
     private void setCleanNBT(ItemStack is) {
-        NBTTagCompound newNBT = new NBTTagCompound();
+        final NBTTagCompound newNBT = new NBTTagCompound();
         newNBT.setTag("simple", new NBTTagCompound());
         newNBT.setTag("advanced", new NBTTagCompound());
 
-        NBTTagCompound newTag = new NBTTagCompound();
+        final NBTTagCompound newTag = new NBTTagCompound();
         newTag.setTag("pins", new NBTTagList());
         newTag.setTag("names", new NBTTagList());
         newTag.setTag("pos", new NBTTagCompound());
+
         newNBT.setTag("super", newTag);
+
         is.setTagCompound(newNBT);
     }
 
@@ -100,18 +101,10 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
             float yOff, float zOff) {
         if (Platform.isClient()) return true;
 
-        WirelessToolType mode = (WirelessToolType) getConfigManager(is).getSetting(Settings.WIRELESS_TOOL_TYPE);
-        TileEntity te = w.getTileEntity(x, y, z);
+        final WirelessToolType mode = (WirelessToolType) getConfigManager(is).getSetting(Settings.WIRELESS_TOOL_TYPE);
+        final TileEntity te = w.getTileEntity(x, y, z);
 
-        if (!(te instanceof TileWirelessBase target)) {
-            return false;
-        }
-
-        if (!WireLessToolHelper.hasBuildPermissions(target, p)) {
-            p.addChatMessage(
-                    new ChatComponentTranslation("item.appliedenergistics2.ToolSuperWirelessKit.security.player"));
-            return false;
-        }
+        if (!(te instanceof TileWirelessBase target)) return false;
 
         return switch (mode) {
             case Simple -> WireLessToolHelper.bindSimple(target, is, w, p);
@@ -183,7 +176,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
             }
             case Super -> {
                 NBTTagCompound stash = is.getTagCompound().getCompoundTag("super");
-                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT((NBTTagCompound) stash.getTag("pos"));
+                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
                 if (dcl.isEmpty()) {
                     lines.add(
                             StatCollector.translateToLocal(

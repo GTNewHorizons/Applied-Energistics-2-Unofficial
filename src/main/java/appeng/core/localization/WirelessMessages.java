@@ -23,6 +23,7 @@ public enum WirelessMessages implements Localization {
     mode_simple_bound,
     targethubfull,
     otherhubfull,
+    hubtohub,
     mode_advanced,
     mode_advanced_next,
     mode_advanced_howToggle,

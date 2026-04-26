@@ -1,6 +1,7 @@
 package appeng.tile.misc;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
@@ -111,7 +112,7 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
 
     @Override
     public int[] getAccessibleSlotsBySide(ForgeDirection whichSide) {
-        return new int[27];
+        return IntStream.range(0, 27).toArray();
     }
 
     @Override

@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableMap;
 
 import appeng.api.networking.IGridConnection;
 import appeng.api.util.DimensionalCoord;
+import appeng.helpers.WireLessToolHelper.BindResult;
 
 public class TileWirelessHub extends TileWirelessBase {
 
@@ -53,9 +54,7 @@ public class TileWirelessHub extends TileWirelessBase {
     }
 
     @Override
-    public boolean doLink(TileWirelessBase other) {
-        if (isConnectedTo(other) || !other.canAddLink() || !canAddLink()) return false;
-        if (other.isHub()) return true; // true but not connect or connection loop throw
+    public BindResult doLink(TileWirelessBase other) {
         return setupConnection(other);
     }
 

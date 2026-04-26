@@ -3,10 +3,11 @@ package appeng.client.gui.widgets;
 import net.minecraft.client.Minecraft;
 
 import appeng.api.util.AEColor;
+import appeng.core.localization.GuiColors;
 
 public class GuiColorButton extends GuiAeButton {
 
-    private AEColor color;
+    private final AEColor color;
 
     public GuiColorButton(int id, int xPosition, int yPosition, int width, int height, AEColor color,
             String tootipString) {
@@ -28,18 +29,26 @@ public class GuiColorButton extends GuiAeButton {
             }
             drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, color);
 
-            drawVerticalLine(this.xPosition, this.yPosition, this.yPosition + this.height - 1, 0xFF404040);
+            drawVerticalLine(
+                    this.xPosition,
+                    this.yPosition,
+                    this.yPosition + this.height - 1,
+                    GuiColors.ColorButtonOutline.getColor());
             drawVerticalLine(
                     this.xPosition + this.width - 1,
                     this.yPosition,
                     this.yPosition + this.height - 1,
-                    0xFF404040);
-            drawHorizontalLine(this.xPosition, this.xPosition + this.width - 1, this.yPosition, 0xFF404040);
+                    GuiColors.ColorButtonOutline.getColor());
+            drawHorizontalLine(
+                    this.xPosition,
+                    this.xPosition + this.width - 1,
+                    this.yPosition,
+                    GuiColors.ColorButtonOutline.getColor());
             drawHorizontalLine(
                     this.xPosition,
                     this.xPosition + this.width - 1,
                     this.yPosition + this.height - 1,
-                    0xFF404040);
+                    GuiColors.ColorButtonOutline.getColor());
 
             this.mouseDragged(mc, mouseX, mouseY);
         }

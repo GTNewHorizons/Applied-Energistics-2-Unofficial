@@ -15,7 +15,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import appeng.api.networking.IGridConnection;
+import appeng.api.networking.security.MachineSource;
 import appeng.api.util.DimensionalCoord;
+import appeng.helpers.WireLessToolHelper;
+import appeng.helpers.WireLessToolHelper.BindResult;
 
 public class TileWirelessConnector extends TileWirelessBase {
 
@@ -59,17 +62,13 @@ public class TileWirelessConnector extends TileWirelessBase {
 
     @Override
     public IGridConnection getConnection(TileWirelessBase other) {
-        if (target == other) {
-            return connection;
-        }
+        if (target == other) return connection;
         return null;
     }
 
     @Override
-    public boolean doLink(TileWirelessBase other) {
-        if (!other.canAddLink()) return false;
-
-        doUnlink();
+    public BindResult doLink(TileWirelessBase other) {
+        this.doUnlink();
         return setupConnection(other);
     }
 
@@ -80,22 +79,20 @@ public class TileWirelessConnector extends TileWirelessBase {
 
     @Override
     public void doUnlink(TileWirelessBase other) {
-        if (target == other) {
-            breakConnection(other);
-        }
+        if (target == other) this.breakConnection(other);
     }
 
     @Override
     public void doUnlink() {
-        breakAllConnections();
+        this.breakAllConnections();
     }
 
     @Override
     protected void tryRestoreConnection(List<DimensionalCoord> locList) {
-        if (connection == null) {
-            TileWirelessBase tile = getAndCheckTile(locList.get(0), worldObj, null);
+        if (connection == null && !locList.isEmpty()) {
+            final TileWirelessBase tile = getAndCheckTile(locList.get(0), worldObj, null);
             if (tile == null) return;
-            doLink(tile);
+            WireLessToolHelper.performConnection(tile, this, new MachineSource(this));
         }
     }
 }

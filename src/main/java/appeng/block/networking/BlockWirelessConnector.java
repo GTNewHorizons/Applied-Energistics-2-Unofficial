@@ -30,7 +30,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.IBlockAccess;
@@ -60,10 +59,9 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
     @Override
     public ArrayList<ItemStack> getDrops(World world, int x, int y, int z, int metadata, int fortune) {
         ItemStack is = new ItemStack(this);
-        TileWirelessConnector te = (TileWirelessConnector) world.getTileEntity(x, y, z);
-        if (te != null) {
-            if (te.getColor() != AEColor.Transparent) {
-                is.setItemDamage(te.getColor().ordinal() + 1);
+        if (world.getTileEntity(x, y, z) instanceof TileWirelessBase twc) {
+            if (twc.getColor() != AEColor.Transparent) {
+                is.setItemDamage(twc.getColor().ordinal() + 1);
             }
         }
         ArrayList<ItemStack> arr = new ArrayList<>();
@@ -91,8 +89,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
     @Override
     public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z, EntityPlayer player) {
         ItemStack is = new ItemStack(this);
-        TileEntity te = world.getTileEntity(x, y, z);
-        if (te instanceof TileWirelessBase twc) {
+        if (world.getTileEntity(x, y, z) instanceof TileWirelessBase twc) {
             AEColor color = twc.getColor();
             if (color != AEColor.Transparent) {
                 is.setItemDamage(color.ordinal() + 1);
@@ -105,8 +102,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
     public void onBlockPlacedBy(World w, int x, int y, int z, EntityLivingBase player, ItemStack is) {
         int damage = is.getItemDamage();
         if (damage > 0) {
-            TileEntity te = w.getTileEntity(x, y, z);
-            if (te instanceof TileWirelessBase twc) {
+            if (w.getTileEntity(x, y, z) instanceof TileWirelessBase twc) {
                 twc.recolourBlock(ForgeDirection.UNKNOWN, AEColor.values()[damage - 1], (EntityPlayer) player);
                 w.setBlockMetadataWithNotify(x, y, z, 0, 3);
             }

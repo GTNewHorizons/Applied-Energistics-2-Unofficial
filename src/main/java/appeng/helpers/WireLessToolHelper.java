@@ -18,10 +18,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.AdvancedWirelessToolMode;
-import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
 import appeng.api.config.WirelessToolType;
-import appeng.api.networking.security.ISecurityGrid;
+import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.localization.WirelessMessages;
@@ -29,6 +29,13 @@ import appeng.tile.networking.TileWirelessBase;
 import appeng.util.Platform;
 
 public class WireLessToolHelper {
+
+    public enum BindResult {
+        INVALID_SOURCE,
+        SUCCESS,
+        INVALID_TARGET,
+        FAILED
+    }
 
     public static void nextToolMode(EntityPlayer p, IConfigManager cm) {
         final WirelessToolType newState = (WirelessToolType) Platform.rotateEnum(
@@ -70,61 +77,108 @@ public class WireLessToolHelper {
         if (p != null) p.addChatMessage(WirelessMessages.empty.toChat(EnumChatFormatting.YELLOW + mode.getLocal()));
     }
 
-    public static boolean hasBuildPermissions(TileWirelessBase gh, EntityPlayer p) {
-        return ((ISecurityGrid) gh.getGridNode(ForgeDirection.UNKNOWN).getGrid().getCache(ISecurityGrid.class))
-                .hasPermission(p, SecurityPermissions.BUILD);
-    }
-
     @Nullable
     public static TileWirelessBase getAndCheckTile(DimensionalCoord dc, World w, @Nullable EntityPlayer p) {
-        if (dc == null) {
-            throw new NullPointerException("dc is null"); // maybe return null instead
-        }
+        if (dc == null) throw new NullPointerException("dc is null"); // maybe return null instead
 
-        TileEntity te = w.getTileEntity(dc.x, dc.y, dc.z);
-        if (te instanceof TileWirelessBase) {
-            return (TileWirelessBase) te;
-        }
+        final TileEntity te = w.getTileEntity(dc.x, dc.y, dc.z);
+        if (te instanceof TileWirelessBase twb) return twb;
+
         if (p != null) p.addChatMessage(
                 WirelessMessages.invalidTarget.toChat().setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
 
         return null;
     }
 
-    public static boolean performConnection(TileWirelessBase target, TileWirelessBase otherTile, EntityPlayer p) {
-        if (target.getLocation().getDimension() != otherTile.getLocation().getDimension()) {
-            p.addChatMessage(WirelessMessages.dimensionMismatch.toChat());
+    public static boolean securityCheck(TileWirelessBase source, BaseActionSource actionSource) {
+        if (!Platform.canAccess(source.getProxy(), actionSource)) {
+            if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
+                    new ChatComponentTranslation("item.appliedenergistics2.ToolSuperWirelessKit.security.player"));
             return false;
         }
 
-        if (target.isHub() && !target.canAddLink()) {
-            p.addChatMessage(WirelessMessages.targethubfull.toChat());
-            return false;
-        }
-
-        if (otherTile.isHub() && !otherTile.canAddLink()) {
-            DimensionalCoord loc = otherTile.getLocation();
-            p.addChatMessage(WirelessMessages.otherhubfull.toChat(loc.x, loc.y, loc.z));
-            return false;
-        }
-
-        if (target.doLink(otherTile)) {
-            DimensionalCoord dc = otherTile.getLocation();
-            p.addChatMessage(
-                    WirelessMessages.connected.toChat(dc.x, dc.y, dc.z)
-                            .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));
-            return true;
-        } else {
-            p.addChatMessage(
-                    WirelessMessages.failed.toChat().setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
-        }
-
-        return false;
+        return true;
     }
 
-    public static void breakConnection(TileWirelessBase target, TileWirelessBase otherTile, EntityPlayer p) {
-        target.doUnlink(otherTile);
-        p.addChatMessage(WirelessMessages.disconnected.toChat());
+    public static BindResult securityCheck(TileWirelessBase target, TileWirelessBase source,
+            BaseActionSource actionSource) {
+        final boolean securitySource = !Platform.canAccess(source.getProxy(), actionSource);
+        final boolean securityTarget = !Platform.canAccess(target.getProxy(), actionSource);
+
+        if (securitySource || securityTarget) {
+            if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
+                    new ChatComponentTranslation("item.appliedenergistics2.ToolSuperWirelessKit.security.player"));
+            if (securitySource && securityTarget) return BindResult.FAILED;
+            if (securitySource) return BindResult.INVALID_SOURCE;
+            return BindResult.INVALID_TARGET;
+        }
+
+        return BindResult.SUCCESS;
+    }
+
+    public static BindResult performConnection(TileWirelessBase target, TileWirelessBase source,
+            BaseActionSource actionSource) {
+        if (target.getLocation().getDimension() != source.getLocation().getDimension()) {
+            if (actionSource instanceof PlayerSource ps)
+                ps.player.addChatMessage(WirelessMessages.dimensionMismatch.toChat());
+            return BindResult.FAILED;
+        }
+
+        final BindResult securityCheck = securityCheck(target, source, actionSource);
+        if (securityCheck != BindResult.SUCCESS) return securityCheck;
+
+        if (target.isHub() && !target.canAddLink()) {
+            if (actionSource instanceof PlayerSource ps)
+                ps.player.addChatMessage(WirelessMessages.targethubfull.toChat());
+            return BindResult.INVALID_TARGET;
+        }
+
+        if (source.isHub() && !source.canAddLink()) {
+            final DimensionalCoord loc = source.getLocation();
+            if (actionSource instanceof PlayerSource ps)
+                ps.player.addChatMessage(WirelessMessages.otherhubfull.toChat(loc.x, loc.y, loc.z));
+            return BindResult.INVALID_SOURCE;
+        }
+
+        if (source.isHub() && target.isHub()) {
+            if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(WirelessMessages.hubtohub.toChat());
+            return BindResult.INVALID_SOURCE;
+        }
+
+        final BindResult result = target.doLink(source);
+        switch (result) {
+            case SUCCESS -> {
+                final DimensionalCoord dc = source.getLocation();
+                if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
+                        WirelessMessages.connected.toChat(dc.x, dc.y, dc.z)
+                                .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));
+            }
+
+            case FAILED, INVALID_TARGET, INVALID_SOURCE -> {
+                if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
+                        WirelessMessages.failed.toChat()
+                                .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+            }
+        }
+
+        return result;
+    }
+
+    public static void breakConnection(TileWirelessBase source, BaseActionSource actionSource) {
+        source.getConnectedTiles().forEach(t -> {
+            final BindResult securityCheck = securityCheck(t, source, actionSource);
+            if (securityCheck == BindResult.SUCCESS) WireLessToolHelper.breakConnection(t, source, actionSource);
+            if (actionSource instanceof PlayerSource ps)
+                ps.player.addChatMessage(WirelessMessages.disconnected.toChat());
+        });
+    }
+
+    public static void breakConnection(TileWirelessBase target, TileWirelessBase source,
+            BaseActionSource actionSource) {
+        final BindResult securityCheck = securityCheck(target, source, actionSource);
+        if (securityCheck != BindResult.SUCCESS) return;
+        target.doUnlink(source);
+        if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(WirelessMessages.disconnected.toChat());
     }
 
     public static boolean bindSimple(TileWirelessBase target, ItemStack tool, World w, EntityPlayer p) {
@@ -141,17 +195,15 @@ public class WireLessToolHelper {
         }
 
         TileWirelessBase tile = getAndCheckTile(DimensionalCoord.readFromNBT(tag), w, p);
-        if (tile == null) {
-            return false;
-        }
+        if (tile == null) return false;
 
         if (target.isConnectedTo(tile)) {
-            breakConnection(target, tile, p);
+            breakConnection(target, tile, new PlayerSource(p, null));
             tool.getTagCompound().setTag("simple", new NBTTagCompound());
             return true;
         }
 
-        if (performConnection(target, tile, p)) {
+        if (performConnection(target, tile, new PlayerSource(p, null)) == BindResult.SUCCESS) {
             tool.getTagCompound().setTag("simple", new NBTTagCompound());
             return true;
         }
@@ -219,7 +271,7 @@ public class WireLessToolHelper {
         if (Platform.keyBindLCtrl.isKeyDown(p) && target.isHub()) {
             int i = 0;
             while (tile != null && target.canAddLink()) {
-                if (performConnection(target, tile, p)) {
+                if (performConnection(target, tile, new PlayerSource(p, null)) == BindResult.SUCCESS) {
                     locList.remove(0);
                     tile = locList.isEmpty() ? null : getAndCheckTile(locList.get(0), w, p);
                     i++;
@@ -227,7 +279,7 @@ public class WireLessToolHelper {
                 } else break;
             }
             p.addChatMessage(WirelessMessages.mode_advanced_binding_hub.toChat(i));
-        } else if (performConnection(target, tile, p)) {
+        } else if (performConnection(target, tile, new PlayerSource(p, null)) == BindResult.SUCCESS) {
             locList.remove(0);
             success = true;
         }

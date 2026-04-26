@@ -16,8 +16,8 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.ImmutableList;
@@ -29,6 +29,7 @@ import appeng.api.config.YesNo;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
@@ -42,6 +43,7 @@ import appeng.helpers.SuperWirelessKitCommand.PinType;
 import appeng.helpers.SuperWirelessKitCommand.SubCommand;
 import appeng.helpers.SuperWirelessKitCommand.SuperWirelessKitCommands;
 import appeng.helpers.SuperWirelessToolDataObject;
+import appeng.helpers.WireLessToolHelper;
 import appeng.items.contents.SuperWirelessKitObject;
 import appeng.tile.networking.TileWirelessBase;
 import appeng.tile.networking.TileWirelessConnector;
@@ -61,7 +63,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
     private final boolean isAEStaffLoaded = Loader.isModLoaded("ae2stuff");
 
     public ContainerSuperWirelessKit(final InventoryPlayer ip, final SuperWirelessKitObject te) {
-        super(ip, null, null);
+        super(ip, te);
         this.toolInv = te;
 
         this.clientCM = new ConfigManager(this);
@@ -149,8 +151,8 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
     }
 
     public void updateData() {
-        NBTTagCompound stash = toolInv.getItemStack().getTagCompound().getCompoundTag("super");
-        List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT((NBTTagCompound) stash.getTag("pos"));
+        final NBTTagCompound stash = toolInv.getItemStack().getTagCompound().getCompoundTag("super");
+        final List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
 
         World w = toolInv.getWorld();
 
@@ -175,9 +177,9 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
             }
         }
 
-        NBTTagCompound nbtData = new NBTTagCompound();
-        nbtData.setTag("pins", stash.getTag("pins"));
-        nbtData.setTag("names", stash.getTag("names"));
+        final NBTTagCompound nbtData = new NBTTagCompound();
+        nbtData.setTag("pins", stash.getTagList("pins", NBT.TAG_COMPOUND));
+        nbtData.setTag("names", stash.getTagList("names", NBT.TAG_COMPOUND));
 
         if (!nbtData.hasNoTags()) {
             for (ICrafting crafter : this.crafters) {
@@ -246,9 +248,10 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                             names.appendTag(pin);
                         }
                         stash.setTag("names", names);
-                        updateData();
                     }
                 }
+
+                updateData();
             }
 
             case PIN -> {
@@ -327,51 +330,39 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
             }
             case RECOLOR -> {
                 for (final SubCommand subCommand : command.toBindRow) {
+
                     switch (subCommand.groupBy) {
                         case SINGLE -> {
                             if (w.getTileEntity(
                                     subCommand.coord.x,
                                     subCommand.coord.y,
                                     subCommand.coord.z) instanceof TileWirelessBase tw) {
-                                if (subCommand.coord != null) {
+                                if (!WireLessToolHelper
+                                        .securityCheck(tw, new PlayerSource(this.getPlayerInv().player, null)))
+                                    continue;
+                                if (subCommand.coord != null)
                                     tw.recolourBlock(ForgeDirection.UNKNOWN, command.color, this.getPlayerInv().player);
-                                } else {
-                                    tw.madChameleonRecolor();
-                                }
+                                else tw.madChameleonRecolor();
                             }
                         }
 
                         case NETWORK, COLOR -> {
                             final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
                             for (SuperWirelessToolDataObject sd : data) {
-                                if (subCommand.networkPos.equals(sd.network)) {
-                                    if (isColor) {
-                                        if (sd.color == subCommand.color) {
-                                            TileEntity te = w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z);
-                                            if (te instanceof TileWirelessBase tw) {
-                                                if (subCommand.color != null) {
-                                                    tw.recolourBlock(
-                                                            ForgeDirection.UNKNOWN,
-                                                            command.color,
-                                                            this.getPlayerInv().player);
-                                                } else {
-                                                    tw.madChameleonRecolor();
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        TileEntity te = w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z);
-                                        if (te instanceof TileWirelessBase tw) {
-                                            if (subCommand.color != null) {
-                                                tw.recolourBlock(
-                                                        ForgeDirection.UNKNOWN,
-                                                        command.color,
-                                                        this.getPlayerInv().player);
-                                            } else {
-                                                tw.madChameleonRecolor();
-                                            }
-                                        }
-                                    }
+                                if (!subCommand.networkPos.equals(sd.network)) continue;
+
+                                if (!(w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z) instanceof TileWirelessBase tw))
+                                    continue;
+
+                                if (!WireLessToolHelper
+                                        .securityCheck(tw, new PlayerSource(this.getPlayerInv().player, null)))
+                                    continue;
+
+                                if (isColor) if (sd.color != subCommand.color) continue;
+                                if (subCommand.color != null) {
+                                    tw.recolourBlock(ForgeDirection.UNKNOWN, command.color, this.getPlayerInv().player);
+                                } else {
+                                    tw.madChameleonRecolor();
                                 }
                             }
                         }
@@ -388,15 +379,23 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
 
                 int i = 0;
                 int ii = 0;
-                while (twToBind.size() > i && twToBind.size() > ii) {
+                toBind: while (twToBind.size() > i && twTarget.size() > ii) {
                     while (twTarget.get(ii).getFreeSlots() > 0) {
-                        if (twToBind.get(i).doLink(twTarget.get(ii))) {
-                            i++;
-                            if (!(twToBind.size() > i)) {
-                                break;
+                        switch (WireLessToolHelper.performConnection(
+                                twTarget.get(ii),
+                                twToBind.get(i),
+                                new PlayerSource(getPlayerInv().player, null))) {
+                            case SUCCESS -> {
+                                i++;
+                                if (!(twToBind.size() > i)) break toBind;
                             }
-                        } else {
-                            ii++;
+
+                            case INVALID_TARGET -> ii++;
+                            case INVALID_SOURCE -> i++;
+                            case FAILED -> {
+                                i++;
+                                ii++;
+                            }
                         }
                     }
                     ii++;
@@ -458,8 +457,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
             case AE2STUFF_REPLACE -> {
                 if (!isAEStaffLoaded) return;
 
-                List<DimensionalCoord> networks = DimensionalCoord
-                        .readAsListFromNBT((NBTTagCompound) stash.getTag("pos"));
+                final List<DimensionalCoord> networks = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
                 for (DimensionalCoord dc : networks) {
                     IGridHost gh = w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost ghInstance ? ghInstance
                             : null;
@@ -523,6 +521,8 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                                         targetDc.y,
                                         targetDc.z) instanceof TileWirelessBase target))
                                     continue;
+                                newCon.onReady();
+                                target.onReady();
                                 newCon.doLink(target);
                             }
                         }
@@ -546,7 +546,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                             subCommand.coord.z) instanceof TileWirelessBase wc) {
                         if (unbind) {
                             connectors.addAll(wc.getConnectedTiles());
-                            wc.doUnlink();
+                            WireLessToolHelper.breakConnection(wc, new PlayerSource(this.getPlayerInv().player, null));
                         }
                         connectors.add(wc);
                     }
@@ -563,7 +563,9 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                                     if (isColor && wc.getColor() != subCommand.color) continue;
                                     if (unbind) {
                                         connectors.addAll(wc.getConnectedTiles());
-                                        wc.doUnlink();
+                                        WireLessToolHelper.breakConnection(
+                                                wc,
+                                                new PlayerSource(this.getPlayerInv().player, null));
                                     }
                                     connectors.add(wc);
                                 }
@@ -578,7 +580,9 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                                     if (isColor && wc.getColor() != subCommand.color) continue;
                                     if (unbind) {
                                         connectors.addAll(wc.getConnectedTiles());
-                                        wc.doUnlink();
+                                        WireLessToolHelper.breakConnection(
+                                                wc,
+                                                new PlayerSource(this.getPlayerInv().player, null));
                                     }
                                     connectors.add(wc);
                                 }

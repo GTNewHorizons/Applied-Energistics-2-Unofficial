@@ -31,6 +31,7 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
 import appeng.helpers.SuperWirelessToolDataObject;
+import appeng.helpers.WireLessToolHelper.BindResult;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
@@ -104,29 +105,41 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         return used;
     }
 
-    public abstract boolean doLink(TileWirelessBase other);
+    /**
+     * DO NOT USE THIS, USE WireLessToolHelper.performConnection()
+     **/
+    public abstract BindResult doLink(TileWirelessBase other);
 
+    /**
+     * DO NOT USE THIS, USE WireLessToolHelper.breakConnection()
+     **/
     public abstract void doUnlink(TileWirelessBase other);
 
+    /**
+     * DO NOT USE THIS, USE WireLessToolHelper.breakConnection()
+     **/
     public abstract void doUnlink();
 
-    protected boolean setupConnection(TileWirelessBase other) {
-        if (!canAddLink() && other.canAddLink()) return false;
-        try {
-            IGridNode selfNode = getGridNode(ForgeDirection.UNKNOWN);
-            IGridNode targetNode = other.getGridNode(ForgeDirection.UNKNOWN);
-            if (selfNode != null && targetNode != null) {
-                IGridConnection connection = AEApi.instance().createGridConnection(selfNode, targetNode);
+    protected BindResult setupConnection(TileWirelessBase other) {
+        if (!canAddLink()) return BindResult.INVALID_SOURCE;
 
-                setDataConnections(other, connection);
-                other.setDataConnections(this, connection);
-                updateActive();
-                other.updateActive();
-                shareCustomName(other);
-                return true;
-            }
+        try {
+            final IGridNode selfNode = getGridNode(ForgeDirection.UNKNOWN);
+            final IGridNode targetNode = other.getGridNode(ForgeDirection.UNKNOWN);
+
+            if (selfNode == null) return BindResult.INVALID_SOURCE;
+            if (targetNode == null) return BindResult.INVALID_SOURCE;
+
+            final IGridConnection connection = AEApi.instance().createGridConnection(selfNode, targetNode);
+
+            setDataConnections(other, connection);
+            other.setDataConnections(this, connection);
+            updateActive();
+            other.updateActive();
+            shareCustomName(other);
+            return BindResult.SUCCESS;
         } catch (FailedConnection ignored) {}
-        return false;
+        return BindResult.FAILED;
     }
 
     protected void breakConnection(TileWirelessBase other) {
