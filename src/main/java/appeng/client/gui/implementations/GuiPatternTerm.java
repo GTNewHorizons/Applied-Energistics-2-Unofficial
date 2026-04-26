@@ -29,7 +29,6 @@ import org.lwjgl.input.Mouse;
 import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 import com.gtnewhorizon.gtnhlib.util.numberformatting.options.FormatOptions;
 
-import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.ItemSubstitution;
 import appeng.api.config.PatternBeSubstitution;
@@ -83,7 +82,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     protected VirtualMEPatternSlot[] outputSlots;
     private boolean craftingMode;
     @NotNull
-    private IAEItemStack blankPatternView = ContainerPatternTerm.BLANK_PATTERN.copy().setStackSize(0);
+    private IAEItemStack blankPatternView = ContainerPatternTerm.createBlankPattern().setStackSize(0);
 
     public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te,
             final ContainerPatternTerm containerPatternTerm) {
@@ -411,8 +410,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     public void postUpdate(List<IAEStack<?>> list) {
         super.postUpdate(list);
         for (IAEStack<?> stack : list) {
-            if (stack instanceof IAEItemStack ais
-                    && AEApi.instance().definitions().materials().blankPattern().isSameAs(ais.getItemStack())) {
+            if (stack instanceof IAEItemStack ais && blankPatternView.equals(ais)) {
                 this.blankPatternView = ais;
             }
         }
