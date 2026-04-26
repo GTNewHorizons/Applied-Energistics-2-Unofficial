@@ -47,7 +47,7 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
             if (out == null) {
                 out = immutableStack.toStack(0);
-            }
+            } else if (!immutableStack.matches(out)) continue;
 
             ItemStack extracted = iter.extract(amount, false);
 
