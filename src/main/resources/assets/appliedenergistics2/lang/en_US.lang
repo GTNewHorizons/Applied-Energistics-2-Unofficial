@@ -634,6 +634,14 @@ gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterface=Toggles showing 
 gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOnDesc=Showing all interfaces
 gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOffDesc=Showing only interfaces with invalid patterns
 gui.tooltips.appliedenergistics2.HighlightInterface=Highlight interface
+gui.tooltips.appliedenergistics2.HighlightInterfaceDesc=§6ALT§8 - §7Toggle interface visibility
+gui.tooltips.appliedenergistics2.RenameInterface=§6SHIFT§8 - §7Rename interface
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibility=Interface Terminal Visibility
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityVisible=Visible - shown in interface terminal
+gui.tooltips.appliedenergistics2.InterfaceTerminalVisibilityHidden=Hidden - not shown in interface terminal
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfaces=Show Hidden Interfaces
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfacesOnDesc=Showing hidden interfaces
+gui.tooltips.appliedenergistics2.ToggleShowHiddenInterfacesOffDesc=Not showing hidden interfaces
 
 gui.tooltips.appliedenergistics2.ReshuffleIncludeSubnets=Include Subnets
 gui.tooltips.appliedenergistics2.ReshuffleIncludeSubnetsOn=Enabled - sub-network storage is included in the reshuffle

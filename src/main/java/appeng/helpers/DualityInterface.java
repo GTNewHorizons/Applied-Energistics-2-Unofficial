@@ -395,6 +395,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 // :P
             }
         }
+
+        this.notifyNeighbors();
     }
 
     public void updateCraftingList() {
@@ -1647,6 +1649,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
      * Returns the suffix to append after translation, or null if none.
      */
     public String getAdjacentNameSuffix() {
+        if (((ICustomNameObject) this.iHost).hasCustomName()) return null;
         final TileEntity hostTile = this.iHost.getTileEntity();
         if (hostTile == null || hostTile.getWorldObj() == null) return null;
         for (final ForgeDirection direction : this.iHost.getTargets()) {

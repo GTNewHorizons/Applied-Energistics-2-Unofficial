@@ -176,6 +176,7 @@ public enum ButtonToolTips implements Localization {
     ToggleShowOnlyInvalidInterfaceOffDesc,
     HighlightInterface,
     HighlightInterfaceDesc,
+    RenameInterface,
     SearchFieldInputs,
     SearchFieldOutputs,
     SearchFieldNames,
@@ -281,7 +282,15 @@ public enum ButtonToolTips implements Localization {
     CellHealthSortByFill,
     CellHealthSortBySize,
 
-    ReshuffleTabReshuffleHint;
+    ReshuffleTabReshuffleHint,
+
+    InterfaceTerminalVisibility,
+    InterfaceTerminalVisibilityVisible,
+    InterfaceTerminalVisibilityHidden,
+
+    ToggleShowHiddenInterfaces,
+    ToggleShowHiddenInterfacesOnDesc,
+    ToggleShowHiddenInterfacesOffDesc;
 
     ButtonToolTips() {}
 
