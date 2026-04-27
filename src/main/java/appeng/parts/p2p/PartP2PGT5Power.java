@@ -32,7 +32,7 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
 
     private TileEntity cachedTarget;
     private boolean isCachedTargetValid;
-    private int mRestRF = 0;
+    private int restRF = 0;
 
     public PartP2PGT5Power(ItemStack is) {
         super(is);
