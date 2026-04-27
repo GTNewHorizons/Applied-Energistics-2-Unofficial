@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 
 import appeng.api.AEApi;
 import appeng.api.config.PowerMultiplier;
-import appeng.api.exceptions.FailedConnection;
 import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridConnection;
@@ -138,7 +137,10 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
             other.updateActive();
             shareCustomName(other);
             return BindResult.SUCCESS;
-        } catch (FailedConnection ignored) {}
+        } catch (Exception e) {
+            if (e.getMessage().equals("Connection already set!")) return BindResult.ALREADY_BIND;
+        }
+
         return BindResult.FAILED;
     }
 
@@ -218,6 +220,10 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
 
     private List<DimensionalCoord> locList = new ArrayList<>();
 
+    public void injectConnection(DimensionalCoord target) {
+        this.locList.add(target);
+    }
+
     protected abstract void tryRestoreConnection(List<DimensionalCoord> locList);
 
     @TileEvent(TileEventType.TICK)
@@ -235,10 +241,9 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     public void writeToNBT_TileWirelessConnector(final NBTTagCompound data) {
         data.setShort("Color", (short) color.ordinal());
 
-        final List<DimensionalCoord> locs = new ArrayList<>();
-        getConnectedTiles().forEach(t -> locs.add(t.getLocation()));
+        getConnectedTiles().forEach(t -> locList.add(t.getLocation()));
         final NBTTagCompound nbt = new NBTTagCompound();
-        DimensionalCoord.writeListToNBT(nbt, locs);
+        DimensionalCoord.writeListToNBT(nbt, this.locList);
         data.setTag("connectedTargets", nbt);
     }
 

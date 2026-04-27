@@ -516,14 +516,9 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                     for (SuperWirelessToolDataObject data : dataSet) {
                         if (w.getTileEntity(data.cord.x, data.cord.y, data.cord.z) instanceof TileWirelessBase newCon) {
                             for (final DimensionalCoord targetDc : data.targets) {
-                                if (!(w.getTileEntity(
-                                        targetDc.x,
-                                        targetDc.y,
-                                        targetDc.z) instanceof TileWirelessBase target))
+                                if (!(w.getTileEntity(targetDc.x, targetDc.y, targetDc.z) instanceof TileWirelessBase))
                                     continue;
-                                newCon.onReady();
-                                target.onReady();
-                                newCon.doLink(target);
+                                newCon.injectConnection(targetDc);
                             }
                         }
                     }

@@ -615,18 +615,12 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                     posY * 3 + 28,
                     GuiColors.CraftingCPUStored.getColor());
             fontRendererObj.drawString(
-                    GuiText.GuiSuperWirelessKitSelfPos.getLocal(
-                            String.valueOf(data.cord.x),
-                            String.valueOf(data.cord.y),
-                            String.valueOf(data.cord.z)),
+                    GuiText.GuiSuperWirelessKitSelfPos.getLocal(data.cord.getGuiTextShort()),
                     descPosX,
                     posY * 3 + 38,
                     GuiColors.CraftingCPUStored.getColor());
             if (data.isConnected) fontRendererObj.drawString(
-                    GuiText.GuiSuperWirelessKitTargetPos.getLocal(
-                            String.valueOf(data.targets.get(0).x),
-                            String.valueOf(data.targets.get(0).y),
-                            String.valueOf(data.targets.get(0).z)),
+                    GuiText.GuiSuperWirelessKitTargetPos.getLocal(data.targets.get(0).getGuiTextShort()),
                     descPosX,
                     posY * 3 + 48,
                     GuiColors.CraftingCPUStored.getColor());

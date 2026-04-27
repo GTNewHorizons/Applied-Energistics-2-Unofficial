@@ -471,10 +471,15 @@ gui.appliedenergistics2.Selected=Selected
 
 gui.appliedenergistics2.GuiSuperWirelessKitColor=Color %s
 gui.appliedenergistics2.GuiSuperWirelessKitNetwork=Net: %s
-gui.appliedenergistics2.GuiSuperWirelessKitSelfPos=I: %s, %s, %s
-gui.appliedenergistics2.GuiSuperWirelessKitTargetPos=T: %s, %s, %s
+gui.appliedenergistics2.GuiSuperWirelessKitSelfPos=I:
+gui.appliedenergistics2.GuiSuperWirelessKitTargetPos=T:
 gui.appliedenergistics2.GuiSuperWirelessKitChannelsUsage=Channels Usage: %s
 gui.appliedenergistics2.GuiSuperWirelessKitNameFieldDesc=Rename connector in world or group in gui
+
+gui.appliedenergistics2.GuiDimensionalCoord=§4X: %s§r,§2Y: %s§r,§1Z: %s§r,§5DIM: %s
+gui.appliedenergistics2.GuiDimensionalCoordShort=§4%s§r, §2%s§r, §1%s§r, §5%s
+gui.appliedenergistics2.GuiDimensionalCoordNoDim=§4X: %s§r,§2Y: %s§r,§1Z: %s
+gui.appliedenergistics2.GuiDimensionalCoordShortNoDim=§4%s§r, §2%s§r, §1%s
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -859,10 +864,10 @@ waila.appliedenergistics2.IOBusSpeed=Speed: %s %s/t
 # Baubles Extended
 slot.Terminal=§aTerminal§7
 
-waila.appliedenergistics2.wireless.connected=Connected to %s,%s,%s
+waila.appliedenergistics2.wireless.connected=Connected to %s
 waila.appliedenergistics2.wireless.connected.multiple=Connected to %s Wireless (shift for details)
 waila.appliedenergistics2.wireless.connected.detailsTitle=Connected Wireless:
-waila.appliedenergistics2.wireless.connected.details= (%s, %s, %s)
+waila.appliedenergistics2.wireless.connected.details= %s
 waila.appliedenergistics2.wireless.notconnected=Not Connected
 waila.appliedenergistics2.wireless.channels=Channels: %s
 waila.appliedenergistics2.wireless.power=Power Used: %s AE/t
@@ -1056,7 +1061,7 @@ item.appliedenergistics2.ToolDebugCard.name=Dev.DebugCard
 item.appliedenergistics2.ToolReplicatorCard.name=Dev.ReplicatorCard
 
 item.appliedenergistics2.ToolNetworkVisualiser.name=Network Visualisation Tool
-item.appliedenergistics2.ToolNetworkVisualiser.bound=§eVisualising network at %s, %s, %s
+item.appliedenergistics2.ToolNetworkVisualiser.bound=§eVisualising network at %s
 item.appliedenergistics2.ToolNetworkVisualiser.mode=Mode:
 item.appliedenergistics2.ToolNetworkVisualiser.set=Mode changed to %s
 item.appliedenergistics2.ToolNetworkVisualiser.mode.full=§eShow Everything
@@ -1070,18 +1075,18 @@ item.appliedenergistics2.ToolSuperWirelessKit.name=Super Wireless Kit
 item.appliedenergistics2.ToolSuperWirelessKit.security.player=Security violation - you are not allowed to modify this network
 item.appliedenergistics2.ToolSuperWirelessKit.dimensionMismatch=Both connectors must be in the same dimension
 item.appliedenergistics2.ToolSuperWirelessKit.clear=Shift + Ctrl + R-click for clear current tool mode
-item.appliedenergistics2.ToolSuperWirelessKit.bound=§aBound to %s, %s, %s
+item.appliedenergistics2.ToolSuperWirelessKit.bound=§aBound to %s
 item.appliedenergistics2.ToolSuperWirelessKit.bound.advanced.filled=§cTarget already in queue
-item.appliedenergistics2.ToolSuperWirelessKit.bound.super=§aNetwork at %s, %s, %s added to list
+item.appliedenergistics2.ToolSuperWirelessKit.bound.super=§aNetwork at %s §aadded to list
 item.appliedenergistics2.ToolSuperWirelessKit.bound.super.failed=§cNetwork already in list
-item.appliedenergistics2.ToolSuperWirelessKit.connected=§aConnected to %s, %s, %s
+item.appliedenergistics2.ToolSuperWirelessKit.connected=§aConnected to %s
 item.appliedenergistics2.ToolSuperWirelessKit.disconnected=WireLess disconnect
 item.appliedenergistics2.ToolSuperWirelessKit.invalidTarget=§cInvalid target - must be Wireless Connector or Wireless Hub
 item.appliedenergistics2.ToolSuperWirelessKit.failed=§cConnection failed
-item.appliedenergistics2.ToolSuperWirelessKit.empty=List of §e%s mode cleared
+item.appliedenergistics2.ToolSuperWirelessKit.empty=§aList of §e%s mode cleared
 item.appliedenergistics2.ToolSuperWirelessKit.set=Mode changed to %s
 item.appliedenergistics2.ToolSuperWirelessKit.targethubfull=§cTarget Hub is Full
-item.appliedenergistics2.ToolSuperWirelessKit.otherhubfull=§cHub at %s,%s,%s is Full
+item.appliedenergistics2.ToolSuperWirelessKit.otherhubfull=§cHub at %s §cis Full
 item.appliedenergistics2.ToolSuperWirelessKit.hubtohub=§cHub to Hub connection is not allowed
 item.appliedenergistics2.ToolSuperWirelessKit.mode=Mode:
 item.appliedenergistics2.ToolSuperWirelessKit.mode.toggle=Tab + R-Click for toggle mode
@@ -1091,7 +1096,7 @@ item.appliedenergistics2.ToolSuperWirelessKit.mode.simple.empty=Click Wireless C
 item.appliedenergistics2.ToolSuperWirelessKit.mode.simple.bound=Click other Wireless Connector to connect
 
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced=§eAdvanced
-item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.next=§9Next connector in queue: %s,%s,%s
+item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.next=§9Next connector in queue: %s
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.howToggle=Sneak right click to change mode between queuing and binding mode
 
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing=§aQueuing Mode
@@ -1106,7 +1111,7 @@ item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.binding.empty=§9Swi
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing.notempty=§9Current wireless connectors in queue:
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.binding.notempty=§9Current wireless connectors in queue to be bound:
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.noconnectors=No connectors found in queue. Try putting the tool into queueing mode and adding some
-item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queued=§aAdded connector at %s,%s,%s to queue
+item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queued=§aAdded connector at %s §ato queue
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.binding.hubqols=Ctrl + R-click for connect to all free hub slots
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing.hubqols=Ctrl + R-click for add all free hub slots to queue
 item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing.hub=§a%s hub slots added to queue
@@ -1115,7 +1120,7 @@ item.appliedenergistics2.ToolSuperWirelessKit.mode.advanced.queueing.targethubfu
 
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super=§eSuper
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklist=Network list:
-item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network=Network %sat %s, %s, %s
+item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network=Network %sat %s
 item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklistempty=There no networks in list
 
 # Commands

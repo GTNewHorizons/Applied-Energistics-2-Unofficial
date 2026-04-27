@@ -46,14 +46,15 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
                     break;
                 case 1: {
                     DimensionalCoord dc = locList.get(0);
-                    currentToolTip.add(WailaText.wireless_connected.getLocal(dc.x, dc.y, dc.z));
+                    currentToolTip.add(WailaText.wireless_connected.getLocal(dc.getGuiTextShortNoDim()));
                     break;
                 }
                 default: {
                     if (tag.getBoolean("isSneaking")) {
                         currentToolTip.add(WailaText.wireless_connected_detailsTitle.getLocal());
                         for (DimensionalCoord dc : locList) {
-                            currentToolTip.add(WailaText.wireless_connected_details.getLocal(dc.x, dc.y, dc.z));
+                            currentToolTip
+                                    .add(WailaText.wireless_connected_details.getLocal(dc.getGuiTextShortNoDim()));
                         }
                         return currentToolTip; // just list connected wireless devices
                     }

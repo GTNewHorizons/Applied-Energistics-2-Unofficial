@@ -146,7 +146,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
                 } else {
                     DimensionalCoord dc = DimensionalCoord.readFromNBT(is.getTagCompound().getCompoundTag("simple"));
 
-                    lines.add(WirelessMessages.bound.getLocal(dc.x, dc.y, dc.z));
+                    lines.add(WirelessMessages.bound.getLocal(dc.getGuiTextShortNoDim()));
                     lines.add(WirelessMessages.mode_simple_bound.getLocal());
                 }
             }
@@ -161,10 +161,9 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
                 } else {
                     if (GuiScreen.isShiftKeyDown()) {
                         lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_notempty").getLocal());
-                        dcl.forEach(dc -> lines.add(String.format("%d,%d,%d", dc.x, dc.y, dc.z)));
+                        dcl.forEach(dc -> lines.add(dc.getGuiTextShort()));
                         return;
-                    } else lines.add(
-                            WirelessMessages.mode_advanced_next.getLocal(dcl.get(0).x, dcl.get(0).y, dcl.get(0).z));
+                    } else lines.add(WirelessMessages.mode_advanced_next.getLocal(dcl.get(0).getGuiTextShortNoDim()));
                 }
                 lines.add(WirelessMessages.mode_advanced_howToggle.getLocal(EnumChatFormatting.ITALIC));
                 lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_hubqols").getLocal());
@@ -195,9 +194,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
                                 StatCollector.translateToLocalFormatted(
                                         "item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network",
                                         customName + " ",
-                                        dc.x,
-                                        dc.y,
-                                        dc.z));
+                                        dc.getGuiTextShortNoDim()));
                     }
                 }
             }

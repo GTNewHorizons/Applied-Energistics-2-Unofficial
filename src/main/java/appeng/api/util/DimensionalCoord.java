@@ -21,6 +21,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+import appeng.core.localization.GuiText;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -161,5 +162,21 @@ public class DimensionalCoord extends WorldCoord {
 
     public int getDimension() {
         return dimId;
+    }
+
+    public String getGuiText() {
+        return GuiText.GuiDimensionalCoord.getLocal(this.x, this.y, this.z, this.dimId);
+    }
+
+    public String getGuiTextNoDim() {
+        return GuiText.GuiDimensionalCoordNoDim.getLocal(this.x, this.y, this.z);
+    }
+
+    public String getGuiTextShort() {
+        return GuiText.GuiDimensionalCoordShort.getLocal(this.x, this.y, this.z, this.dimId);
+    }
+
+    public String getGuiTextShortNoDim() {
+        return GuiText.GuiDimensionalCoordShortNoDim.getLocal(this.x, this.y, this.z);
     }
 }

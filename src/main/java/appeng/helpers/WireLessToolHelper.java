@@ -32,7 +32,8 @@ public class WireLessToolHelper {
         INVALID_SOURCE,
         SUCCESS,
         INVALID_TARGET,
-        FAILED
+        FAILED,
+        ALREADY_BIND
     }
 
     public static void nextToolMode(EntityPlayer p, IConfigManager cm) {
@@ -133,7 +134,7 @@ public class WireLessToolHelper {
         if (source.isHub() && !source.canAddLink()) {
             final DimensionalCoord loc = source.getLocation();
             if (actionSource instanceof PlayerSource ps)
-                ps.player.addChatMessage(WirelessMessages.otherhubfull.toChat(loc.x, loc.y, loc.z));
+                ps.player.addChatMessage(WirelessMessages.otherhubfull.toChat(loc.getGuiTextShortNoDim()));
             return BindResult.INVALID_SOURCE;
         }
 
@@ -147,7 +148,7 @@ public class WireLessToolHelper {
             case SUCCESS -> {
                 final DimensionalCoord dc = source.getLocation();
                 if (actionSource instanceof PlayerSource ps)
-                    ps.player.addChatMessage(WirelessMessages.connected.toChat(dc.x, dc.y, dc.z));
+                    ps.player.addChatMessage(WirelessMessages.connected.toChat(dc.getGuiTextShortNoDim()));
             }
 
             case FAILED, INVALID_TARGET, INVALID_SOURCE -> {
@@ -230,10 +231,12 @@ public class WireLessToolHelper {
             p.addChatMessage(WirelessMessages.mode_advanced_queueing_hub.toChat(i));
         } else {
             locList.add(new DimensionalCoord(target));
-            p.addChatMessage(WirelessMessages.mode_advanced_queued.toChat(targetLoc.x, targetLoc.y, targetLoc.z));
+            p.addChatMessage(WirelessMessages.mode_advanced_queued.toChat(targetLoc.getGuiTextShortNoDim()));
         }
 
-        DimensionalCoord.writeListToNBT(tool.getTagCompound().getCompoundTag("advanced"), locList);
+        final NBTTagCompound tag = new NBTTagCompound();
+        DimensionalCoord.writeListToNBT(tag, locList);
+        tool.getTagCompound().setTag("advanced", tag);
         return true;
     }
 
@@ -302,7 +305,7 @@ public class WireLessToolHelper {
             }
         }
         DimensionalCoord targetLoc = target.getLocation();
-        p.addChatMessage(WirelessMessages.bound_super.toChat(targetLoc.x, targetLoc.y, targetLoc.z));
+        p.addChatMessage(WirelessMessages.bound_super.toChat(targetLoc.getGuiTextShortNoDim()));
         locList.add(targetLoc);
         DimensionalCoord.writeListToNBT(tag, locList);
         return true;

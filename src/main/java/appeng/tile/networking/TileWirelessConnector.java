@@ -92,8 +92,8 @@ public class TileWirelessConnector extends TileWirelessBase {
         if (connection == null && !locList.isEmpty()) {
             final TileWirelessBase tile = getAndCheckTile(locList.get(0), worldObj, null);
             if (tile == null) return;
-            if (WireLessToolHelper.performConnection(tile, this, new MachineSource(this)) == BindResult.SUCCESS)
-                locList.remove(0);
+            final BindResult result = WireLessToolHelper.performConnection(tile, this, new MachineSource(this));
+            if (result == BindResult.SUCCESS || result == BindResult.ALREADY_BIND) locList.remove(0);
         }
     }
 }

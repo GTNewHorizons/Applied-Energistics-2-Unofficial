@@ -372,7 +372,12 @@ public enum GuiText implements Localization {
     GuiSuperWirelessKitSelfPos,
     GuiSuperWirelessKitTargetPos,
     GuiSuperWirelessKitChannelsUsage,
-    GuiSuperWirelessKitNameFieldDesc;
+    GuiSuperWirelessKitNameFieldDesc,
+
+    GuiDimensionalCoord,
+    GuiDimensionalCoordShort,
+    GuiDimensionalCoordNoDim,
+    GuiDimensionalCoordShortNoDim;
 
     private final String root;
 

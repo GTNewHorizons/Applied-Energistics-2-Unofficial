@@ -141,9 +141,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                 p.addChatMessage(
                         new ChatComponentTranslation(
                                 "item.appliedenergistics2.ToolNetworkVisualiser.bound",
-                                String.valueOf(dc.x),
-                                String.valueOf(dc.y),
-                                String.valueOf(dc.z)));
+                                dc.getGuiTextShortNoDim()));
                 return true;
             }
         }

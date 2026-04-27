@@ -3,6 +3,7 @@ package appeng.tile.networking;
 import static appeng.helpers.WireLessToolHelper.getAndCheckTile;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -72,11 +73,13 @@ public class TileWirelessHub extends TileWirelessBase {
 
     @Override
     protected void tryRestoreConnection(List<DimensionalCoord> locList) {
-        for (DimensionalCoord target : locList) {
+        final Iterator<DimensionalCoord> iterator = locList.iterator();
+        while (iterator.hasNext()) {
+            final DimensionalCoord target = iterator.next();
             TileWirelessBase tile = getAndCheckTile(target, worldObj, null);
             if (tile == null) continue;
-            if (WireLessToolHelper.performConnection(tile, this, new MachineSource(this)) == BindResult.SUCCESS)
-                locList.remove(target);
+            final BindResult result = WireLessToolHelper.performConnection(tile, this, new MachineSource(this));
+            if (result == BindResult.SUCCESS || result == BindResult.ALREADY_BIND) iterator.remove();
         }
     }
 }
