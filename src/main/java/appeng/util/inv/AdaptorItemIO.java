@@ -78,7 +78,7 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
             if (out == null) {
                 out = stack.toStack(0);
-            }
+            } else if (!stack.matches(out)) continue;
 
             int simulatedTransfer = Math.min(amount, stack.getStackSize());
 
