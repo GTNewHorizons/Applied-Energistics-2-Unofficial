@@ -59,7 +59,6 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
         super.onNeighborChanged();
         this.isCachedTargetValid = false;
         this.cachedTarget = null;
-        this.restRF = 0;
     }
 
     @Override
