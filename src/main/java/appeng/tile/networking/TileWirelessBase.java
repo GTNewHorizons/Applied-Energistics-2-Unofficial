@@ -14,7 +14,6 @@ import java.util.Objects;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -36,6 +35,7 @@ import appeng.me.helpers.AENetworkProxy;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
+import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
 public abstract class TileWirelessBase extends AENetworkTile implements IColorableTile {
@@ -216,35 +216,31 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         return oldColor != this.color;
     }
 
+    private List<DimensionalCoord> locList = new ArrayList<>();
+
     protected abstract void tryRestoreConnection(List<DimensionalCoord> locList);
+
+    @TileEvent(TileEventType.TICK)
+    public void onTick() {
+        if (!Platform.isServer() || locList.isEmpty()) return;
+        this.tryRestoreConnection(this.locList);
+    }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
     public void writeToStream_TileSecurity(final ByteBuf data) {
         data.writeByte(this.color.ordinal());
-        if (tilesToConnect != null) {
-            List<DimensionalCoord> locList = new ArrayList<>();
-            for (int i = 0; i < tilesToConnect.tagCount(); i++) {
-                NBTTagCompound tag = tilesToConnect.getCompoundTagAt(i);
-                locList.add(DimensionalCoord.readFromNBT(tag));
-            }
-            tryRestoreConnection(locList);
-            tilesToConnect = null;
-        }
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileWirelessConnector(final NBTTagCompound data) {
         data.setShort("Color", (short) color.ordinal());
-        NBTTagList locList = new NBTTagList();
-        for (TileWirelessBase other : getConnectedTiles()) {
-            NBTTagCompound locationTag = new NBTTagCompound();
-            other.getLocation().writeToNBT(locationTag);
-            locList.appendTag(locationTag);
-        }
-        data.setTag("connectedTargets", locList);
-    }
 
-    NBTTagList tilesToConnect = null;
+        final List<DimensionalCoord> locs = new ArrayList<>();
+        getConnectedTiles().forEach(t -> locs.add(t.getLocation()));
+        final NBTTagCompound nbt = new NBTTagCompound();
+        DimensionalCoord.writeListToNBT(nbt, locs);
+        data.setTag("connectedTargets", nbt);
+    }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileWirelessConnector(final NBTTagCompound data) {
@@ -252,9 +248,8 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
             this.color = AEColor.values()[data.getShort("Color")];
             this.getProxy().setColor(this.color);
         }
-        if (data.hasKey("connectedTargets")) {
-            tilesToConnect = (NBTTagList) data.getTag("connectedTargets");
-        }
+
+        this.locList = DimensionalCoord.readAsListFromNBT(data.getCompoundTag("connectedTargets"));
     }
 
     @Override

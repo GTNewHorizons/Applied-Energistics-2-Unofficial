@@ -35,7 +35,7 @@ import appeng.client.gui.widgets.GuiColorButton;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.client.render.BlockPosHighlighter;
+import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerSuperWirelessKit;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
@@ -84,18 +84,18 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
 
     private final ArrayList<ItemStack> icons;
 
-    private final ArrayList<baseUnit> unselected = new ArrayList<>();
-    private final ArrayList<baseUnit> toBind = new ArrayList<>();
-    private final ArrayList<baseUnit> target = new ArrayList<>();
+    private final ArrayList<BaseUnit> unselected = new ArrayList<>();
+    private final ArrayList<BaseUnit> toBind = new ArrayList<>();
+    private final ArrayList<BaseUnit> target = new ArrayList<>();
 
-    private baseUnit toRemoveFromUnselected;
-    private baseUnit toAddToUnselected;
+    private BaseUnit toRemoveFromUnselected;
+    private BaseUnit toAddToUnselected;
 
-    private baseUnit toRemoveFromToBind;
-    private baseUnit toAddToBind;
+    private BaseUnit toRemoveFromToBind;
+    private BaseUnit toAddToBind;
 
-    private baseUnit toRemoveFromTarget;
-    private baseUnit toAddTarget;
+    private BaseUnit toRemoveFromTarget;
+    private BaseUnit toAddTarget;
 
     private NBTTagCompound nData;
     private ArrayList<SuperWirelessToolDataObject> wData;
@@ -333,15 +333,15 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) {
-        for (baseUnit bs : unselected) {
+        for (BaseUnit bs : unselected) {
             if (bs.keyTyped(typedChar, keyCode)) return;
         }
 
-        for (baseUnit bs : toBind) {
+        for (BaseUnit bs : toBind) {
             if (bs.keyTyped(typedChar, keyCode)) return;
         }
 
-        for (baseUnit bs : target) {
+        for (BaseUnit bs : target) {
             if (bs.keyTyped(typedChar, keyCode)) return;
         }
 
@@ -392,15 +392,15 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             this.targetColumnScroll.click(this, xCoord - this.guiLeft, yCoord - this.guiTop);
         }
 
-        for (baseUnit bs : unselected) {
+        for (BaseUnit bs : unselected) {
             bs.mouseClicked(xCoord, yCoord, btn);
         }
 
-        for (baseUnit bs : toBind) {
+        for (BaseUnit bs : toBind) {
             bs.mouseClicked(xCoord, yCoord, btn);
         }
 
-        for (baseUnit bs : target) {
+        for (BaseUnit bs : target) {
             bs.mouseClicked(xCoord, yCoord, btn);
         }
 
@@ -492,15 +492,15 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             if (i < 10) this.pinButtons[i].visible = false;
         }
 
-        for (baseUnit bu : this.unselected) {
+        for (BaseUnit bu : this.unselected) {
             bu.isVisible = false;
         }
 
-        for (baseUnit bu : this.toBind) {
+        for (BaseUnit bu : this.toBind) {
             bu.isVisible = false;
         }
 
-        for (baseUnit bu : this.target) {
+        for (BaseUnit bu : this.target) {
             bu.isVisible = false;
         }
     }
@@ -583,7 +583,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         }
     }
 
-    private class singleUnit extends baseUnit {
+    private class singleUnit extends BaseUnit {
 
         singleUnit(SuperWirelessToolDataObject data, String customNetworkName, String customColorName) {
             super(data, customNetworkName, customColorName);
@@ -657,7 +657,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         }
     }
 
-    private class groupUnit extends baseUnit {
+    private class GroupUnit extends BaseUnit {
 
         private final ArrayList<SuperWirelessToolDataObject> wsList = new ArrayList<>();
         private final ArrayList<DimensionalCoord> cordList = new ArrayList<>();
@@ -667,25 +667,25 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         private int slots;
         private int usedSlots;
 
-        groupUnit(SuperWirelessToolDataObject data, String customNetworkName) {
+        GroupUnit(SuperWirelessToolDataObject data, String customNetworkName) {
             this(data, customNetworkName, false, true, true, false);
         }
 
-        groupUnit(SuperWirelessToolDataObject data, String customNetworkName, boolean byColor, String customColorName) {
+        GroupUnit(SuperWirelessToolDataObject data, String customNetworkName, boolean byColor, String customColorName) {
             this(data, customNetworkName, customColorName, byColor, true, true, false);
         }
 
-        groupUnit(SuperWirelessToolDataObject data, String customNetworkName, boolean byColor, String customColorName,
+        GroupUnit(SuperWirelessToolDataObject data, String customNetworkName, boolean byColor, String customColorName,
                 boolean includeConnectors, boolean includeHubs, boolean isPinned) {
             this(data, customNetworkName, customColorName, byColor, includeConnectors, includeHubs, isPinned);
         }
 
-        groupUnit(SuperWirelessToolDataObject data, String customNetworkName, boolean byColor,
+        GroupUnit(SuperWirelessToolDataObject data, String customNetworkName, boolean byColor,
                 boolean includeConnectors, boolean includeHubs, boolean isPinned) {
             this(data, customNetworkName, "", byColor, includeConnectors, includeHubs, isPinned);
         }
 
-        groupUnit(SuperWirelessToolDataObject data, String customNetworkName, String customColorName, boolean byColor,
+        GroupUnit(SuperWirelessToolDataObject data, String customNetworkName, String customColorName, boolean byColor,
                 boolean includeConnectors, boolean includeHubs, boolean isPinned) {
             super(data, customNetworkName, customColorName);
             this.byColor = byColor;
@@ -905,7 +905,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         }
     }
 
-    private class baseUnit {
+    private class BaseUnit {
 
         protected final int w = 60;
         protected final int h = 22;
@@ -924,7 +924,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         protected boolean isVisible = false;
         protected boolean byColor = false;
 
-        baseUnit(SuperWirelessToolDataObject data, String customNetworkName, String customColorName) {
+        BaseUnit(SuperWirelessToolDataObject data, String customNetworkName, String customColorName) {
             this.data = data;
             this.customNetworkName = !Objects.equals(customNetworkName, "") ? customNetworkName
                     : data.network.x + ", "
@@ -964,7 +964,8 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             GL11.glPushMatrix();
             GL11.glScaled(0.5, 0.5, 0.5);
             nameField[totalPos].drawTextBox();
-            if (nameField[totalPos].isMouseIn((mouseX - guiLeft) * 2, (mouseY - guiTop) * 2)) {
+            if (nameField[totalPos].isVisible()
+                    && nameField[totalPos].isMouseIn((mouseX - guiLeft) * 2, (mouseY - guiTop) * 2)) {
                 drawTooltip(mouseX + 11, Math.max(mouseY, 15) + 4, nameField[totalPos].getMessage());
             }
 
@@ -1015,10 +1016,10 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                 if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
                     BlockPosHighlighter.highlightBlocks(
                             mc.thePlayer,
-                            data.targets.get(0) == null ? Collections.singletonList(data.cord)
+                            data.targets.isEmpty() ? Collections.singletonList(data.cord)
                                     : new ArrayList<>(Arrays.asList(data.cord, data.targets.get(0))),
-                            PlayerMessages.InterfaceHighlighted.getUnlocalized(),
-                            PlayerMessages.InterfaceInOtherDim.getUnlocalized());
+                            PlayerMessages.MachineHighlighted.getUnlocalized(),
+                            PlayerMessages.MachineInOtherDim.getUnlocalized());
                     mc.thePlayer.closeScreen();
                     return;
                 }
@@ -1098,7 +1099,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         } catch (IOException ignored) {}
     }
 
-    private void sendCommand(SuperWirelessKitCommands commandType, baseUnit bu) {
+    private void sendCommand(SuperWirelessKitCommands commandType, BaseUnit bu) {
         final SuperWirelessKitCommand command = new SuperWirelessKitCommand(commandType);
 
         switch (commandType) {
@@ -1121,9 +1122,9 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
     }
 
     @Nonnull
-    private SubCommand getSubCommand(baseUnit butb) {
+    private SubCommand getSubCommand(BaseUnit butb) {
         final SubCommand subCommand = new SubCommand();
-        if (butb instanceof groupUnit gu) {
+        if (butb instanceof GroupUnit gu) {
             subCommand.setNetworkPos(gu.data.network);
             if (gu.includeConnectors) subCommand.includeConnectors();
             if (gu.includeHubs) subCommand.includeHubs();
@@ -1141,7 +1142,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         return subCommand;
     }
 
-    private static class savedName {
+    private static class SavedName {
 
         final DimensionalCoord network;
         final String name;
@@ -1149,7 +1150,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         final boolean byColor;
         final String colorName;
 
-        savedName(DimensionalCoord network, String name, AEColor color, boolean byColor, String colorName) {
+        SavedName(DimensionalCoord network, String name, AEColor color, boolean byColor, String colorName) {
             this.network = network;
             this.name = name;
             this.color = color;
@@ -1158,7 +1159,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         }
     }
 
-    private static class savedPin {
+    private static class SavedPin {
 
         final DimensionalCoord network;
         final AEColor color;
@@ -1167,7 +1168,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         final boolean includeConnectors;
         final boolean includeHubs;
 
-        savedPin(DimensionalCoord network, AEColor color, PinType type, DimensionalCoord coord,
+        SavedPin(DimensionalCoord network, AEColor color, PinType type, DimensionalCoord coord,
                 boolean includeConnectors, boolean includeHubs) {
             this.network = network;
             this.color = color;
@@ -1178,9 +1179,9 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         }
     }
 
-    private groupUnit getNetworkUnitFormResolver(ArrayList<groupUnit> list, DimensionalCoord network, AEColor color,
+    private GroupUnit getNetworkUnitFormResolver(ArrayList<GroupUnit> list, DimensionalCoord network, AEColor color,
             boolean isPin) {
-        for (groupUnit gu : list) {
+        for (GroupUnit gu : list) {
             if (gu.data.network.equals(network) && gu.isPinned == isPin) {
                 if (color == null) {
                     return gu;
@@ -1206,15 +1207,15 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         this.toBind.clear();
         this.target.clear();
 
-        ArrayList<groupUnit> networkGroupResolver = new ArrayList<>();
+        ArrayList<GroupUnit> networkGroupResolver = new ArrayList<>();
 
         final NBTTagList names = this.nData.getTagList("names", 10);
-        final ArrayList<savedName> savedNames = new ArrayList<>();
+        final ArrayList<SavedName> savedNames = new ArrayList<>();
 
         for (int i = 0; i < names.tagCount(); i++) {
             final NBTTagCompound tag = names.getCompoundTagAt(i);
             savedNames.add(
-                    new savedName(
+                    new SavedName(
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
                             tag.getString("networkName"),
                             AEColor.values()[tag.getInteger("color")],
@@ -1223,12 +1224,12 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         }
 
         final NBTTagList pins = this.nData.getTagList("pins", 10);
-        final ArrayList<savedPin> savedPins = new ArrayList<>();
+        final ArrayList<SavedPin> savedPins = new ArrayList<>();
 
         for (int i = 0; i < pins.tagCount(); i++) {
             final NBTTagCompound tag = pins.getCompoundTagAt(i);
             savedPins.add(
-                    new savedPin(
+                    new SavedPin(
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
                             AEColor.values()[tag.getInteger("color")],
                             PinType.values()[tag.getInteger("type")],
@@ -1248,7 +1249,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
 
             if (hideBounded == YesNo.YES && wdo.isConnected && !(wdo.isHub && wdo.slots != 0)) continue;
 
-            for (final savedName savedName : savedNames) {
+            for (final SavedName savedName : savedNames) {
                 if (savedName.network.equals(wdo.network)) {
                     if (savedName.byColor) {
                         if (wdo.color == savedName.color) {
@@ -1260,7 +1261,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                 }
             }
 
-            for (final savedPin savedPin : savedPins) {
+            for (final SavedPin savedPin : savedPins) {
                 switch (savedPin.type) {
                     case SINGLE -> {
                         if (savedPin.coord.equals(wdo.cord)) {
@@ -1294,9 +1295,9 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             if (isPinned) {
                 if (isGroup) {
                     if (isSameColor) {
-                        groupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, wdo.color, true);
+                        GroupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, wdo.color, true);
                         if (gu == null) {
-                            groupUnit newUnit = new groupUnit(
+                            GroupUnit newUnit = new GroupUnit(
                                     wdo,
                                     networkName,
                                     true,
@@ -1311,11 +1312,11 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                         }
 
                     } else {
-                        groupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, null, true);
+                        GroupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, null, true);
                         if (gu != null) {
                             gu.addToGroup(wdo);
                         } else {
-                            groupUnit newUnit = new groupUnit(
+                            GroupUnit newUnit = new GroupUnit(
                                     wdo,
                                     networkName,
                                     false,
@@ -1333,20 +1334,20 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                 if (mode == SuperWirelessToolGroupBy.Single) {
                     this.unselected.add(new singleUnit(wdo, networkName, colorName));
                 } else if (mode == SuperWirelessToolGroupBy.Network) {
-                    groupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, null, false);
+                    GroupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, null, false);
                     if (gu != null) {
                         gu.addToGroup(wdo);
                     } else {
-                        groupUnit newUnit = new groupUnit(wdo, networkName);
+                        GroupUnit newUnit = new GroupUnit(wdo, networkName);
                         networkGroupResolver.add(newUnit);
                         this.unselected.add(newUnit);
                     }
                 } else {
-                    groupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, wdo.color, false);
+                    GroupUnit gu = getNetworkUnitFormResolver(networkGroupResolver, wdo.network, wdo.color, false);
                     if (gu != null) {
                         gu.addToGroup(wdo);
                     } else {
-                        groupUnit newUnit = new groupUnit(wdo, networkName, true, colorName);
+                        GroupUnit newUnit = new GroupUnit(wdo, networkName, true, colorName);
                         networkGroupResolver.add(newUnit);
                         this.unselected.add(newUnit);
                     }
