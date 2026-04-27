@@ -18,6 +18,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.config.AdvancedWirelessToolMode;
 import appeng.api.config.Settings;
 import appeng.api.config.WirelessToolType;
+import appeng.api.networking.IGridHost;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.util.DimensionalCoord;
@@ -287,7 +288,7 @@ public class WireLessToolHelper {
         };
     }
 
-    public static boolean bindSuper(TileWirelessBase target, ItemStack tool, World w, EntityPlayer p) {
+    public static boolean bindSuper(TileEntity target, ItemStack tool, World w, EntityPlayer p) {
         if (!tool.getTagCompound().hasKey("super")) {
             clearNBT(tool, WirelessToolType.Super, null);
         }
@@ -296,15 +297,15 @@ public class WireLessToolHelper {
         List<DimensionalCoord> locList = DimensionalCoord.readAsListFromNBT(tag);
         for (DimensionalCoord dc : locList) {
             TileEntity TempTe = w.getTileEntity(dc.x, dc.y, dc.z);
-            if (TempTe instanceof TileWirelessBase tile) {
-                if (target.getGridNode(ForgeDirection.UNKNOWN).getGrid()
+            if (TempTe instanceof IGridHost tile && target instanceof IGridHost gh) {
+                if (gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
                         == tile.getGridNode(ForgeDirection.UNKNOWN).getGrid()) {
                     p.addChatMessage(WirelessMessages.bound_super_failed.toChat());
                     return false;
                 }
             }
         }
-        DimensionalCoord targetLoc = target.getLocation();
+        DimensionalCoord targetLoc = new DimensionalCoord(target);
         p.addChatMessage(WirelessMessages.bound_super.toChat(targetLoc.getGuiTextShortNoDim()));
         locList.add(targetLoc);
         DimensionalCoord.writeListToNBT(tag, locList);

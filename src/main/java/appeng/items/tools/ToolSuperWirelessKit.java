@@ -24,6 +24,7 @@ import appeng.api.config.WirelessToolType;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
+import appeng.api.networking.IGridHost;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.features.AEFeature;
@@ -104,12 +105,15 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
         final WirelessToolType mode = (WirelessToolType) getConfigManager(is).getSetting(Settings.WIRELESS_TOOL_TYPE);
         final TileEntity te = w.getTileEntity(x, y, z);
 
+        if (mode == WirelessToolType.Super && te instanceof IGridHost)
+            return WireLessToolHelper.bindSuper(te, is, w, p);
+
         if (!(te instanceof TileWirelessBase target)) return false;
 
         return switch (mode) {
             case Simple -> WireLessToolHelper.bindSimple(target, is, w, p);
             case Advanced -> WireLessToolHelper.bindAdvanced(target, is, w, p);
-            case Super -> WireLessToolHelper.bindSuper(target, is, w, p);
+            default -> false;
         };
     }
 
