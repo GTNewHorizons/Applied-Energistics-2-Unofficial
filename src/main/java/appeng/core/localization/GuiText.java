@@ -222,6 +222,7 @@ public enum GuiText implements Localization {
     ConfirmReset,
     DiagnosticObserved,
     DiagnosticParallel,
+    DiagnosticResetItem,
     CPUs,
     FacadeCrafting,
     inWorldCraftingPresses,

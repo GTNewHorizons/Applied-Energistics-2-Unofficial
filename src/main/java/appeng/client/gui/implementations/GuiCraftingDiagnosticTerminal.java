@@ -32,6 +32,7 @@ import appeng.core.AEConfig;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketCraftingDiagnosticReset;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.me.cache.CraftingGridCache;
 
@@ -67,6 +68,8 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     private int lastMouseX;
     private int lastMouseY;
     private long lastResetClickAt;
+    private long lastRowResetClickAt;
+    private IAEStack<?> lastRowResetStack;
 
     public GuiCraftingDiagnosticTerminal(final InventoryPlayer inventoryPlayer, final Object host) {
         super(new ContainerCraftingDiagnosticTerminal(inventoryPlayer, (appeng.api.storage.ITerminalHost) host));
@@ -211,10 +214,16 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         this.lastResetClickAt = 0L;
     }
 
+    private void clearRowResetConfirmation() {
+        this.lastRowResetClickAt = 0L;
+        this.lastRowResetStack = null;
+    }
+
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         super.mouseClicked(xCoord, yCoord, btn);
         this.searchField.mouseClicked(xCoord, yCoord, btn);
+        this.handleRowResetClick(xCoord, yCoord, btn);
     }
 
     @Override
@@ -381,6 +390,9 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
             lines.add(GuiText.Samples.getLocal() + ": " + row.sampleCount);
             lines.add(GuiText.DiagnosticObserved.getLocal());
             lines.add(GuiText.DiagnosticParallel.getLocal());
+            if (row.canReset()) {
+                lines.add(GuiText.DiagnosticResetItem.getLocal());
+            }
             this.drawTooltip(relMouseX + 12, relMouseY, lines.toArray(new String[0]));
         }
 
@@ -450,6 +462,52 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         this.rows.sort(comparator);
+    }
+
+    private void handleRowResetClick(final int mouseX, final int mouseY, final int button) {
+        if (button != 0 || !isCtrlKeyDown()) {
+            this.clearRowResetConfirmation();
+            return;
+        }
+
+        final int rowIndex = this.getRowIndexAt(mouseX, mouseY);
+        if (rowIndex < 0 || rowIndex >= this.rows.size()) {
+            this.clearRowResetConfirmation();
+            return;
+        }
+
+        final Row row = this.rows.get(rowIndex);
+        if (!row.canReset()) {
+            this.clearRowResetConfirmation();
+            return;
+        }
+
+        final long now = System.currentTimeMillis();
+        if (now - this.lastRowResetClickAt > RESET_DOUBLE_CLICK_MILLIS || !row.matches(this.lastRowResetStack)) {
+            this.lastRowResetClickAt = now;
+            this.lastRowResetStack = row.copyStack();
+            return;
+        }
+
+        this.clearRowResetConfirmation();
+        this.clearResetConfirmation();
+        this.rows.remove(rowIndex);
+        this.setScrollBar();
+        NetworkHandler.instance.sendToServer(new PacketCraftingDiagnosticReset(row.copyStack()));
+    }
+
+    private int getRowIndexAt(final int mouseX, final int mouseY) {
+        final int relMouseX = mouseX - this.guiLeft;
+        final int relMouseY = mouseY - this.guiTop;
+        if (relMouseX < LAYOUT.listLeft || relMouseX > LAYOUT.listRight
+                || relMouseY < LAYOUT.listTop
+                || relMouseY >= this.getListBottom()) {
+            return -1;
+        }
+
+        final int visualIndex = (relMouseY - LAYOUT.listTop) / LAYOUT.rowHeight;
+        final int rowIndex = this.getScrollBar().getCurrentScroll() + visualIndex;
+        return rowIndex < this.rows.size() ? rowIndex : -1;
     }
 
     private int getListBottom() {
@@ -612,6 +670,18 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
             }
 
             return formatCompactDecimal(itemsPerSecond);
+        }
+
+        private boolean canReset() {
+            return this.stack != null;
+        }
+
+        private IAEStack<?> copyStack() {
+            return this.stack == null ? null : this.stack.copy();
+        }
+
+        private boolean matches(final IAEStack<?> other) {
+            return this.stack != null && this.stack.equals(other);
         }
 
         private static String formatScientificIfNeeded(final long value) {

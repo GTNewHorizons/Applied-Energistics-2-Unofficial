@@ -12,6 +12,7 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.data.IAEStack;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.sync.network.NetworkHandler;
@@ -141,6 +142,14 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
         final CraftingGridCache cache = this.getCraftingCache();
         if (cache != null) {
             cache.clearDiagnosticStats();
+            this.syncDelay = FULL_SYNC_INTERVAL;
+        }
+    }
+
+    public void clearDiagnostics(final IAEStack<?> stack) {
+        final CraftingGridCache cache = this.getCraftingCache();
+        if (cache != null) {
+            cache.clearDiagnosticStats(stack);
             this.syncDelay = FULL_SYNC_INTERVAL;
         }
     }

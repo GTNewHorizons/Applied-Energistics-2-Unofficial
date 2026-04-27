@@ -63,6 +63,17 @@ public final class CraftingNetworkDiagnostics {
         this.revision++;
     }
 
+    public void clear(final IAEStack<?> output) {
+        final IAEStack<?> key = normalizeDiagnosticStack(output);
+        if (key == null) {
+            return;
+        }
+
+        if (this.diagnostics.remove(key) != null) {
+            this.revision++;
+        }
+    }
+
     public boolean isEmpty() {
         return this.diagnostics.isEmpty();
     }

@@ -757,6 +757,11 @@ public class CraftingGridCache
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
+    public synchronized void clearDiagnosticStats(final IAEStack<?> stack) {
+        this.diagnostics.clear(stack);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
+    }
+
     public synchronized boolean isDiagnosticsEnabled() {
         return this.diagnosticsEnabled;
     }

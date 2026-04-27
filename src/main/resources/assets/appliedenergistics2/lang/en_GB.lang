@@ -333,6 +333,7 @@ gui.appliedenergistics2.ResetStats=Reset
 gui.appliedenergistics2.ConfirmReset=Confirm
 gui.appliedenergistics2.DiagnosticObserved=Observed during AE autocrafting.
 gui.appliedenergistics2.DiagnosticParallel=Parallel crafting can influence timings.
+gui.appliedenergistics2.DiagnosticResetItem=Hold Ctrl and double-click to reset this item.
 gui.appliedenergistics2.FacadeCrafting=Facade Crafting
 gui.appliedenergistics2.inWorldCraftingPresses=Crafting Presses are found in the centre of meteorites which can be found in around the world, they can be located by using a meteorite compass.
 gui.appliedenergistics2.Included=Included
