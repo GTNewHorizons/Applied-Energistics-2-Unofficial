@@ -59,7 +59,7 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
         super.onNeighborChanged();
         this.isCachedTargetValid = false;
         this.cachedTarget = null;
-        this.mRestRF = 0;
+        this.restRF = 0;
     }
 
     @Override
@@ -182,16 +182,6 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
                         }
                     } else if (GregTechAPI.mOutputRF && te instanceof IEnergyReceiver) {
                         int rfOut = (int) (aVoltage * (long) GregTechAPI.mEUtoRF / 100L);
-                        long ampsUsed = 0;
-                        if (mRestRF < rfOut) {
-                            mRestRF += rfOut;
-                            ampsUsed = 1;
-                        }
-                        if (((IEnergyReceiver) te).receiveEnergy(oppositeSide, mRestRF, true) > 0) {
-                            int consumed = ((IEnergyReceiver) te).receiveEnergy(oppositeSide, mRestRF, false);
-                            mRestRF -= consumed;
-                            return ampsUsed;
-                        }
 
                         if (GregTechAPI.mRFExplosions && GregTechAPI.sMachineExplosions
                                 && ((IEnergyReceiver) te).getMaxEnergyStored(oppositeSide) < rfOut * 600
@@ -231,7 +221,19 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
                                         tStrength,
                                         true);
                             }
+                            return 0L;
                         }
+
+                        long ampsUsed = 0;
+                        final int maxReceive = rfOut + restRF;
+                        final int received = ((IEnergyReceiver) te).receiveEnergy(oppositeSide, maxReceive, false);
+                        if (received <= restRF) {
+                            restRF -= received;
+                        } else {
+                            restRF = maxReceive - received;
+                            ampsUsed = 1;
+                        }
+                        return ampsUsed;
                     }
 
                     return 0L;
