@@ -2,64 +2,78 @@ package appeng.core.localization;
 
 public enum WirelessMessages implements Localization {
 
-    name,
-    security_player,
-    dimensionMismatch,
-    clear,
-    bound,
-    bound_advanced_filled,
-    bound_super,
-    bound_super_failed,
-    connected,
-    disconnected,
-    invalidTarget,
-    failed,
-    empty,
-    set,
-    mode,
-    mode_toggle,
-    mode_simple,
-    mode_simple_empty,
-    mode_simple_bound,
-    targethubfull,
-    otherhubfull,
-    hubtohub,
-    mode_advanced,
-    mode_advanced_next,
-    mode_advanced_howToggle,
-    mode_advanced_queueing,
-    mode_advanced_binding,
-    mode_advanced_queueing_activated,
-    mode_advanced_queueingLine_activated,
-    mode_advanced_binding_activated,
-    mode_advanced_bindingLine_activated,
-    mode_advanced_queueing_empty,
-    mode_advanced_binding_empty,
-    mode_advanced_queueing_notempty,
-    mode_advanced_binding_notempty,
-    mode_advanced_noconnectors,
-    mode_advanced_queued,
-    mode_advanced_binding_hubqols,
-    mode_advanced_queueing_hubqols,
-    mode_advanced_queueing_hub,
-    mode_advanced_binding_hub,
-    mode_advanced_queueing_targethubfull,
-    mode_super,
-    mode_super_networklist,
-    mode_super_network,
-    mode_super_networklistempty;
+    Security,
+    DimensionMismatch,
+    Clear,
+    BoundAdvancedFilled,
+    Connected,
+    Disconnected,
+    InvalidTarget,
+    Failed,
+    Cleared,
+    Mode,
+    ModeToggle,
+    SetMode,
 
-    private final String formatedName;
+    rowBindSuccess,
+    rowBindInvalidSource,
+    rowBindInvalidTarget,
+    rowBindFailed,
 
-    WirelessMessages() {
-        this.formatedName = this.name().replace("_", ".");
-    }
+    SourceHubFull,
+    TargetHubFull,
+    HubToHub,
 
-    WirelessMessages(final String name) {
-        formatedName = name;
-    }
+    Simple,
+    SimpleEmpty,
+    SimpleCleared,
+    SimpleBound,
+    SimpleBounded,
+
+    Advanced,
+    AdvancedNext,
+    AdvancedHowToggle,
+    AdvancedActivated,
+
+    AdvancedQueueing,
+    AdvancedQueued,
+    AdvancedNoConnectors,
+    AdvancedQueueEmpty,
+    AdvancedQueueNotEmpty,
+    AdvancedQueueingHub,
+    AdvancedQueueingHubQol,
+    AdvancedQueueingTargetHubFull,
+
+    AdvancedBinding,
+    AdvancedBindingHub,
+    AdvancedBindingHubQol,
+    AdvancedBindingEmpty,
+    AdvancedBindingNotEmpty,
+
+    AdvancedQueueingLine,
+    AdvancedBindingLine,
+    AdvancedQueueingLineNotEmpty,
+
+    AdvancedLine1st,
+    AdvancedLine2nd,
+    AdvancedLineEmpty1st,
+    AdvancedLineEmpty2nd,
+
+    AdvancedLine1stAdded,
+    AdvancedLine2ndAdded,
+
+    AdvancedLineNotLine,
+    AdvancedLineReset,
+
+    Super,
+    BoundSuper,
+    BoundSuperFailed,
+    SuperClear,
+    SuperNetworkList,
+    SuperNetwork,
+    SuperNetworkListEmpty;
 
     public String getUnlocalized() {
-        return "item.appliedenergistics2.ToolSuperWirelessKit." + this.formatedName;
+        return "item.appliedenergistics2.WirelessMessages." + this.name();
     }
 }

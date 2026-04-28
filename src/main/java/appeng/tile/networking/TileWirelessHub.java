@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,7 +73,7 @@ public class TileWirelessHub extends TileWirelessBase {
     }
 
     @Override
-    protected void tryRestoreConnection(List<DimensionalCoord> locList) {
+    protected void tryRestoreConnection(Set<DimensionalCoord> locList) {
         final Iterator<DimensionalCoord> iterator = locList.iterator();
         while (iterator.hasNext()) {
             final DimensionalCoord target = iterator.next();

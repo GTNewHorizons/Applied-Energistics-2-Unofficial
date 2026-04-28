@@ -33,11 +33,13 @@ import appeng.items.storage.ItemSpatialStorageCell;
 import appeng.items.storage.ItemViewCell;
 import appeng.items.storage.ItemVoidStorageCell;
 import appeng.items.tools.ToolAdvancedNetworkTool;
+import appeng.items.tools.ToolAdvancedWirelessKit;
 import appeng.items.tools.ToolBiometricCard;
 import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolNetworkTool;
 import appeng.items.tools.ToolNetworkVisualiser;
 import appeng.items.tools.ToolPriorityCard;
+import appeng.items.tools.ToolSimpleWirelessKit;
 import appeng.items.tools.ToolSuperWirelessKit;
 import appeng.items.tools.powered.ToolChargedStaff;
 import appeng.items.tools.powered.ToolColorApplicator;
@@ -126,6 +128,8 @@ public final class ApiItems implements IItems {
     private final IItemDefinition toolReplicatorCard;
 
     private final IItemDefinition toolNetworkVisualiser;
+    private final IItemDefinition toolSimpleWirelessKit;
+    private final IItemDefinition toolAdvancedWirelessKit;
     private final IItemDefinition toolSuperWirelessKit;
 
     public ApiItems(final DefinitionConstructor constructor) {
@@ -205,6 +209,8 @@ public final class ApiItems implements IItems {
         this.toolDebugCard = constructor.registerItemDefinition(new ToolDebugCard());
         this.toolReplicatorCard = constructor.registerItemDefinition(new ToolReplicatorCard());
         this.toolNetworkVisualiser = constructor.registerItemDefinition(new ToolNetworkVisualiser());
+        this.toolSimpleWirelessKit = constructor.registerItemDefinition(new ToolSimpleWirelessKit());
+        this.toolAdvancedWirelessKit = constructor.registerItemDefinition(new ToolAdvancedWirelessKit());
         this.toolSuperWirelessKit = constructor.registerItemDefinition(new ToolSuperWirelessKit());
     }
 

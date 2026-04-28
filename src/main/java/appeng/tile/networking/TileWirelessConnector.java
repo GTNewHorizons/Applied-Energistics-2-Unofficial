@@ -8,8 +8,10 @@ package appeng.tile.networking;
 
 import static appeng.helpers.WireLessToolHelper.getAndCheckTile;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,12 +90,19 @@ public class TileWirelessConnector extends TileWirelessBase {
     }
 
     @Override
-    protected void tryRestoreConnection(List<DimensionalCoord> locList) {
-        if (connection == null && !locList.isEmpty()) {
-            final TileWirelessBase tile = getAndCheckTile(locList.get(0), worldObj, null);
+    protected void tryRestoreConnection(Set<DimensionalCoord> locList) {
+        final Iterator<DimensionalCoord> iterator = locList.iterator();
+        if (iterator.hasNext()) {
+            if (this.connection != null) {
+                iterator.next();
+                iterator.remove();
+                return;
+            }
+
+            final TileWirelessBase tile = getAndCheckTile(iterator.next(), worldObj, null);
             if (tile == null) return;
             final BindResult result = WireLessToolHelper.performConnection(tile, this, new MachineSource(this));
-            if (result == BindResult.SUCCESS || result == BindResult.ALREADY_BIND) locList.remove(0);
+            if (result == BindResult.SUCCESS || result == BindResult.ALREADY_BIND) iterator.remove();
         }
     }
 }

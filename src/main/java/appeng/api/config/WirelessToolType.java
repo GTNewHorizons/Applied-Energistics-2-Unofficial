@@ -12,9 +12,9 @@ public enum WirelessToolType implements Localization {
     @Override
     public String getUnlocalized() {
         return switch (this) {
-            case Simple -> WirelessMessages.mode_simple.getUnlocalized();
-            case Advanced -> WirelessMessages.mode_advanced.getUnlocalized();
-            case Super -> WirelessMessages.mode_super.getUnlocalized();
+            case Simple -> WirelessMessages.Simple.getUnlocalized();
+            case Advanced -> WirelessMessages.Advanced.getUnlocalized();
+            case Super -> WirelessMessages.Super.getUnlocalized();
         };
     }
 }

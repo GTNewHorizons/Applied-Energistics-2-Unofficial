@@ -11,11 +11,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
+import appeng.api.config.WirelessToolType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.render.NetworkVisualiserRender;
 import appeng.core.localization.WailaText;
-import appeng.core.localization.WirelessMessages;
+import appeng.helpers.WireLessToolHelper;
 import appeng.integration.modules.waila.BaseWailaDataProvider;
 import appeng.items.tools.ToolSuperWirelessKit;
 import appeng.tile.networking.TileWirelessBase;
@@ -75,8 +76,8 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
             currentToolTip.add(StatCollector.translateToLocal("gui.appliedenergistics2." + color.name()));
         }
 
-        if (wl.isHub() && tag.getBoolean("holdWand")) currentToolTip.add(
-                WirelessMessages.valueOf("mode_advanced_" + tag.getString("wandConnectMode") + "_hubqols").getLocal());
+        if (wl.isHub() && tag.getBoolean("holdWand"))
+            currentToolTip.add(StatCollector.translateToLocal(tag.getString("wandConnectMode")));
 
         return currentToolTip;
     }
@@ -98,11 +99,14 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
             tag.setBoolean("isSneaking", player.isSneaking());
         }
 
-        ItemStack hand = player.getCurrentEquippedItem();
-        if (hand != null && hand.getItem() instanceof ToolSuperWirelessKit) {
-            String connectionMode = getConnectMode(hand);
-            tag.setBoolean("holdWand", true);
-            tag.setString("wandConnectMode", connectionMode);
+        final ItemStack hand = player.getCurrentEquippedItem();
+        if (hand != null && hand.getItem() instanceof ToolSuperWirelessKit swk) {
+            if (swk.getIdentity() != WirelessToolType.Simple
+                    && WireLessToolHelper.getMode(hand) == WirelessToolType.Advanced) {
+                final String connectionMode = getConnectMode(hand).getUnlocalized();
+                tag.setBoolean("holdWand", true);
+                tag.setString("wandConnectMode", connectionMode);
+            }
         }
 
         tag.setInteger("color", wc.getColor().ordinal());

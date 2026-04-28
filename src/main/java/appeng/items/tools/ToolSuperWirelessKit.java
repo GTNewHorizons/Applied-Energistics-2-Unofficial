@@ -1,6 +1,7 @@
 package appeng.items.tools;
 
 import static appeng.api.config.AdvancedWirelessToolMode.Queueing;
+import static appeng.api.config.AdvancedWirelessToolMode.QueueingLine;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -13,8 +14,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.AdvancedWirelessToolMode;
@@ -46,24 +47,11 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
 
     @Override
     public void onUpdate(ItemStack is, World w, Entity e, int p_77663_4_, boolean p_77663_5_) {
-        if (!is.hasTagCompound()) {
-            setCleanNBT(is);
-        }
+        if (!is.hasTagCompound()) WireLessToolHelper.newNBT(is, this.getIdentity());
     }
 
-    private void setCleanNBT(ItemStack is) {
-        final NBTTagCompound newNBT = new NBTTagCompound();
-        newNBT.setTag("simple", new NBTTagCompound());
-        newNBT.setTag("advanced", new NBTTagCompound());
-
-        final NBTTagCompound newTag = new NBTTagCompound();
-        newTag.setTag("pins", new NBTTagList());
-        newTag.setTag("names", new NBTTagList());
-        newTag.setTag("pos", new NBTTagCompound());
-
-        newNBT.setTag("super", newTag);
-
-        is.setTagCompound(newNBT);
+    public WirelessToolType getIdentity() {
+        return WirelessToolType.Super;
     }
 
     @Override
@@ -72,14 +60,15 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
             return is;
         }
 
-        IConfigManager cm = getConfigManager(is);
+        final IConfigManager cm = getConfigManager(is);
         if (Platform.keyBindTab.isKeyDown(p)) {
             WireLessToolHelper.nextToolMode(p, cm);
             return is;
         }
 
-        WirelessToolType mode = (WirelessToolType) cm.getSetting(Settings.WIRELESS_TOOL_TYPE);
-        if (p.isSneaking() && Platform.keyBindLCtrl.isKeyDown(p)) {
+        final WirelessToolType mode = this.getIdentity() == WirelessToolType.Super ? WireLessToolHelper.getMode(is)
+                : this.getIdentity();
+        if (p.isSneaking() && (Platform.keyBindLCtrl.isKeyDown(p) || this.getIdentity() == WirelessToolType.Simple)) {
             WireLessToolHelper.clearNBT(is, mode, p);
             return is;
         }
@@ -136,69 +125,107 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
     protected void addCheckedInformation(ItemStack is, EntityPlayer player, final List<String> lines,
             boolean displayMoreInfo) {
 
-        IConfigManager cm = getConfigManager(is);
-        WirelessToolType currentMode = (WirelessToolType) cm.getSetting(Settings.WIRELESS_TOOL_TYPE);
-        lines.add(WirelessMessages.mode.getLocal() + " " + currentMode.getLocal(EnumChatFormatting.YELLOW));
-        lines.add(WirelessMessages.mode_toggle.getLocal());
-
-        lines.add(WirelessMessages.clear.getLocal());
+        final IConfigManager cm = getConfigManager(is);
+        final WirelessToolType currentMode = (WirelessToolType) cm.getSetting(Settings.WIRELESS_TOOL_TYPE);
+        if (this.getIdentity() == WirelessToolType.Super) {
+            lines.add(WirelessMessages.Mode.getLocal(currentMode.getLocal()));
+            lines.add(WirelessMessages.ModeToggle.getLocal());
+            lines.add(WirelessMessages.SuperClear.getLocal());
+        } else lines.add(WirelessMessages.Clear.getLocal());
 
         switch (currentMode) {
             case Simple -> {
-                if (is.getTagCompound().getCompoundTag("simple").hasNoTags()) {
-                    lines.add(WirelessMessages.mode_simple_empty.getLocal());
+                if (is.getTagCompound().getCompoundTag(WireLessToolHelper.NbtSimple).hasNoTags()) {
+                    lines.add(WirelessMessages.SimpleEmpty.getLocal());
                 } else {
-                    DimensionalCoord dc = DimensionalCoord.readFromNBT(is.getTagCompound().getCompoundTag("simple"));
-
-                    lines.add(WirelessMessages.bound.getLocal(dc.getGuiTextShortNoDim()));
-                    lines.add(WirelessMessages.mode_simple_bound.getLocal());
+                    DimensionalCoord dc = DimensionalCoord
+                            .readFromNBT(is.getTagCompound().getCompoundTag(WireLessToolHelper.NbtSimple));
+                    lines.add(WirelessMessages.SimpleBounded.getLocal(dc.getGuiTextShortNoDim()));
+                    lines.add(WirelessMessages.SimpleBound.getLocal());
                 }
             }
             case Advanced -> {
-                List<DimensionalCoord> dcl = DimensionalCoord
-                        .readAsListFromNBT(is.getTagCompound().getCompoundTag("advanced"));
-                String modeName = cm.getSetting(AdvancedWirelessToolMode.class).getMode();
-                lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName).getLocal());
+                final AdvancedWirelessToolMode mode = cm.getSetting(AdvancedWirelessToolMode.class);
+                lines.add(WirelessMessages.AdvancedActivated.getLocal(mode.getLocal()));
 
-                if (dcl.isEmpty()) {
-                    lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_empty").getLocal());
-                } else {
-                    if (GuiScreen.isShiftKeyDown()) {
-                        lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_notempty").getLocal());
-                        dcl.forEach(dc -> lines.add(dc.getGuiTextShort()));
-                        return;
-                    } else lines.add(WirelessMessages.mode_advanced_next.getLocal(dcl.get(0).getGuiTextShortNoDim()));
-                }
-                lines.add(WirelessMessages.mode_advanced_howToggle.getLocal(EnumChatFormatting.ITALIC));
-                lines.add(WirelessMessages.valueOf("mode_advanced_" + modeName + "_hubqols").getLocal());
-            }
-            case Super -> {
-                NBTTagCompound stash = is.getTagCompound().getCompoundTag("super");
-                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
-                if (dcl.isEmpty()) {
-                    lines.add(
-                            StatCollector.translateToLocal(
-                                    "item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklistempty"));
-                } else {
-                    NBTTagList tagList = stash.getTagList("names", 10);
-                    lines.add(
-                            StatCollector.translateToLocal(
-                                    "item.appliedenergistics2.ToolSuperWirelessKit.mode.super.networklist"));
-                    for (int i = 0; i < dcl.size(); i++) {
-                        DimensionalCoord dc = dcl.get(i);
-                        String customName = "";
-                        for (int j = 0; j < tagList.tagCount(); j++) {
-                            NBTTagCompound tag = tagList.getCompoundTagAt(i);
-                            if (tag.getInteger("network") == i && tag.hasKey("networkName")) {
-                                customName = tag.getString("networkName");
-                                break;
+                switch (mode) {
+                    case Queueing, Binding -> {
+                        final List<DimensionalCoord> dcl = DimensionalCoord
+                                .readAsListFromNBT(is.getTagCompound().getCompoundTag(WireLessToolHelper.NbtAdvanced));
+                        if (dcl.isEmpty()) {
+                            if (mode == Queueing) lines.add(WirelessMessages.AdvancedQueueEmpty.getLocal());
+                            else lines.add(WirelessMessages.AdvancedBindingEmpty.getLocal());
+
+                        } else {
+                            if (GuiScreen.isShiftKeyDown()) {
+                                if (mode == Queueing) lines.add(WirelessMessages.AdvancedQueueNotEmpty.getLocal());
+                                else lines.add(WirelessMessages.AdvancedBindingNotEmpty.getLocal());
+                                dcl.forEach(dc -> lines.add(dc.getGuiTextShort()));
+                                return;
+                            } else lines.add(WirelessMessages.AdvancedNext.getLocal(dcl.get(0).getGuiTextShortNoDim()));
+                        }
+
+                        if (mode == Queueing) lines.add(WirelessMessages.AdvancedQueueingHubQol.getLocal());
+                        else lines.add(WirelessMessages.AdvancedBindingHubQol.getLocal());
+                    }
+
+                    case QueueingLine, BindingLine -> {
+                        final NBTTagCompound line;
+                        if (mode == QueueingLine)
+                            line = is.getTagCompound().getCompoundTag(WireLessToolHelper.NbtAdvancedLineQueue);
+                        else line = is.getTagCompound().getCompoundTag(WireLessToolHelper.NbtAdvancedLineBinding);
+
+                        if (!line.hasKey(WireLessToolHelper.NbtAdvanced1StPoint))
+                            lines.add(WirelessMessages.AdvancedLineEmpty1st.getLocal());
+                        else {
+                            lines.add(
+                                    WirelessMessages.AdvancedLine1st.getLocal(
+                                            DimensionalCoord
+                                                    .readFromNBT(
+                                                            line.getCompoundTag(WireLessToolHelper.NbtAdvanced1StPoint))
+                                                    .getGuiTextShort()));
+
+                            if (!line.hasKey(WireLessToolHelper.NbtAdvanced2ndPoint))
+                                lines.add(WirelessMessages.AdvancedLineEmpty2nd.getLocal());
+                            else {
+                                lines.add(
+                                        WirelessMessages.AdvancedLine2nd.getLocal(
+                                                DimensionalCoord.readFromNBT(
+                                                        line.getCompoundTag(WireLessToolHelper.NbtAdvanced2ndPoint))
+                                                        .getGuiTextShort()));
+                                lines.add(WirelessMessages.AdvancedQueueingLineNotEmpty.getLocal());
                             }
                         }
+                    }
+                }
+
+                lines.add(WirelessMessages.AdvancedHowToggle.getLocal(EnumChatFormatting.ITALIC));
+            }
+            case Super -> {
+                final NBTTagCompound stash = is.getTagCompound().getCompoundTag(WireLessToolHelper.NbtSuper);
+                final List<DimensionalCoord> dcl = DimensionalCoord
+                        .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
+                if (dcl.isEmpty()) lines.add(WirelessMessages.SuperNetworkListEmpty.getLocal());
+                else {
+                    lines.add(WirelessMessages.SuperNetworkList.getLocal());
+                    final NBTTagList tagNames = stash.getTagList(WireLessToolHelper.NbtSuperNames, NBT.TAG_COMPOUND);
+                    for (int i = 0; i < tagNames.tagCount(); i++) {
+                        final NBTTagCompound tag = tagNames.getCompoundTagAt(i);
+                        final DimensionalCoord netCoord = DimensionalCoord.readFromNBT(tag);
+                        String customName = "";
+
+                        if (tag.hasKey("networkName")) {
+                            for (final DimensionalCoord dc : dcl) {
+                                if (dc.equals(netCoord)) {
+                                    customName = tag.getString("networkName");
+                                    break;
+                                }
+                            }
+                        }
+
                         lines.add(
-                                StatCollector.translateToLocalFormatted(
-                                        "item.appliedenergistics2.ToolSuperWirelessKit.mode.super.network",
-                                        customName + " ",
-                                        dc.getGuiTextShortNoDim()));
+                                WirelessMessages.SuperNetwork
+                                        .getLocal(customName + " ", netCoord.getGuiTextShortNoDim()));
                     }
                 }
             }

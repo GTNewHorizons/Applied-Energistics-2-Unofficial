@@ -151,8 +151,10 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
     }
 
     public void updateData() {
-        final NBTTagCompound stash = toolInv.getItemStack().getTagCompound().getCompoundTag("super");
-        final List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
+        final NBTTagCompound stash = toolInv.getItemStack().getTagCompound()
+                .getCompoundTag(WireLessToolHelper.NbtSuper);
+        final List<DimensionalCoord> dcl = DimensionalCoord
+                .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
 
         World w = toolInv.getWorld();
 
@@ -178,8 +180,12 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
         }
 
         final NBTTagCompound nbtData = new NBTTagCompound();
-        nbtData.setTag("pins", stash.getTagList("pins", NBT.TAG_COMPOUND));
-        nbtData.setTag("names", stash.getTagList("names", NBT.TAG_COMPOUND));
+        nbtData.setTag(
+                WireLessToolHelper.NbtSuperPins,
+                stash.getTagList(WireLessToolHelper.NbtSuperPins, NBT.TAG_COMPOUND));
+        nbtData.setTag(
+                WireLessToolHelper.NbtSuperNames,
+                stash.getTagList(WireLessToolHelper.NbtSuperNames, NBT.TAG_COMPOUND));
 
         if (!nbtData.hasNoTags()) {
             for (ICrafting crafter : this.crafters) {
@@ -193,7 +199,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
 
     public void processCommand(SuperWirelessKitCommand command) {
         World w = toolInv.getWorld();
-        NBTTagCompound stash = toolInv.getItemStack().getTagCompound().getCompoundTag("super");
+        NBTTagCompound stash = toolInv.getItemStack().getTagCompound().getCompoundTag(WireLessToolHelper.NbtSuper);
         switch (command.command) {
             case RENAME_SINGLE, RENAME_GROUP -> {
                 switch (command.subCommand.groupBy) {
@@ -207,7 +213,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                     case COLOR, NETWORK -> {
                         boolean noData = true;
                         final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
-                        final NBTTagList names = stash.getTagList("names", 10);
+                        final NBTTagList names = stash.getTagList(WireLessToolHelper.NbtSuperNames, 10);
                         for (int i = 0; i < names.tagCount(); i++) {
                             final NBTTagCompound name = names.getCompoundTagAt(i);
 
@@ -255,7 +261,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
             }
 
             case PIN -> {
-                final NBTTagList tgl = stash.getTagList("pins", 10);
+                final NBTTagList tgl = stash.getTagList(WireLessToolHelper.NbtSuperPins, 10);
                 for (int i = 0; i < tgl.tagCount(); i++) {
                     final NBTTagCompound tag = tgl.getCompoundTagAt(i);
                     final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
@@ -308,7 +314,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                 }
             }
             case DELETE -> {
-                final NBTTagList pins = stash.getTagList("pins", 10);
+                final NBTTagList pins = stash.getTagList(WireLessToolHelper.NbtSuperPins, 10);
 
                 // remove pin
                 for (int i = 0; i < pins.tagCount(); i++) {
@@ -319,7 +325,8 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                     }
                 }
 
-                final List<DimensionalCoord> networks = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
+                final List<DimensionalCoord> networks = DimensionalCoord
+                        .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
                 networks.removeIf(network -> command.networkPos.equals(network));
 
                 final NBTTagCompound tag = new NBTTagCompound();
@@ -372,37 +379,14 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                 updateData();
             }
             case BIND -> {
-                final ArrayList<TileWirelessBase> twToBind = this.fletchConnectors(false, command.toBindRow, w);
-                final ArrayList<TileWirelessBase> twTarget = this.fletchConnectors(false, command.targetRow, w);
+                final List<TileWirelessBase> twToBind = this.fletchConnectors(false, command.toBindRow, w);
+                final List<TileWirelessBase> twTarget = this.fletchConnectors(false, command.targetRow, w);
 
-                if (twToBind.isEmpty() || twTarget.isEmpty()) return;
-
-                int i = 0;
-                int ii = 0;
-                toBind: while (twToBind.size() > i && twTarget.size() > ii) {
-                    while (twTarget.get(ii).getFreeSlots() > 0) {
-                        switch (WireLessToolHelper.performConnection(
-                                twTarget.get(ii),
-                                twToBind.get(i),
-                                new PlayerSource(getPlayerInv().player, null))) {
-                            case SUCCESS -> {
-                                i++;
-                                if (!(twToBind.size() > i)) break toBind;
-                            }
-
-                            case INVALID_TARGET -> ii++;
-                            case INVALID_SOURCE -> i++;
-                            case FAILED -> {
-                                i++;
-                                ii++;
-                            }
-                        }
-                    }
-                    ii++;
-                }
+                WireLessToolHelper.bindRows(twToBind, twTarget, this.getPlayerInv().player);
 
                 // Check if network was absorbed after bind and delete it if
-                final List<DimensionalCoord> networks = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
+                final List<DimensionalCoord> networks = DimensionalCoord
+                        .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
                 final ArrayList<IGrid> gList = new ArrayList<>();
                 for (DimensionalCoord dc : networks) {
                     if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
@@ -429,7 +413,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
             }
             case UNBIND -> {
                 final List<DimensionalCoord> networks = DimensionalCoord
-                        .readAsListFromNBT((NBTTagCompound) stash.getTag("pos"));
+                        .readAsListFromNBT((NBTTagCompound) stash.getTag(WireLessToolHelper.NbtSuperPos));
                 final ArrayList<TileWirelessBase> unbounded = this.fletchConnectors(true, command.toBindRow, w);
 
                 for (final TileWirelessBase tw : unbounded) {
@@ -450,14 +434,15 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                 }
                 final NBTTagCompound tag = new NBTTagCompound();
                 DimensionalCoord.writeListToNBT(tag, networks);
-                stash.setTag("pos", tag);
+                stash.setTag(WireLessToolHelper.NbtSuperPos, tag);
 
                 updateData();
             }
             case AE2STUFF_REPLACE -> {
                 if (!isAEStaffLoaded) return;
 
-                final List<DimensionalCoord> networks = DimensionalCoord.readAsListFromNBT(stash.getCompoundTag("pos"));
+                final List<DimensionalCoord> networks = DimensionalCoord
+                        .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
                 for (DimensionalCoord dc : networks) {
                     IGridHost gh = w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost ghInstance ? ghInstance
                             : null;

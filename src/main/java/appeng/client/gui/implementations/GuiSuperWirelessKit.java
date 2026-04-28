@@ -49,6 +49,7 @@ import appeng.helpers.SuperWirelessKitCommand.PinType;
 import appeng.helpers.SuperWirelessKitCommand.SubCommand;
 import appeng.helpers.SuperWirelessKitCommand.SuperWirelessKitCommands;
 import appeng.helpers.SuperWirelessToolDataObject;
+import appeng.helpers.WireLessToolHelper;
 import appeng.items.contents.SuperWirelessKitObject;
 import appeng.util.IConfigManagerHost;
 import cpw.mods.fml.common.Loader;
@@ -1203,7 +1204,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
 
         ArrayList<GroupUnit> networkGroupResolver = new ArrayList<>();
 
-        final NBTTagList names = this.nData.getTagList("names", 10);
+        final NBTTagList names = this.nData.getTagList(WireLessToolHelper.NbtSuperNames, 10);
         final ArrayList<SavedName> savedNames = new ArrayList<>();
 
         for (int i = 0; i < names.tagCount(); i++) {
@@ -1217,7 +1218,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                             tag.getString("colorName")));
         }
 
-        final NBTTagList pins = this.nData.getTagList("pins", 10);
+        final NBTTagList pins = this.nData.getTagList(WireLessToolHelper.NbtSuperPins, 10);
         final ArrayList<SavedPin> savedPins = new ArrayList<>();
 
         for (int i = 0; i < pins.tagCount(); i++) {
