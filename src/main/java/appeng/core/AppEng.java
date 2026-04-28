@@ -23,7 +23,6 @@ import com.google.common.base.Stopwatch;
 import appeng.api.events.LocatableEventAnnounce;
 import appeng.api.events.LocatableEventAnnounce.LocatableEvent;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.client.gui.AEBaseGui;
 import appeng.core.crash.CrashInfo;
 import appeng.core.crash.IntegrationCrashEnhancement;
 import appeng.core.crash.ModCrashEnhancement;
@@ -241,9 +240,6 @@ public final class AppEng {
         }
         TickHandler.INSTANCE.shutdown();
         CraftingNotificationManager.clear();
-        if (event.getSide().isClient()) {
-            AEBaseGui.aeRenderItem.parent = null;
-        }
         MinecraftForge.EVENT_BUS.post(new LocatableEventAnnounce(null, LocatableEvent.RemoveAll));
     }
 
