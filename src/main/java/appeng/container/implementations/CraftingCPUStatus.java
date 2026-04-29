@@ -44,6 +44,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final long craftingElapsedTime;
     private final boolean isSuspended;
     private final String sourcePlayer;
+    private final boolean craftingLinkStandalone;
 
     public CraftingCPUStatus() {
         this.serverCluster = null;
@@ -60,6 +61,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.craftingElapsedTime = 0;
         this.isSuspended = false;
         this.sourcePlayer = null;
+        this.craftingLinkStandalone = false;
     }
 
     public CraftingCPUStatus(ICraftingCPU cluster, int serial) {
@@ -85,6 +87,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.allowMode = cluster.getCraftingAllowMode();
         this.isSuspended = cluster.isSuspended();
         this.sourcePlayer = cluster.getSourcePlayer();
+        this.craftingLinkStandalone = cluster.isCraftingLinkStandalone();
     }
 
     public CraftingCPUStatus(NBTTagCompound i) {
@@ -103,6 +106,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.craftingElapsedTime = i.hasKey("craftingElapsedTime") ? i.getLong("craftingElapsedTime") : 0;
         this.isSuspended = i.getBoolean("isSuspended");
         this.sourcePlayer = i.hasKey("sourcePlayer") ? i.getString("sourcePlayer") : null;
+        this.craftingLinkStandalone = i.getBoolean("craftingLinkStandalone");
     }
 
     public CraftingCPUStatus(ByteBuf packet) throws IOException {
@@ -136,6 +140,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         }
         i.setInteger("allowMode", this.allowMode.ordinal());
         i.setBoolean("isSuspended", this.isSuspended);
+        i.setBoolean("craftingLinkStandalone", this.craftingLinkStandalone);
         if (this.sourcePlayer != null) {
             i.setString("sourcePlayer", this.sourcePlayer);
         }
@@ -211,6 +216,10 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
 
     public String getSourcePlayer() {
         return sourcePlayer;
+    }
+
+    public boolean isCraftingLinkStandalone() {
+        return craftingLinkStandalone;
     }
 
     @Override
