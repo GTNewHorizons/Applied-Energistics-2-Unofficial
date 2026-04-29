@@ -301,7 +301,7 @@ public class WireLessToolHelper {
 
     private static boolean addToQueue(TileWirelessBase target, ItemStack tool, EntityPlayer p) {
         List<DimensionalCoord> locList = DimensionalCoord
-                .readAsListFromNBT(tool.getTagCompound().getCompoundTag("advanced"));
+                .readAsListFromNBT(tool.getTagCompound().getCompoundTag(NbtAdvanced));
 
         DimensionalCoord targetLoc = target.getLocation();
         boolean isHub = target.isHub();
@@ -332,7 +332,7 @@ public class WireLessToolHelper {
 
         final NBTTagCompound tag = new NBTTagCompound();
         DimensionalCoord.writeListToNBT(tag, locList);
-        tool.getTagCompound().setTag("advanced", tag);
+        tool.getTagCompound().setTag(NbtAdvanced, tag);
         return true;
     }
 
@@ -404,7 +404,7 @@ public class WireLessToolHelper {
 
     private static boolean bindFromQueue(TileWirelessBase target, ItemStack tool, World w, EntityPlayer p) {
         List<DimensionalCoord> locList = DimensionalCoord
-                .readAsListFromNBT(tool.getTagCompound().getCompoundTag("advanced"));
+                .readAsListFromNBT(tool.getTagCompound().getCompoundTag(NbtAdvanced));
         if (locList.isEmpty()) {
             p.addChatMessage(WirelessMessages.AdvancedNoConnectors.toChat());
             return false;
@@ -435,7 +435,7 @@ public class WireLessToolHelper {
 
         NBTTagCompound tag = new NBTTagCompound();
         DimensionalCoord.writeListToNBT(tag, locList);
-        tool.getTagCompound().setTag("advanced", tag);
+        tool.getTagCompound().setTag(NbtAdvanced, tag);
         return success;
     }
 
@@ -504,13 +504,13 @@ public class WireLessToolHelper {
             if (TempTe instanceof IGridHost tile && target instanceof IGridHost gh) {
                 if (gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
                         == tile.getGridNode(ForgeDirection.UNKNOWN).getGrid()) {
-                    p.addChatMessage(WirelessMessages.BoundSuperFailed.toChat());
+                    p.addChatMessage(WirelessMessages.SuperBoundFailed.toChat());
                     return false;
                 }
             }
         }
         DimensionalCoord targetLoc = new DimensionalCoord(target);
-        p.addChatMessage(WirelessMessages.BoundSuper.toChat(targetLoc.getGuiTextShortNoDim()));
+        p.addChatMessage(WirelessMessages.SuperBound.toChat(targetLoc.getGuiTextShortNoDim()));
         locList.add(targetLoc);
         DimensionalCoord.writeListToNBT(tag, locList);
         return true;

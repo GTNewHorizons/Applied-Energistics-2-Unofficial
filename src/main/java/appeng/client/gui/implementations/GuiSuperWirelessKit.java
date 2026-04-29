@@ -2,8 +2,8 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -28,6 +28,7 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiCheckBox;
@@ -270,18 +271,19 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                 x = this.guiLeft + 60;
                 y = this.guiTop + (i * 23) + TOP_OFFSET + 17;
             }
-            this.includeHubsButtons[i] = new GuiCheckBox(
-                    0.25D,
-                    x,
-                    y,
-                    ButtonToolTips.SuperWirelessKitIncludeHubsName.getLocal(),
-                    ButtonToolTips.SuperWirelessKitIncludeHubsDesc.getLocal());
+
             this.includeConnectorsButtons[i] = new GuiCheckBox(
                     0.25D,
                     x - 5,
                     y,
                     ButtonToolTips.SuperWirelessKitIncludeConnectorsName.getLocal(),
                     ButtonToolTips.SuperWirelessKitIncludeConnectorsDesc.getLocal());
+            this.includeHubsButtons[i] = new GuiCheckBox(
+                    0.25D,
+                    x,
+                    y,
+                    ButtonToolTips.SuperWirelessKitIncludeHubsName.getLocal(),
+                    ButtonToolTips.SuperWirelessKitIncludeHubsDesc.getLocal());
             this.deleteButtons[i] = new GuiCheckBox(
                     0.25D,
                     x - 55,
@@ -655,7 +657,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
     private class GroupUnit extends BaseUnit {
 
         private final ArrayList<SuperWirelessToolDataObject> wsList = new ArrayList<>();
-        private final ArrayList<DimensionalCoord> cordList = new ArrayList<>();
+        private final ArrayList<NamedDimensionalCoord> cordList = new ArrayList<>();
         private boolean includeHubs;
         private boolean includeConnectors;
         private int channels;
@@ -690,14 +692,14 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             this.isPinned = isPinned;
 
             if (includeConnectors && !data.isHub) {
-                this.cordList.add(data.cord);
+                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
                 this.channels = data.channels;
                 this.slots = 1;
                 this.usedSlots = 1 - data.slots;
             }
 
             if (includeHubs && data.isHub) {
-                this.cordList.add(data.cord);
+                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
                 this.channels = data.channels;
                 this.slots = 32;
                 this.usedSlots = 32 - data.slots;
@@ -708,14 +710,14 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             this.wsList.add(data);
 
             if (includeConnectors && !data.isHub) {
-                this.cordList.add(data.cord);
+                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
                 this.channels += data.channels;
                 this.slots += 1;
                 this.usedSlots += 1 - data.slots;
             }
 
             if (includeHubs && data.isHub) {
-                this.cordList.add(data.cord);
+                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
                 this.channels += data.channels;
                 this.slots += 32;
                 this.usedSlots += 32 - data.slots;
@@ -730,14 +732,14 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
 
             for (SuperWirelessToolDataObject s : wsList) {
                 if (includeConnectors && !s.isHub) {
-                    this.cordList.add(s.cord);
+                    this.cordList.add(new NamedDimensionalCoord(s.cord, s.customName));
                     this.channels += s.channels;
                     this.slots += 1;
                     this.usedSlots += 1 - s.slots;
                 }
 
                 if (includeHubs && s.isHub) {
-                    this.cordList.add(s.cord);
+                    this.cordList.add(new NamedDimensionalCoord(s.cord, s.customName));
                     this.channels += s.channels;
                     this.slots += 32;
                     this.usedSlots += 32 - s.slots;
@@ -867,11 +869,14 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         public void mouseClicked(int xPos, int yPos, int button) {
             if (this.isMouseIn(xPos, yPos)) {
                 if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-                    BlockPosHighlighter.highlightBlocks(
-                            mc.thePlayer,
-                            cordList,
-                            PlayerMessages.InterfaceHighlighted.getUnlocalized(),
-                            PlayerMessages.InterfaceInOtherDim.getUnlocalized());
+                    final String prefix = this.byColor
+                            ? PlayerMessages.WirelessHighlighterColorPrefix
+                                    .getLocal(this.customColorName, this.customNetworkName)
+                            : PlayerMessages.WirelessHighlighterNetworkPrefix.getLocal(this.customNetworkName);
+
+                    final Map<NamedDimensionalCoord, String[]> messages = new HashMap<>();
+                    this.cordList.forEach(c -> messages.put(c, this.getHighlightKeys()));
+                    BlockPosHighlighter.highlightNamedBlocks(mc.thePlayer, messages, prefix);
                     mc.thePlayer.closeScreen();
                 } else {
                     if (includeConnectorsButtons[totalPos].mousePressed(null, xPos, yPos)) {
@@ -922,12 +927,7 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
         BaseUnit(SuperWirelessToolDataObject data, String customNetworkName, String customColorName) {
             this.data = data;
             this.customNetworkName = !Objects.equals(customNetworkName, "") ? customNetworkName
-                    : data.network.x + ", "
-                            + data.network.y
-                            + ", "
-                            + data.network.z
-                            + ", "
-                            + data.network.getDimension();
+                    : data.cord.getGuiTextShort();
             this.customColorName = !Objects.equals(customColorName, "") ? customColorName : data.color.toString();
         }
 
@@ -1006,15 +1006,28 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             return false;
         }
 
+        protected String[] getHighlightKeys() {
+            return new String[] { PlayerMessages.WirelessHighlighted.getUnlocalized(),
+                    PlayerMessages.WirelessInOtherDim.getUnlocalized() };
+        }
+
         public void mouseClicked(final int xPos, final int yPos, final int button) {
             if (this.isMouseIn(xPos, yPos)) {
                 if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-                    BlockPosHighlighter.highlightBlocks(
+                    final Map<NamedDimensionalCoord, String[]> messages = new HashMap<>();
+                    if (this.data.targets.isEmpty()) {
+                        messages.put(
+                                new NamedDimensionalCoord(this.data.cord, this.data.customName),
+                                this.getHighlightKeys());
+                    } else {
+                        messages.put(
+                                new NamedDimensionalCoord(this.data.targets.get(0), this.data.customName),
+                                this.getHighlightKeys());
+                    }
+                    BlockPosHighlighter.highlightNamedBlocks(
                             mc.thePlayer,
-                            data.targets.isEmpty() ? Collections.singletonList(data.cord)
-                                    : new ArrayList<>(Arrays.asList(data.cord, data.targets.get(0))),
-                            PlayerMessages.MachineHighlighted.getUnlocalized(),
-                            PlayerMessages.MachineInOtherDim.getUnlocalized());
+                            messages,
+                            PlayerMessages.WirelessHighlighterPrefix.getLocal());
                     mc.thePlayer.closeScreen();
                     return;
                 }

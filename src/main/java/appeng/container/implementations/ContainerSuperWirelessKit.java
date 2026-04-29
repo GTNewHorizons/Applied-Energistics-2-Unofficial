@@ -331,13 +331,12 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
 
                 final NBTTagCompound tag = new NBTTagCompound();
                 DimensionalCoord.writeListToNBT(tag, networks);
-                stash.setTag("pos", tag);
+                stash.setTag(WireLessToolHelper.NbtSuperPos, tag);
 
                 updateData();
             }
             case RECOLOR -> {
                 for (final SubCommand subCommand : command.toBindRow) {
-
                     switch (subCommand.groupBy) {
                         case SINGLE -> {
                             if (w.getTileEntity(
@@ -354,7 +353,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                         }
 
                         case NETWORK, COLOR -> {
-                            final boolean isColor = command.subCommand.groupBy == PinType.COLOR;
+                            final boolean isColor = subCommand.groupBy == PinType.COLOR;
                             for (SuperWirelessToolDataObject sd : data) {
                                 if (!subCommand.networkPos.equals(sd.network)) continue;
 

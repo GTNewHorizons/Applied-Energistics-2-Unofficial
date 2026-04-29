@@ -18,6 +18,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.AdvancedWirelessToolMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SuperWirelessToolGroupBy;
@@ -108,7 +110,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
 
     public static IConfigManager getConfigManager(final ItemStack target) {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(target);
+            final NBTTagCompound data = ItemStackNBT.get(target);
             manager.writeToNBT(data);
         });
 
@@ -117,7 +119,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
         out.registerSetting(Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
         out.registerSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE, Queueing);
 
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(target).copy());
+        out.readFromNBT(ItemStackNBT.copy(target));
         return out;
     }
 

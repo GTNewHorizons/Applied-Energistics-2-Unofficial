@@ -150,6 +150,11 @@ chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dim
 chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
+chat.appliedenergistics2.WirelessHighlighted=%d §e"%d§e"§r is now highlighted at %d, %d, %d
+chat.appliedenergistics2.WirelessInOtherDim=%d §e"%d§e"§r located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.WirelessHighlighterPrefix=Wireless
+chat.appliedenergistics2.WirelessHighlighterNetworkPrefix=Wireless of network §e"%s§e"§r -
+chat.appliedenergistics2.WirelessHighlighterColorPrefix=Wireless color §e"%s§e"§r of network §e"%s§e"§r -
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -469,10 +474,10 @@ gui.appliedenergistics2.ControlButtonValuesDesc2=Negative buttons are mirrored
 gui.appliedenergistics2.SelectColor=Select a Color
 gui.appliedenergistics2.Selected=Selected
 
-gui.appliedenergistics2.GuiSuperWirelessKitColor=Color %s
-gui.appliedenergistics2.GuiSuperWirelessKitNetwork=Net: %s
-gui.appliedenergistics2.GuiSuperWirelessKitSelfPos=I:
-gui.appliedenergistics2.GuiSuperWirelessKitTargetPos=T:
+gui.appliedenergistics2.GuiSuperWirelessKitColor=C: %s
+gui.appliedenergistics2.GuiSuperWirelessKitNetwork=N: %s
+gui.appliedenergistics2.GuiSuperWirelessKitSelfPos=S: %s
+gui.appliedenergistics2.GuiSuperWirelessKitTargetPos=T: %s
 gui.appliedenergistics2.GuiSuperWirelessKitChannelsUsage=Channels Usage: %s
 gui.appliedenergistics2.GuiSuperWirelessKitNameFieldDesc=Rename connector in world or group in gui
 
@@ -770,10 +775,10 @@ gui.tooltips.appliedenergistics2.SuperWirelessKitMadChameleonRecolorName=Mad Cha
 gui.tooltips.appliedenergistics2.SuperWirelessKitMadChameleonRecolorDesc=Recolor in color which not allow connect to neighbor wireless`s
 gui.tooltips.appliedenergistics2.SuperWirelessKitaAE2StuffName=AE2Stuff converter
 gui.tooltips.appliedenergistics2.SuperWirelessKitAE2StuffDesc=Replace ae2tuff connectors in networks with AE2 connections
-gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeConnectorsName=Include hubs
-gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeConnectorsDesc=Include hubs in manipulations
-gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeHubsName=Include connectors
-gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeHubsDesc=Include connectors in manipulations
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeConnectorsName=Include connectors
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeConnectorsDesc=Include connectors in manipulations
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeHubsName=Include hubs
+gui.tooltips.appliedenergistics2.SuperWirelessKitIncludeHubsDesc=Include hubs in manipulations
 gui.tooltips.appliedenergistics2.SuperWirelessKitDeleteName=Delete Network
 gui.tooltips.appliedenergistics2.SuperWirelessKitDeleteDesc=Remove network from list
 gui.tooltips.appliedenergistics2.SuperWirelessKitBindName=Bind

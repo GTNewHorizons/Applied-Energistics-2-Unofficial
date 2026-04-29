@@ -66,8 +66,8 @@ public enum WirelessMessages implements Localization {
     AdvancedLineReset,
 
     Super,
-    BoundSuper,
-    BoundSuperFailed,
+    SuperBound,
+    SuperBoundFailed,
     SuperClear,
     SuperNetworkList,
     SuperNetwork,
