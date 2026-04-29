@@ -251,6 +251,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return this.myLastLink;
     }
 
+    @Override
+    public boolean isCraftingLinkStandalone() {
+        return this.myLastLink != null && this.myLastLink.isStandalone();
+    }
+
     private List<CraftCompleteListener> initializeDefaultOnCompleteListener() {
         return new ArrayList<>(defaultOnComplete);
     }
@@ -1062,7 +1067,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public ICraftingLink submitJob(final IGrid g, final ICraftingJob job, final BaseActionSource src,
             final ICraftingRequester requestingMachine) {
-        if (this.myLastLink != null && this.isBusy()
+        if (requestingMachine == null && this.myLastLink != null
+                && this.myLastLink.isStandalone()
+                && this.isBusy()
                 && this.finalOutput.get().isSameType(job.getOutput())
                 && this.availableStorage >= this.usedStorage + job.getByteTotal()) {
             return mergeJob(g, job, src, requestingMachine);
@@ -1661,8 +1668,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public boolean isMaking(final IAEStack<?> what) {
-        final IAEStack<?> wat = this.waitingFor.findPrecise(what);
-        return wat != null && wat.getStackSize() > 0;
+        return what != null && (this.getStackAmount(what, CraftingItemList.ACTIVE) > 0
+                || this.getStackAmount(what, CraftingItemList.PENDING) > 0);
     }
 
     public void breakCluster() {

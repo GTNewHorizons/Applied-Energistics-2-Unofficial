@@ -696,6 +696,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     public void onGuiClosed() {
         super.onGuiClosed();
         this.subGui = true; // in case the gui is reopened later ( i'm looking at you NEI )
+        aeRenderItem.parent = null;
     }
 
     @Nullable
