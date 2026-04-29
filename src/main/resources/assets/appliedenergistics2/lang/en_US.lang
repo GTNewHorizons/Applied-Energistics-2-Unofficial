@@ -481,10 +481,10 @@ gui.appliedenergistics2.GuiSuperWirelessKitTargetPos=T: %s
 gui.appliedenergistics2.GuiSuperWirelessKitChannelsUsage=Channels Usage: %s
 gui.appliedenergistics2.GuiSuperWirelessKitNameFieldDesc=Rename connector in world or group in gui
 
-gui.appliedenergistics2.GuiDimensionalCoord=§4X: %s§r,§2Y: %s§r,§1Z: %s§r,§5DIM: %s
-gui.appliedenergistics2.GuiDimensionalCoordShort=§4%s§r, §2%s§r, §1%s§r, §5%s
-gui.appliedenergistics2.GuiDimensionalCoordNoDim=§4X: %s§r,§2Y: %s§r,§1Z: %s
-gui.appliedenergistics2.GuiDimensionalCoordShortNoDim=§4%s§r, §2%s§r, §1%s
+gui.appliedenergistics2.GuiDimensionalCoord=§cX: %s§r,§aY: %s§r,§9Z: %s§r,§5DIM: %s
+gui.appliedenergistics2.GuiDimensionalCoordShort=§c%s§r, §a%s§r, §9%s§r, §5%s
+gui.appliedenergistics2.GuiDimensionalCoordNoDim=§cX: %s§r,§aY: %s§r,§9Z: %s
+gui.appliedenergistics2.GuiDimensionalCoordShortNoDim=§c%s§r, §a%s§r, §9%s
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000

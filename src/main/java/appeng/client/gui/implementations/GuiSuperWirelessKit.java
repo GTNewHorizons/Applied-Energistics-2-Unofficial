@@ -778,52 +778,36 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             final int offY = 23;
             final int posY = yo * offY + TOP_OFFSET;
             final int descPosX = xo * 3 + 46;
+            final int scaleCorrectionX = (int) Math.round(xo / 0.45);
+            final int scaleCorrectionY = (int) Math.round(posY / 0.45);
 
             GL11.glPushMatrix();
             GL11.glScaled(0.45, 0.45, 0.45);
             if (byColor) {
                 if (includeHubs) {
-                    drawItem(
-                            (int) Math.round(xo / 0.45) + 7,
-                            (int) Math.round(posY / 0.45) + 2,
-                            icons.get(data.color.ordinal() + 17));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(data.color.ordinal() + 17));
                 } else {
-                    drawItem(
-                            (int) Math.round(xo / 0.45) + 7,
-                            (int) Math.round(posY / 0.45) + 2,
-                            icons.get(data.color.ordinal()));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(data.color.ordinal()));
                 }
                 if (includeConnectors) {
-                    drawItem(
-                            (int) Math.round(xo / 0.45) + 0,
-                            (int) Math.round(posY / 0.45) + 14,
-                            icons.get(data.color.ordinal()));
-                    drawItem(
-                            (int) Math.round(xo / 0.45) + 14,
-                            (int) Math.round(posY / 0.45) + 14,
-                            icons.get(data.color.ordinal()));
+                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(data.color.ordinal()));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(data.color.ordinal()));
                 } else {
-                    drawItem(
-                            (int) Math.round(xo / 0.45) + 0,
-                            (int) Math.round(posY / 0.45) + 14,
-                            icons.get(data.color.ordinal() + 17));
-                    drawItem(
-                            (int) Math.round(xo / 0.45) + 14,
-                            (int) Math.round(posY / 0.45) + 14,
-                            icons.get(data.color.ordinal() + 17));
+                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(data.color.ordinal() + 17));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(data.color.ordinal() + 17));
                 }
             } else {
                 if (includeHubs) {
-                    drawItem((int) Math.round(xo / 0.45) + 7, (int) Math.round(posY / 0.45) + 2, icons.get(17));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(17));
                 } else {
-                    drawItem((int) Math.round(xo / 0.45) + 7, (int) Math.round(posY / 0.45) + 2, icons.get(0));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(0));
                 }
                 if (includeConnectors) {
-                    drawItem((int) Math.round(xo / 0.45) + 0, (int) Math.round(posY / 0.45) + 14, icons.get(1));
-                    drawItem((int) Math.round(xo / 0.45) + 14, (int) Math.round(posY / 0.45) + 14, icons.get(2));
+                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(1));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(2));
                 } else {
-                    drawItem((int) Math.round(xo / 0.45) + 0, (int) Math.round(posY / 0.45) + 14, icons.get(1 + 17));
-                    drawItem((int) Math.round(xo / 0.45) + 14, (int) Math.round(posY / 0.45) + 14, icons.get(2 + 17));
+                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(1 + 17));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(2 + 17));
                 }
             }
 
@@ -1015,15 +999,12 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             if (this.isMouseIn(xPos, yPos)) {
                 if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
                     final Map<NamedDimensionalCoord, String[]> messages = new HashMap<>();
-                    if (this.data.targets.isEmpty()) {
-                        messages.put(
-                                new NamedDimensionalCoord(this.data.cord, this.data.customName),
-                                this.getHighlightKeys());
-                    } else {
-                        messages.put(
-                                new NamedDimensionalCoord(this.data.targets.get(0), this.data.customName),
-                                this.getHighlightKeys());
-                    }
+                    messages.put(
+                            new NamedDimensionalCoord(this.data.cord, this.data.customName),
+                            this.getHighlightKeys());
+                    if (!this.data.targets.isEmpty()) messages.put(
+                            new NamedDimensionalCoord(this.data.targets.get(0), this.data.customName),
+                            this.getHighlightKeys());
                     BlockPosHighlighter.highlightNamedBlocks(
                             mc.thePlayer,
                             messages,
