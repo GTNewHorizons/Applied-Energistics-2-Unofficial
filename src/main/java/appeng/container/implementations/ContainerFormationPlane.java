@@ -143,4 +143,8 @@ public class ContainerFormationPlane extends ContainerUpgradeable implements IVi
     public boolean supportItemDrop() {
         return this.te.supportItemDrop();
     }
+
+    public boolean supportFuzzy() {
+        return this.te.supportFuzzy();
+    }
 }

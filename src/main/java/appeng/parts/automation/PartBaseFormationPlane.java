@@ -11,9 +11,6 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.config.FuzzyMode;
-import appeng.api.config.Settings;
-import appeng.api.config.YesNo;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
@@ -46,9 +43,6 @@ public abstract class PartBaseFormationPlane extends PartUpgradeable
 
     public PartBaseFormationPlane(ItemStack is) {
         super(is);
-
-        this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
-        this.getConfigManager().registerSetting(Settings.PLACE_BLOCK, YesNo.YES);
     }
 
     @Override
@@ -61,6 +55,7 @@ public abstract class PartBaseFormationPlane extends PartUpgradeable
         super.readFromNBT(data);
         this.Config.readFromNBT(data, "config");
         this.priority = data.getInteger("priority");
+        this.updateHandler();
     }
 
     @Override
@@ -302,7 +297,10 @@ public abstract class PartBaseFormationPlane extends PartUpgradeable
     }
 
     @Override
-    public void saveAEStackInv() {}
+    public void saveAEStackInv() {
+        this.updateHandler();
+        this.saveChanges();
+    }
 
     @Override
     public IAEStackInventory getAEInventoryByName(StorageName name) {
@@ -315,6 +313,8 @@ public abstract class PartBaseFormationPlane extends PartUpgradeable
     public abstract IAEStackType<?> getStackType();
 
     public abstract boolean supportItemDrop();
+
+    public abstract boolean supportFuzzy();
 
     protected void updateHandler() {}
 

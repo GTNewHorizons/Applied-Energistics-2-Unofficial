@@ -73,6 +73,8 @@ public class PartFormationPlane extends PartBaseFormationPlane implements ICellC
     public PartFormationPlane(final ItemStack is) {
         super(is);
 
+        this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
+        this.getConfigManager().registerSetting(Settings.PLACE_BLOCK, YesNo.YES);
         this.updateHandler();
     }
 
@@ -378,6 +380,11 @@ public class PartFormationPlane extends PartBaseFormationPlane implements ICellC
 
     @Override
     public boolean supportItemDrop() {
+        return true;
+    }
+
+    @Override
+    public boolean supportFuzzy() {
         return true;
     }
 

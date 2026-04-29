@@ -59,11 +59,14 @@ public class GuiFormationPlane extends GuiUpgradeable {
             this.buttonList.add(this.placeMode);
         }
 
-        this.fuzzyMode = new GuiImgButton(
-                this.guiLeft - 18,
-                this.guiTop + 48,
-                Settings.FUZZY_MODE,
-                FuzzyMode.IGNORE_ALL);
+        if (this.cfp.supportFuzzy()) {
+            this.fuzzyMode = new GuiImgButton(
+                    this.guiLeft - 18,
+                    this.guiTop + 48,
+                    Settings.FUZZY_MODE,
+                    FuzzyMode.IGNORE_ALL);
+            this.buttonList.add(this.fuzzyMode);
+        }
 
         this.buttonList.add(
                 this.priority = new GuiTabButton(
@@ -72,8 +75,6 @@ public class GuiFormationPlane extends GuiUpgradeable {
                         2 + 4 * 16,
                         GuiText.Priority.getLocal(),
                         itemRender));
-
-        this.buttonList.add(this.fuzzyMode);
     }
 
     @Override
