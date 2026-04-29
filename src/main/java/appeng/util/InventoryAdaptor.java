@@ -176,14 +176,12 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             
             if (invs && sided.getSizeInventory() > 0 && slots != null && slots.length > 0) {
                 return new AdaptorIInventory(new WrapperMCISidedInventory(sided, d));
+            } else {
+                return null;
             }
         }
 
-        if (tanks && te instanceof IFluidHandler tank && !(tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0))) {
-            return new AdaptorFluidHandler(tank, d);
-        }
-
-        if (invs && !(te instanceof ISidedInventory) && te instanceof IInventory i && i.getSizeInventory() > 0) {
+        if (invs && te instanceof IInventory i && i.getSizeInventory() > 0) {
             return new AdaptorIInventory(i);
         }
         // spotless:on
