@@ -71,7 +71,7 @@ public class MEGuiTextField implements ITooltip {
         h = height;
 
         field.setEnableBackgroundDrawing(false);
-        field.setMaxStringLength(256);
+        field.setMaxStringLength(1024);
         field.setTextColor(GuiColors.SearchboxText.getColor());
         field.setCursorPositionZero();
 
