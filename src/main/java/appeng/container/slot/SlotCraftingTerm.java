@@ -134,56 +134,52 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
         if (is != null && Platform.isSameItem(request, is)) {
             final ItemStack[] set = new ItemStack[this.getPattern().getSizeInventory()];
             int multiple = request.stackSize / is.stackSize;
+            int crafted = 0;
 
-            // add one of each item to the items on the board...
-            if (Platform.isServer()) {
-                final InventoryCrafting ic = new InventoryCrafting(new ContainerNull(), 3, 3);
-                for (int x = 0; x < 9; x++) {
-                    ic.setInventorySlotContents(x, this.getPattern().getStackInSlot(x));
-                }
-
-                final IRecipe r = Platform.findMatchingRecipe(ic, p.worldObj);
-
-                if (r == null) {
-                    if (request.stackSize > is.stackSize) // do not try to batch invalid recipes
-                        return null;
-                    final Item target = request.getItem();
-                    if (target.isDamageable() && target.isRepairable()) {
-                        boolean isBad = false;
-                        for (int x = 0; x < ic.getSizeInventory(); x++) {
-                            final ItemStack pis = ic.getStackInSlot(x);
-                            if (pis == null) {
-                                continue;
-                            }
-                            if (pis.getItem() != target) {
-                                isBad = true;
-                            }
-                        }
-                        if (!isBad) {
-                            super.onPickupFromSlot(p, is);
-                            // actually necessary to cleanup this case...
-                            p.openContainer.onCraftMatrixChanged(this.craftInv);
-                            return request;
-                        }
+            for (int i = 0; i < multiple; i++) {
+                // add one of each item to the items on the board...
+                if (Platform.isServer()) {
+                    final InventoryCrafting ic = new InventoryCrafting(new ContainerNull(), 3, 3);
+                    for (int x = 0; x < 9; x++) {
+                        ic.setInventorySlotContents(x, this.getPattern().getStackInSlot(x));
                     }
-                    return null;
-                }
 
-                is = r.getCraftingResult(ic);
+                    final IRecipe r = Platform.findMatchingRecipe(ic, p.worldObj);
 
-                if (inv != null) {
-                    IPartitionList<IAEItemStack> filter = ItemViewCell.createFilter(this.container.getViewCells());
-                    if (!extractItems(p, inv, all, is, set, multiple, ic, r, filter)) {
-                        cleanup(p, inv, set);
-                        multiple = 1;
+                    if (r == null) {
+                        if (request.stackSize > is.stackSize) // do not try to batch invalid recipes
+                            return null;
+                        final Item target = request.getItem();
+                        if (target.isDamageable() && target.isRepairable()) {
+                            boolean isBad = false;
+                            for (int x = 0; x < ic.getSizeInventory(); x++) {
+                                final ItemStack pis = ic.getStackInSlot(x);
+                                if (pis == null) {
+                                    continue;
+                                }
+                                if (pis.getItem() != target) {
+                                    isBad = true;
+                                }
+                            }
+                            if (!isBad) {
+                                super.onPickupFromSlot(p, is);
+                                // actually necessary to cleanup this case...
+                                p.openContainer.onCraftMatrixChanged(this.craftInv);
+                                return request;
+                            }
+                        }
+                        return null;
+                    }
+
+                    is = r.getCraftingResult(ic);
+
+                    if (inv != null) {
+                        IPartitionList<IAEItemStack> filter = ItemViewCell.createFilter(this.container.getViewCells());
                         extractItems(p, inv, all, is, set, 1, ic, r, filter);
                     }
                 }
-            }
 
-            int crafted = 0;
-            if (this.preCraft(p, inv, set, is)) {
-                for (int i = 0; i < multiple; ++i) {
+                if (this.preCraft(p, inv, set, is)) {
                     this.makeItem(p, is);
                     ++crafted;
                     // last craft may use up all the rest of the items in the system
@@ -191,6 +187,7 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                     if (!this.postCraft(p, inv, set, is) && i < (multiple - 1)) break;
                 }
             }
+
             is.stackSize *= crafted;
             cleanup(p, inv, set);
 
