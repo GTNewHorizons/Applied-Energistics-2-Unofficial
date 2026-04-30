@@ -386,12 +386,17 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.SortBy,
                     ButtonToolTips.UsedPercent);
 
-            this.registerApp(64, Settings.CRAFTING_SORT_BY, DiagnosticSortButton.NAME, ButtonToolTips.SortBy, "Name");
-            this.registerApp(65, Settings.CRAFTING_SORT_BY, DiagnosticSortButton.QTY, ButtonToolTips.SortBy, "Qty");
-            this.registerApp(121, Settings.CRAFTING_SORT_BY, DiagnosticSortButton.TIME, ButtonToolTips.SortBy, "Time");
+            this.registerApp(64, Settings.DIAGNOSTIC_SORT_BY, DiagnosticSortButton.NAME, ButtonToolTips.SortBy, "Name");
+            this.registerApp(65, Settings.DIAGNOSTIC_SORT_BY, DiagnosticSortButton.QTY, ButtonToolTips.SortBy, "Qty");
+            this.registerApp(
+                    121,
+                    Settings.DIAGNOSTIC_SORT_BY,
+                    DiagnosticSortButton.TIME,
+                    ButtonToolTips.SortBy,
+                    "Time");
             this.registerApp(
                     120,
-                    Settings.CRAFTING_SORT_BY,
+                    Settings.DIAGNOSTIC_SORT_BY,
                     DiagnosticSortButton.AVG_PER_SECOND,
                     ButtonToolTips.SortBy,
                     "Avg/s");

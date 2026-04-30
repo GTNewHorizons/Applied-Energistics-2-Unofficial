@@ -96,7 +96,9 @@ public enum Settings {
 
     INSERT_ORDER(EnumSet.of(YesNo.YES, YesNo.NO)),
 
-    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class));
+    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class)),
+
+    DIAGNOSTIC_SORT_BY(EnumSet.allOf(DiagnosticSortButton.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

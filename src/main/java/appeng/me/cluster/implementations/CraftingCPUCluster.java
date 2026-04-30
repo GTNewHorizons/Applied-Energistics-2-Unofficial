@@ -913,11 +913,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                         final CraftingDiagnosticSessionId diagnosticSessionId = craftingEntry.getValue()
                                 .consumeCraftSession();
-                        final long patternStartTime = currentDiagnosticTimeNanos();
+                        final long patternStartTimeMillis = currentDiagnosticTimeMillis();
                         // Process output items.
                         for (final IAEStack<?> outputItemStack : details.getCondensedAEOutputs()) {
                             this.diagnostics
-                                    .trackProducedOutput(outputItemStack, patternStartTime, diagnosticSessionId);
+                                    .trackProducedOutput(outputItemStack, patternStartTimeMillis, diagnosticSessionId);
                             this.postChange(outputItemStack, this.machineSrc);
                             this.waitingFor.add(outputItemStack.copy());
                             this.postCraftingStatusChange(outputItemStack.copy());
@@ -1724,7 +1724,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void pushDiagnosticSample(final CraftingCpuDiagnostics.CompletedDiagnosticRecord record) {
-        if (record.getElapsedTime() <= 0L || this.getGrid() == null) {
+        if (record.getElapsedTimeMillis() <= 0L || this.getGrid() == null) {
             return;
         }
 
@@ -1735,8 +1735,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     record.getOutput(),
                     record.getDiagnosticSessionId(),
                     record.getProducedAmount(),
-                    record.getStartTime(),
-                    record.getEndTime());
+                    record.getStartTimeMillis(),
+                    record.getEndTimeMillis());
         }
     }
 
@@ -1803,8 +1803,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return this.diagnostics.nextSessionId();
     }
 
-    private static long currentDiagnosticTimeNanos() {
-        return TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
+    private static long currentDiagnosticTimeMillis() {
+        return System.currentTimeMillis();
     }
 
     @Override

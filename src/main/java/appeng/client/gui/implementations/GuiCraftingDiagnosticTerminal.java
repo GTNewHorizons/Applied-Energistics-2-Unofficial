@@ -32,13 +32,13 @@ import appeng.core.AEConfig;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketCraftingDiagnosticReset;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.me.cache.CraftingGridCache;
 
 public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
-    private static final boolean DEBUG_LAYOUT = false;
     private static final int GUI_WIDTH = 208;
     private static final int GUI_HEIGHT = 256;
     private static final int SMALL_VISIBLE_ROWS = 5;
@@ -63,7 +63,6 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     private GuiImgButton resetButton;
     private int hoveredRow = -1;
     private boolean tallMode;
-    private boolean suppressDebugRows;
     private int visibleRows = SMALL_VISIBLE_ROWS;
     private int lastMouseX;
     private int lastMouseY;
@@ -93,7 +92,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         this.sortModeBox = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 28,
-                Settings.CRAFTING_SORT_BY,
+                Settings.DIAGNOSTIC_SORT_BY,
                 this.getSortModeAppearance());
         this.sortDirectionBox = new GuiImgButton(
                 this.guiLeft - 18,
@@ -127,10 +126,6 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         this.searchField.x = this.guiLeft + LAYOUT.searchX;
         this.searchField.y = this.guiTop + LAYOUT.searchY;
 
-        if (DEBUG_LAYOUT && this.rows.isEmpty() && !this.suppressDebugRows) {
-            this.populateDebugRows();
-        }
-
         this.setScrollBar();
         this.repositionSlots();
         this.updateButtonLabels();
@@ -150,46 +145,39 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
 
-        try {
-            if (btn == this.sortModeBox) {
-                this.clearResetConfirmation();
-                final int current = this.getSortButtonIndex();
-                final boolean backwards = Mouse.isButtonDown(1);
-                final int next = backwards ? (current + SORT_BUTTON_ORDER.length - 1) % SORT_BUTTON_ORDER.length
-                        : (current + 1) % SORT_BUTTON_ORDER.length;
-                this.container.sortMode = SORT_BUTTON_ORDER[next].ordinal();
-                this.applyClientSort();
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "CraftingDiagnostics.Sort",
-                                Integer.toString(SORT_BUTTON_ORDER[next].ordinal())));
-            } else if (btn == this.sortDirectionBox) {
-                this.clearResetConfirmation();
-                final boolean nextAscending = !this.container.ascending;
-                this.container.ascending = nextAscending;
-                this.applyClientSort();
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig("CraftingDiagnostics.Direction", nextAscending ? "1" : "0"));
-            } else if (btn == this.resetButton) {
-                final long now = System.currentTimeMillis();
-                if (now - this.lastResetClickAt > RESET_DOUBLE_CLICK_MILLIS) {
-                    this.lastResetClickAt = now;
-                    return;
-                }
-
-                this.clearResetConfirmation();
-                this.suppressDebugRows = true;
-                this.rows.clear();
-                this.setScrollBar();
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("CraftingDiagnostics.Reset", "1"));
-            } else if (btn == this.terminalStyleBox) {
-                this.tallMode = !this.tallMode;
-                final TerminalStyle nextStyle = this.tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL;
-                AEConfig.instance.getConfigManager().putSetting(Settings.TERMINAL_STYLE, nextStyle);
-                this.terminalStyleBox.set(nextStyle);
-                this.setWorldAndResolution(this.mc, this.width, this.height);
+        if (btn == this.sortModeBox) {
+            this.clearResetConfirmation();
+            final int current = this.getSortButtonIndex();
+            final boolean backwards = Mouse.isButtonDown(1);
+            final int next = backwards ? (current + SORT_BUTTON_ORDER.length - 1) % SORT_BUTTON_ORDER.length
+                    : (current + 1) % SORT_BUTTON_ORDER.length;
+            this.container.sortMode = SORT_BUTTON_ORDER[next].ordinal();
+            this.applyClientSort();
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(Settings.DIAGNOSTIC_SORT_BY, backwards));
+        } else if (btn == this.sortDirectionBox) {
+            this.clearResetConfirmation();
+            final boolean nextAscending = !this.container.ascending;
+            this.container.ascending = nextAscending;
+            this.applyClientSort();
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(Settings.SORT_DIRECTION, false));
+        } else if (btn == this.resetButton) {
+            final long now = System.currentTimeMillis();
+            if (now - this.lastResetClickAt > RESET_DOUBLE_CLICK_MILLIS) {
+                this.lastResetClickAt = now;
+                return;
             }
-        } catch (final IOException ignored) {}
+
+            this.clearResetConfirmation();
+            this.rows.clear();
+            this.setScrollBar();
+            NetworkHandler.instance.sendToServer(new PacketCraftingDiagnosticReset((IAEStack<?>) null));
+        } else if (btn == this.terminalStyleBox) {
+            this.tallMode = !this.tallMode;
+            final TerminalStyle nextStyle = this.tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL;
+            AEConfig.instance.getConfigManager().putSetting(Settings.TERMINAL_STYLE, nextStyle);
+            this.terminalStyleBox.set(nextStyle);
+            this.setWorldAndResolution(this.mc, this.width, this.height);
+        }
     }
 
     @Override
@@ -261,9 +249,6 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 FIXED_BOTTOM_HEIGHT);
         this.drawTableBackground(offsetX, offsetY);
         this.drawSearch();
-        if (DEBUG_LAYOUT) {
-            this.drawDebugOverlay(offsetX, offsetY);
-        }
     }
 
     private void drawSearch() {
@@ -398,14 +383,6 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
         GL11.glColor4f(1, 1, 1, 1);
         this.getScrollBar().draw(this);
-
-        if (DEBUG_LAYOUT) {
-            this.fontRendererObj.drawString(
-                    "x=" + (mouseX - this.guiLeft) + ", y=" + (mouseY - this.guiTop),
-                    8,
-                    this.ySize - 106,
-                    0xFF00FF);
-        }
     }
 
     private void drawRightAligned(final String text, final int rightX, final int y) {
@@ -414,27 +391,6 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 rightX - this.fontRendererObj.getStringWidth(text),
                 y,
                 GuiColors.DefaultBlack.getColor());
-    }
-
-    private void drawDebugOverlay(final int offsetX, final int offsetY) {
-        drawRect(
-                offsetX + LAYOUT.searchX,
-                offsetY + LAYOUT.searchY,
-                offsetX + LAYOUT.searchX + LAYOUT.searchWidth,
-                offsetY + LAYOUT.searchY + 12,
-                0x44FF0000);
-        drawRect(
-                offsetX + LAYOUT.listLeft,
-                offsetY + LAYOUT.listTop,
-                offsetX + LAYOUT.listRight,
-                offsetY + this.getListBottom(),
-                0x2200FF00);
-        drawRect(
-                offsetX + LAYOUT.itemTextX,
-                offsetY + LAYOUT.listTop,
-                offsetX + LAYOUT.itemTextX + LAYOUT.itemTextWidth,
-                offsetY + this.getListBottom(),
-                0x220000FF);
     }
 
     private void recalculateScreenSize() {
@@ -454,7 +410,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
             case CRAFTED -> Comparator.comparingLong(row -> row.totalProduced);
             case SAMPLES -> Comparator.comparingLong(row -> row.sampleCount);
             case AVG_PER_SECOND -> Comparator.comparingDouble(Row::getItemsPerSecond);
-            case CUMULATIVE_TIME -> Comparator.comparingLong(row -> row.elapsedTimeNanos);
+            case CUMULATIVE_TIME -> Comparator.comparingLong(row -> row.elapsedTimeMillis);
         };
 
         if (!this.container.ascending) {
@@ -518,10 +474,6 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         return SMALL_MIDDLE_HEIGHT + (this.visibleRows - SMALL_VISIBLE_ROWS) * LAYOUT.rowHeight;
     }
 
-    private int getButtonY() {
-        return this.ySize - 97;
-    }
-
     private DiagnosticSortButton getSortModeAppearance() {
         return switch (CraftingGridCache.DiagnosticSortMode.values()[this.container.sortMode]) {
             case NAME -> DiagnosticSortButton.NAME;
@@ -551,35 +503,10 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
     }
 
-    private void populateDebugRows() {
-        this.rows.clear();
-        final long[] producedValues = { 7L, 42L, 999L, 1_250L, 9_999L, 12_345L, 250_000L, 9_876_543L, 1_234_567_890L,
-                3_200_000_000_000L, 9_900_000_000_000_000L, 123_456_789_012_345_678L, 88L, 5_500L, 777_777L,
-                45_000_000L, 6_100_000_000L, 800_000_000_000_000L };
-        final long[] millisValues = { 120L, 950L, 1_500L, 9_900L, 45_000L, 90_000L, 8L * 60L * 1000L, 42L * 60L * 1000L,
-                3L * 60L * 60L * 1000L, 11L * 60L * 60L * 1000L, 26L * 60L * 60L * 1000L, 5L * 24L * 60L * 60L * 1000L,
-                300L, 12_000L, 600_000L, 2L * 60L * 60L * 1000L, 18L * 60L * 60L * 1000L,
-                9L * 24L * 60L * 60L * 1000L };
-        for (int i = 0; i < 18; i++) {
-            final Row row = new Row();
-            row.stack = null;
-            row.debugDisplayName = "Debug Item " + (i + 1);
-            row.totalProduced = producedValues[i];
-            row.elapsedTimeNanos = TimeUnit.MILLISECONDS.toNanos(millisValues[i]);
-            row.sampleCount = 50L + i * 13L;
-            this.rows.add(row);
-        }
-    }
-
     public void postUpdate(final List<CraftingGridCache.DiagnosticRowView> updatedRows) {
         this.rows.clear();
         for (final CraftingGridCache.DiagnosticRowView row : updatedRows) {
             this.rows.add(Row.fromPacket(row));
-        }
-        if (!this.rows.isEmpty()) {
-            this.suppressDebugRows = false;
-        } else if (DEBUG_LAYOUT && !this.suppressDebugRows) {
-            this.populateDebugRows();
         }
         this.applyClientSort();
         this.setScrollBar();
@@ -590,14 +517,14 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         private IAEStack<?> stack;
         private String debugDisplayName;
         private long totalProduced;
-        private long elapsedTimeNanos;
+        private long elapsedTimeMillis;
         private long sampleCount;
 
         private static Row fromPacket(final CraftingGridCache.DiagnosticRowView packetRow) {
             final Row row = new Row();
             row.stack = packetRow.stack;
             row.totalProduced = packetRow.totalProduced;
-            row.elapsedTimeNanos = packetRow.elapsedTimeNanos;
+            row.elapsedTimeMillis = packetRow.elapsedTimeMillis;
             row.sampleCount = packetRow.sampleCount;
             return row;
         }
@@ -615,9 +542,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         private String getFormattedTime() {
-            return DurationFormatUtils.formatDuration(
-                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS),
-                    GuiText.ETAFormat.getLocal());
+            return DurationFormatUtils.formatDuration(this.elapsedTimeMillis, GuiText.ETAFormat.getLocal());
         }
 
         private String getCompactProduced() {
@@ -625,11 +550,8 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         private String getCompactFormattedTime() {
-            final double[] values = {
-                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 1000.0D,
-                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 60000.0D,
-                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 3_600_000.0D,
-                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 86_400_000.0D };
+            final double[] values = { this.elapsedTimeMillis / 1000.0D, this.elapsedTimeMillis / 60000.0D,
+                    this.elapsedTimeMillis / 3_600_000.0D, this.elapsedTimeMillis / 86_400_000.0D };
             final char[] units = { 's', 'm', 'h', 'd' };
 
             for (int i = 0; i < values.length; i++) {
@@ -642,25 +564,25 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         private String getFormattedItemsPerSecond(final DecimalFormat format) {
-            if (this.elapsedTimeNanos <= 0) {
+            if (this.elapsedTimeMillis <= 0) {
                 return "-";
             }
 
-            final double itemsPerSecond = this.totalProduced * (double) TimeUnit.SECONDS.toNanos(1)
-                    / (double) this.elapsedTimeNanos;
+            final double itemsPerSecond = this.totalProduced * (double) TimeUnit.SECONDS.toMillis(1)
+                    / (double) this.elapsedTimeMillis;
             return format.format(itemsPerSecond);
         }
 
         private double getItemsPerSecond() {
-            if (this.elapsedTimeNanos <= 0) {
+            if (this.elapsedTimeMillis <= 0) {
                 return 0.0D;
             }
 
-            return this.totalProduced * (double) TimeUnit.SECONDS.toNanos(1) / (double) this.elapsedTimeNanos;
+            return this.totalProduced * (double) TimeUnit.SECONDS.toMillis(1) / (double) this.elapsedTimeMillis;
         }
 
         private String getCompactFormattedItemsPerSecond(final DecimalFormat format) {
-            if (this.elapsedTimeNanos <= 0) {
+            if (this.elapsedTimeMillis <= 0) {
                 return "-";
             }
 

@@ -122,14 +122,9 @@ public class PacketValueConfig extends AppEngPacket {
                 case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
                 case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
             }
-        } else if (this.Name.startsWith("CraftingDiagnostics.")
+        } else if (this.Name.equals("CraftingDiagnostics.Search")
                 && c instanceof final ContainerCraftingDiagnosticTerminal qk) {
-            switch (this.Name) {
-                case "CraftingDiagnostics.Search" -> qk.setSearchText(this.Value);
-                case "CraftingDiagnostics.Sort" -> qk.setSortMode(Integer.parseInt(this.Value));
-                case "CraftingDiagnostics.Direction" -> qk.setAscending("1".equals(this.Value));
-                case "CraftingDiagnostics.Reset" -> qk.clearDiagnostics();
-            }
+            qk.setSearchText(this.Value);
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {

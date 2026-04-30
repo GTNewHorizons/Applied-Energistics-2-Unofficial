@@ -42,7 +42,7 @@ final class CraftingCpuDiagnostics {
         this.outputTimingRecords.clear();
     }
 
-    void trackProducedOutput(final IAEStack<?> output, final long startTime,
+    void trackProducedOutput(final IAEStack<?> output, final long startTimeMillis,
             final CraftingDiagnosticSessionId diagnosticSessionId) {
         if (output == null || output.getStackSize() <= 0 || diagnosticSessionId == null) {
             return;
@@ -57,7 +57,7 @@ final class CraftingCpuDiagnostics {
                 .computeIfAbsent(key, ignored -> new TreeSet<>());
         final CraftingTimingRecord probe = new CraftingTimingRecord(
                 output.getStackSize(),
-                startTime,
+                startTimeMillis,
                 diagnosticSessionId);
         final CraftingTimingRecord existing = records.ceiling(probe);
         if (existing != null && existing.compareTo(probe) == 0) {
@@ -83,7 +83,7 @@ final class CraftingCpuDiagnostics {
         }
 
         long remainingReturned = returnedStack.getStackSize();
-        final long endTime = currentDiagnosticTimeNanos();
+        final long endTimeMillis = currentDiagnosticTimeMillis();
         final List<CompletedDiagnosticRecord> completedRecords = new ArrayList<>();
         while (remainingReturned > 0 && !records.isEmpty()) {
             final CraftingTimingRecord record = records.first();
@@ -92,15 +92,15 @@ final class CraftingCpuDiagnostics {
             remainingReturned -= consumed;
 
             if (record.getRemainingToProduce() <= 0) {
-                record.setEndTime(endTime);
+                record.setEndTimeMillis(endTimeMillis);
                 completedRecords.add(
                         new CompletedDiagnosticRecord(
                                 returnedStack,
                                 record.getDiagnosticSessionId(),
                                 record.getOriginalToProduce(),
-                                record.getStartTime(),
-                                record.getEndTime(),
-                                record.getElapsedTime()));
+                                record.getStartTimeMillis(),
+                                record.getEndTimeMillis(),
+                                record.getElapsedTimeMillis()));
                 records.pollFirst();
             }
         }
@@ -120,7 +120,7 @@ final class CraftingCpuDiagnostics {
         for (final NavigableSet<CraftingTimingRecord> records : this.outputTimingRecords.values()) {
             for (final CraftingTimingRecord record : records) {
                 if (diagnosticSessionId.equals(record.getDiagnosticSessionId())
-                        && (record.getRemainingToProduce() > 0 || record.getEndTime() == 0L)) {
+                        && (record.getRemainingToProduce() > 0 || record.getEndTimeMillis() == 0L)) {
                     return true;
                 }
             }
@@ -196,8 +196,8 @@ final class CraftingCpuDiagnostics {
         return normalized;
     }
 
-    private static long currentDiagnosticTimeNanos() {
-        return TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
+    private static long currentDiagnosticTimeMillis() {
+        return System.currentTimeMillis();
     }
 
     static final class CompletedDiagnosticRecord {
@@ -205,19 +205,19 @@ final class CraftingCpuDiagnostics {
         private final IAEStack<?> output;
         private final CraftingDiagnosticSessionId diagnosticSessionId;
         private final long producedAmount;
-        private final long startTime;
-        private final long endTime;
-        private final long elapsedTime;
+        private final long startTimeMillis;
+        private final long endTimeMillis;
+        private final long elapsedTimeMillis;
 
         private CompletedDiagnosticRecord(final IAEStack<?> output,
-                final CraftingDiagnosticSessionId diagnosticSessionId, final long producedAmount, final long startTime,
-                final long endTime, final long elapsedTime) {
+                final CraftingDiagnosticSessionId diagnosticSessionId, final long producedAmount,
+                final long startTimeMillis, final long endTimeMillis, final long elapsedTimeMillis) {
             this.output = output;
             this.diagnosticSessionId = diagnosticSessionId;
             this.producedAmount = producedAmount;
-            this.startTime = startTime;
-            this.endTime = endTime;
-            this.elapsedTime = elapsedTime;
+            this.startTimeMillis = startTimeMillis;
+            this.endTimeMillis = endTimeMillis;
+            this.elapsedTimeMillis = elapsedTimeMillis;
         }
 
         IAEStack<?> getOutput() {
@@ -232,16 +232,16 @@ final class CraftingCpuDiagnostics {
             return this.producedAmount;
         }
 
-        long getStartTime() {
-            return this.startTime;
+        long getStartTimeMillis() {
+            return this.startTimeMillis;
         }
 
-        long getEndTime() {
-            return this.endTime;
+        long getEndTimeMillis() {
+            return this.endTimeMillis;
         }
 
-        long getElapsedTime() {
-            return this.elapsedTime;
+        long getElapsedTimeMillis() {
+            return this.elapsedTimeMillis;
         }
     }
 
@@ -249,16 +249,16 @@ final class CraftingCpuDiagnostics {
 
         private long remainingToProduce;
         private long originalToProduce;
-        private long accumulatedElapsedTime;
-        private long startTime;
+        private long accumulatedElapsedTimeMillis;
+        private long startTimeMillis;
         private final CraftingDiagnosticSessionId diagnosticSessionId;
-        private long endTime;
+        private long endTimeMillis;
 
-        private CraftingTimingRecord(final long toProduce, final long startTime,
+        private CraftingTimingRecord(final long toProduce, final long startTimeMillis,
                 final CraftingDiagnosticSessionId diagnosticSessionId) {
             this.remainingToProduce = toProduce;
             this.originalToProduce = toProduce;
-            this.startTime = startTime;
+            this.startTimeMillis = startTimeMillis;
             this.diagnosticSessionId = diagnosticSessionId;
         }
 
@@ -279,20 +279,20 @@ final class CraftingCpuDiagnostics {
             return this.originalToProduce;
         }
 
-        private void setEndTime(final long endTime) {
-            this.endTime = endTime;
+        private void setEndTimeMillis(final long endTimeMillis) {
+            this.endTimeMillis = endTimeMillis;
         }
 
-        private long getElapsedTime() {
-            return this.accumulatedElapsedTime + Math.max(0L, this.endTime - this.startTime);
+        private long getElapsedTimeMillis() {
+            return this.accumulatedElapsedTimeMillis + Math.max(0L, this.endTimeMillis - this.startTimeMillis);
         }
 
-        private long getStartTime() {
-            return this.startTime;
+        private long getStartTimeMillis() {
+            return this.startTimeMillis;
         }
 
-        private long getEndTime() {
-            return this.endTime;
+        private long getEndTimeMillis() {
+            return this.endTimeMillis;
         }
 
         private CraftingDiagnosticSessionId getDiagnosticSessionId() {
@@ -304,8 +304,9 @@ final class CraftingCpuDiagnostics {
             tag.setLong("remainingToProduce", this.remainingToProduce);
             tag.setLong("originalToProduce", this.originalToProduce);
             tag.setLong(
-                    "elapsedTime",
-                    this.accumulatedElapsedTime + Math.max(0L, currentDiagnosticTimeNanos() - this.startTime));
+                    "elapsedTimeMillis",
+                    this.accumulatedElapsedTimeMillis
+                            + Math.max(0L, currentDiagnosticTimeMillis() - this.startTimeMillis));
             this.diagnosticSessionId.writeToNBT(tag, "diagnosticSessionId");
             return tag;
         }
@@ -319,16 +320,18 @@ final class CraftingCpuDiagnostics {
 
             final CraftingTimingRecord record = new CraftingTimingRecord(
                     tag.getLong("originalToProduce"),
-                    currentDiagnosticTimeNanos(),
+                    currentDiagnosticTimeMillis(),
                     diagnosticSessionId);
-            record.accumulatedElapsedTime = tag.getLong("elapsedTime");
+            record.accumulatedElapsedTimeMillis = tag.hasKey("elapsedTimeMillis", NBT.TAG_LONG)
+                    ? tag.getLong("elapsedTimeMillis")
+                    : TimeUnit.MILLISECONDS.convert(tag.getLong("elapsedTime"), TimeUnit.NANOSECONDS);
             record.remainingToProduce = tag.getLong("remainingToProduce");
             return record;
         }
 
         @Override
         public int compareTo(final CraftingTimingRecord other) {
-            final int byStartTime = Long.compare(this.startTime, other.startTime);
+            final int byStartTime = Long.compare(this.startTimeMillis, other.startTimeMillis);
             if (byStartTime != 0) {
                 return byStartTime;
             }
@@ -344,12 +347,13 @@ final class CraftingCpuDiagnostics {
             if (!(obj instanceof final CraftingTimingRecord other)) {
                 return false;
             }
-            return this.startTime == other.startTime && Objects.equals(this.diagnosticSessionId, other.diagnosticSessionId);
+            return this.startTimeMillis == other.startTimeMillis
+                    && Objects.equals(this.diagnosticSessionId, other.diagnosticSessionId);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(this.startTime, this.diagnosticSessionId);
+            return Objects.hash(this.startTimeMillis, this.diagnosticSessionId);
         }
     }
 }

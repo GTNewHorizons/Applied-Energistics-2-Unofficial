@@ -7,12 +7,16 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.config.DiagnosticSortButton;
+import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.util.IConfigManager;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.sync.network.NetworkHandler;
@@ -24,6 +28,7 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
 
     private static final int FULL_SYNC_INTERVAL = 20;
 
+    private final ITerminalHost host;
     private IGrid network;
     private String searchText = "";
     private long lastSentRevision = Long.MIN_VALUE;
@@ -40,7 +45,9 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
 
     public ContainerCraftingDiagnosticTerminal(final InventoryPlayer ip, final ITerminalHost host) {
         super(ip, host);
+        this.host = host;
         this.bindPlayerInventory(ip, 0, -31);
+        this.syncSortSettingsFromHost();
 
         if (host instanceof IGridHost gridHost) {
             this.findNode(gridHost, ForgeDirection.UNKNOWN);
@@ -77,6 +84,7 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
     @Override
     public void detectAndSendChanges() {
         if (Platform.isServer()) {
+            this.syncSortSettingsFromHost();
             this.syncDelay++;
             final CraftingGridCache cache = this.getCraftingCache();
             if (cache != null) {
@@ -110,6 +118,21 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
         this.lastSentSortMode = this.sortMode;
         this.lastSentAscending = this.ascending;
         this.syncDelay = 0;
+    }
+
+    private void syncSortSettingsFromHost() {
+        final IConfigManager configManager = this.host.getConfigManager();
+        this.setSortMode(this.toSortMode((DiagnosticSortButton) configManager.getSetting(Settings.DIAGNOSTIC_SORT_BY)));
+        this.setAscending(configManager.getSetting(Settings.SORT_DIRECTION) == SortDir.ASCENDING);
+    }
+
+    private int toSortMode(final DiagnosticSortButton sortButton) {
+        return switch (sortButton) {
+            case NAME -> CraftingGridCache.DiagnosticSortMode.NAME.ordinal();
+            case QTY -> CraftingGridCache.DiagnosticSortMode.CRAFTED.ordinal();
+            case TIME -> CraftingGridCache.DiagnosticSortMode.CUMULATIVE_TIME.ordinal();
+            case AVG_PER_SECOND -> CraftingGridCache.DiagnosticSortMode.AVG_PER_SECOND.ordinal();
+        };
     }
 
     public void setSearchText(final String searchText) {
@@ -147,6 +170,11 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
     }
 
     public void clearDiagnostics(final IAEStack<?> stack) {
+        if (stack == null) {
+            this.clearDiagnostics();
+            return;
+        }
+
         final CraftingGridCache cache = this.getCraftingCache();
         if (cache != null) {
             cache.clearDiagnosticStats(stack);

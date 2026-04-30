@@ -4,6 +4,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
+import appeng.api.config.DiagnosticSortButton;
+import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
@@ -17,6 +20,8 @@ public class PartCraftingDiagnosticTerminal extends AbstractPartTerminal {
     @Reflected
     public PartCraftingDiagnosticTerminal(final ItemStack is) {
         super(is);
+        this.getConfigManager().registerSetting(Settings.DIAGNOSTIC_SORT_BY, DiagnosticSortButton.TIME);
+        this.getConfigManager().putSetting(Settings.SORT_DIRECTION, SortDir.DESCENDING);
     }
 
     @Override

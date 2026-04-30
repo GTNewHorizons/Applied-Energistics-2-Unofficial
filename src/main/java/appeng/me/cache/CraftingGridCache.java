@@ -741,9 +741,9 @@ public class CraftingGridCache
     }
 
     public synchronized void recordDiagnosticSample(final IAEStack<?> output,
-            final CraftingDiagnosticSessionId sessionId, final long producedAmount, final long observedStartNanos,
-            final long observedEndNanos) {
-        this.diagnostics.recordSample(output, sessionId, producedAmount, observedStartNanos, observedEndNanos);
+            final CraftingDiagnosticSessionId sessionId, final long producedAmount, final long observedStartMillis,
+            final long observedEndMillis) {
+        this.diagnostics.recordSample(output, sessionId, producedAmount, observedStartMillis, observedEndMillis);
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
@@ -776,7 +776,7 @@ public class CraftingGridCache
     }
 
     public synchronized long getDiagnosticsRevision() {
-        return this.diagnostics.getRevision();
+        return this.diagnosticsRevision;
     }
 
     public synchronized List<DiagnosticRowView> createDiagnosticRows(final String search,
@@ -810,14 +810,14 @@ public class CraftingGridCache
 
         public final IAEStack<?> stack;
         public final long totalProduced;
-        public final long elapsedTimeNanos;
+        public final long elapsedTimeMillis;
         public final long sampleCount;
 
-        public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long elapsedTimeNanos,
+        public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long elapsedTimeMillis,
                 final long sampleCount) {
             this.stack = stack;
             this.totalProduced = totalProduced;
-            this.elapsedTimeNanos = elapsedTimeNanos;
+            this.elapsedTimeMillis = elapsedTimeMillis;
             this.sampleCount = sampleCount;
         }
     }

@@ -28,9 +28,10 @@ public class PacketCraftingDiagnosticsUpdate extends AppEngPacket {
         for (int i = 0; i < rowCount; i++) {
             final IAEStack<?> stack = Platform.readStackByte(stream);
             final long totalProduced = stream.readLong();
-            final long elapsedTimeNanos = stream.readLong();
+            final long elapsedTimeMillis = stream.readLong();
             final long sampleCount = stream.readLong();
-            this.rows.add(new CraftingGridCache.DiagnosticRowView(stack, totalProduced, elapsedTimeNanos, sampleCount));
+            this.rows
+                    .add(new CraftingGridCache.DiagnosticRowView(stack, totalProduced, elapsedTimeMillis, sampleCount));
         }
     }
 
@@ -43,7 +44,7 @@ public class PacketCraftingDiagnosticsUpdate extends AppEngPacket {
         for (final CraftingGridCache.DiagnosticRowView row : rows) {
             Platform.writeStackByte(row.stack, data);
             data.writeLong(row.totalProduced);
-            data.writeLong(row.elapsedTimeNanos);
+            data.writeLong(row.elapsedTimeMillis);
             data.writeLong(row.sampleCount);
         }
         this.configureWrite(data);
