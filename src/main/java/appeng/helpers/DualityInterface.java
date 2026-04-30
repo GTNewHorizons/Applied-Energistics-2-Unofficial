@@ -1796,6 +1796,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public void updateRedstoneState() {
+        this.pushItemsOut(this.iHost.getTargets());
         // reset cache to undecided
         redstoneState = YesNo.UNDECIDED;
 
