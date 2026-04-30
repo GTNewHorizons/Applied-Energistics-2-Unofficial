@@ -1,6 +1,7 @@
 package appeng.container.sync;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -15,11 +16,11 @@ import io.netty.buffer.ByteBuf;
 public interface DeltaSyncCodec<T, D> extends SyncCodec<T> {
 
     /**
-     * Returns a delta from {@code previous} to {@code current}, or {@code null} when this change should be sent as a
-     * full update instead.
+     * Returns deltas from {@code previous} to {@code current}, or {@code null} or an empty list when this change should
+     * be sent as a full update instead.
      */
     @Nullable
-    D diff(T previous, T current);
+    List<D> diff(T previous, T current);
 
     void writeDelta(ByteBuf buf, D delta) throws IOException;
 

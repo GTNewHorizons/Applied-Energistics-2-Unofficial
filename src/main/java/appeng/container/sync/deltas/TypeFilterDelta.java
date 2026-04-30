@@ -1,4 +1,4 @@
-package appeng.container.sync;
+package appeng.container.sync.deltas;
 
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;

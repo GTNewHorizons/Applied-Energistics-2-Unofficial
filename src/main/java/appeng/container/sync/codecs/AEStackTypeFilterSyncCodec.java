@@ -1,13 +1,15 @@
 package appeng.container.sync.codecs;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
 import appeng.container.sync.DeltaSyncCodec;
-import appeng.container.sync.TypeFilterDelta;
+import appeng.container.sync.deltas.TypeFilterDelta;
 import appeng.util.AEStackTypeFilter;
 import io.netty.buffer.ByteBuf;
 
@@ -40,8 +42,18 @@ public final class AEStackTypeFilterSyncCodec implements DeltaSyncCodec<AEStackT
     }
 
     @Override
-    public @Nullable TypeFilterDelta diff(final AEStackTypeFilter previous, final AEStackTypeFilter current) {
-        return null;
+    public @Nullable List<TypeFilterDelta> diff(final AEStackTypeFilter previous, final AEStackTypeFilter current) {
+        List<TypeFilterDelta> deltas = null;
+        for (final IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            if (previous.isEnabled(type) != current.isEnabled(type)) {
+                if (deltas == null) {
+                    deltas = new ArrayList<>();
+                }
+                deltas.add(TypeFilterDelta.toggle(type));
+            }
+        }
+
+        return deltas;
     }
 
     @Override

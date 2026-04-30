@@ -1,6 +1,7 @@
 package appeng.container.sync.handlers;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -232,14 +233,16 @@ public class ObjectSyncHandler<T> extends AbstractSyncHandler {
             return null;
         }
 
-        final Object delta = deltaCodec.diff(previous, current);
-        if (delta == null) {
+        final List<Object> deltas = deltaCodec.diff(previous, current);
+        if (deltas == null || deltas.isEmpty()) {
             return null;
         }
 
         final ByteBuf deltaPayload = Unpooled.buffer();
-        deltaPayload.writeInt(1);
-        deltaCodec.writeDelta(deltaPayload, delta);
+        deltaPayload.writeInt(deltas.size());
+        for (final Object delta : deltas) {
+            deltaCodec.writeDelta(deltaPayload, delta);
+        }
         return deltaPayload;
     }
 
