@@ -94,14 +94,12 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
                 "levelMode",
                 Settings.LEVEL_TYPE,
                 LevelType.class,
-                this.getUpgradeable().getConfigManager(),
-                (LevelType) lvlEmitter.getConfigManager().getSetting(Settings.LEVEL_TYPE));
+                this.getUpgradeable().getConfigManager());
         this.craftingModeSync = sync.configEnum(
                 "craftingMode",
                 Settings.CRAFT_VIA_REDSTONE,
                 YesNo.class,
-                this.getUpgradeable().getConfigManager(),
-                (YesNo) lvlEmitter.getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE));
+                this.getUpgradeable().getConfigManager());
         this.configStackSync = sync
                 .object(
                         "configStack",

@@ -82,7 +82,7 @@ public interface SyncRegistrar {
 
     @NotNull
     <E extends Enum<E>> ConfigEnumSyncHandler<E> configEnum(@NotNull String key, @NotNull Settings setting,
-            @NotNull Class<E> enumClass, @NotNull IConfigManager configManager, E initialValue);
+            @NotNull Class<E> enumClass, @NotNull IConfigManager configManager);
 
     @NotNull
     AEStackInventorySyncHandler aeStackInventoryS2C(@NotNull String key, @NotNull IAEStackInventory inventory);

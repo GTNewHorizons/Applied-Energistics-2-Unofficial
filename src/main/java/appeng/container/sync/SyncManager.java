@@ -388,7 +388,7 @@ public final class SyncManager {
         @Override
         public <E extends Enum<E>> @NotNull ConfigEnumSyncHandler<E> configEnum(final @NotNull String key,
                 final @NotNull Settings setting, final @NotNull Class<E> enumClass,
-                final @NotNull IConfigManager configManager, final @Nullable E initialValue) {
+                final @NotNull IConfigManager configManager) {
             return register(
                     new ConfigEnumSyncHandler<>(
                             SyncManager.this,
@@ -398,7 +398,7 @@ public final class SyncManager {
                             setting,
                             enumClass,
                             configManager,
-                            initialValue));
+                            enumClass.cast(configManager.getSetting(setting))));
         }
 
         @Override
