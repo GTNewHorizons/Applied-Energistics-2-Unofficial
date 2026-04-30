@@ -254,7 +254,7 @@ public class MEGuiTextField implements ITooltip {
 
         if (focus) {
 
-            if (prevTextField == null) {
+            if (prevTextField == null || prevTextField.get() == null) {
                 prevKeyRepeatEnabled = Keyboard.areRepeatEventsEnabled();
             }
 
@@ -262,7 +262,7 @@ public class MEGuiTextField implements ITooltip {
             Keyboard.enableRepeatEvents(true);
         } else {
 
-            if (prevTextField.get() == this) {
+            if (prevTextField != null && prevTextField.get() == this) {
                 prevTextField = null;
                 Keyboard.enableRepeatEvents(prevKeyRepeatEnabled);
             }
