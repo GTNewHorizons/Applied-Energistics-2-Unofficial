@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import appeng.api.config.Settings;
 import appeng.api.util.IConfigManager;
 import appeng.container.AEBaseContainer;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.container.sync.handlers.BooleanSyncHandler;
 import appeng.container.sync.handlers.ConfigEnumSyncHandler;
 import appeng.container.sync.handlers.DeltaObjectSyncHandler;
@@ -24,6 +25,7 @@ import appeng.container.sync.handlers.ObjectSyncHandler;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketContainerSync;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -397,6 +399,42 @@ public final class SyncManager {
                             enumClass,
                             configManager,
                             initialValue));
+        }
+
+        @Override
+        public @NotNull AEStackInventorySyncHandler aeStackInventoryS2C(final @NotNull String key,
+                final @NotNull IAEStackInventory inventory) {
+            return register(
+                    new AEStackInventorySyncHandler(
+                            SyncManager.this,
+                            key,
+                            this.qualify(key),
+                            SyncDirection.SERVER_TO_CLIENT,
+                            inventory));
+        }
+
+        @Override
+        public @NotNull AEStackInventorySyncHandler aeStackInventoryC2S(final @NotNull String key,
+                final @NotNull IAEStackInventory inventory) {
+            return register(
+                    new AEStackInventorySyncHandler(
+                            SyncManager.this,
+                            key,
+                            this.qualify(key),
+                            SyncDirection.CLIENT_TO_SERVER,
+                            inventory));
+        }
+
+        @Override
+        public @NotNull AEStackInventorySyncHandler aeStackInventory(final @NotNull String key,
+                final @NotNull IAEStackInventory inventory) {
+            return register(
+                    new AEStackInventorySyncHandler(
+                            SyncManager.this,
+                            key,
+                            this.qualify(key),
+                            SyncDirection.BIDIRECTIONAL,
+                            inventory));
         }
 
         private String qualify(final String key) {

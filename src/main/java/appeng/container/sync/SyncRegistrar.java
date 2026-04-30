@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import appeng.api.config.Settings;
 import appeng.api.util.IConfigManager;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.container.sync.handlers.BooleanSyncHandler;
 import appeng.container.sync.handlers.ConfigEnumSyncHandler;
 import appeng.container.sync.handlers.DeltaObjectSyncHandler;
@@ -11,6 +12,7 @@ import appeng.container.sync.handlers.DoubleSyncHandler;
 import appeng.container.sync.handlers.IntSyncHandler;
 import appeng.container.sync.handlers.LongSyncHandler;
 import appeng.container.sync.handlers.ObjectSyncHandler;
+import appeng.tile.inventory.IAEStackInventory;
 
 public interface SyncRegistrar {
 
@@ -81,4 +83,13 @@ public interface SyncRegistrar {
     @NotNull
     <E extends Enum<E>> ConfigEnumSyncHandler<E> configEnum(@NotNull String key, @NotNull Settings setting,
             @NotNull Class<E> enumClass, @NotNull IConfigManager configManager, E initialValue);
+
+    @NotNull
+    AEStackInventorySyncHandler aeStackInventoryS2C(@NotNull String key, @NotNull IAEStackInventory inventory);
+
+    @NotNull
+    AEStackInventorySyncHandler aeStackInventoryC2S(@NotNull String key, @NotNull IAEStackInventory inventory);
+
+    @NotNull
+    AEStackInventorySyncHandler aeStackInventory(@NotNull String key, @NotNull IAEStackInventory inventory);
 }
