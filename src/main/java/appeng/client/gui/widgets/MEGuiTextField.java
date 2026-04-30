@@ -10,6 +10,7 @@
 
 package appeng.client.gui.widgets;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
@@ -31,14 +32,14 @@ import codechicken.nei.FormattedTextField.TextFormatter;
  */
 public class MEGuiTextField implements ITooltip {
 
-    protected GuiTextField field;
-
     private static final int PADDING = 2;
-    private static boolean previousKeyboardRepeatEnabled;
-    private static MEGuiTextField previousKeyboardRepeatEnabledField;
+    private static boolean prevKeyRepeatEnabled;
+    private static WeakReference<MEGuiTextField> prevTextField;
+
+    protected GuiTextField field;
     private Method setFormatterMethod;
     private String tooltip;
-    private int fontPad;
+    private final int fontPad;
     private boolean shouldUnfocusWithEnter = true;
 
     public int x;
@@ -253,17 +254,17 @@ public class MEGuiTextField implements ITooltip {
 
         if (focus) {
 
-            if (previousKeyboardRepeatEnabledField == null) {
-                previousKeyboardRepeatEnabled = Keyboard.areRepeatEventsEnabled();
+            if (prevTextField == null) {
+                prevKeyRepeatEnabled = Keyboard.areRepeatEventsEnabled();
             }
 
-            previousKeyboardRepeatEnabledField = this;
+            prevTextField = new WeakReference<>(this);
             Keyboard.enableRepeatEvents(true);
         } else {
 
-            if (previousKeyboardRepeatEnabledField == this) {
-                previousKeyboardRepeatEnabledField = null;
-                Keyboard.enableRepeatEvents(previousKeyboardRepeatEnabled);
+            if (prevTextField.get() == this) {
+                prevTextField = null;
+                Keyboard.enableRepeatEvents(prevKeyRepeatEnabled);
             }
         }
     }
