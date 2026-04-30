@@ -68,6 +68,7 @@ import appeng.api.crafting.ICraftingIconProvider;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.tiles.ICraftingMachine;
+import appeng.api.interfaces.IInterfaceNameProvider;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
@@ -394,6 +395,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 // :P
             }
         }
+
+        this.notifyNeighbors();
     }
 
     public void updateCraftingList() {
@@ -553,6 +556,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public AppEngInternalInventory getPatterns() {
         return this.patterns;
+    }
+
+    public IAEStackType<?>[] getSupportedStackTypes() {
+        return this.isFluidInterface ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
+                : new IAEStackType<?>[] { ITEM_STACK_TYPE };
     }
 
     public AppEngInternalInventory getUpgrades() {
@@ -1617,16 +1625,53 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public String getTermName() {
+        final String baseName = getRawTermName();
+        final String suffix = getAdjacentNameSuffix();
+        if (suffix == null) {
+            return baseName;
+        }
+        return baseName + suffix;
+    }
+
+    /**
+     * Returns the untranslated base name (unlocalized name or custom name). Should be sent separately to the client so
+     * translation happens client-side.
+     */
+    public String getRawTermName() {
         if (((ICustomNameObject) this.iHost).hasCustomName()) {
             return ((ICustomNameObject) this.iHost).getCustomName();
         }
-
         final ItemStack item = getCrafterIcon();
-        if (item != null) {
-            return item.getUnlocalizedName();
-        } else {
-            return "Nothing";
+        return item != null ? item.getUnlocalizedName() : "Nothing";
+    }
+
+    /**
+     * Returns the suffix to append after translation, or null if none.
+     */
+    public String getAdjacentNameSuffix() {
+        if (((ICustomNameObject) this.iHost).hasCustomName()) return null;
+        final TileEntity hostTile = this.iHost.getTileEntity();
+        if (hostTile == null || hostTile.getWorldObj() == null) return null;
+        for (final ForgeDirection direction : this.iHost.getTargets()) {
+            final TileEntity directedTile = hostTile.getWorldObj().getTileEntity(
+                    hostTile.xCoord + direction.offsetX,
+                    hostTile.yCoord + direction.offsetY,
+                    hostTile.zCoord + direction.offsetZ);
+            if (directedTile == null) continue;
+            if (directedTile instanceof IInterfaceHost) {
+                try {
+                    if (((IInterfaceHost) directedTile).getInterfaceDuality().sameGrid(this.gridProxy.getGrid()))
+                        continue;
+                } catch (final GridAccessException e) {
+                    continue;
+                }
+            }
+            if (directedTile instanceof IInterfaceNameProvider provider) {
+                final String suffix = provider.getInterfaceNameSuffix();
+                if (suffix != null) return suffix;
+            }
         }
+        return null;
     }
 
     public BaseActionSource getActionSource() {

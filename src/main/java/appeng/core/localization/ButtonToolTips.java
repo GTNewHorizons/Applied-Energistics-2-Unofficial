@@ -118,6 +118,7 @@ public enum ButtonToolTips implements Localization {
     BeSubstitutionsDescDisabled,
     CraftOnly,
     CraftEither,
+    MergeOnlyPlayerRequestedCrafts,
 
     Craft,
     Mod,
@@ -176,6 +177,7 @@ public enum ButtonToolTips implements Localization {
     ToggleShowOnlyInvalidInterfaceOffDesc,
     HighlightInterface,
     HighlightInterfaceDesc,
+    RenameInterface,
     SearchFieldInputs,
     SearchFieldOutputs,
     SearchFieldNames,
@@ -259,7 +261,37 @@ public enum ButtonToolTips implements Localization {
     CPUCrafting,
     Automation,
     NumberOfStorageMemory,
-    NumberOfCoProcessors;
+    NumberOfCoProcessors,
+
+    ReshuffleIncludeSubnets,
+    ReshuffleIncludeSubnetsOn,
+    ReshuffleIncludeSubnetsOff,
+    ReshuffleInsertOrder,
+    ReshuffleInsertOrderOn,
+    ReshuffleInsertOrderOff,
+    OpenReshuffle,
+    OpenReshuffleDesc,
+    OpenReshuffleOffDesc,
+    ReshuffleTab,
+    ReshuffleTabHint,
+    ReshuffleTabScan,
+    ReshuffleTabScanHint,
+    ReshuffleHealthTab,
+    ReshuffleHealthTabHint,
+    ReshuffleLocate,
+    CellHealthSortBy,
+    CellHealthSortByFill,
+    CellHealthSortBySize,
+
+    ReshuffleTabReshuffleHint,
+
+    InterfaceTerminalVisibility,
+    InterfaceTerminalVisibilityVisible,
+    InterfaceTerminalVisibilityHidden,
+
+    ToggleShowHiddenInterfaces,
+    ToggleShowHiddenInterfacesOnDesc,
+    ToggleShowHiddenInterfacesOffDesc;
 
     ButtonToolTips() {}
 

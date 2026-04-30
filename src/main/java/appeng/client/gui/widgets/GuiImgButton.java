@@ -35,6 +35,7 @@ import appeng.api.config.CraftingStatus;
 import appeng.api.config.ExtractionMode;
 import appeng.api.config.FullnessMode;
 import appeng.api.config.FuzzyMode;
+import appeng.api.config.HealthSortOrder;
 import appeng.api.config.InsertionMode;
 import appeng.api.config.ItemSubstitution;
 import appeng.api.config.LevelType;
@@ -685,6 +686,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.HIGHLIGHT_INTERFACE,
                     ButtonToolTips.HighlightInterface,
                     "");
+            this.registerApp(70, Settings.ACTIONS, ActionItems.RENAME_INTERFACE, ButtonToolTips.RenameInterface, "");
+            this.registerApp(
+                    5 * 16 + 10,
+                    Settings.INTERFACE_TERMINAL,
+                    YesNo.YES,
+                    ButtonToolTips.InterfaceTerminalVisibility,
+                    ButtonToolTips.InterfaceTerminalVisibilityVisible);
+            this.registerApp(
+                    5 * 16 + 11,
+                    Settings.INTERFACE_TERMINAL,
+                    YesNo.NO,
+                    ButtonToolTips.InterfaceTerminalVisibility,
+                    ButtonToolTips.InterfaceTerminalVisibilityHidden);
             this.registerApp(
                     72,
                     Settings.ACTIONS,
@@ -921,7 +935,91 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CPUSortBy.COPROCESSORS,
                     ButtonToolTips.SortBy,
                     ButtonToolTips.NumberOfCoProcessors);
+            this.registerApp(
+                    8 * 16 + 7,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_PARTITION,
+                    ButtonToolTips.ReshuffleTabScan,
+                    ButtonToolTips.ReshuffleTabScanHint);
+            this.registerApp(
+                    8 * 16 + 8,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_RESHUFFLE,
+                    ButtonToolTips.ReshuffleTab,
+                    ButtonToolTips.ReshuffleTabHint);
+            this.registerApp(
+                    8 * 16 + 8,
+                    Settings.ACTIONS,
+                    ActionItems.OPEN_RESHUFFLE_ON,
+                    ButtonToolTips.OpenReshuffle,
+                    ButtonToolTips.OpenReshuffleDesc);
+            this.registerApp(
+                    8 * 16 + 9,
+                    Settings.ACTIONS,
+                    ActionItems.OPEN_RESHUFFLE_OFF,
+                    ButtonToolTips.OpenReshuffle,
+                    ButtonToolTips.OpenReshuffleOffDesc);
+            this.registerApp(
+                    8 * 16 + 10,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_LOCATE,
+                    ButtonToolTips.ReshuffleIncludeSubnets,
+                    ButtonToolTips.ReshuffleLocate);
+            this.registerApp(
+                    8 * 16 + 11,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_HEALTH,
+                    ButtonToolTips.ReshuffleHealthTab,
+                    ButtonToolTips.ReshuffleHealthTabHint);
+            this.registerApp(
+                    8 * 16 + 12,
+                    Settings.INCLUDE_SUBNETS,
+                    YesNo.YES,
+                    ButtonToolTips.ReshuffleIncludeSubnets,
+                    ButtonToolTips.ReshuffleIncludeSubnetsOn);
+            this.registerApp(
+                    8 * 16 + 13,
+                    Settings.INCLUDE_SUBNETS,
+                    YesNo.NO,
+                    ButtonToolTips.ReshuffleIncludeSubnets,
+                    ButtonToolTips.ReshuffleIncludeSubnetsOff);
+            this.registerApp(
+                    4 * 16 + 10,
+                    Settings.CELL_HEALTH_SORT,
+                    HealthSortOrder.FILL_PCT,
+                    ButtonToolTips.CellHealthSortBy,
+                    ButtonToolTips.CellHealthSortByFill);
+            this.registerApp(
+                    4 * 16 + 3,
+                    Settings.CELL_HEALTH_SORT,
+                    HealthSortOrder.BYTES_TOTAL,
+                    ButtonToolTips.CellHealthSortBy,
+                    ButtonToolTips.CellHealthSortBySize);
+            this.registerApp(
+                    2 * 16,
+                    Settings.INSERT_ORDER,
+                    YesNo.YES,
+                    ButtonToolTips.ReshuffleInsertOrder,
+                    ButtonToolTips.ReshuffleInsertOrderOn);
+            this.registerApp(
+                    16,
+                    Settings.INSERT_ORDER,
+                    YesNo.NO,
+                    ButtonToolTips.ReshuffleInsertOrder,
+                    ButtonToolTips.ReshuffleInsertOrderOff);
 
+            this.registerApp(
+                    5 * 16 + 11,
+                    Settings.ACTIONS,
+                    ActionItems.TOGGLE_SHOW_HIDDEN_INTERFACES_ON,
+                    ButtonToolTips.ToggleShowHiddenInterfaces,
+                    ButtonToolTips.ToggleShowHiddenInterfacesOnDesc);
+            this.registerApp(
+                    5 * 16 + 10,
+                    Settings.ACTIONS,
+                    ActionItems.TOGGLE_SHOW_HIDDEN_INTERFACES_OFF,
+                    ButtonToolTips.ToggleShowHiddenInterfaces,
+                    ButtonToolTips.ToggleShowHiddenInterfacesOffDesc);
         }
     }
 

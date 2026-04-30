@@ -146,8 +146,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     private SortDir sortDir = SortDir.ASCENDING;
 
     private GuiButton cancel;
-    private GuiButton start;
-    private GuiButton startWithFollow;
+    private GuiAeButton start;
+    private GuiAeButton startWithFollow;
     private GuiButton selectCPU;
     private GuiImgButton switchTallMode;
     private GuiSimpleImgButton takeScreenshot;
@@ -195,22 +195,24 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
 
         this.setScrollBar();
 
-        this.start = new GuiButton(
+        this.start = new GuiAeButton(
                 0,
                 this.guiLeft + this.xSize - 78,
                 this.guiTop + this.ySize - 25,
                 52,
                 20,
-                GuiText.Start.getLocal());
+                GuiText.Start.getLocal(),
+                "");
         this.start.enabled = false;
         this.buttonList.add(this.start);
-        this.startWithFollow = new GuiButton(
+        this.startWithFollow = new GuiAeButton(
                 0,
                 this.guiLeft + (219 - 96) / 2,
                 this.guiTop + this.ySize - 25,
                 96,
                 20,
-                GuiText.StartWithFollow.getLocal());
+                GuiText.StartWithFollow.getLocal(),
+                "");
         this.startWithFollow.enabled = false;
         this.buttonList.add(this.startWithFollow);
 
@@ -326,6 +328,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         this.updateCancelButtonText();
         cpuTable.drawScreen();
 
+        this.start.setTootipString("");
+        this.startWithFollow.setTootipString("");
         this.start.enabled = !(this.ccc.hasNoCPU() || this.isSimulation());
         if (this.start.enabled) {
             CraftingCPUStatus selected = this.cpuTable.getContainer().getSelectedCPU();
@@ -337,6 +341,11 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             if (selected == null || !this.ccc.cpuMatches(selected)) {
                 this.start.enabled = false;
             }
+            final String startTooltip = isBlockedByNonPlayerMerge(selected)
+                    ? ButtonToolTips.MergeOnlyPlayerRequestedCrafts.getLocal()
+                    : "";
+            this.start.setTootipString(startTooltip);
+            this.startWithFollow.setTootipString(startTooltip);
         }
 
         this.startWithFollow.enabled = this.start.enabled;
@@ -430,6 +439,12 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
 
     private boolean isSimulation() {
         return ((ContainerCraftConfirm) this.inventorySlots).isSimulation();
+    }
+
+    private boolean isBlockedByNonPlayerMerge(CraftingCPUStatus selected) {
+        return selected != null && selected.isBusy()
+                && this.ccc.cpuCraftingSameItem(selected)
+                && !selected.isCraftingLinkStandalone();
     }
 
     @Override

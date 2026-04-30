@@ -13,12 +13,14 @@ package appeng.me.cache;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.item.ItemStack;
 
@@ -233,37 +235,47 @@ public class GridStorageCache implements IStorageGrid {
 
     @MENetworkEventSubscribe
     public void cellUpdate(final MENetworkCellArrayUpdate ev) {
-        for (IAEStackType<?> type : inventoryHandlers.keySet()) {
-            this.inventoryHandlers.put(type, null);
-        }
-
-        final LinkedList<ICellProvider> ll = new LinkedList<>();
-        ll.addAll(this.inactiveCellProviders);
-        ll.addAll(this.activeCellProviders);
-
-        final CellChangeTracker tracker = new CellChangeTracker();
-
-        for (final ICellProvider cc : ll) {
-            boolean active = true;
-
-            if (cc instanceof IActionHost) {
-                final IGridNode node = ((IActionHost) cc).getActionableNode();
-                active = node != null && node.isActive();
+        this.setMonitorsLocked(true);
+        try {
+            for (IAEStackType<?> type : inventoryHandlers.keySet()) {
+                this.inventoryHandlers.put(type, null);
             }
 
-            if (active) {
-                this.addCellProvider(cc, tracker);
-            } else {
-                this.removeCellProvider(cc, tracker);
+            final LinkedList<ICellProvider> ll = new LinkedList<>();
+            ll.addAll(this.inactiveCellProviders);
+            ll.addAll(this.activeCellProviders);
+
+            final CellChangeTracker tracker = new CellChangeTracker();
+
+            for (final ICellProvider cc : ll) {
+                boolean active = true;
+
+                if (cc instanceof IActionHost) {
+                    final IGridNode node = ((IActionHost) cc).getActionableNode();
+                    active = node != null && node.isActive();
+                }
+
+                if (active) {
+                    this.addCellProvider(cc, tracker);
+                } else {
+                    this.removeCellProvider(cc, tracker);
+                }
             }
+
+            for (NetworkMonitor<?> monitor : this.monitors.values()) {
+                monitor.forceUpdate();
+            }
+
+            tracker.applyChanges();
+        } finally {
+            this.setMonitorsLocked(false);
         }
+    }
 
-        for (NetworkMonitor<?> monitor : this.monitors.values()) {
-            monitor.forceUpdate();
+    private void setMonitorsLocked(final boolean locked) {
+        for (final NetworkMonitor<?> monitor : this.monitors.values()) {
+            monitor.setLocked(locked);
         }
-
-        tracker.applyChanges();
-
     }
 
     private void postChangesToNetwork(final IAEStackType<?> type, final int upOrDown, final IItemList availableItems,
@@ -501,6 +513,10 @@ public class GridStorageCache implements IStorageGrid {
         if (map.computeIfPresent(newStack, (currentStack, stackCount) -> stackCount + 1) == null) {
             map.put(newStack, 1);
         }
+    }
+
+    public Set<ICellProvider> getActiveCellProviders() {
+        return Collections.unmodifiableSet(this.activeCellProviders);
     }
 
     private void resetCellInfo() {

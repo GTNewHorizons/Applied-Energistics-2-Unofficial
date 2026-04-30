@@ -295,7 +295,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         if (c.allowMode() == CraftingAllow.ONLY_NONPLAYER) return false;
         if (this.getUsedBytes() <= 0) return false;
         if (c.isBusy() && this.cpuCraftingSameItem(c)) {
-            return c.getStorage() >= this.getUsedBytes() + c.getUsedStorage();
+            return c.isCraftingLinkStandalone() && c.getStorage() >= this.getUsedBytes() + c.getUsedStorage();
         }
         return c.getStorage() >= this.getUsedBytes() && !c.isBusy();
     }

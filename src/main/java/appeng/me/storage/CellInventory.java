@@ -226,7 +226,7 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
                     this.saveChanges();
                 }
 
-                return r;
+                return cardVoidOverflow ? null : r;
             } else {
                 if (mode == Actionable.MODULATE) {
                     l.setStackSize(l.getStackSize() + input.getStackSize());
@@ -264,7 +264,7 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
                         this.updateItemCount(toWrite.getStackSize());
                         this.saveChanges();
                     }
-                    return toReturn;
+                    return cardVoidOverflow ? null : toReturn;
                 }
 
                 if (mode == Actionable.MODULATE) {

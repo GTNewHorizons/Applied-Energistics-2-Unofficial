@@ -58,6 +58,7 @@ import appeng.core.sync.packets.PacketRemoteRename;
 import appeng.core.sync.packets.PacketSpatialAction;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.core.sync.packets.PacketToggleInterfaceVisibility;
 import appeng.core.sync.packets.PacketTransitionEffect;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.core.sync.packets.PacketVirtualSlot;
@@ -141,7 +142,8 @@ public class AppEngPacketHandlerBase {
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
         PACKET_COLOR_SELECT(PacketColorSelect.class),
         PACKET_REMOTE_RENAME(PacketRemoteRename.class),
-        PACKET_SPATIAL_ACTION(PacketSpatialAction.class);
+        PACKET_SPATIAL_ACTION(PacketSpatialAction.class),
+        PACKET_TOGGLE_INTERFACE_VISIBILITY(PacketToggleInterfaceVisibility.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;

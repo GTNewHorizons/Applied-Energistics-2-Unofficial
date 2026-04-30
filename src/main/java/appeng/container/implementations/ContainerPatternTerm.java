@@ -75,10 +75,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEAppEngInventory, IOptionalSlotHost,
         IContainerCraftingPacket, IVirtualSlotHolder, IVirtualSlotSource {
 
-    @NotNull
-    public static final IAEItemStack BLANK_PATTERN = AEItemStack
-            .create(AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get());
-
     public static final int MULTIPLE_OF_BUTTON_CLICK = 2;
     public static final int MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT = 8;
     protected final IPatternTerminal patternTerminal;
@@ -292,8 +288,11 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 }
             } else if (blank == null) {
                 IMEMonitor<IAEItemStack> itemMonitor = this.getItemMonitor();
-                IAEItemStack extracted = Platform
-                        .poweredExtraction(this.getPowerSource(), itemMonitor, BLANK_PATTERN, this.getActionSource());
+                IAEItemStack extracted = Platform.poweredExtraction(
+                        this.getPowerSource(),
+                        itemMonitor,
+                        createBlankPattern(),
+                        this.getActionSource());
                 if (extracted == null || extracted.getStackSize() <= 0) {
                     return;
                 }
@@ -585,14 +584,14 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 IMEMonitor<IAEItemStack> monitor = getItemMonitor();
                 if (monitor == null) return null;
 
-                IAEItemStack blank = monitor.getAvailableItem(BLANK_PATTERN, fetchNewId());
+                IAEItemStack blank = monitor.getAvailableItem(createBlankPattern(), fetchNewId());
                 if (blank != null && blank.getStackSize() > 0 && (leftClick || rightClick)) {
                     if (this.getPowerSource() == null) return null;
 
                     if (leftClick) {
-                        this.pickupStoredItems(BLANK_PATTERN.copy(), epmp, monitor);
+                        this.pickupStoredItems(createBlankPattern(), epmp, monitor);
                     } else {
-                        this.splitStoredItems(BLANK_PATTERN.copy(), epmp, monitor);
+                        this.splitStoredItems(createBlankPattern(), epmp, monitor);
                     }
                     return null;
                 }
@@ -620,7 +619,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                     }
                     return null;
                 } else if (middleClick && player.capabilities.isCreativeMode && !slot.getHasStack()) {
-                    ItemStack blankStack = BLANK_PATTERN.getItemStack();
+                    ItemStack blankStack = AEApi.instance().definitions().materials().blankPattern().maybeStack(1)
+                            .get();
                     blankStack.stackSize = blankStack.getMaxStackSize();
                     player.inventory.setItemStack(blankStack);
                     this.updateHeld(epmp);
@@ -877,5 +877,10 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 }
             }
         }
+    }
+
+    @NotNull
+    public static IAEItemStack createBlankPattern() {
+        return AEItemStack.create(AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get());
     }
 }

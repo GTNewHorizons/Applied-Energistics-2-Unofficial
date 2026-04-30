@@ -23,6 +23,7 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingRequester;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IInterfaceViewable;
 
 public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICraftingRequester, IInterfaceViewable {
@@ -51,8 +52,29 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
     }
 
     @Override
+    default IAEStackType<?>[] getSupportedStackTypes() {
+        return getInterfaceDuality().getSupportedStackTypes();
+    }
+
+    @Override
     default String getName() {
         return getInterfaceDuality().getTermName();
+    }
+
+    /**
+     * Raw (untranslated) name for sending to client.
+     */
+    @Override
+    default String getRawName() {
+        return getInterfaceDuality().getRawTermName();
+    }
+
+    /**
+     * Optional suffix to append after translation on client.
+     */
+    @Override
+    default String getNameSuffix() {
+        return getInterfaceDuality().getAdjacentNameSuffix();
     }
 
     @Override

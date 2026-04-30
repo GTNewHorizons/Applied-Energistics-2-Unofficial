@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.S29PacketSoundEffect;
 
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
@@ -36,7 +37,8 @@ public class CraftingNotificationManager {
 
                     player.addChatMessage(notification.createMessage());
                 }
-                player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
+                ((EntityPlayerMP) player).playerNetServerHandler.sendPacket(
+                        new S29PacketSoundEffect("random.levelup", player.posX, player.posY, player.posZ, 1f, 1f));
             }
         }
     }
