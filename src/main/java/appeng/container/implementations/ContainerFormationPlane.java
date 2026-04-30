@@ -102,8 +102,10 @@ public class ContainerFormationPlane extends ContainerUpgradeable implements IVi
         this.verifyPermissions(SecurityPermissions.BUILD, false);
 
         if (Platform.isServer()) {
-            this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
-            this.setPlaceMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.PLACE_BLOCK));
+            if (this.supportFuzzy())
+                this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
+            if (this.supportItemDrop())
+                this.setPlaceMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.PLACE_BLOCK));
 
             final IAEStackInventory config = this.te.getAEInventoryByName(StorageName.CONFIG);
             this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
