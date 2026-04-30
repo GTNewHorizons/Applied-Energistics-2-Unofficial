@@ -82,6 +82,7 @@ public class WireLessToolHelper {
     }
 
     public static void newNBT(ItemStack is, WirelessToolType mode) {
+        is.setTagCompound(new NBTTagCompound());
         switch (mode) {
             case Simple, Advanced -> clearNBT(is, mode, null);
             case Super -> {
@@ -93,19 +94,20 @@ public class WireLessToolHelper {
     }
 
     public static void clearNBT(ItemStack is, WirelessToolType mode, @Nullable EntityPlayer p) {
+        final NBTTagCompound tag = is.getTagCompound();
         switch (mode) {
-            case Simple -> is.getTagCompound().setTag(NbtSimple, new NBTTagCompound());
+            case Simple -> tag.setTag(NbtSimple, new NBTTagCompound());
             case Advanced -> {
-                is.getTagCompound().setTag(NbtAdvanced, new NBTTagCompound());
-                is.getTagCompound().setTag(NbtAdvancedLineQueue, new NBTTagCompound());
-                is.getTagCompound().setTag(NbtAdvancedLineBinding, new NBTTagCompound());
+                tag.setTag(NbtAdvanced, new NBTTagCompound());
+                tag.setTag(NbtAdvancedLineQueue, new NBTTagCompound());
+                tag.setTag(NbtAdvancedLineBinding, new NBTTagCompound());
             }
             case Super -> {
                 NBTTagCompound newTag = new NBTTagCompound();
                 newTag.setTag(NbtSuperPins, new NBTTagList());
                 newTag.setTag(NbtSuperNames, new NBTTagList());
                 newTag.setTag(NbtSuperPos, new NBTTagCompound());
-                is.getTagCompound().setTag(NbtSuper, newTag);
+                tag.setTag(NbtSuper, newTag);
             }
         }
         if (p != null) if (mode == WirelessToolType.Simple) p.addChatMessage(WirelessMessages.SimpleCleared.toChat());
