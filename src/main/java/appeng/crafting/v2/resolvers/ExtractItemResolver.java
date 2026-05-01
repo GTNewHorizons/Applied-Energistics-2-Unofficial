@@ -121,6 +121,8 @@ public class ExtractItemResolver implements CraftingRequestResolver {
                         }
                     }
                 }
+
+                if (this.patternInputSize == 0) this.patternInputSize = 1;
             }
 
             return request / this.patternInputSize;
