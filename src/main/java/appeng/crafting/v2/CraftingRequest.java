@@ -173,7 +173,8 @@ public class CraftingRequest implements ITreeSerializable {
             Builder<CraftingRequest> builder = ImmutableSet.builder();
             builder.addAll(parentRequest.parentRequests);
 
-            for (final IAEStack<?> aes : parentRequest.pattern.getAEInputs()) {
+            for (final IAEStack<?> aes : parentRequest.pattern.isCraftable() ? parentRequest.pattern.getAEInputs()
+                    : parentRequest.pattern.getCondensedAEInputs()) {
                 if (aes == null) continue;
                 this.patternInputs.add(aes.copy());
             }
