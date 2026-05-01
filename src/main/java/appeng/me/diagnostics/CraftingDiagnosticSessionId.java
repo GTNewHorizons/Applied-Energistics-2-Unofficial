@@ -25,23 +25,23 @@ public final class CraftingDiagnosticSessionId implements Comparable<CraftingDia
         }
 
         if (tag.hasKey(key, Constants.NBT.TAG_STRING)) {
-            return fromLegacyString(tag.getString(key));
+            return fromSerializedString(tag.getString(key));
         }
 
         return null;
     }
 
-    public static CraftingDiagnosticSessionId fromLegacyString(final String legacyId) {
-        if (legacyId == null || legacyId.isEmpty()) {
+    public static CraftingDiagnosticSessionId fromSerializedString(final String serializedId) {
+        if (serializedId == null || serializedId.isEmpty()) {
             return null;
         }
 
         try {
-            return of(Long.parseLong(legacyId, Character.MAX_RADIX));
+            return of(Long.parseLong(serializedId, Character.MAX_RADIX));
         } catch (final NumberFormatException ignored) {
             long hash = 1125899906842597L;
-            for (int i = 0; i < legacyId.length(); i++) {
-                hash = 31L * hash + legacyId.charAt(i);
+            for (int i = 0; i < serializedId.length(); i++) {
+                hash = 31L * hash + serializedId.charAt(i);
             }
 
             if (hash == Long.MIN_VALUE) {

@@ -137,7 +137,6 @@ import cpw.mods.fml.common.FMLCommonHandler;
 public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     private static final String LOG_MARK_AS_COMPLETE = "Completed job for %s.";
-    private static final int MISSING_INPUT_RETRY_INTERVAL_TICKS = 20;
 
     private final WorldCoord min;
     private final WorldCoord max;
@@ -1099,7 +1098,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     for (IAEStack<?> wfm : this.waitingForMissing) {
                         this.waitingFor.add(wfm);
                     }
-                    this.countToTryExtractItems = MISSING_INPUT_RETRY_INTERVAL_TICKS;
                     this.markDirty();
 
                     this.updateCPU();
@@ -1608,8 +1606,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.remainingItemCount = data.getLong("remainingItemCount");
         this.diagnostics.setSessionCounter(data.getLong("diagnosticSessionCounter"));
         this.isMissingMode = data.getBoolean("isMissingMode");
-        this.countToTryExtractItems = this.waitingForMissing.isEmpty() ? 0 : MISSING_INPUT_RETRY_INTERVAL_TICKS;
-
         NBTBase tag = data.getTag("playerNameList");
         if (tag instanceof NBTTagList ntl) {
             this.playersFollowingCurrentCraft.clear();
@@ -1729,7 +1725,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         final ICraftingGrid craftingGrid = this.getGrid().getCache(ICraftingGrid.class);
-        if (craftingGrid instanceof CraftingGridCache cache && AEConfig.instance.enableCraftingDiagnostics
+        if (AEConfig.instance.enableCraftingDiagnostics && craftingGrid instanceof CraftingGridCache cache
                 && cache.isDiagnosticsEnabled()) {
             cache.recordDiagnosticSample(
                     record.getOutput(),
@@ -1747,7 +1743,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         final ICraftingGrid craftingGrid = this.getGrid().getCache(ICraftingGrid.class);
-        if (craftingGrid instanceof CraftingGridCache cache && AEConfig.instance.enableCraftingDiagnostics
+        if (AEConfig.instance.enableCraftingDiagnostics && craftingGrid instanceof CraftingGridCache cache
                 && cache.isDiagnosticsEnabled()) {
             cache.completeDiagnosticSession(diagnosticSessionId);
         }
@@ -1796,7 +1792,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     private CraftingDiagnosticSessionId getCurrentDiagnosticSessionId() {
         return this.myLastLink == null ? null
-                : CraftingDiagnosticSessionId.fromLegacyString(this.myLastLink.getCraftingID());
+                : CraftingDiagnosticSessionId.fromSerializedString(this.myLastLink.getCraftingID());
     }
 
     private CraftingDiagnosticSessionId generateDiagnosticSessionId() {
@@ -1960,13 +1956,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void tryExtractItems() {
-        if (!this.isMissingMode || this.waitingForMissing.isEmpty()) {
-            this.countToTryExtractItems = 0;
-            return;
-        }
-
-        if (this.countToTryExtractItems >= MISSING_INPUT_RETRY_INTERVAL_TICKS) {
-            this.countToTryExtractItems = 0;
+        if (this.waitingForMissing.isEmpty()) return;
+        if (countToTryExtractItems > 1200) {
+            countToTryExtractItems = 0;
             for (IAEStack<?> waitingForItem : this.waitingForMissing) {
                 final IGrid grid = this.getGrid();
                 if (grid != null) {
@@ -1997,7 +1989,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
             }
         } else {
-            this.countToTryExtractItems++;
+            countToTryExtractItems++;
         }
     }
 
