@@ -172,6 +172,9 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                     }
 
                     is = r.getCraftingResult(ic);
+                    if (!Platform.isSameItemPrecise(request, is)) {
+                        break;
+                    }
 
                     if (inv != null) {
                         IPartitionList<IAEItemStack> filter = ItemViewCell.createFilter(this.container.getViewCells());
