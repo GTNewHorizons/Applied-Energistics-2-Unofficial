@@ -48,6 +48,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
@@ -204,7 +205,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
 
                             player.addChatMessage(notification.createMessage());
-                            player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
+                            ((EntityPlayerMP) player).playerNetServerHandler.sendPacket(
+                                    new S29PacketSoundEffect(
+                                            "random.levelup",
+                                            player.posX,
+                                            player.posY,
+                                            player.posZ,
+                                            1f,
+                                            1f));
                         } else {
                             this.unreadNotifications.computeIfAbsent(playerName, name -> new ArrayList<>())
                                     .add(notification);
@@ -247,6 +255,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public ICraftingLink getLastCraftingLink() {
         return this.myLastLink;
+    }
+
+    @Override
+    public boolean isCraftingLinkStandalone() {
+        return this.myLastLink != null && this.myLastLink.isStandalone();
     }
 
     private List<CraftCompleteListener> initializeDefaultOnCompleteListener() {
@@ -365,11 +378,16 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (is != null && is.getStackSize() > 0) {
                 if (is.getStackSize() >= what.getStackSize()) {
                     if (this.finalOutput.isFinalOutput(what)) {
-                        if (this.myLastLink != null) {
-                            return ((CraftingLink) this.myLastLink).injectItems(what.copy(), type);
+                        final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(what, type);
+                        if (outputToSend == null) {
+                            return null;
                         }
 
-                        return what; // ignore it.
+                        if (this.myLastLink != null) {
+                            return ((CraftingLink) this.myLastLink).injectItems(outputToSend.copy(), type);
+                        }
+
+                        return outputToSend; // ignore it.
                     }
 
                     return null;
@@ -381,13 +399,24 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 final IAEStack<?> used = what.copy();
                 used.setStackSize(is.getStackSize());
 
-                if (this.finalOutput.isFinalOutput(what)) {
-                    if (this.myLastLink != null) {
-                        leftOver.add(((CraftingLink) this.myLastLink).injectItems(used.copy(), type));
+                if (this.finalOutput.isFinalOutput(used)) {
+                    final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(used, type);
+
+                    if (outputToSend == null) {
                         return leftOver;
                     }
 
-                    return what; // ignore it.
+                    if (this.myLastLink != null) {
+                        final IAEStack<?> linkLeftOver = ((CraftingLink) this.myLastLink)
+                                .injectItems(outputToSend.copy(), type);
+                        if (linkLeftOver != null) {
+                            leftOver.add(linkLeftOver);
+                        }
+                        return leftOver;
+                    }
+
+                    leftOver.add(outputToSend);
+                    return leftOver; // ignore it.
                 }
 
                 return leftOver;
@@ -412,13 +441,16 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     }
 
                     if (this.finalOutput.isFinalOutput(what)) {
-                        IAEStack<?> leftover = what;
+                        final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(what, type);
+                        IAEStack<?> leftover = outputToSend;
                         IAEStack<?> finalOutput = this.finalOutput.findPrecise(what);
 
-                        finalOutput.decStackSize(what.getStackSize());
+                        if (outputToSend != null) {
+                            finalOutput.decStackSize(outputToSend.getStackSize());
+                        }
 
-                        if (this.myLastLink != null) {
-                            leftover = ((CraftingLink) this.myLastLink).injectItems(what, type);
+                        if (outputToSend != null && this.myLastLink != null) {
+                            leftover = ((CraftingLink) this.myLastLink).injectItems(outputToSend, type);
                         }
 
                         if (this.finalOutput.isEmpty()) {
@@ -446,14 +478,24 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.recordReturnedOutputs(insert);
 
                 if (this.finalOutput.isFinalOutput(insert)) {
-                    IAEStack<?> leftover = input;
-                    IAEStack<?> finalOutput = this.finalOutput.findPrecise(what);
+                    final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(insert, type);
+                    IAEStack<?> leftover = what;
+                    IAEStack<?> finalOutput = this.finalOutput.findPrecise(insert);
 
-                    finalOutput.decStackSize(insert.getStackSize());
+                    if (outputToSend != null) {
+                        finalOutput.decStackSize(outputToSend.getStackSize());
+                    }
 
-                    if (this.myLastLink != null) {
-                        what.add(((CraftingLink) this.myLastLink).injectItems(insert.copy(), type));
-                        leftover = what;
+                    if (outputToSend != null) {
+                        if (this.myLastLink != null) {
+                            final IAEStack<?> linkLeftOver = ((CraftingLink) this.myLastLink)
+                                    .injectItems(outputToSend.copy(), type);
+                            if (linkLeftOver != null) {
+                                what.add(linkLeftOver);
+                            }
+                        } else {
+                            what.add(outputToSend);
+                        }
                     }
 
                     if (this.finalOutput.isEmpty()) {
@@ -1043,7 +1085,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public ICraftingLink submitJob(final IGrid g, final ICraftingJob job, final BaseActionSource src,
             final ICraftingRequester requestingMachine) {
-        if (this.myLastLink != null && this.isBusy()
+        if (requestingMachine == null && this.myLastLink != null
+                && this.myLastLink.isStandalone()
+                && this.isBusy()
                 && this.finalOutput.get().isSameType(job.getOutput())
                 && this.availableStorage >= this.usedStorage + job.getByteTotal()) {
             return mergeJob(g, job, src, requestingMachine);
@@ -1665,8 +1709,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public boolean isMaking(final IAEStack<?> what) {
-        final IAEStack<?> wat = this.waitingFor.findPrecise(what);
-        return wat != null && wat.getStackSize() > 0;
+        return what != null && (this.getStackAmount(what, CraftingItemList.ACTIVE) > 0
+                || this.getStackAmount(what, CraftingItemList.PENDING) > 0);
     }
 
     public void breakCluster() {
@@ -2242,6 +2286,56 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         public boolean isFinalOutput(IAEStack<?> aes) {
             return this.outputs.findPrecise(aes) != null;
+        }
+
+        /**
+         * Reserves the portion of a final output that is still needed as an ingredient, returning only the surplus.
+         */
+        private IAEStack<?> splitOutputToIngredient(final IAEStack<?> output, final Actionable type) {
+            final long ingredientAmount = this.getRemainingIngredientAmount(output);
+            if (ingredientAmount <= 0) {
+                return output;
+            }
+
+            final IAEStack<?> ingredientOutput = output.copy();
+            ingredientOutput.setStackSize(ingredientAmount);
+
+            if (type == Actionable.MODULATE) {
+                inventory.injectItems(ingredientOutput, Actionable.MODULATE);
+            }
+
+            if (ingredientAmount >= output.getStackSize()) {
+                return null;
+            }
+
+            final IAEStack<?> remainingOutput = output.copy();
+            remainingOutput.decStackSize(ingredientAmount);
+            return remainingOutput;
+        }
+
+        /**
+         * Calculates how many items of this output are still required by pending crafting tasks.
+         */
+        private long getRemainingIngredientAmount(final IAEStack<?> output) {
+            long required = 0;
+            for (Entry<ICraftingPatternDetails, TaskProgress> e : tasks.entrySet()) {
+                if (e.getValue().value <= 0) {
+                    continue;
+                }
+                for (final IAEStack<?> aes : e.getKey().getCondensedAEInputs()) {
+                    if (aes.equals(output)) {
+                        required += aes.getStackSize() * e.getValue().value;
+                    }
+                }
+            }
+
+            @SuppressWarnings("rawtypes, unchecked")
+            final IAEStack available = inventory.findPrecise((IAEStack) output);
+            if (available != null) {
+                required -= available.getStackSize();
+            }
+
+            return Math.max(0, Math.min(required, output.getStackSize()));
         }
 
         public IAEStack<?> findPrecise(IAEStack<?> aes) {

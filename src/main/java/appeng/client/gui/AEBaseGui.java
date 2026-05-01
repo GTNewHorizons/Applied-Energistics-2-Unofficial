@@ -478,7 +478,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         slot.putStack(stack);
     }
 
-    private ItemStack getStackFromHand() {
+    protected ItemStack getStackFromHand() {
         final ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
                 ? NEI.instance.getDraggingPhantomItem()
                 : null;
@@ -696,6 +696,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     public void onGuiClosed() {
         super.onGuiClosed();
         this.subGui = true; // in case the gui is reopened later ( i'm looking at you NEI )
+        aeRenderItem.parent = null;
     }
 
     @Nullable

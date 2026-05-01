@@ -703,6 +703,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.HIGHLIGHT_INTERFACE,
                     ButtonToolTips.HighlightInterface,
                     "");
+            this.registerApp(70, Settings.ACTIONS, ActionItems.RENAME_INTERFACE, ButtonToolTips.RenameInterface, "");
+            this.registerApp(
+                    5 * 16 + 10,
+                    Settings.INTERFACE_TERMINAL,
+                    YesNo.YES,
+                    ButtonToolTips.InterfaceTerminalVisibility,
+                    ButtonToolTips.InterfaceTerminalVisibilityVisible);
+            this.registerApp(
+                    5 * 16 + 11,
+                    Settings.INTERFACE_TERMINAL,
+                    YesNo.NO,
+                    ButtonToolTips.InterfaceTerminalVisibility,
+                    ButtonToolTips.InterfaceTerminalVisibilityHidden);
             this.registerApp(
                     72,
                     Settings.ACTIONS,
@@ -1011,6 +1024,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     YesNo.NO,
                     ButtonToolTips.ReshuffleInsertOrder,
                     ButtonToolTips.ReshuffleInsertOrderOff);
+
+            this.registerApp(
+                    5 * 16 + 11,
+                    Settings.ACTIONS,
+                    ActionItems.TOGGLE_SHOW_HIDDEN_INTERFACES_ON,
+                    ButtonToolTips.ToggleShowHiddenInterfaces,
+                    ButtonToolTips.ToggleShowHiddenInterfacesOnDesc);
+            this.registerApp(
+                    5 * 16 + 10,
+                    Settings.ACTIONS,
+                    ActionItems.TOGGLE_SHOW_HIDDEN_INTERFACES_OFF,
+                    ButtonToolTips.ToggleShowHiddenInterfaces,
+                    ButtonToolTips.ToggleShowHiddenInterfacesOffDesc);
         }
     }
 

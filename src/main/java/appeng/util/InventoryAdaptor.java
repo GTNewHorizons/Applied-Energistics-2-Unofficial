@@ -132,6 +132,10 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
             if (te instanceof TileCableBus cableBus) {
                 IPart part = cableBus.getPart(d);
+                if (part == null) {
+                    return null;
+                }
+
                 if (invs && part instanceof IInterfaceHost host) {
                     return new AdaptorDualityInterface(new WrapperMCISidedInventory(sided, d), host);
                 }
@@ -172,11 +176,9 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             
             if (invs && sided.getSizeInventory() > 0 && slots != null && slots.length > 0) {
                 return new AdaptorIInventory(new WrapperMCISidedInventory(sided, d));
+            } else {
+                return null;
             }
-        }
-
-        if (tanks && te instanceof IFluidHandler tank && !(tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0))) {
-            return new AdaptorFluidHandler(tank, d);
         }
 
         if (invs && te instanceof IInventory i && i.getSizeInventory() > 0) {

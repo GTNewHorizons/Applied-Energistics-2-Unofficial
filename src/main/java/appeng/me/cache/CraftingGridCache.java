@@ -620,8 +620,10 @@ public class CraftingGridCache
             for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
 
                 boolean canOrder = false;
-                // This cpu can be merge
-                canOrder |= (cpu.isActive() && cpu.isBusy()
+                // Only player/standalone jobs may merge into an existing busy CPU.
+                canOrder |= (requestingMachine == null && cpu.isCraftingLinkStandalone()
+                        && cpu.isActive()
+                        && cpu.isBusy()
                         && job.getOutput().isSameType((Object) cpu.getFinalMultiOutput())
                         && cpu.getAvailableStorage() >= cpu.getUsedStorage() + job.getByteTotal());
                 // Or this cpu is idle
