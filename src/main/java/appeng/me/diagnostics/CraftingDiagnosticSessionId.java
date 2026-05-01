@@ -53,10 +53,6 @@ public final class CraftingDiagnosticSessionId implements Comparable<CraftingDia
         }
     }
 
-    public long asLong() {
-        return this.value;
-    }
-
     public void writeToNBT(final NBTTagCompound tag, final String key) {
         tag.setLong(key, this.value);
     }
