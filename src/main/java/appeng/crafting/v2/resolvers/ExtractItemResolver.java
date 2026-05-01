@@ -11,7 +11,6 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
-import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.localization.GuiText;
@@ -78,7 +77,7 @@ public class ExtractItemResolver implements CraftingRequestResolver {
         private void extractExact(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList,
                 boolean isFuzzy) {
             StackType exactMatching = source.extractItems((StackType) request.stack, Actionable.SIMULATE);
-            if (exactMatching != null) {
+            if (exactMatching != null && exactMatching.getStackSize() > 0) {
                 final long requestSize = Math
                         .min(request.remainingToProcess, this.patternExact(exactMatching.getStackSize(), isFuzzy));
                 final StackType extracted = source
@@ -94,7 +93,7 @@ public class ExtractItemResolver implements CraftingRequestResolver {
         private void extractFuzzy(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
             Collection<StackType> fuzzyMatching = source.findFuzzy((StackType) request.stack, FuzzyMode.IGNORE_ALL);
             for (final StackType candidate : fuzzyMatching) {
-                if (candidate == null) continue;
+                if (candidate == null || candidate.getStackSize() == 0) continue;
                 if (request.acceptableSubstituteFn.test(candidate)) {
                     final long requestSize = Math
                             .min(request.remainingToProcess, this.patternExact(candidate.getStackSize(), true));
@@ -108,24 +107,33 @@ public class ExtractItemResolver implements CraftingRequestResolver {
             }
         }
 
-        private long patternInputSize = 0;
-
         private long patternExact(final long request, boolean isFuzzy) {
             if (!isFuzzy) return request;
-            if (this.patternInputSize == 0) {
-                out: for (final ICraftingPatternDetails patternDetails : this.request.patternParents) {
-                    for (final IAEStack<?> aes : patternDetails.getCondensedAEInputs()) {
-                        if (aes.equals(this.request.stack)) {
-                            this.patternInputSize = aes.getStackSize();
-                            break out;
-                        }
-                    }
-                }
+            final Iterator<IAEStack<?>> i = this.request.patternInputs.iterator();
+            long requestSize = request;
 
-                if (this.patternInputSize == 0) this.patternInputSize = 1;
+            while (i.hasNext()) {
+                final IAEStack<?> aes = i.next();
+                if (this.request.stack.equals(aes)) {
+                    final long inputSize = aes.getStackSize();
+                    if (requestSize > inputSize) {
+                        requestSize -= inputSize;
+                        if (requestSize > 0) {
+                            i.remove();
+                        } else if (requestSize < 0) {
+                            return request + requestSize;
+                        } else {
+                            i.remove();
+                            return request;
+                        }
+                    } else if (requestSize == inputSize) {
+                        i.remove();
+                        return request;
+                    } else return 0;
+                }
             }
 
-            return request / this.patternInputSize;
+            return request;
         }
 
         @Override
