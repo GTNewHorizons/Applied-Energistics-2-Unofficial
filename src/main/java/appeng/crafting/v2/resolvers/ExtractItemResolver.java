@@ -93,7 +93,7 @@ public class ExtractItemResolver implements CraftingRequestResolver {
         private void extractFuzzy(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
             Collection<StackType> fuzzyMatching = source.findFuzzy((StackType) request.stack, FuzzyMode.IGNORE_ALL);
             for (final StackType candidate : fuzzyMatching) {
-                if (candidate == null || candidate.getStackSize() == 0) continue;
+                if (candidate == null || candidate.getStackSize() >= 0) continue;
                 if (request.acceptableSubstituteFn.test(candidate)) {
                     final long requestSize = Math
                             .min(request.remainingToProcess, this.patternExact(candidate.getStackSize(), true));
