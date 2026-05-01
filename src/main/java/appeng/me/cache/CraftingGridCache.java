@@ -742,33 +742,32 @@ public class CraftingGridCache
         this.postPatternChangeListeners.remove(listener);
     }
 
-    public synchronized void recordDiagnosticSample(final IAEStack<?> output,
-            final CraftingDiagnosticSessionId sessionId, final long producedAmount, final long observedStartMillis,
-            final long observedEndMillis) {
+    public void recordDiagnosticSample(final IAEStack<?> output, final CraftingDiagnosticSessionId sessionId,
+            final long producedAmount, final long observedStartMillis, final long observedEndMillis) {
         this.diagnostics.recordSample(output, sessionId, producedAmount, observedStartMillis, observedEndMillis);
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
-    public synchronized void completeDiagnosticSession(final CraftingDiagnosticSessionId sessionId) {
+    public void completeDiagnosticSession(final CraftingDiagnosticSessionId sessionId) {
         this.diagnostics.completeSession(sessionId);
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
-    public synchronized void clearDiagnosticStats() {
+    public void clearDiagnosticStats() {
         this.diagnostics.clear();
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
-    public synchronized void clearDiagnosticStats(final IAEStack<?> stack) {
+    public void clearDiagnosticStats(final IAEStack<?> stack) {
         this.diagnostics.clear(stack);
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
-    public synchronized boolean isDiagnosticsEnabled() {
+    public boolean isDiagnosticsEnabled() {
         return this.diagnosticsEnabled;
     }
 
-    public synchronized void setDiagnosticsEnabled(final boolean enabled) {
+    public void setDiagnosticsEnabled(final boolean enabled) {
         if (this.diagnosticsEnabled == enabled) {
             return;
         }
@@ -777,20 +776,20 @@ public class CraftingGridCache
         this.diagnosticsRevision++;
     }
 
-    public synchronized long getDiagnosticsRevision() {
+    public long getDiagnosticsRevision() {
         return this.diagnosticsRevision;
     }
 
-    public synchronized List<DiagnosticRowView> createDiagnosticRows(final String search,
-            final DiagnosticSortMode sortMode, final boolean ascending) {
+    public List<DiagnosticRowView> createDiagnosticRows(final String search, final DiagnosticSortMode sortMode,
+            final boolean ascending) {
         return this.diagnostics.createRows(search, sortMode, ascending);
     }
 
-    private synchronized NBTTagList writeDiagnosticsToNBT() {
+    private NBTTagList writeDiagnosticsToNBT() {
         return this.diagnostics.writeToNBT();
     }
 
-    private synchronized void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
+    private void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
         this.diagnostics.readFromNBT(list, merge);
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
