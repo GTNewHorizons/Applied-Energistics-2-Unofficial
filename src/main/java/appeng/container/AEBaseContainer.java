@@ -371,6 +371,13 @@ public abstract class AEBaseContainer extends Container {
         return this.syncManager;
     }
 
+    /**
+     * Returns the root registrar for the container synchronization system.
+     * <p>
+     * Call this from container constructors to register explicit synchronization handlers with stable, unique keys.
+     * Handlers must be registered before synchronization starts. See {@link appeng.container.sync.SyncRegistrar} for
+     * the available handler types.
+     */
     protected final SyncRegistrar syncRegistrar() {
         return this.syncManager.root();
     }
