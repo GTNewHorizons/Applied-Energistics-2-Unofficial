@@ -171,10 +171,12 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                         return null;
                     }
 
-                    is = r.getCraftingResult(ic);
+                    ItemStack next = r.getCraftingResult(ic);
                     if (!Platform.isSameItemPrecise(request, is)) {
                         break;
                     }
+
+                    is = next;
 
                     if (inv != null) {
                         IPartitionList<IAEItemStack> filter = ItemViewCell.createFilter(this.container.getViewCells());
@@ -197,7 +199,7 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
             // shouldn't be necessary...
             p.openContainer.onCraftMatrixChanged(this.craftInv);
 
-            return is;
+            return is.stackSize > 0 ? is : null;
         }
 
         return null;
