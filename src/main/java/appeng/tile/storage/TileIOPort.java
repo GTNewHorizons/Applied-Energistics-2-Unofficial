@@ -107,10 +107,12 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
 
         private final long itemsLeftToMove;
         private final boolean sourceEmpty;
+        private final boolean destinationFull;
 
-        private TransferResult(final long itemsLeftToMove, final boolean sourceEmpty) {
+        private TransferResult(final long itemsLeftToMove, final boolean sourceEmpty, final boolean destinationFull) {
             this.itemsLeftToMove = itemsLeftToMove;
             this.sourceEmpty = sourceEmpty;
+            this.destinationFull = destinationFull;
         }
     }
 
@@ -368,6 +370,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                     IMEMonitor<?> monitor = null;
                     boolean sourceEmptyAfterTransfer = false;
                     boolean didWork = false;
+                    boolean destinationFull = false;
                     if (inv != null) {
                         monitor = this.getProxy().getStorage().getMEMonitor(inv.getStackType());
                         if (monitor != null) {
@@ -382,6 +385,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
 
                             amountToMove = Platform.ceilDiv(transferResult.itemsLeftToMove, amountPerUnit);
                             sourceEmptyAfterTransfer = transferResult.sourceEmpty;
+                            destinationFull = transferResult.destinationFull;
                             didWork = transferResult.itemsLeftToMove != transferBudget;
                         }
                     }
@@ -392,6 +396,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                         if (this.shouldMove(
                                 inv,
                                 sourceEmptyAfterTransfer,
+                                destinationFull,
                                 didWork,
                                 moveOnEmptyWhileFilling,
                                 operationMode,
@@ -462,6 +467,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
 
         boolean didStuff;
         boolean sourceHasRemainingItems = false;
+        boolean destinationFull = false;
 
         do {
             didStuff = false;
@@ -511,15 +517,17 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                 }
             }
         } while (itemsToMove > 0 && didStuff);
-
-        return new TransferResult(itemsToMove, !sourceHasRemainingItems && !it.hasNext());
+        if (itemsToMove > 0 && !didStuff) {
+            destinationFull = true;
+        }
+        return new TransferResult(itemsToMove, !sourceHasRemainingItems && !it.hasNext(), destinationFull);
     }
 
     private boolean shouldMove(final IMEInventory<?> inventory, final boolean sourceEmptyAfterTransfer,
-            final boolean didWork, final boolean moveOnEmptyWhileFilling, final OperationMode om,
-            final FullnessMode fm) {
-        if (moveOnEmptyWhileFilling) {
-            return sourceEmptyAfterTransfer;
+            final boolean destinationFull, final boolean didWork, final boolean moveOnEmptyWhileFilling,
+            final OperationMode om, final FullnessMode fm) {
+        if (moveOnEmptyWhileFilling && didWork) {
+            return sourceEmptyAfterTransfer || destinationFull;
         }
 
         if (inventory != null) {
