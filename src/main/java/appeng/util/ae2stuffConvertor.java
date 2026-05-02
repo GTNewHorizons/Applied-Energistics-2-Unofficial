@@ -87,36 +87,34 @@ public class ae2stuffConvertor implements Runnable {
             final NBTTagCompound newNbt = new NBTTagCompound();
             final boolean isHub = tag.getBoolean("isHub");
 
-            final int color;
-            if (tag.hasKey("Color")) {
-                color = tag.getInteger("Color");
-            } else color = -1;
-
+            final int color = tag.getInteger("Color");
             if (isHub) {
                 newNbt.setString("id", "BlockWirelessHub");
             } else {
                 newNbt.setString("id", "BlockWirelessConnector");
 
-                final NBTTagCompound link = tag.getCompoundTag("link");
-                final NBTTagCompound target = new NBTTagCompound();
-                final NBTTagCompound targetPos = new NBTTagCompound();
+                if (tag.hasKey("link")) {
+                    final NBTTagCompound link = tag.getCompoundTag("link");
+                    final NBTTagCompound target = new NBTTagCompound();
+                    final NBTTagCompound targetPos = new NBTTagCompound();
 
-                targetPos.setInteger("dim", world.provider.dimensionId);
-                targetPos.setInteger("x", link.getInteger("x"));
-                targetPos.setInteger("y", link.getInteger("y"));
-                targetPos.setInteger("z", link.getInteger("z"));
+                    targetPos.setInteger("dim", world.provider.dimensionId);
+                    targetPos.setInteger("x", link.getInteger("x"));
+                    targetPos.setInteger("y", link.getInteger("y"));
+                    targetPos.setInteger("z", link.getInteger("z"));
 
-                target.setTag("pos#0", targetPos);
-                newNbt.setTag("connectedTargets", target);
+                    target.setTag("pos#0", targetPos);
+                    newNbt.setTag("connectedTargets", target);
+                }
             }
 
-            newNbt.setShort("Color", (short) color);
+            if (color != 16) newNbt.setShort("Color", (short) color);
             newNbt.setTag("proxy", tag.getCompoundTag("ae_node"));
             newNbt.setInteger("x", tag.getInteger("x"));
             newNbt.setInteger("y", tag.getInteger("y"));
             newNbt.setInteger("z", tag.getInteger("z"));
 
-            return new BlockInfo(isHub ? hubBlock : connectorBlock, color + 1, nbtTagCompound -> newNbt);
+            return new BlockInfo(isHub ? hubBlock : connectorBlock, 0, nbtTagCompound -> newNbt);
         }));
     }
 
