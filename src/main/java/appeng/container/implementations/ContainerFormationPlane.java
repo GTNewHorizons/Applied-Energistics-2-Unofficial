@@ -10,28 +10,36 @@
 
 package appeng.container.implementations;
 
+import static appeng.util.Platform.isServer;
+
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
-import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.container.guisync.GuiSync;
-import appeng.container.slot.OptionalSlotFakeTypeOnly;
-import appeng.container.slot.SlotFakeTypeOnly;
+import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.parts.automation.PartFormationPlane;
+import appeng.parts.automation.PartBaseFormationPlane;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerFormationPlane extends ContainerUpgradeable {
+public class ContainerFormationPlane extends ContainerUpgradeable implements IVirtualSlotHolder {
 
     @GuiSync(10)
     public YesNo placeMode;
+    public final PartBaseFormationPlane te;
+    private final IAEStack<?>[] configClientSlot = new IAEStack[63];
 
-    public ContainerFormationPlane(final InventoryPlayer ip, final PartFormationPlane te) {
+    public ContainerFormationPlane(final InventoryPlayer ip, final PartBaseFormationPlane te) {
         super(ip, te);
+        this.te = te;
     }
 
     @Override
@@ -41,20 +49,6 @@ public class ContainerFormationPlane extends ContainerUpgradeable {
 
     @Override
     protected void setupConfig() {
-        final int xo = 8;
-        final int yo = 23 + 6;
-
-        final IInventory config = this.getUpgradeable().getInventoryByName("config");
-        for (int y = 0; y < 7; y++) {
-            for (int x = 0; x < 9; x++) {
-                if (y < 2) {
-                    this.addSlotToContainer(new SlotFakeTypeOnly(config, y * 9 + x, xo + x * 18, yo + y * 18));
-                } else {
-                    this.addSlotToContainer(new OptionalSlotFakeTypeOnly(config, this, y * 9 + x, xo, yo, x, y, y - 2));
-                }
-            }
-        }
-
         final IInventory upgrades = this.getUpgradeable().getInventoryByName("upgrades");
         this.addSlotToContainer(
                 (new SlotRestrictedInput(
@@ -99,11 +93,6 @@ public class ContainerFormationPlane extends ContainerUpgradeable {
     }
 
     @Override
-    protected boolean supportCapacity() {
-        return true;
-    }
-
-    @Override
     public int availableUpgrades() {
         return 5;
     }
@@ -113,18 +102,28 @@ public class ContainerFormationPlane extends ContainerUpgradeable {
         this.verifyPermissions(SecurityPermissions.BUILD, false);
 
         if (Platform.isServer()) {
-            this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
-            this.setPlaceMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.PLACE_BLOCK));
+            if (this.supportFuzzy())
+                this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
+            if (this.supportItemDrop())
+                this.setPlaceMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.PLACE_BLOCK));
+
+            final IAEStackInventory config = this.te.getAEInventoryByName(StorageName.CONFIG);
+            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
         }
 
         this.standardDetectAndSendChanges();
     }
 
     @Override
-    public boolean isSlotEnabled(final int idx) {
-        final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
+    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
+        final IAEStackInventory config = this.te.getAEInventoryByName(StorageName.CONFIG);
+        for (var entry : slotStacks.int2ObjectEntrySet()) {
+            config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
+        }
 
-        return upgrades > idx;
+        if (isServer()) {
+            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
+        }
     }
 
     public YesNo getPlaceMode() {
@@ -133,5 +132,21 @@ public class ContainerFormationPlane extends ContainerUpgradeable {
 
     private void setPlaceMode(final YesNo placeMode) {
         this.placeMode = placeMode;
+    }
+
+    public IAEStackType<?> getStackType() {
+        return this.te.getStackType();
+    }
+
+    public IAEStackInventory getConfig() {
+        return this.te.getAEInventoryByName(StorageName.CONFIG);
+    }
+
+    public boolean supportItemDrop() {
+        return this.te.supportItemDrop();
+    }
+
+    public boolean supportFuzzy() {
+        return this.te.supportFuzzy();
     }
 }

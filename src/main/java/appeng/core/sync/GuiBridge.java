@@ -111,7 +111,7 @@ import appeng.helpers.IPriorityHost;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.PriorityCardObject;
 import appeng.items.contents.QuartzKnifeObj;
-import appeng.parts.automation.PartFormationPlane;
+import appeng.parts.automation.PartBaseFormationPlane;
 import appeng.parts.automation.PartSharedItemBus;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
@@ -192,7 +192,7 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_STORAGEBUS(ContainerStorageBus.class, IStorageBus.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
-    GUI_FORMATION_PLANE(ContainerFormationPlane.class, PartFormationPlane.class, GuiHostType.WORLD,
+    GUI_FORMATION_PLANE(ContainerFormationPlane.class, PartBaseFormationPlane.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
 
     GUI_PRIORITY(ContainerPriority.class, IPriorityHost.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
