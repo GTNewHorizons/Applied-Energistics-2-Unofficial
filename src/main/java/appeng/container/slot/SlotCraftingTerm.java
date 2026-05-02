@@ -172,7 +172,7 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                     }
 
                     ItemStack next = r.getCraftingResult(ic);
-                    if (!Platform.isSameItemPrecise(request, is)) {
+                    if (!Platform.isSameItemPrecise(request, next)) {
                         break;
                     }
 
