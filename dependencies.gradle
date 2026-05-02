@@ -1,6 +1,7 @@
 // Add your dependencies here
 
 dependencies {
+    api("com.github.GTNewHorizons:Postea:1.2.5:dev")
     implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.87-GTNH:dev')
     implementation("com.github.GTNewHorizons:GTNHLib:0.9.49:dev")
     implementation('curse.maven:cofh-core-69162:2388751')

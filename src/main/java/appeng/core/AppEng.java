@@ -41,6 +41,7 @@ import appeng.services.export.ExportProcess;
 import appeng.services.export.ForgeExportConfig;
 import appeng.util.InvTweakSortingModule;
 import appeng.util.Platform;
+import appeng.util.ae2stuffConvertor;
 import baubles.api.expanded.BaubleExpandedSlots;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
@@ -214,6 +215,8 @@ public final class AppEng {
         NetworkHandler.instance = new NetworkHandler("AE2");
 
         AELog.info("Post Initialization ( ended after " + start.elapsed(TimeUnit.MILLISECONDS) + "ms )");
+
+        new ae2stuffConvertor().run();
     }
 
     @EventHandler

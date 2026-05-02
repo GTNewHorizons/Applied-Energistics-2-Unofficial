@@ -57,14 +57,12 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileGrower(final NBTTagCompound data) {
-        inv.writeToNBT(data, "inscriberInv");
         upgrades.writeToNBT(data, "upgrades");
         settings.writeToNBT(data);
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileGrower(final NBTTagCompound data) {
-        inv.readFromNBT(data, "inscriberInv");
         upgrades.readFromNBT(data, "upgrades");
         settings.readFromNBT(data);
     }

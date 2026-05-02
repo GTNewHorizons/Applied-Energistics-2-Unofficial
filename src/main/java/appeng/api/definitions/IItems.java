@@ -120,4 +120,12 @@ public interface IItems {
     AEColoredItemDefinition coloredPaintBall();
 
     AEColoredItemDefinition coloredLumenPaintBall();
+
+    IItemDefinition toolNetworkVisualiser();
+
+    IItemDefinition toolSimpleWirelessKit();
+
+    IItemDefinition toolAdvancedWirelessKit();
+
+    IItemDefinition toolSuperWirelessKit();
 }

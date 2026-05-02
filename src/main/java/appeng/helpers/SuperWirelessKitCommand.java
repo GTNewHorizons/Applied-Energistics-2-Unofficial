@@ -16,8 +16,7 @@ public class SuperWirelessKitCommand {
         DELETE,
         RENAME_SINGLE,
         RENAME_GROUP,
-        RECOLOR,
-        AE2STUFF_REPLACE
+        RECOLOR
     }
 
     public enum PinType {

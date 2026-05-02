@@ -53,7 +53,6 @@ import appeng.helpers.SuperWirelessToolDataObject;
 import appeng.helpers.WireLessToolHelper;
 import appeng.items.contents.SuperWirelessKitObject;
 import appeng.util.IConfigManagerHost;
-import cpw.mods.fml.common.Loader;
 
 public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost {
 
@@ -62,7 +61,6 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
 
     private GuiImgButton sortBy;
     private GuiImgButton hideBoundedButton;
-    private GuiCheckBox ae2stuffConvert;
     private GuiAeButton bind;
     private GuiAeButton unbind;
     private final GuiColorButton[] colorButtons = new GuiColorButton[17];
@@ -101,8 +99,6 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
 
     private NBTTagCompound nData;
     private ArrayList<SuperWirelessToolDataObject> wData;
-
-    private final boolean isAEStaffLoaded = Loader.isModLoaded("ae2stuff");
 
     public GuiSuperWirelessKit(final InventoryPlayer inventoryPlayer, final SuperWirelessKitObject te) {
         this(inventoryPlayer, te, new ContainerSuperWirelessKit(inventoryPlayer, te));
@@ -221,19 +217,6 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
                 AEColor.values()[16].name());
 
         this.buttonList.add(this.colorButtons[16]);
-
-        if (isAEStaffLoaded) {
-            this.ae2stuffConvert = new GuiCheckBox(
-                    0.5D,
-                    this.guiLeft + 244,
-                    this.guiTop + 4,
-                    16 * 10,
-                    16 * 10,
-                    ButtonToolTips.SuperWirelessKitAE2StuffName.getLocal(),
-                    ButtonToolTips.SuperWirelessKitAE2StuffDesc.getLocal());
-
-            this.buttonList.add(ae2stuffConvert);
-        }
 
         this.madChameleonButton = new GuiCheckBox(
                 0.5D,
@@ -368,10 +351,6 @@ public class GuiSuperWirelessKit extends AEBaseGui implements IConfigManagerHost
             sendCommand(SuperWirelessKitCommands.BIND, null);
         } else if (btn == this.unbind) {
             sendCommand(SuperWirelessKitCommands.UNBIND, null);
-        }
-
-        if (isAEStaffLoaded && btn == ae2stuffConvert) {
-            sendCommand(SuperWirelessKitCommands.AE2STUFF_REPLACE, null);
         }
 
         for (GuiColorButton colorButton : colorButtons) {

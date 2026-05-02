@@ -2,14 +2,10 @@ package appeng.container.implementations;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import net.bdew.ae2stuff.machines.wireless.TileWireless;
-import net.bdew.lib.block.BlockRef;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
@@ -20,9 +16,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.google.common.collect.ImmutableList;
-
-import appeng.api.AEApi;
 import appeng.api.config.Settings;
 import appeng.api.config.SuperWirelessToolGroupBy;
 import appeng.api.config.YesNo;
@@ -436,78 +429,6 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                 stash.setTag(WireLessToolHelper.NbtSuperPos, tag);
 
                 updateData();
-            }
-            case AE2STUFF_REPLACE -> {
-                if (!isAEStaffLoaded) return;
-
-                final List<DimensionalCoord> networks = DimensionalCoord
-                        .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
-                for (DimensionalCoord dc : networks) {
-                    IGridHost gh = w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost ghInstance ? ghInstance
-                            : null;
-                    if (gh == null) return;
-
-                    Set<SuperWirelessToolDataObject> dataSet = new HashSet<>();
-
-                    for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                            .getMachines(TileWireless.class)) {
-                        TileWireless wc = (TileWireless) gn.getMachine();
-                        DimensionalCoord targetDC = null;
-
-                        if (wc.link().value().isDefined()) {
-                            BlockRef temp = wc.link().value().get();
-                            targetDC = new DimensionalCoord(w, temp.x(), temp.y(), temp.z());
-                        }
-
-                        SuperWirelessToolDataObject data = new SuperWirelessToolDataObject(
-                                null,
-                                wc.hasCustomName() ? wc.getCustomName() : null,
-                                wc.getLocation(),
-                                targetDC != null,
-                                targetDC == null ? ImmutableList.of() : ImmutableList.of(targetDC),
-                                wc.getColor(),
-                                -1,
-                                wc.isHub(),
-                                -1);
-                        dataSet.add(data);
-                    }
-
-                    for (SuperWirelessToolDataObject data : dataSet) {
-                        w.setBlockToAir(data.cord.x, data.cord.y, data.cord.z);
-                    }
-
-                    for (SuperWirelessToolDataObject data : dataSet) {
-                        if (data.isHub) {
-                            w.setBlock(
-                                    data.cord.x,
-                                    data.cord.y,
-                                    data.cord.z,
-                                    AEApi.instance().definitions().blocks().wirelessHub().maybeBlock().get());
-                        } else {
-                            w.setBlock(
-                                    data.cord.x,
-                                    data.cord.y,
-                                    data.cord.z,
-                                    AEApi.instance().definitions().blocks().wirelessConnector().maybeBlock().get());
-                        }
-
-                        if (w.getTileEntity(data.cord.x, data.cord.y, data.cord.z) instanceof TileWirelessBase newCon) {
-                            if (data.customName != null) newCon.setCustomName(data.customName);
-                            newCon.recolourBlock(ForgeDirection.UNKNOWN, data.color, null);
-                        }
-                    }
-
-                    for (SuperWirelessToolDataObject data : dataSet) {
-                        if (w.getTileEntity(data.cord.x, data.cord.y, data.cord.z) instanceof TileWirelessBase newCon) {
-                            for (final DimensionalCoord targetDc : data.targets) {
-                                if (!(w.getTileEntity(targetDc.x, targetDc.y, targetDc.z) instanceof TileWirelessBase))
-                                    continue;
-                                newCon.injectConnection(targetDc);
-                            }
-                        }
-                    }
-                }
-
             }
             default -> {}
         }

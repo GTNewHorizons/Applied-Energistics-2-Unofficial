@@ -464,6 +464,26 @@ public final class ApiItems implements IItems {
         return this.coloredLumenPaintBall;
     }
 
+    @Override
+    public IItemDefinition toolSimpleWirelessKit() {
+        return this.toolSimpleWirelessKit;
+    }
+
+    @Override
+    public IItemDefinition toolAdvancedWirelessKit() {
+        return this.toolAdvancedWirelessKit;
+    }
+
+    @Override
+    public IItemDefinition toolSuperWirelessKit() {
+        return this.toolSuperWirelessKit;
+    }
+
+    @Override
+    public IItemDefinition toolNetworkVisualiser() {
+        return this.toolNetworkVisualiser;
+    }
+
     public IItemDefinition paintBall() {
         return this.paintBall;
     }
