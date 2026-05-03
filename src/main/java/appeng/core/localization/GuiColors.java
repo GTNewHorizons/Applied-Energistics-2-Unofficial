@@ -223,9 +223,9 @@ public enum GuiColors implements Localization {
 
     ColorButtonOutline(0xFF404040),
 
-    SuperWirelessKitGood(AEColor.Lime.mediumVariant),
-    SuperWirelessKitNeutral(AEColor.Orange.mediumVariant),
-    SuperWirelessKitBad(AEColor.Red.mediumVariant),
+    WirelessKitGood(AEColor.Lime.mediumVariant),
+    WirelessKitNeutral(AEColor.Orange.mediumVariant),
+    WirelessKitBad(AEColor.Red.mediumVariant),
 
     NetworkVisualiserFloatingText(0xffffffff),
     NetworkVisualiserNodeMissing(0xffff0000),

@@ -17,7 +17,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.Settings;
-import appeng.api.config.SuperWirelessToolGroupBy;
+import appeng.api.config.WirelessToolGroupBy;
 import appeng.api.config.YesNo;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
@@ -29,15 +29,15 @@ import appeng.api.util.IConfigurableObject;
 import appeng.container.AEBaseContainer;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketSuperWirelessToolData;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.helpers.SuperWirelessKitCommand;
-import appeng.helpers.SuperWirelessKitCommand.PinType;
-import appeng.helpers.SuperWirelessKitCommand.SubCommand;
-import appeng.helpers.SuperWirelessKitCommand.SuperWirelessKitCommands;
-import appeng.helpers.SuperWirelessToolDataObject;
+import appeng.core.sync.packets.PacketWirelessToolData;
 import appeng.helpers.WireLessToolHelper;
-import appeng.items.contents.SuperWirelessKitObject;
+import appeng.helpers.WirelessKitCommand;
+import appeng.helpers.WirelessKitCommand.PinType;
+import appeng.helpers.WirelessKitCommand.SubCommand;
+import appeng.helpers.WirelessKitCommand.WirelessKitCommands;
+import appeng.helpers.WirelessToolDataObject;
+import appeng.items.contents.WirelessKitObject;
 import appeng.tile.networking.TileWirelessBase;
 import appeng.tile.networking.TileWirelessConnector;
 import appeng.tile.networking.TileWirelessHub;
@@ -46,23 +46,23 @@ import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
 import cpw.mods.fml.common.Loader;
 
-public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfigManagerHost, IConfigurableObject {
+public class ContainerWirelessKit extends AEBaseContainer implements IConfigManagerHost, IConfigurableObject {
 
-    private final SuperWirelessKitObject toolInv;
+    private final WirelessKitObject toolInv;
     private final IConfigManager clientCM;
     private IConfigManager serverCM;
     private IConfigManagerHost gui;
-    private final ArrayList<SuperWirelessToolDataObject> data = new ArrayList<>();
+    private final ArrayList<WirelessToolDataObject> data = new ArrayList<>();
     private final boolean isAEStaffLoaded = Loader.isModLoaded("ae2stuff");
 
-    public ContainerSuperWirelessKit(final InventoryPlayer ip, final SuperWirelessKitObject te) {
+    public ContainerWirelessKit(final InventoryPlayer ip, final WirelessKitObject te) {
         super(ip, te);
         this.toolInv = te;
 
         this.clientCM = new ConfigManager(this);
 
-        this.clientCM.registerSetting(Settings.SUPER_WIRELESS_TOOL_GROUP_BY, SuperWirelessToolGroupBy.Single);
-        this.clientCM.registerSetting(Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
+        this.clientCM.registerSetting(Settings.WIRELESS_TOOL_GROUP_BY, WirelessToolGroupBy.Single);
+        this.clientCM.registerSetting(Settings.WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
 
         if (Platform.isServer()) {
             this.serverCM = te.getConfigManager();
@@ -184,13 +184,13 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
             for (ICrafting crafter : this.crafters) {
                 final EntityPlayerMP emp = (EntityPlayerMP) crafter;
                 try {
-                    NetworkHandler.instance.sendTo(new PacketSuperWirelessToolData(nbtData, this.data), emp);
+                    NetworkHandler.instance.sendTo(new PacketWirelessToolData(nbtData, this.data), emp);
                 } catch (IOException ignored) {}
             }
         }
     }
 
-    public void processCommand(SuperWirelessKitCommand command) {
+    public void processCommand(WirelessKitCommand command) {
         World w = toolInv.getWorld();
         NBTTagCompound stash = toolInv.getItemStack().getTagCompound().getCompoundTag(WireLessToolHelper.NbtSuper);
         switch (command.command) {
@@ -347,7 +347,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
 
                         case NETWORK, COLOR -> {
                             final boolean isColor = subCommand.groupBy == PinType.COLOR;
-                            for (SuperWirelessToolDataObject sd : data) {
+                            for (WirelessToolDataObject sd : data) {
                                 if (!subCommand.networkPos.equals(sd.network)) continue;
 
                                 if (!(w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z) instanceof TileWirelessBase tw))
@@ -385,8 +385,8 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                         final IGrid newG = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
                         if (newG != null) {
                             if (gList.contains(newG)) {
-                                final SuperWirelessKitCommand nextCommand = new SuperWirelessKitCommand(
-                                        SuperWirelessKitCommands.DELETE);
+                                final WirelessKitCommand nextCommand = new WirelessKitCommand(
+                                        WirelessKitCommands.DELETE);
                                 nextCommand.setNetworkPos(dc);
                                 processCommand(nextCommand);
                             } else {
@@ -394,8 +394,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
                             }
                         }
                     } else {
-                        final SuperWirelessKitCommand nextCommand = new SuperWirelessKitCommand(
-                                SuperWirelessKitCommands.DELETE);
+                        final WirelessKitCommand nextCommand = new WirelessKitCommand(WirelessKitCommands.DELETE);
                         nextCommand.setNetworkPos(dc);
                         processCommand(nextCommand);
                     }
@@ -435,7 +434,7 @@ public class ContainerSuperWirelessKit extends AEBaseContainer implements IConfi
     }
 
     private ArrayList<TileWirelessBase> fletchConnectors(final boolean unbind,
-            final ArrayList<SuperWirelessKitCommand.SubCommand> list, final World w) {
+            final ArrayList<WirelessKitCommand.SubCommand> list, final World w) {
         final ArrayList<TileWirelessBase> connectors = new ArrayList<>();
         for (final SubCommand subCommand : list) {
             switch (subCommand.groupBy) {

@@ -1,6 +1,6 @@
 package appeng.api.config;
 
-public enum SuperWirelessToolGroupBy {
+public enum WirelessToolGroupBy {
     Single,
     Color,
     Network

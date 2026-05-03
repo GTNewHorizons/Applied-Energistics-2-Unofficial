@@ -3,7 +3,7 @@ package appeng.api.config;
 import appeng.core.localization.Localization;
 import appeng.core.localization.WirelessMessages;
 
-public enum WirelessToolType implements Localization {
+public enum WirelessToolMode implements Localization {
 
     Simple,
     Advanced,

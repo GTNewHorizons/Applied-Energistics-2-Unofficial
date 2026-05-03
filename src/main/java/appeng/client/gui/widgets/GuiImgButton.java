@@ -55,9 +55,9 @@ import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.StringOrder;
-import appeng.api.config.SuperWirelessToolGroupBy;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.ViewItems;
+import appeng.api.config.WirelessToolGroupBy;
 import appeng.api.config.YesNo;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.localization.ButtonToolTips;
@@ -893,38 +893,38 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
             this.registerApp(
                     16 * 7 + 8,
-                    Settings.SUPER_WIRELESS_TOOL_GROUP_BY,
-                    SuperWirelessToolGroupBy.Single,
-                    ButtonToolTips.SuperWirelessToolGroupBySingleName,
-                    ButtonToolTips.SuperWirelessToolGroupBySingleDesc);
+                    Settings.WIRELESS_TOOL_GROUP_BY,
+                    WirelessToolGroupBy.Single,
+                    ButtonToolTips.WirelessToolGroupBySingleName,
+                    ButtonToolTips.WirelessToolGroupBySingleDesc);
 
             this.registerApp(
                     16 * 7 + 9,
-                    Settings.SUPER_WIRELESS_TOOL_GROUP_BY,
-                    SuperWirelessToolGroupBy.Color,
-                    ButtonToolTips.SuperWirelessToolGroupByColorName,
-                    ButtonToolTips.SuperWirelessToolGroupByColorDesc);
+                    Settings.WIRELESS_TOOL_GROUP_BY,
+                    WirelessToolGroupBy.Color,
+                    ButtonToolTips.WirelessToolGroupByColorName,
+                    ButtonToolTips.WirelessToolGroupByColorDesc);
 
             this.registerApp(
                     16 * 7 + 10,
-                    Settings.SUPER_WIRELESS_TOOL_GROUP_BY,
-                    SuperWirelessToolGroupBy.Network,
-                    ButtonToolTips.SuperWirelessToolGroupByNetworkName,
-                    ButtonToolTips.SuperWirelessToolGroupByNetworkDesc);
+                    Settings.WIRELESS_TOOL_GROUP_BY,
+                    WirelessToolGroupBy.Network,
+                    ButtonToolTips.WirelessToolGroupByNetworkName,
+                    ButtonToolTips.WirelessToolGroupByNetworkDesc);
 
             this.registerApp(
                     16 * 6 + 12,
-                    Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED,
+                    Settings.WIRELESS_TOOL_HIDE_BOUNDED,
                     YesNo.YES,
-                    ButtonToolTips.SuperWirelessToolHideBoundedYesName,
-                    ButtonToolTips.SuperWirelessToolHideBoundedYesDesc);
+                    ButtonToolTips.WirelessToolHideBoundedYesName,
+                    ButtonToolTips.WirelessToolHideBoundedYesDesc);
 
             this.registerApp(
                     16 * 6 + 11,
-                    Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED,
+                    Settings.WIRELESS_TOOL_HIDE_BOUNDED,
                     YesNo.NO,
-                    ButtonToolTips.SuperWirelessToolHideBoundedNoName,
-                    ButtonToolTips.SuperWirelessToolHideBoundedNoDesc);
+                    ButtonToolTips.WirelessToolHideBoundedNoName,
+                    ButtonToolTips.WirelessToolHideBoundedNoDesc);
 
             this.registerApp(
                     16 * 15 + 13,

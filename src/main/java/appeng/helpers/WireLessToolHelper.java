@@ -1,6 +1,6 @@
 package appeng.helpers;
 
-import static appeng.items.tools.ToolSuperWirelessKit.getConfigManager;
+import static appeng.items.tools.ToolWirelessKit.getConfigManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.AdvancedWirelessToolMode;
 import appeng.api.config.Settings;
-import appeng.api.config.WirelessToolType;
+import appeng.api.config.WirelessToolMode;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.PlayerSource;
@@ -52,11 +52,11 @@ public class WireLessToolHelper {
     public final static String NbtSuperPos = "pos";
 
     public static void nextToolMode(EntityPlayer p, IConfigManager cm) {
-        final WirelessToolType newState = (WirelessToolType) Platform.rotateEnum(
-                cm.getSetting(Settings.WIRELESS_TOOL_TYPE),
+        final WirelessToolMode newState = (WirelessToolMode) Platform.rotateEnum(
+                cm.getSetting(Settings.WIRELESS_TOOL_MODE),
                 false,
-                Settings.WIRELESS_TOOL_TYPE.getPossibleValues());
-        cm.putSetting(Settings.WIRELESS_TOOL_TYPE, newState);
+                Settings.WIRELESS_TOOL_MODE.getPossibleValues());
+        cm.putSetting(Settings.WIRELESS_TOOL_MODE, newState);
 
         p.addChatMessage(WirelessMessages.SetMode.toChat(newState.getLocal()));
     }
@@ -71,9 +71,9 @@ public class WireLessToolHelper {
         p.addChatMessage(new ChatComponentTranslation(newState.getLocal()));
     }
 
-    public static WirelessToolType getMode(ItemStack is) {
+    public static WirelessToolMode getMode(ItemStack is) {
         final IConfigManager cm = getConfigManager(is);
-        return (WirelessToolType) cm.getSetting(Settings.WIRELESS_TOOL_TYPE);
+        return (WirelessToolMode) cm.getSetting(Settings.WIRELESS_TOOL_MODE);
     }
 
     public static AdvancedWirelessToolMode getConnectMode(ItemStack stack) {
@@ -83,12 +83,12 @@ public class WireLessToolHelper {
 
     public static void newNBT(ItemStack is) {
         is.setTagCompound(new NBTTagCompound());
-        clearNBT(is, WirelessToolType.Simple, null);
-        clearNBT(is, WirelessToolType.Advanced, null);
-        clearNBT(is, WirelessToolType.Super, null);
+        clearNBT(is, WirelessToolMode.Simple, null);
+        clearNBT(is, WirelessToolMode.Advanced, null);
+        clearNBT(is, WirelessToolMode.Super, null);
     }
 
-    public static void clearNBT(ItemStack is, WirelessToolType mode, @Nullable EntityPlayer p) {
+    public static void clearNBT(ItemStack is, WirelessToolMode mode, @Nullable EntityPlayer p) {
         final NBTTagCompound tag = is.getTagCompound();
         switch (mode) {
             case Simple -> tag.setTag(NbtSimple, new NBTTagCompound());
@@ -491,7 +491,7 @@ public class WireLessToolHelper {
     }
 
     public static boolean bindSuper(TileEntity target, ItemStack tool, World w, EntityPlayer p) {
-        if (!tool.getTagCompound().hasKey(NbtSuper)) clearNBT(tool, WirelessToolType.Super, null);
+        if (!tool.getTagCompound().hasKey(NbtSuper)) clearNBT(tool, WirelessToolMode.Super, null);
 
         final NBTTagCompound tag = tool.getTagCompound().getCompoundTag(NbtSuper).getCompoundTag(NbtSuperPos);
         final List<DimensionalCoord> locList = DimensionalCoord.readAsListFromNBT(tag);

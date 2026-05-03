@@ -11,14 +11,14 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
-import appeng.api.config.WirelessToolType;
+import appeng.api.config.WirelessToolMode;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.render.NetworkVisualiserRender;
 import appeng.core.localization.WailaText;
 import appeng.helpers.WireLessToolHelper;
 import appeng.integration.modules.waila.BaseWailaDataProvider;
-import appeng.items.tools.ToolSuperWirelessKit;
+import appeng.items.tools.ToolWirelessKit;
 import appeng.tile.networking.TileWirelessBase;
 import appeng.util.Platform;
 import mcp.mobius.waila.api.IWailaConfigHandler;
@@ -100,8 +100,8 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
         }
 
         final ItemStack hand = player.getCurrentEquippedItem();
-        if (hand != null && hand.getItem() instanceof ToolSuperWirelessKit) {
-            if (WireLessToolHelper.getMode(hand) == WirelessToolType.Advanced) {
+        if (hand != null && hand.getItem() instanceof ToolWirelessKit) {
+            if (WireLessToolHelper.getMode(hand) == WirelessToolMode.Advanced) {
                 final String connectionMode = getConnectMode(hand).getUnlocalized();
                 tag.setBoolean("holdWand", true);
                 tag.setString("wandConnectMode", connectionMode);

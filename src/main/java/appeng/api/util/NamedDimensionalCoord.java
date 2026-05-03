@@ -86,6 +86,17 @@ public class NamedDimensionalCoord extends DimensionalCoord {
         ByteBufUtils.writeUTF8String(data, this.name == null ? "" : this.name);
     }
 
+    public static void writeListToPacketNamed(final ByteBuf data, final List<NamedDimensionalCoord> list) {
+        data.writeInt(list == null ? 0 : list.size());
+        if (list == null) {
+            return;
+        }
+
+        for (final NamedDimensionalCoord coord : list) {
+            coord.writeToPacket(data);
+        }
+    }
+
     public static NamedDimensionalCoord readFromPacket(final ByteBuf data) {
         return new NamedDimensionalCoord(DimensionalCoord.readFromPacket(data), ByteBufUtils.readUTF8String(data));
     }

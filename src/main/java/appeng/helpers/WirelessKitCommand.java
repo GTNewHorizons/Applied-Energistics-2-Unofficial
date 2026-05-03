@@ -7,9 +7,9 @@ import appeng.api.util.DimensionalCoord;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 
-public class SuperWirelessKitCommand {
+public class WirelessKitCommand {
 
-    public enum SuperWirelessKitCommands {
+    public enum WirelessKitCommands {
         BIND,
         UNBIND,
         PIN,
@@ -96,7 +96,7 @@ public class SuperWirelessKitCommand {
         }
     }
 
-    public final SuperWirelessKitCommands command;
+    public final WirelessKitCommands command;
     public String name = "";
     public AEColor color = null;
     public DimensionalCoord networkPos = null;
@@ -105,7 +105,7 @@ public class SuperWirelessKitCommand {
     public final ArrayList<SubCommand> toBindRow = new ArrayList<>();
     public final ArrayList<SubCommand> targetRow = new ArrayList<>();
 
-    public SuperWirelessKitCommand(SuperWirelessKitCommands command) {
+    public WirelessKitCommand(WirelessKitCommands command) {
         this.command = command;
     }
 
@@ -137,9 +137,8 @@ public class SuperWirelessKitCommand {
         this.targetRow.forEach(cmd -> cmd.write(buf));
     }
 
-    public static SuperWirelessKitCommand read(ByteBuf buf) {
-        final SuperWirelessKitCommand command = new SuperWirelessKitCommand(
-                SuperWirelessKitCommands.values()[buf.readInt()]);
+    public static WirelessKitCommand read(ByteBuf buf) {
+        final WirelessKitCommand command = new WirelessKitCommand(WirelessKitCommands.values()[buf.readInt()]);
         command.setName(ByteBufUtils.readUTF8String(buf));
 
         if (buf.readBoolean()) command.setColor(AEColor.values()[buf.readInt()]);

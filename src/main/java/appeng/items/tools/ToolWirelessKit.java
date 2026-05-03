@@ -22,8 +22,8 @@ import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.AdvancedWirelessToolMode;
 import appeng.api.config.Settings;
-import appeng.api.config.SuperWirelessToolGroupBy;
-import appeng.api.config.WirelessToolType;
+import appeng.api.config.WirelessToolGroupBy;
+import appeng.api.config.WirelessToolMode;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
@@ -35,14 +35,14 @@ import appeng.core.localization.WirelessMessages;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.WireLessToolHelper;
 import appeng.items.AEBaseItem;
-import appeng.items.contents.SuperWirelessKitObject;
+import appeng.items.contents.WirelessKitObject;
 import appeng.tile.networking.TileWirelessBase;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
 
-public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
+public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
 
-    public ToolSuperWirelessKit() {
+    public ToolWirelessKit() {
         this.setFeature(EnumSet.of(AEFeature.Core));
         this.setMaxStackSize(1);
     }
@@ -64,18 +64,18 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
             return is;
         }
 
-        final WirelessToolType mode = WireLessToolHelper.getMode(is);
+        final WirelessToolMode mode = WireLessToolHelper.getMode(is);
         if (p.isSneaking() && Platform.keyBindLCtrl.isKeyDown(p)) {
             WireLessToolHelper.clearNBT(is, mode, p);
             return is;
         }
 
-        if (p.isSneaking() && mode == WirelessToolType.Advanced) {
+        if (p.isSneaking() && mode == WirelessToolMode.Advanced) {
             WireLessToolHelper.nextConnectMode(cm, p);
             return is;
         }
 
-        if (mode == WirelessToolType.Super) {
+        if (mode == WirelessToolMode.Super) {
             Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_SUPER_WIRELESS_KIT);
             return is;
         }
@@ -88,10 +88,10 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
             float yOff, float zOff) {
         if (Platform.isClient()) return true;
 
-        final WirelessToolType mode = (WirelessToolType) getConfigManager(is).getSetting(Settings.WIRELESS_TOOL_TYPE);
+        final WirelessToolMode mode = (WirelessToolMode) getConfigManager(is).getSetting(Settings.WIRELESS_TOOL_MODE);
         final TileEntity te = w.getTileEntity(x, y, z);
 
-        if (mode == WirelessToolType.Super && te instanceof IGridHost)
+        if (mode == WirelessToolMode.Super && te instanceof IGridHost)
             return WireLessToolHelper.bindSuper(te, is, w, p);
 
         if (!(te instanceof TileWirelessBase target)) return false;
@@ -109,11 +109,11 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
             manager.writeToNBT(data);
         });
 
-        final ToolSuperWirelessKit tool = (ToolSuperWirelessKit) target.getItem();
+        final ToolWirelessKit tool = (ToolWirelessKit) target.getItem();
 
-        out.registerSetting(Settings.WIRELESS_TOOL_TYPE, WirelessToolType.Simple);
-        out.registerSetting(Settings.SUPER_WIRELESS_TOOL_GROUP_BY, SuperWirelessToolGroupBy.Single);
-        out.registerSetting(Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
+        out.registerSetting(Settings.WIRELESS_TOOL_MODE, WirelessToolMode.Simple);
+        out.registerSetting(Settings.WIRELESS_TOOL_GROUP_BY, WirelessToolGroupBy.Single);
+        out.registerSetting(Settings.WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
         out.registerSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE, Queueing);
 
         out.readFromNBT(ItemStackNBT.get(target));
@@ -124,7 +124,7 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
     protected void addCheckedInformation(ItemStack is, EntityPlayer player, final List<String> lines,
             boolean displayMoreInfo) {
         final IConfigManager cm = getConfigManager(is);
-        final WirelessToolType currentMode = cm.getSetting(WirelessToolType.class);
+        final WirelessToolMode currentMode = (WirelessToolMode) cm.getSetting(Settings.WIRELESS_TOOL_MODE);
         lines.add(WirelessMessages.Mode.getLocal(currentMode.getLocal()));
         lines.add(WirelessMessages.ModeToggle.getLocal());
         lines.add(WirelessMessages.SuperClear.getLocal());
@@ -143,7 +143,8 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
                 }
             }
             case Advanced -> {
-                final AdvancedWirelessToolMode mode = cm.getSetting(AdvancedWirelessToolMode.class);
+                final AdvancedWirelessToolMode mode = (AdvancedWirelessToolMode) cm
+                        .getSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE);
                 lines.add(WirelessMessages.AdvancedActivated.getLocal(mode.getLocal()));
 
                 switch (mode) {
@@ -230,6 +231,6 @@ public class ToolSuperWirelessKit extends AEBaseItem implements IGuiItem {
 
     @Override
     public IGuiItemObject getGuiObject(ItemStack is, World world, EntityPlayer player, int x, int y, int z) {
-        return new SuperWirelessKitObject(is, world);
+        return new WirelessKitObject(is, world);
     }
 }

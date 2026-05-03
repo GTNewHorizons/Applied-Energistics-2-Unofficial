@@ -99,9 +99,9 @@ import appeng.container.implementations.ContainerSpatialIOPort;
 import appeng.container.implementations.ContainerSpatialLinkChamber;
 import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerStorageReshuffle;
-import appeng.container.implementations.ContainerSuperWirelessKit;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
+import appeng.container.implementations.ContainerWirelessKit;
 import appeng.core.stats.Achievements;
 import appeng.helpers.ICellRestriction;
 import appeng.helpers.ICustomNameObject;
@@ -245,7 +245,7 @@ public enum GuiBridge implements IGuiHandler {
     GUI_CRYSTAL_GROWTH_CHAMBER(ContainerCrystalGrowthChamber.class, TileCrystalGrowthChamber.class, GuiHostType.WORLD,
             null),
 
-    GUI_SUPER_WIRELESS_KIT(ContainerSuperWirelessKit.class, IGuiItemObject.class, GuiHostType.ITEM, null);
+    GUI_SUPER_WIRELESS_KIT(ContainerWirelessKit.class, IGuiItemObject.class, GuiHostType.ITEM, null);
 
     private final Class tileClass;
     private final Class containerClass;

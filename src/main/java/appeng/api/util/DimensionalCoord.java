@@ -123,7 +123,7 @@ public class DimensionalCoord extends WorldCoord {
         data.writeInt(this.dimId);
     }
 
-    public static void writeListToPacket(final ByteBuf data, final List<NamedDimensionalCoord> list) {
+    public static void writeListToPacket(final ByteBuf data, final List<DimensionalCoord> list) {
         data.writeInt(list == null ? 0 : list.size());
         if (list == null) {
             return;

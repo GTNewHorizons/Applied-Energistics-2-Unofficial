@@ -5,7 +5,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import appeng.api.config.Settings;
-import appeng.api.config.SuperWirelessToolGroupBy;
+import appeng.api.config.WirelessToolGroupBy;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.util.IConfigManager;
@@ -13,12 +13,12 @@ import appeng.api.util.IConfigurableObject;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
 
-public class SuperWirelessKitObject implements IGuiItemObject, IConfigurableObject {
+public class WirelessKitObject implements IGuiItemObject, IConfigurableObject {
 
     private final ItemStack stack;
     private final World world;
 
-    public SuperWirelessKitObject(final ItemStack stack, World w) {
+    public WirelessKitObject(final ItemStack stack, World w) {
         this.stack = stack;
         this.world = w;
     }
@@ -35,12 +35,12 @@ public class SuperWirelessKitObject implements IGuiItemObject, IConfigurableObje
     @Override
     public IConfigManager getConfigManager() {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(SuperWirelessKitObject.this.stack);
+            final NBTTagCompound data = Platform.openNbtData(WirelessKitObject.this.stack);
             manager.writeToNBT(data);
         });
 
-        out.registerSetting(Settings.SUPER_WIRELESS_TOOL_GROUP_BY, SuperWirelessToolGroupBy.Single);
-        out.registerSetting(Settings.SUPER_WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
+        out.registerSetting(Settings.WIRELESS_TOOL_GROUP_BY, WirelessToolGroupBy.Single);
+        out.registerSetting(Settings.WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
 
         out.readFromNBT((NBTTagCompound) Platform.openNbtData(this.stack).copy());
         return out;

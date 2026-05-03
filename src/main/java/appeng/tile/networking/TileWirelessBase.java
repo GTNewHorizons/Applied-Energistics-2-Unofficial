@@ -30,8 +30,8 @@ import appeng.api.networking.IGridNode;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
-import appeng.helpers.SuperWirelessToolDataObject;
 import appeng.helpers.WireLessToolHelper.BindResult;
+import appeng.helpers.WirelessToolDataObject;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
@@ -320,8 +320,8 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         this.markForUpdate();
     }
 
-    public SuperWirelessToolDataObject getDataForTool(DimensionalCoord network) {
-        return new SuperWirelessToolDataObject(
+    public WirelessToolDataObject getDataForTool(DimensionalCoord network) {
+        return new WirelessToolDataObject(
                 network,
                 this.hasCustomName() ? this.getCustomName() : this.getBlockType().getLocalizedName(),
                 getLocation(),

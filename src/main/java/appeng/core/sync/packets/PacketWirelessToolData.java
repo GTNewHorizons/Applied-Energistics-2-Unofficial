@@ -8,29 +8,29 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 
-import appeng.client.gui.implementations.GuiSuperWirelessKit;
+import appeng.client.gui.implementations.GuiWirelessKit;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
-import appeng.helpers.SuperWirelessToolDataObject;
+import appeng.helpers.WirelessToolDataObject;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class PacketSuperWirelessToolData extends AppEngPacket {
+public class PacketWirelessToolData extends AppEngPacket {
 
     private final NBTTagCompound nData;
-    private final ArrayList<SuperWirelessToolDataObject> wData;
+    private final ArrayList<WirelessToolDataObject> wData;
 
     // automatic.
-    public PacketSuperWirelessToolData(final ByteBuf stream) throws IOException {
+    public PacketWirelessToolData(final ByteBuf stream) throws IOException {
         this.nData = ByteBufUtils.readTag(stream);
-        this.wData = SuperWirelessToolDataObject.readAsList(stream);
+        this.wData = WirelessToolDataObject.readAsList(stream);
     }
 
     // api
-    public PacketSuperWirelessToolData(final NBTTagCompound nData, final ArrayList<SuperWirelessToolDataObject> wData)
+    public PacketWirelessToolData(final NBTTagCompound nData, final ArrayList<WirelessToolDataObject> wData)
             throws IOException {
         this.nData = nData;
         this.wData = wData;
@@ -41,7 +41,7 @@ public class PacketSuperWirelessToolData extends AppEngPacket {
 
         ByteBufUtils.writeTag(data, nData);
 
-        SuperWirelessToolDataObject.writeAsList(wData, data);
+        WirelessToolDataObject.writeAsList(wData, data);
 
         this.configureWrite(data);
     }
@@ -50,6 +50,6 @@ public class PacketSuperWirelessToolData extends AppEngPacket {
     @SideOnly(Side.CLIENT)
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-        if (gs instanceof GuiSuperWirelessKit gsw) gsw.setData(this.nData, this.wData);
+        if (gs instanceof GuiWirelessKit gsw) gsw.setData(this.nData, this.wData);
     }
 }

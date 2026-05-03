@@ -56,14 +56,14 @@ import appeng.core.sync.packets.PacketPickBlock;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketRemoteRename;
 import appeng.core.sync.packets.PacketSpatialAction;
-import appeng.core.sync.packets.PacketSuperWirelessToolCommand;
-import appeng.core.sync.packets.PacketSuperWirelessToolData;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketToggleInterfaceVisibility;
 import appeng.core.sync.packets.PacketTransitionEffect;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.core.sync.packets.PacketVirtualSlot;
+import appeng.core.sync.packets.PacketWirelessToolCommand;
+import appeng.core.sync.packets.PacketWirelessToolData;
 import io.netty.buffer.ByteBuf;
 
 public class AppEngPacketHandlerBase {
@@ -146,8 +146,8 @@ public class AppEngPacketHandlerBase {
         PACKET_SPATIAL_ACTION(PacketSpatialAction.class),
         PACKET_TOGGLE_INTERFACE_VISIBILITY(PacketToggleInterfaceVisibility.class),
         PACKET_NETWORK_VISUALISER_DATA(PacketNetworkVisualiserData.class),
-        PACKET_SUPER_WIRELESS_TOOL_DATA(PacketSuperWirelessToolData.class),
-        PACKET_SUPER_WIRELESS_TOOL_COMMAND(PacketSuperWirelessToolCommand.class);
+        PACKET_SUPER_WIRELESS_TOOL_DATA(PacketWirelessToolData.class),
+        PACKET_SUPER_WIRELESS_TOOL_COMMAND(PacketWirelessToolCommand.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;

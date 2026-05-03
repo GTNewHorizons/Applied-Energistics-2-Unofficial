@@ -28,12 +28,12 @@ public class ae2stuffConvertor implements Runnable {
         // items
         ItemStackReplacementManager.addSimpleReplacement(
                 ae2stuffWirelessKit,
-                AEApi.instance().definitions().items().toolSuperWirelessKit().maybeItem().get(),
+                AEApi.instance().definitions().items().toolWirelessKit().maybeItem().get(),
                 true);
 
         ItemStackReplacementManager.addSimpleReplacement(
                 ae2stuffAdvWirelessKit,
-                AEApi.instance().definitions().items().toolSuperWirelessKit().maybeItem().get(),
+                AEApi.instance().definitions().items().toolWirelessKit().maybeItem().get(),
                 true);
 
         ItemStackReplacementManager.addSimpleReplacement(
