@@ -738,6 +738,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
+                this.duringPushOut = true;
                 final Iterator<IAEStack<?>> iter = this.waitingToSend.iterator();
                 while (iter.hasNext()) {
                     IAEStack<?> aes = iter.next();
@@ -761,8 +762,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         iter.remove();
                     }
                 }
+                this.duringPushOut = false;
             }
-
         }
 
         if (this.waitingToSend.isEmpty()) {
@@ -1795,8 +1796,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return unlockStacks;
     }
 
+    private boolean duringPushOut = false;
+
     public void updateRedstoneState() {
-        if (this.gridProxy.isActive()) this.pushItemsOut(this.iHost.getTargets());
+        if (this.gridProxy.isActive() && !duringPushOut) this.pushItemsOut(this.iHost.getTargets());
         // reset cache to undecided
         redstoneState = YesNo.UNDECIDED;
 
