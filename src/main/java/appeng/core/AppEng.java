@@ -216,7 +216,7 @@ public final class AppEng {
 
         AELog.info("Post Initialization ( ended after " + start.elapsed(TimeUnit.MILLISECONDS) + "ms )");
 
-        new ae2stuffConvertor().run();
+        if (Platform.isPosteaLoaded) new ae2stuffConvertor().run();
     }
 
     @EventHandler

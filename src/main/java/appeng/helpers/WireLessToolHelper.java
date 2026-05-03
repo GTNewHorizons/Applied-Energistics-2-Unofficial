@@ -81,16 +81,11 @@ public class WireLessToolHelper {
         return ((AdvancedWirelessToolMode) cm.getSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE));
     }
 
-    public static void newNBT(ItemStack is, WirelessToolType mode) {
+    public static void newNBT(ItemStack is) {
         is.setTagCompound(new NBTTagCompound());
-        switch (mode) {
-            case Simple, Advanced -> clearNBT(is, mode, null);
-            case Super -> {
-                clearNBT(is, WirelessToolType.Simple, null);
-                clearNBT(is, WirelessToolType.Advanced, null);
-                clearNBT(is, WirelessToolType.Super, null);
-            }
-        }
+        clearNBT(is, WirelessToolType.Simple, null);
+        clearNBT(is, WirelessToolType.Advanced, null);
+        clearNBT(is, WirelessToolType.Super, null);
     }
 
     public static void clearNBT(ItemStack is, WirelessToolType mode, @Nullable EntityPlayer p) {
@@ -110,8 +105,7 @@ public class WireLessToolHelper {
                 tag.setTag(NbtSuper, newTag);
             }
         }
-        if (p != null) if (mode == WirelessToolType.Simple) p.addChatMessage(WirelessMessages.SimpleCleared.toChat());
-        else p.addChatMessage(WirelessMessages.Cleared.toChat(mode.getLocal()));
+        if (p != null) p.addChatMessage(WirelessMessages.Cleared.toChat(mode.getLocal()));
     }
 
     @Nullable

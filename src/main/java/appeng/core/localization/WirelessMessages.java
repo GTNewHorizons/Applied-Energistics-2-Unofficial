@@ -4,7 +4,6 @@ public enum WirelessMessages implements Localization {
 
     Security,
     DimensionMismatch,
-    Clear,
     BoundAdvancedFilled,
     Connected,
     Disconnected,
@@ -26,7 +25,6 @@ public enum WirelessMessages implements Localization {
 
     Simple,
     SimpleEmpty,
-    SimpleCleared,
     SimpleBound,
     SimpleBounded,
 

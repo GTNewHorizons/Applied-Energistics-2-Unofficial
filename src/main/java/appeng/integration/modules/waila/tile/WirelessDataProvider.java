@@ -100,9 +100,8 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
         }
 
         final ItemStack hand = player.getCurrentEquippedItem();
-        if (hand != null && hand.getItem() instanceof ToolSuperWirelessKit swk) {
-            if (swk.getIdentity() != WirelessToolType.Simple
-                    && WireLessToolHelper.getMode(hand) == WirelessToolType.Advanced) {
+        if (hand != null && hand.getItem() instanceof ToolSuperWirelessKit) {
+            if (WireLessToolHelper.getMode(hand) == WirelessToolType.Advanced) {
                 final String connectionMode = getConnectMode(hand).getUnlocalized();
                 tag.setBoolean("holdWand", true);
                 tag.setString("wandConnectMode", connectionMode);

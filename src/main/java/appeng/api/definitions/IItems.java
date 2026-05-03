@@ -123,9 +123,5 @@ public interface IItems {
 
     IItemDefinition toolNetworkVisualiser();
 
-    IItemDefinition toolSimpleWirelessKit();
-
-    IItemDefinition toolAdvancedWirelessKit();
-
     IItemDefinition toolSuperWirelessKit();
 }

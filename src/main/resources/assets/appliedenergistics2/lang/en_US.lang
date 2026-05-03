@@ -1066,9 +1066,7 @@ item.appliedenergistics2.ToolBiometricCard.name=Biometric Card
 item.appliedenergistics2.ToolDebugCard.name=Dev.DebugCard
 item.appliedenergistics2.ToolReplicatorCard.name=Dev.ReplicatorCard
 item.appliedenergistics2.ToolNetworkVisualiser.name=Network Visualisation Tool
-item.appliedenergistics2.ToolSimpleWirelessKit.name=Simple Wireless Kit
-item.appliedenergistics2.ToolAdvancedWirelessKit.name=Advanced Wireless Kit
-item.appliedenergistics2.ToolSuperWirelessKit.name=Super Wireless Kit
+item.appliedenergistics2.ToolSuperWirelessKit.name=Wireless Kit
 
 item.appliedenergistics2.ToolNetworkVisualiser.bound=§eVisualising network at %s
 item.appliedenergistics2.ToolNetworkVisualiser.mode=Mode:
@@ -1094,11 +1092,9 @@ item.appliedenergistics2.WirelessMessages.InvalidTarget=§cInvalid target - must
 item.appliedenergistics2.WirelessMessages.Cleared=§aList of §e%s mode cleared
 item.appliedenergistics2.WirelessMessages.Mode=Mode: %s
 item.appliedenergistics2.WirelessMessages.SetMode=Mode changed to %s
-item.appliedenergistics2.WirelessMessages.Clear=Sneak + R-click for clear tool
 
 item.appliedenergistics2.WirelessMessages.Simple=§eSimple
 item.appliedenergistics2.WirelessMessages.SimpleEmpty=Click Wireless Connector to bind
-item.appliedenergistics2.WirelessMessages.SimpleCleared=§eTool is cleared
 item.appliedenergistics2.WirelessMessages.SimpleBound=§aBound to %s
 item.appliedenergistics2.WirelessMessages.SimpleBounded=Click other Wireless Connector to connect
 
