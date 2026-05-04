@@ -35,25 +35,78 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         boolean test(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton);
     }
 
+    @FunctionalInterface
+    public interface StackGetter {
+
+        @Nullable
+        IAEStack<?> get();
+    }
+
+    @FunctionalInterface
+    public interface StackSetter {
+
+        void set(@Nullable IAEStack<?> stack);
+    }
+
+    @Nullable
     private final IAEStackInventory inventory;
     private final TypeAcceptPredicate acceptType;
+    @Nullable
+    private final StackGetter stackGetter;
+    @Nullable
+    private final StackSetter stackSetter;
 
     public VirtualMEPhantomSlot(int x, int y, IAEStackInventory inventory, int slotIndex,
             TypeAcceptPredicate acceptType) {
+        this(x, y, inventory, slotIndex, acceptType, null, null);
+    }
+
+    public VirtualMEPhantomSlot(int x, int y, TypeAcceptPredicate acceptType, StackGetter stackGetter,
+            StackSetter stackSetter) {
+        this(x, y, null, 0, acceptType, stackGetter, stackSetter);
+    }
+
+    private VirtualMEPhantomSlot(int x, int y, @Nullable IAEStackInventory inventory, int slotIndex,
+            TypeAcceptPredicate acceptType, @Nullable StackGetter stackGetter, @Nullable StackSetter stackSetter) {
         super(x, y, slotIndex);
         this.inventory = inventory;
         this.showAmount = false;
         this.acceptType = acceptType;
+        this.stackGetter = stackGetter;
+        this.stackSetter = stackSetter;
     }
 
     @Nullable
     @Override
     public IAEStack<?> getAEStack() {
-        return this.inventory.getAEStackInSlot(this.getSlotIndex());
+        if (this.stackGetter != null) {
+            return this.stackGetter.get();
+        }
+
+        return this.getInventory().getAEStackInSlot(this.getSlotIndex());
+    }
+
+    protected void setAEStack(@Nullable final IAEStack<?> stack) {
+        if (this.stackSetter != null) {
+            this.stackSetter.set(stack);
+            return;
+        }
+
+        this.getInventory().putAEStackInSlot(this.getSlotIndex(), stack);
+
+        NetworkHandler.instance.sendToServer(new PacketVirtualSlot(this.getStorageName(), this.getSlotIndex(), stack));
     }
 
     public StorageName getStorageName() {
-        return this.inventory.getStorageName();
+        return this.getInventory().getStorageName();
+    }
+
+    private IAEStackInventory getInventory() {
+        if (this.inventory == null) {
+            throw new IllegalStateException("Inventory is not available for synced virtual slots");
+        }
+
+        return this.inventory;
     }
 
     /**
@@ -150,10 +203,7 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         }
 
         // Set on the client to avoid lag on slow networks
-        inventory.putAEStackInSlot(this.getSlotIndex(), currentStack);
-
-        NetworkHandler.instance
-                .sendToServer(new PacketVirtualSlot(this.getStorageName(), this.getSlotIndex(), currentStack));
+        this.setAEStack(currentStack);
     }
 
     @Override
