@@ -28,11 +28,9 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
-import appeng.api.storage.StorageName;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
-import appeng.client.gui.slots.VirtualMESyncSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiQuantityButton;
 import appeng.client.gui.widgets.MEGuiTextField;
@@ -63,7 +61,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
     private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
-    private VirtualMESyncSlot config;
+    private VirtualMEPhantomSlot config;
 
     public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final ILevelEmitter te) {
         super(new ContainerLevelEmitter(inventoryPlayer, te));
@@ -82,11 +80,9 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.container.setTextField(this.amountTextField);
         this.validateText();
 
-        this.config = new VirtualMESyncSlot(
+        this.config = new VirtualMEPhantomSlot(
                 17,
                 42,
-                ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.CONFIG),
-                0,
                 GuiLevelEmitter::acceptType,
                 this.container::getConfigStack,
                 this.container::setConfigStack);
