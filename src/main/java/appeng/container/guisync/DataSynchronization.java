@@ -11,6 +11,14 @@ import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 
+/**
+ * Legacy reflection-based synchronization for fields annotated with {@link GuiSync}.
+ *
+ * @deprecated Use {@link appeng.container.AEBaseContainer#syncRegistrar()} and
+ *             {@link appeng.container.sync.SyncRegistrar} to register sync handlers explicitly. See
+ *             {@link appeng.container.implementations.ContainerLevelEmitter} for an example.
+ */
+@Deprecated
 public class DataSynchronization {
 
     private final Map<Integer, SynchronizedField<?>> fields = new HashMap<>();
