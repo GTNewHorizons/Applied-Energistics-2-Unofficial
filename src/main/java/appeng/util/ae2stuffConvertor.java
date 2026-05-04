@@ -6,6 +6,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
+import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 import com.gtnewhorizons.postea.utility.BlockInfo;
@@ -28,6 +29,8 @@ public class ae2stuffConvertor implements Runnable {
 
     @Override
     public void run() {
+        this.ignoreMissingMappings();
+
         // items
         ItemStackReplacementManager.addSimpleReplacement(
                 ae2stuffWirelessKit,
@@ -159,6 +162,19 @@ public class ae2stuffConvertor implements Runnable {
 
             return new BlockInfo(isHub ? hubBlock : connectorBlock, 0, nbtTagCompound -> newNbt);
         }));
+    }
+
+    private void ignoreMissingMappings() {
+        ItemStackReplacementManager.ignoreMissingMapping(ae2stuffGrowerItem);
+        ItemStackReplacementManager.ignoreMissingMapping(ae2stuffInscriberItem);
+        ItemStackReplacementManager.ignoreMissingMapping(ae2stuffWirelessItem);
+        ItemStackReplacementManager.ignoreMissingMapping(ae2stuffWirelessKit);
+        ItemStackReplacementManager.ignoreMissingMapping(ae2stuffAdvWirelessKit);
+        ItemStackReplacementManager.ignoreMissingMapping(ae2stuffVisualizer);
+
+        BlockReplacementManager.ignoreMissingMapping(ae2stuffGrowerItem);
+        BlockReplacementManager.ignoreMissingMapping(ae2stuffInscriberItem);
+        BlockReplacementManager.ignoreMissingMapping(ae2stuffWirelessItem);
     }
 
     private NBTTagCompound writeInv(final String prefix, final NBTTagList list) {
