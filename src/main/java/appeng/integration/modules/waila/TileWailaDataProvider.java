@@ -28,6 +28,7 @@ import appeng.integration.modules.waila.tile.InterfaceDataProvider;
 import appeng.integration.modules.waila.tile.PowerStateWailaDataProvider;
 import appeng.integration.modules.waila.tile.PowerStorageWailaDataProvider;
 import appeng.integration.modules.waila.tile.QuantumBridgeWailaDataProvider;
+import appeng.integration.modules.waila.tile.WirelessDataProvider;
 import appeng.tile.qnb.TileQuantumBridge;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
@@ -59,9 +60,16 @@ public final class TileWailaDataProvider implements IWailaDataProvider {
         final IWailaDataProvider craftingMonitor = new CraftingMonitorWailaDataProvider();
         final IWailaDataProvider interfaceBlock = new InterfaceDataProvider();
         final IWailaDataProvider quantumBridge = new QuantumBridgeWailaDataProvider();
+        final IWailaDataProvider wireless = new WirelessDataProvider();
 
-        this.providers = Lists
-                .newArrayList(charger, energyCell, craftingBlock, craftingMonitor, interfaceBlock, quantumBridge);
+        this.providers = Lists.newArrayList(
+                charger,
+                energyCell,
+                craftingBlock,
+                craftingMonitor,
+                interfaceBlock,
+                quantumBridge,
+                wireless);
     }
 
     @Override

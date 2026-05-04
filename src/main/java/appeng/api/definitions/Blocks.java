@@ -53,6 +53,8 @@ public class Blocks {
 
     public AEItemDefinition blockInscriber;
 
+    public AEItemDefinition blockAdvancedInscriber;
+
     public AEItemDefinition blockWireless;
 
     public AEItemDefinition blockCharger;

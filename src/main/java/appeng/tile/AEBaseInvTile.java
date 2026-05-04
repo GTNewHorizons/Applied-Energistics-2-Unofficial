@@ -40,7 +40,7 @@ public abstract class AEBaseInvTile extends AEBaseTile implements ISidedInventor
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_AEBaseInvTile(final net.minecraft.nbt.NBTTagCompound data) {
-        if (this.inventoryPersistent) {
+        if (this.isInventoryPersistent()) {
             final IInventory inv = this.getInternalInventory();
             final NBTTagCompound opt = data.getCompoundTag("inv");
             for (int x = 0; x < inv.getSizeInventory(); x++) {
@@ -54,7 +54,7 @@ public abstract class AEBaseInvTile extends AEBaseTile implements ISidedInventor
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_AEBaseInvTile(final net.minecraft.nbt.NBTTagCompound data) {
-        if (this.inventoryPersistent) {
+        if (this.isInventoryPersistent()) {
             final IInventory inv = this.getInternalInventory();
             final NBTTagCompound opt = new NBTTagCompound();
             for (int x = 0; x < inv.getSizeInventory(); x++) {
@@ -67,6 +67,10 @@ public abstract class AEBaseInvTile extends AEBaseTile implements ISidedInventor
             }
             data.setTag("inv", opt);
         }
+    }
+
+    protected boolean isInventoryPersistent() {
+        return this.inventoryPersistent;
     }
 
     @Override

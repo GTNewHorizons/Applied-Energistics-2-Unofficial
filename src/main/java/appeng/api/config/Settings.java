@@ -17,6 +17,8 @@ import java.util.EnumSet;
 
 import javax.annotation.Nonnull;
 
+import appeng.items.tools.ToolNetworkVisualiser.VisualisationModes;
+
 public enum Settings {
 
     LEVEL_EMITTER_MODE(EnumSet.allOf(LevelEmitterMode.class)),
@@ -88,6 +90,8 @@ public enum Settings {
 
     INTERFACE_TERMINAL_SECTION_ORDER(EnumSet.allOf(StringOrder.class)),
 
+    NETWORK_VISUALISER(EnumSet.allOf(VisualisationModes.class)),
+
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class)),
 
     PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO)),
@@ -96,7 +100,15 @@ public enum Settings {
 
     INSERT_ORDER(EnumSet.of(YesNo.YES, YesNo.NO)),
 
-    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class));
+    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class)),
+
+    WIRELESS_TOOL_MODE(EnumSet.allOf(WirelessToolMode.class)),
+
+    ADVANCED_WIRELESS_TOOL_MODE(EnumSet.allOf(AdvancedWirelessToolMode.class)),
+
+    WIRELESS_TOOL_GROUP_BY(EnumSet.allOf(WirelessToolGroupBy.class)),
+
+    WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO));
 
     private final EnumSet<? extends Enum<?>> values;
 

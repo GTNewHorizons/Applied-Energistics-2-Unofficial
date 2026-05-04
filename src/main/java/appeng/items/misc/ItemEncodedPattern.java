@@ -48,8 +48,6 @@ import appeng.core.CommonHelper;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.helpers.PatternHelper;
-import appeng.integration.IntegrationRegistry;
-import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
 import codechicken.nei.NEIClientConfig;
@@ -60,7 +58,6 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
     // rather simple client side caching.
     private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<>();
     private static final Map<ItemStack, IAEStack<?>> OUTPUT_STACK_CACHE = new WeakHashMap<>();
-    private static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     private static final Locale locale = Locale.getDefault();
 
     public ItemEncodedPattern() {
@@ -279,7 +276,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             if (item.equals(unknownItem)) return true;
 
             final String itemCountText = NumberFormat.getNumberInstance(locale).format(item.getStackSize());
-            final String itemText = isGTLoaded && item instanceof IAEItemStack ais
+            final String itemText = Platform.isGTLoaded && item instanceof IAEItemStack ais
                     && ais.getItem() instanceof ItemIntegratedCircuit
                             ? Platform.getItemDisplayName(item) + " " + ais.getItemStack().getItemDamage()
                             : Platform.getItemDisplayName(item);

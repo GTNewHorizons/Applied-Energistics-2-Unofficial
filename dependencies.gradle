@@ -7,11 +7,13 @@ dependencies {
 
 	compileOnlyApi('com.github.GTNewHorizons:Angelica:2.1.16:dev')
     compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.12:dev') {transitive = false}
+    compileOnly("com.github.GTNewHorizons:Postea:1.2.5:dev")
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.19:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.57:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.12:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.3:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.411:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:ModularUI2:2.3.58-1.7.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.18:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.12.28-GTNH:api') {transitive = false}
@@ -41,6 +43,7 @@ dependencies {
     //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
     //runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
 
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.22:dev') {transitive = false}
 
     //Uncomment if you need to test chunkloading and warps/homes

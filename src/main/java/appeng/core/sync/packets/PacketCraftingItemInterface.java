@@ -62,7 +62,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
         data.writeInt(this.getPacketID());
         data.writeBoolean(false);
         data.writeBoolean(true);
-        NamedDimensionalCoord.writeListToPacket(data, this.interfaceLocations);
+        NamedDimensionalCoord.writeListToPacketNamed(data, this.interfaceLocations);
 
         this.configureWrite(data);
     }
