@@ -91,7 +91,7 @@ public class AdaptorFluidHandler extends InventoryAdaptor {
         return (itemHandler != null && itemHandler.containsItems()) || containsFluid();
     }
 
-    private boolean containsFluid() {
+    public boolean containsFluid() {
         if (fluidHandler != null) {
             FluidTankInfo[] tankInfos = fluidHandler.getTankInfo(toAdaptor);
             if (tankInfos != null) {
