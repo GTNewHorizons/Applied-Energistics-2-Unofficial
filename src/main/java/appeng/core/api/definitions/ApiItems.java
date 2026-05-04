@@ -34,6 +34,7 @@ import appeng.items.storage.ItemViewCell;
 import appeng.items.storage.ItemVoidStorageCell;
 import appeng.items.tools.ToolAdvancedNetworkTool;
 import appeng.items.tools.ToolBiometricCard;
+import appeng.items.tools.ToolColorizer;
 import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolNetworkTool;
 import appeng.items.tools.ToolPriorityCard;
@@ -112,6 +113,7 @@ public final class ApiItems implements IItems {
     private final IItemDefinition encodedUltimatePattern;
     private final IItemDefinition encodedTunnelPattern;
     private final IItemDefinition colorApplicator;
+    private final IItemDefinition colorizer;
 
     private final IItemDefinition paintBall;
     private final AEColoredItemDefinition coloredPaintBall;
@@ -190,6 +192,7 @@ public final class ApiItems implements IItems {
         encodedUltimatePattern = constructor.registerItemDefinition(new ItemEncodedUltimatePattern());
         this.encodedTunnelPattern = constructor.registerItemDefinition(new ItemTunnelPattern());
         this.colorApplicator = constructor.registerItemDefinition(new ToolColorApplicator());
+        this.colorizer = constructor.registerItemDefinition(new ToolColorizer());
 
         this.paintBall = constructor.registerItemDefinition(new ItemPaintBall());
         this.coloredPaintBall = constructor.constructColoredDefinition(this.paintBall, 0);
@@ -439,6 +442,11 @@ public final class ApiItems implements IItems {
     @Override
     public IItemDefinition colorApplicator() {
         return this.colorApplicator;
+    }
+
+    @Override
+    public IItemDefinition colorizer() {
+        return this.colorizer;
     }
 
     @Override

@@ -8,6 +8,7 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+import appeng.client.gui.ScreenColor;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.localization.ButtonToolTips;
 
@@ -32,9 +33,9 @@ public class TypeToggleButton extends GuiButton implements ITooltip {
                     && mouseX < this.xPosition + this.getWidth()
                     && mouseY < this.yPosition + this.getHeight();
             if (this.enabled) {
-                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                ScreenColor.setGuiColor();
             } else {
-                GL11.glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+                ScreenColor.setDimmedGuiColor();
             }
 
             mc.renderEngine.bindTexture(ExtraBlockTextures.GuiTexture("guis/states.png"));
@@ -46,12 +47,15 @@ public class TypeToggleButton extends GuiButton implements ITooltip {
             this.drawTexturedModalRect(0, 0, 256 - 16, 256 - 16, 16, 16);
 
             if (this.texture != null && this.icon != null) {
+                if (this.enabled) {
+                    ScreenColor.resetGuiColor();
+                }
                 mc.renderEngine.bindTexture(this.texture);
                 this.drawTexturedModelRectFromIcon(0, 0, this.icon, 16, 16);
             }
 
             GL11.glTranslatef(-this.xPosition, -this.yPosition, 0.0F);
-            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            ScreenColor.resetGuiColor();
         }
     }
 

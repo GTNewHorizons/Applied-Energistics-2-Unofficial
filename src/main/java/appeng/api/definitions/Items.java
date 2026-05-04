@@ -96,6 +96,8 @@ public class Items {
 
     public AEItemDefinition itemColorApplicator;
 
+    public AEItemDefinition itemColorizer;
+
     public AEColoredItemDefinition itemPaintBall;
 
     public AEColoredItemDefinition itemLumenPaintBall;

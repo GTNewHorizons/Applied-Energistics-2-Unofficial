@@ -58,6 +58,7 @@ import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
+import appeng.client.gui.ScreenColor;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
@@ -1054,9 +1055,9 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     && mouseX < this.xPosition + this.getWidth()
                     && mouseY < this.yPosition + this.getHeight();
             if (this.enabled) {
-                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                ScreenColor.setGuiColor();
             } else {
-                GL11.glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+                ScreenColor.setDimmedGuiColor();
             }
             mc.renderEngine.bindTexture(ExtraBlockTextures.GuiTexture("guis/states.png"));
             final int iconIndex = this.getIconIndex();
@@ -1068,12 +1069,15 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             GL11.glTranslatef(this.xPosition, this.yPosition, 0.0F);
             if (this.isHalfSize()) GL11.glScalef(0.5f, 0.5f, 0.5f);
             this.drawTexturedModalRect(0, 0, 256 - 16, 256 - 16, 16, 16);
+            if (this.enabled) {
+                ScreenColor.resetGuiColor();
+            }
             this.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
             if (this.isHalfSize()) GL11.glScalef(2f, 2f, 2f);
             GL11.glTranslatef(-this.xPosition, -this.yPosition, 0.0F);
             this.mouseDragged(mc, mouseX, mouseY);
         }
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        ScreenColor.resetGuiColor();
     }
 
     private int getIconIndex() {
