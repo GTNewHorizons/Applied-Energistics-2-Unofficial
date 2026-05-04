@@ -57,6 +57,7 @@ import appeng.api.config.StorageFilter;
 import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.ViewItems;
+import appeng.api.config.WirelessToolGroupBy;
 import appeng.api.config.YesNo;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.localization.ButtonToolTips;
@@ -875,18 +876,55 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CraftingAllow.ALLOW_ALL,
                     ButtonToolTips.CPUAllowMode,
                     ButtonToolTips.CPUAllowAllDesc);
+
             this.registerApp(
                     16 * 14 + 4,
                     Settings.CRAFTING_ALLOW,
                     CraftingAllow.ONLY_PLAYER,
                     ButtonToolTips.CPUAllowMode,
                     ButtonToolTips.CPUOnlyAllowPlayerDesc);
+
             this.registerApp(
                     16 * 14 + 5,
                     Settings.CRAFTING_ALLOW,
                     CraftingAllow.ONLY_NONPLAYER,
                     ButtonToolTips.CPUAllowMode,
                     ButtonToolTips.CPUOnlyAllowNonPlayerDesc);
+
+            this.registerApp(
+                    16 * 7 + 8,
+                    Settings.WIRELESS_TOOL_GROUP_BY,
+                    WirelessToolGroupBy.Single,
+                    ButtonToolTips.WirelessToolGroupBySingleName,
+                    ButtonToolTips.WirelessToolGroupBySingleDesc);
+
+            this.registerApp(
+                    16 * 7 + 9,
+                    Settings.WIRELESS_TOOL_GROUP_BY,
+                    WirelessToolGroupBy.Color,
+                    ButtonToolTips.WirelessToolGroupByColorName,
+                    ButtonToolTips.WirelessToolGroupByColorDesc);
+
+            this.registerApp(
+                    16 * 7 + 10,
+                    Settings.WIRELESS_TOOL_GROUP_BY,
+                    WirelessToolGroupBy.Network,
+                    ButtonToolTips.WirelessToolGroupByNetworkName,
+                    ButtonToolTips.WirelessToolGroupByNetworkDesc);
+
+            this.registerApp(
+                    16 * 6 + 12,
+                    Settings.WIRELESS_TOOL_HIDE_BOUNDED,
+                    YesNo.YES,
+                    ButtonToolTips.WirelessToolHideBoundedYesName,
+                    ButtonToolTips.WirelessToolHideBoundedYesDesc);
+
+            this.registerApp(
+                    16 * 6 + 11,
+                    Settings.WIRELESS_TOOL_HIDE_BOUNDED,
+                    YesNo.NO,
+                    ButtonToolTips.WirelessToolHideBoundedNoName,
+                    ButtonToolTips.WirelessToolHideBoundedNoDesc);
 
             this.registerApp(
                     16 * 15 + 13,

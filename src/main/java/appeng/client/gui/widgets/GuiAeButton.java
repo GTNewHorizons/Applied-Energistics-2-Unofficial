@@ -5,6 +5,8 @@ import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
+import appeng.core.localization.GuiColors;
+
 public class GuiAeButton extends GuiButton implements ITooltip {
 
     private static final Pattern PATTERN_NEW_LINE = Pattern.compile("\\n", Pattern.LITERAL);
@@ -37,16 +39,32 @@ public class GuiAeButton extends GuiButton implements ITooltip {
             int hoverState = this.getHoverState(this.field_146123_n);
             switch (hoverState) {
                 case 0:
-                    this.drawHorizontalLine(xPosition + 2, xPosition + width - 2, yPosition + height - 2, 0xFF2C2C2C);
+                    this.drawHorizontalLine(
+                            xPosition + 2,
+                            xPosition + width - 2,
+                            yPosition + height - 2,
+                            GuiColors.GuiAeButtonLineBeforeUnderlineDisabled.getColor());
                     break;
                 case 1:
-                    this.drawHorizontalLine(xPosition + 2, xPosition + width - 2, yPosition + height - 2, 0xFF565656);
+                    this.drawHorizontalLine(
+                            xPosition + 2,
+                            xPosition + width - 2,
+                            yPosition + height - 2,
+                            GuiColors.GuiAeButtonLineBeforeUnderlineDefault.getColor());
                     break;
                 case 2:
-                    this.drawHorizontalLine(xPosition + 2, xPosition + width - 2, yPosition + height - 2, 0xFF5C669D);
+                    this.drawHorizontalLine(
+                            xPosition + 2,
+                            xPosition + width - 2,
+                            yPosition + height - 2,
+                            GuiColors.GuiAeButtonLineBeforeUnderlineHover.getColor());
                     break;
             }
-            this.drawHorizontalLine(xPosition, xPosition + width - 1, yPosition + height - 1, 0xFF000000);
+            this.drawHorizontalLine(
+                    xPosition,
+                    xPosition + width - 1,
+                    yPosition + height - 1,
+                    GuiColors.GuiAeButtonUnderline.getColor());
         }
     }
 

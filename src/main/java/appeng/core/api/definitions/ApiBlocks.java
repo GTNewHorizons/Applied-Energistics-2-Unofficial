@@ -29,9 +29,11 @@ import appeng.block.crafting.BlockMolecularAssembler;
 import appeng.block.crafting.BlockSingularityCraftingStorage;
 import appeng.block.grindstone.BlockCrank;
 import appeng.block.grindstone.BlockGrinder;
+import appeng.block.misc.BlockAdvancedInscriber;
 import appeng.block.misc.BlockCellWorkbench;
 import appeng.block.misc.BlockCharger;
 import appeng.block.misc.BlockCondenser;
+import appeng.block.misc.BlockCrystalGrowthChamber;
 import appeng.block.misc.BlockInscriber;
 import appeng.block.misc.BlockInterface;
 import appeng.block.misc.BlockLightDetector;
@@ -52,6 +54,8 @@ import appeng.block.networking.BlockDenseEnergyCell;
 import appeng.block.networking.BlockEnergyAcceptor;
 import appeng.block.networking.BlockEnergyCell;
 import appeng.block.networking.BlockWireless;
+import appeng.block.networking.BlockWirelessConnector;
+import appeng.block.networking.BlockWirelessHub;
 import appeng.block.qnb.BlockQuantumLinkChamber;
 import appeng.block.qnb.BlockQuantumRing;
 import appeng.block.solids.BlockFluix;
@@ -108,6 +112,7 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition grindStone;
     private final ITileDefinition crankHandle;
     private final ITileDefinition inscriber;
+    private final ITileDefinition advancedInscriber;
     private final ITileDefinition wireless;
     private final ITileDefinition charger;
     private final IBlockDefinition tinyTNT;
@@ -180,6 +185,10 @@ public final class ApiBlocks implements IBlocks {
 
     private final Set<IOrientableBlock> orientables;
 
+    private final ITileDefinition wirelessConnector;
+    private final ITileDefinition wirelessHub;
+    private final ITileDefinition crystalGrowthChamber;
+
     public ApiBlocks(final DefinitionConstructor constructor) {
         final BlockLightDetector lightDetector = new BlockLightDetector();
         final BlockQuartzPillar quartzPillar = new BlockQuartzPillar();
@@ -208,6 +217,7 @@ public final class ApiBlocks implements IBlocks {
         this.grindStone = constructor.registerTileDefinition(new BlockGrinder());
         this.crankHandle = constructor.registerTileDefinition(new BlockCrank());
         this.inscriber = constructor.registerTileDefinition(new BlockInscriber());
+        this.advancedInscriber = constructor.registerTileDefinition(new BlockAdvancedInscriber());
         this.wireless = constructor.registerTileDefinition(new BlockWireless());
         this.charger = constructor.registerTileDefinition(new BlockCharger());
         this.tinyTNT = constructor.registerBlockDefinition(new BlockTinyTNT());
@@ -332,6 +342,9 @@ public final class ApiBlocks implements IBlocks {
         this.chunkLoader = constructor.registerBlockDefinition(new BlockChunkloader());
         this.phantomNode = constructor.registerBlockDefinition(new BlockPhantomNode());
         this.cubeGenerator = constructor.registerBlockDefinition(new BlockCubeGenerator());
+        this.wirelessConnector = constructor.registerTileDefinition(new BlockWirelessConnector());
+        this.wirelessHub = constructor.registerTileDefinition(new BlockWirelessHub());
+        this.crystalGrowthChamber = constructor.registerTileDefinition(new BlockCrystalGrowthChamber());
     }
 
     @Override
@@ -492,6 +505,11 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition inscriber() {
         return this.inscriber;
+    }
+
+    @Override
+    public ITileDefinition advancedInscriber() {
+        return this.advancedInscriber;
     }
 
     @Override
@@ -728,6 +746,21 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition patternsOptimizationMatrix() {
         return this.patternOptimizationMatrix;
+    }
+
+    @Override
+    public ITileDefinition wirelessConnector() {
+        return this.wirelessConnector;
+    }
+
+    @Override
+    public ITileDefinition wirelessHub() {
+        return this.wirelessHub;
+    }
+
+    @Override
+    public ITileDefinition crystalGrowthChamber() {
+        return this.crystalGrowthChamber;
     }
 
     public IBlockDefinition chunkLoader() {

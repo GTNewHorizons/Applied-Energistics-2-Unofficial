@@ -16,6 +16,7 @@ tile.appliedenergistics2.BlockGrinder.name=Quartz Grindstone
 tile.appliedenergistics2.BlockMatrixFrame.name=Matrix Frame
 tile.appliedenergistics2.BlockIOPort.name=ME IO Port
 tile.appliedenergistics2.BlockInscriber.name=Inscriber
+tile.appliedenergistics2.BlockAdvancedInscriber.name=Advanced Inscriber
 tile.appliedenergistics2.BlockInterface.name=ME Interface
 tile.appliedenergistics2.BlockQuantumLinkChamber.name=ME Quantum Link Chamber
 tile.appliedenergistics2.BlockQuantumRing.name=ME Quantum Ring
@@ -71,6 +72,9 @@ tile.appliedenergistics2.BlockSingularityCraftingStorage.name=Singularity Crafti
 tile.appliedenergistics2.BlockPaint.name=Paint
 tile.appliedenergistics2.BlockSpatialLinkChamber.name=Spatial Link Chamber
 tile.appliedenergistics2.BlockSpatialNetworkRelay.name=Spatial Network Relay
+tile.appliedenergistics2.BlockWirelessConnector.name=Wireless Connector
+tile.appliedenergistics2.BlockWirelessHub.name=Wireless Hub
+tile.appliedenergistics2.BlockCrystalGrowthChamber.name=Crystal Growth Chamber
 
 # Stairs
 tile.appliedenergistics2.ChiseledQuartzStairBlock.name=Chiseled Certus Quartz Stairs
@@ -147,6 +151,11 @@ chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dim
 chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
+chat.appliedenergistics2.WirelessHighlighted=%d §e"%d§e"§r is now highlighted at %d, %d, %d
+chat.appliedenergistics2.WirelessInOtherDim=%d §e"%d§e"§r located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.WirelessHighlighterPrefix=Wireless
+chat.appliedenergistics2.WirelessHighlighterNetworkPrefix=Wireless of network §e"%s§e"§r -
+chat.appliedenergistics2.WirelessHighlighterColorPrefix=Wireless color §e"%s§e"§r of network §e"%s§e"§r -
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -247,6 +256,10 @@ gui.appliedenergistics2.StoredPower=Stored Power
 gui.appliedenergistics2.MaxPower=Max Power
 gui.appliedenergistics2.QuartzCuttingKnife=Quartz Cutting Knife
 gui.appliedenergistics2.Inscriber=Inscriber
+gui.appliedenergistics2.AdvancedInscriber=Advanced Inscriber
+gui.appliedenergistics2.AdvancedInscriberLockOn=Locked - Can't be removed with automation
+gui.appliedenergistics2.AdvancedInscriberLockOff=Unlocked - Can be removed with automation
+gui.appliedenergistics2.AdvancedInscriberLockNote=If no process is ongoing and middle slot is empty
 gui.appliedenergistics2.Wireless=Wireless Access Point
 gui.appliedenergistics2.WirelessTerminal=Wireless Term
 gui.appliedenergistics2.NoPermissions=No Permissions Selected
@@ -465,6 +478,18 @@ gui.appliedenergistics2.ControlButtonValuesDesc1=Set custom amount step values
 gui.appliedenergistics2.ControlButtonValuesDesc2=Negative buttons are mirrored
 gui.appliedenergistics2.SelectColor=Select a Color
 gui.appliedenergistics2.Selected=Selected
+
+gui.appliedenergistics2.GuiWirelessKitColor=C: %s
+gui.appliedenergistics2.GuiWirelessKitNetwork=N: %s
+gui.appliedenergistics2.GuiWirelessKitSelfPos=S: %s
+gui.appliedenergistics2.GuiWirelessKitTargetPos=T: %s
+gui.appliedenergistics2.GuiWirelessKitChannelsUsage=Channels Usage: %s
+gui.appliedenergistics2.GuiWirelessKitNameFieldDesc=Rename connector in world or group in gui
+
+gui.appliedenergistics2.GuiDimensionalCoord=§cX: %s§r,§aY: %s§r,§9Z: %s§r,§5DIM: %s
+gui.appliedenergistics2.GuiDimensionalCoordShort=§c%s§r, §a%s§r, §9%s§r, §5%s
+gui.appliedenergistics2.GuiDimensionalCoordNoDim=§cX: %s§r,§aY: %s§r,§9Z: %s
+gui.appliedenergistics2.GuiDimensionalCoordShortNoDim=§c%s§r, §a%s§r, §9%s
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -738,6 +763,34 @@ gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting r
 gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out crafts
 gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
 
+gui.tooltips.appliedenergistics2.WirelessToolGroupBySingleName=Single
+gui.tooltips.appliedenergistics2.WirelessToolGroupBySingleDesc=Each wireless is single unit
+gui.tooltips.appliedenergistics2.WirelessToolGroupByNetworkName=Network
+gui.tooltips.appliedenergistics2.WirelessToolGroupByNetworkDesc=All wireless in network is one unit
+gui.tooltips.appliedenergistics2.WirelessToolGroupByColorName=Color
+gui.tooltips.appliedenergistics2.WirelessToolGroupByColorDesc=Wireless with same color and in same network is one unit
+gui.tooltips.appliedenergistics2.WirelessToolHideBoundedYesName=Hide bounded
+gui.tooltips.appliedenergistics2.WirelessToolHideBoundedYesDesc=Hide connectors with connection and hubs without free slots
+gui.tooltips.appliedenergistics2.WirelessToolHideBoundedNoName=Show bounded
+gui.tooltips.appliedenergistics2.WirelessToolHideBoundedNoDesc=Show connectors with connection and hubs without free slots
+
+gui.tooltips.appliedenergistics2.WirelessKitPinButtonName=Pin
+gui.tooltips.appliedenergistics2.WirelessKitPinButtonDesc=Keep this unit in current row
+gui.tooltips.appliedenergistics2.WirelessKitMadChameleonRecolorName=Mad Chameleon
+gui.tooltips.appliedenergistics2.WirelessKitMadChameleonRecolorDesc=Recolor in color which not allow connect to neighbor wireless`s
+gui.tooltips.appliedenergistics2.WirelessKitaAE2StuffName=AE2Stuff converter
+gui.tooltips.appliedenergistics2.WirelessKitAE2StuffDesc=Replace ae2tuff connectors in networks with AE2 connections
+gui.tooltips.appliedenergistics2.WirelessKitIncludeConnectorsName=Include connectors
+gui.tooltips.appliedenergistics2.WirelessKitIncludeConnectorsDesc=Include connectors in manipulations
+gui.tooltips.appliedenergistics2.WirelessKitIncludeHubsName=Include hubs
+gui.tooltips.appliedenergistics2.WirelessKitIncludeHubsDesc=Include hubs in manipulations
+gui.tooltips.appliedenergistics2.WirelessKitDeleteName=Delete Network
+gui.tooltips.appliedenergistics2.WirelessKitDeleteDesc=Remove network from list
+gui.tooltips.appliedenergistics2.WirelessKitBindName=Bind
+gui.tooltips.appliedenergistics2.WirelessKitBindDesc=Bind wireless`s in 2nd row to wireless`s in 3rd row
+gui.tooltips.appliedenergistics2.WirelessKitUnbindName=Unbind
+gui.tooltips.appliedenergistics2.WirelessKitUnbindDesc=Break connection for wireless`s in 2nd row
+
 gui.tooltips.appliedenergistics2.PinsSection=Pins section
 gui.tooltips.appliedenergistics2.PinsSectionActive=§6LMB§8 - §7Add player row\n§6RMB§8 - §7Remove player row\n§6CTRL + LMB§8 - §7Add crafting row\n§6CTRL + RMB§8 - §7Remove crafting row\n§6SHIFT + RMB§8 - §7Unpin§r
 gui.tooltips.appliedenergistics2.PinsSectionHint=Hold §6ALT§7 for keybinds
@@ -821,6 +874,15 @@ waila.appliedenergistics2.IOBusSpeed=Speed: %s %s/t
 
 # Baubles Extended
 slot.Terminal=§aTerminal§7
+
+waila.appliedenergistics2.wireless.connected=Connected to %s
+waila.appliedenergistics2.wireless.connected.multiple=Connected to %s Wireless (shift for details)
+waila.appliedenergistics2.wireless.connected.detailsTitle=Connected Wireless:
+waila.appliedenergistics2.wireless.connected.details= %s
+waila.appliedenergistics2.wireless.notconnected=Not Connected
+waila.appliedenergistics2.wireless.channels=Channels: %s
+waila.appliedenergistics2.wireless.power=Power Used: %s AE/t
+waila.appliedenergistics2.wireless.name=Name: %s
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=§61k§r ME Storage Cell
@@ -1008,6 +1070,83 @@ item.appliedenergistics2.ToolBiometricCard.name=Biometric Card
 
 item.appliedenergistics2.ToolDebugCard.name=Dev.DebugCard
 item.appliedenergistics2.ToolReplicatorCard.name=Dev.ReplicatorCard
+item.appliedenergistics2.ToolNetworkVisualiser.name=Network Visualisation Tool
+item.appliedenergistics2.ToolWirelessKit.name=Wireless Kit
+
+item.appliedenergistics2.ToolNetworkVisualiser.bound=§eVisualising network at %s
+item.appliedenergistics2.ToolNetworkVisualiser.mode=Mode:
+item.appliedenergistics2.ToolNetworkVisualiser.set=Mode changed to %s
+item.appliedenergistics2.ToolNetworkVisualiser.mode.full=§eShow Everything
+item.appliedenergistics2.ToolNetworkVisualiser.mode.nodes=§eShow Nodes
+item.appliedenergistics2.ToolNetworkVisualiser.mode.channels=§eShow Channels
+item.appliedenergistics2.ToolNetworkVisualiser.mode.nonum=§eShow Channels and Nodes
+item.appliedenergistics2.ToolNetworkVisualiser.mode.p2p=§eShow P2P Links
+item.appliedenergistics2.ToolNetworkVisualiser.mode.proxy=§eShow Crafting Input Proxy Links
+
+item.appliedenergistics2.WirelessMessages.BoundAdvancedFilled=§cTarget already in queue
+item.appliedenergistics2.WirelessMessages.Disconnected=Wireless %s disconnect %s
+item.appliedenergistics2.WirelessMessages.Failed=§cConnection failed
+item.appliedenergistics2.WirelessMessages.Connected=§aConnected to %s
+item.appliedenergistics2.WirelessMessages.TargetHubFull=§cTarget Hub is Full
+item.appliedenergistics2.WirelessMessages.SourceHubFull=§cHub at %s §cis Full
+item.appliedenergistics2.WirelessMessages.HubToHub=§cHub to Hub connection is not allowed
+item.appliedenergistics2.WirelessMessages.ModeToggle=Tab + R-Click for toggle mode
+item.appliedenergistics2.WirelessMessages.Security=Security violation - you are not allowed to modify this network
+item.appliedenergistics2.WirelessMessages.DimensionMismatch=Both connectors must be in the same dimension
+item.appliedenergistics2.WirelessMessages.InvalidTarget=§cInvalid target - must be Wireless Connector or Wireless Hub
+item.appliedenergistics2.WirelessMessages.Cleared=§aList of §e%s mode cleared
+item.appliedenergistics2.WirelessMessages.Mode=Mode: %s
+item.appliedenergistics2.WirelessMessages.SetMode=Mode changed to %s
+
+item.appliedenergistics2.WirelessMessages.Simple=§eSimple
+item.appliedenergistics2.WirelessMessages.SimpleEmpty=Click Wireless Connector to bind
+item.appliedenergistics2.WirelessMessages.SimpleBound=§aBound to %s
+item.appliedenergistics2.WirelessMessages.SimpleBounded=Click other Wireless Connector to connect
+
+item.appliedenergistics2.WirelessMessages.Advanced=§eAdvanced
+item.appliedenergistics2.WirelessMessages.AdvancedActivated=%s §aactivated
+item.appliedenergistics2.WirelessMessages.AdvancedNext=§9Next connector in queue: %s
+item.appliedenergistics2.WirelessMessages.AdvancedHowToggle=Sneak + R-Click for toggle advanced modes
+item.appliedenergistics2.WirelessMessages.AdvancedNoConnectors=No connectors found in queue. Try putting the tool into queueing mode and adding some
+
+item.appliedenergistics2.WirelessMessages.AdvancedQueueing=§aQueuing Mode
+item.appliedenergistics2.WirelessMessages.AdvancedQueueEmpty=§9Click Wireless Connectors to add to binding queue
+item.appliedenergistics2.WirelessMessages.AdvancedQueueNotEmpty=§9Current wireless connectors in queue:
+item.appliedenergistics2.WirelessMessages.AdvancedQueueingLineNotEmpty=§9Switch to Binding Line mode for perform connection
+item.appliedenergistics2.WirelessMessages.AdvancedQueued=§aAdded connector at %s §ato queue
+item.appliedenergistics2.WirelessMessages.AdvancedQueueingHubQol=Ctrl + R-click for add all free hub slots to queue
+item.appliedenergistics2.WirelessMessages.AdvancedQueueingHub=§a%s hub slots added to queue
+item.appliedenergistics2.WirelessMessages.AdvancedQueueingTargetHubFull=All free slots of target hub already queued
+
+item.appliedenergistics2.WirelessMessages.AdvancedBinding=§aBinding Mode
+item.appliedenergistics2.WirelessMessages.AdvancedBindingEmpty=§9Switch to Queuing Mode to add connectors to queue
+item.appliedenergistics2.WirelessMessages.AdvancedBindingNotEmpty=§9Current wireless connectors in queue to be bound:
+item.appliedenergistics2.WirelessMessages.AdvancedBindingHubQol=Ctrl + R-click for connect to all free hub slots
+item.appliedenergistics2.WirelessMessages.AdvancedBindingHub=%s hub slots added to queue
+
+item.appliedenergistics2.WirelessMessages.AdvancedQueueingLine=§aQueuing Line
+item.appliedenergistics2.WirelessMessages.AdvancedBindingLine=§aBinding Line
+item.appliedenergistics2.WirelessMessages.AdvancedLineNotLine=Its not a line
+item.appliedenergistics2.WirelessMessages.AdvancedLineReset=Points is reseted
+item.appliedenergistics2.WirelessMessages.AdvancedLine1stAdded=§a1St point %s §ais added
+item.appliedenergistics2.WirelessMessages.AdvancedLine2ndAdded=§a2nd point %s §ais added
+item.appliedenergistics2.WirelessMessages.AdvancedLine1st=§91st point %s
+item.appliedenergistics2.WirelessMessages.AdvancedLine2nd=§92nd point %s
+item.appliedenergistics2.WirelessMessages.AdvancedLineEmpty1st=§9Click Wireless Connectors to select 1st point
+item.appliedenergistics2.WirelessMessages.AdvancedLineEmpty2nd=§9Click Wireless Connectors to select 2nd point
+
+item.appliedenergistics2.WirelessMessages.Super=§eSuper
+item.appliedenergistics2.WirelessMessages.SuperBound=§aNetwork at %s §aadded to list
+item.appliedenergistics2.WirelessMessages.SuperBoundFailed=§cNetwork already in list
+item.appliedenergistics2.WirelessMessages.SuperClear=Shift + Ctrl + R-click for clear current tool mode
+item.appliedenergistics2.WirelessMessages.SuperNetworkList=Network list:
+item.appliedenergistics2.WirelessMessages.Network=Network %sat %s
+item.appliedenergistics2.WirelessMessages.SuperNetworkListEmpty=There no networks in list
+
+item.appliedenergistics2.WirelessMessages.rowBindSuccess=§aSuccess connected %s §ato %s
+item.appliedenergistics2.WirelessMessages.rowBindInvalidSource=§cInvalid source %s
+item.appliedenergistics2.WirelessMessages.rowBindInvalidTarget=§cInvalid target %s
+item.appliedenergistics2.WirelessMessages.rowBindFailed=§cCannot connect %s §cto %s
 
 # Commands
 commands.ae2.usage=Commands provided by Applied Energistics 2 - use /ae2 list for a list, and /ae2 help _____ for help with a command.

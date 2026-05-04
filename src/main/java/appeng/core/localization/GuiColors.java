@@ -12,6 +12,7 @@ package appeng.core.localization;
 
 import net.minecraft.util.StatCollector;
 
+import appeng.api.util.AEColor;
 import appeng.core.AELog;
 
 public enum GuiColors implements Localization {
@@ -218,7 +219,29 @@ public enum GuiColors implements Localization {
     ReshuffleTooltipSecondary(0xAAAAAA),
     ReshuffleTooltipDimmed(0x555555),
 
-    ReshuffleToggleDisabledOverlay(0x80000000);
+    ReshuffleToggleDisabledOverlay(0x80000000),
+
+    ColorButtonOutline(0xFF404040),
+
+    WirelessKitGood(AEColor.Lime.mediumVariant),
+    WirelessKitNeutral(AEColor.Orange.mediumVariant),
+    WirelessKitBad(AEColor.Red.mediumVariant),
+
+    NetworkVisualiserFloatingText(0xffffffff),
+    NetworkVisualiserNodeMissing(0xffff0000),
+    NetworkVisualiserNodeDense(0xffffff00),
+    NetworkVisualiserNodeProxy(0xffffa500),
+    NetworkVisualiserNodeDefault(0xff0000ff),
+
+    NetworkVisualiserLinkCompressed(0xffff00ff),
+    NetworkVisualiserLinkDense(0xffffff00),
+    NetworkVisualiserLinkProxy(0xffffa500),
+    NetworkVisualiserLinkDefault(0xff0000ff),
+
+    GuiAeButtonUnderline(0xFF000000),
+    GuiAeButtonLineBeforeUnderlineDefault(0xFF565656),
+    GuiAeButtonLineBeforeUnderlineHover(0xFF5C669D),
+    GuiAeButtonLineBeforeUnderlineDisabled(0xFF2C2C2C);
 
     private final int color;
 
