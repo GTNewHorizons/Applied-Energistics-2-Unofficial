@@ -3,6 +3,7 @@ package appeng.tile.misc;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import net.minecraft.block.Block;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -35,9 +36,13 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
+import appeng.util.InventoryAdaptor;
+import appeng.util.inv.WrapperInventoryRange;
 
 public class TileCrystalGrowthChamber extends AENetworkPowerTile
         implements IGridTickable, IUpgradeableHost, IConfigManagerHost {
+
+    private static final int CYCLE_POWER = 100;
 
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 27);
     private final UpgradeInventory upgrades;
@@ -118,6 +123,13 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
         return new TickingRequest(1, 20, true, false);
     }
 
+    @Override
+    public void gridChanged() {
+        try {
+            this.getProxy().getTick().wakeDevice(this.getProxy().getNode());
+        } catch (final GridAccessException ignored) {}
+    }
+
     public boolean simulatePower() {
         try {
             final IEnergyGrid eg = getProxy().getEnergy();
@@ -125,7 +137,7 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
 
             // Base 1, increase by 1 for each card
             final int speedFactor = 1 + upgrades.getInstalledUpgrades(Upgrades.SPEED);
-            final int powerConsumption = 10 * speedFactor;
+            final int powerConsumption = CYCLE_POWER * speedFactor;
             final double powerThreshold = powerConsumption - 0.01;
             double powerReq = extractAEPower(powerConsumption, Actionable.SIMULATE, PowerMultiplier.CONFIG);
 
@@ -150,7 +162,7 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
 
             // Base 1, increase by 1 for each card
             final int speedFactor = 1 + upgrades.getInstalledUpgrades(Upgrades.SPEED);
-            final int powerConsumption = 10 * speedFactor;
+            final int powerConsumption = CYCLE_POWER * speedFactor;
             final double powerThreshold = powerConsumption - 0.01;
             double powerReq = extractAEPower(powerConsumption, Actionable.SIMULATE, PowerMultiplier.CONFIG);
 
@@ -181,58 +193,52 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
                         }
                         setInventorySlotContents(i, ns);
                         hasWork = true;
-                    } else if (chargedCertusQuartz.isSameAs(is)) {
-                        int redstonePos = -1;
-                        int netherPos = -1;
-                        boolean found = false;
-                        for (int j = 0; j < inv.getSizeInventory(); j++) {
-                            ItemStack isTemp = inv.getStackInSlot(j);
-                            if (isTemp != null) {
-                                if (isTemp.getItem() == Items.redstone) {
-                                    redstonePos = j;
-                                } else if (isTemp.getItem() == Items.quartz) {
-                                    netherPos = j;
-                                }
-                            }
-                            if (redstonePos > -1 && netherPos > -1) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (found) {
-                            int slot = -1;
-                            for (int j = 0; j < inv.getSizeInventory(); j++) {
-                                ItemStack isTemp = inv.getStackInSlot(j);
-                                if (isTemp != null) {
-                                    if (fluixCrystal.isSameAs(isTemp) && isTemp.stackSize < 64) {
-                                        slot = j;
-                                        break;
-                                    }
-                                } else if (slot < 0) {
-                                    slot = j;
-                                }
-                            }
-                            if (slot > -1) {
-                                decrStackSize(i, 1);
-                                decrStackSize(netherPos, 1);
-                                decrStackSize(redstonePos, 1);
-                                if (inv.getStackInSlot(slot) != null) {
-                                    decrStackSize(slot, -2);
-                                } else {
-                                    setInventorySlotContents(slot, fluixCrystal.maybeStack(2).get());
-                                }
-                                hasWork = true;
-                            }
-                        }
                     }
                 }
             }
+
+            hasWork |= tryCreateFluix();
         } else return TickRateModulation.SLOWER;
 
         if (hasWork) consumePower();
         updateMeta(hasWork);
 
         return hasWork ? TickRateModulation.URGENT : TickRateModulation.SLEEP;
+    }
+
+    private boolean tryCreateFluix() {
+        int certusPos = -1;
+        int redstonePos = -1;
+        int netherPos = -1;
+
+        for (int j = 0; j < inv.getSizeInventory(); j++) {
+            final ItemStack is = inv.getStackInSlot(j);
+            if (is == null) continue;
+
+            if (certusPos < 0 && chargedCertusQuartz.isSameAs(is)) {
+                certusPos = j;
+            } else if (redstonePos < 0 && is.getItem() == Items.redstone) {
+                redstonePos = j;
+            } else if (netherPos < 0 && is.getItem() == Items.quartz) {
+                netherPos = j;
+            }
+
+            if (certusPos > -1 && redstonePos > -1 && netherPos > -1) break;
+        }
+
+        if (certusPos < 0 || redstonePos < 0 || netherPos < 0) return false;
+
+        final ItemStack output = fluixCrystal.maybeStack(2).get();
+        final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(
+                new WrapperInventoryRange(this.inv, 0, this.inv.getSizeInventory(), true),
+                ForgeDirection.UNKNOWN);
+
+        if (adaptor.addItems(output) != null) return false;
+
+        decrStackSize(certusPos, 1);
+        decrStackSize(netherPos, 1);
+        decrStackSize(redstonePos, 1);
+        return true;
     }
 
     private void updateMeta(boolean hasWork) {
@@ -264,6 +270,12 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
         }
 
         return null;
+    }
+
+    @Override
+    public boolean shouldRefresh(final Block oldBlock, final Block newBlock, final int oldMeta, final int newMeta,
+            final World world, final int x, final int y, final int z) {
+        return oldBlock != newBlock;
     }
 
     @Override
