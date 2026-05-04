@@ -56,6 +56,7 @@ import appeng.client.gui.GuiNull;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
+import appeng.container.implementations.ContainerAdvancedInscriber;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
 import appeng.container.implementations.ContainerBusIO;
 import appeng.container.implementations.ContainerCellRestriction;
@@ -116,6 +117,7 @@ import appeng.parts.automation.PartSharedItemBus;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.grindstone.TileGrinder;
+import appeng.tile.misc.TileAdvancedInscriber;
 import appeng.tile.misc.TileCondenser;
 import appeng.tile.misc.TileCrystalGrowthChamber;
 import appeng.tile.misc.TileInscriber;
@@ -213,6 +215,8 @@ public enum GuiBridge implements IGuiHandler {
             SecurityPermissions.BUILD),
 
     GUI_INSCRIBER(ContainerInscriber.class, TileInscriber.class, GuiHostType.WORLD, null),
+
+    GUI_ADVANCED_INSCRIBER(ContainerAdvancedInscriber.class, TileAdvancedInscriber.class, GuiHostType.WORLD, null),
 
     GUI_CELL_WORKBENCH(ContainerCellWorkbench.class, ICellWorkbench.class, GuiHostType.WORLD, null),
 

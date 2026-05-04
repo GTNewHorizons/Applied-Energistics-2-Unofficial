@@ -29,6 +29,7 @@ import appeng.block.crafting.BlockMolecularAssembler;
 import appeng.block.crafting.BlockSingularityCraftingStorage;
 import appeng.block.grindstone.BlockCrank;
 import appeng.block.grindstone.BlockGrinder;
+import appeng.block.misc.BlockAdvancedInscriber;
 import appeng.block.misc.BlockCellWorkbench;
 import appeng.block.misc.BlockCharger;
 import appeng.block.misc.BlockCondenser;
@@ -111,6 +112,7 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition grindStone;
     private final ITileDefinition crankHandle;
     private final ITileDefinition inscriber;
+    private final ITileDefinition advancedInscriber;
     private final ITileDefinition wireless;
     private final ITileDefinition charger;
     private final IBlockDefinition tinyTNT;
@@ -215,6 +217,7 @@ public final class ApiBlocks implements IBlocks {
         this.grindStone = constructor.registerTileDefinition(new BlockGrinder());
         this.crankHandle = constructor.registerTileDefinition(new BlockCrank());
         this.inscriber = constructor.registerTileDefinition(new BlockInscriber());
+        this.advancedInscriber = constructor.registerTileDefinition(new BlockAdvancedInscriber());
         this.wireless = constructor.registerTileDefinition(new BlockWireless());
         this.charger = constructor.registerTileDefinition(new BlockCharger());
         this.tinyTNT = constructor.registerBlockDefinition(new BlockTinyTNT());
@@ -502,6 +505,11 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition inscriber() {
         return this.inscriber;
+    }
+
+    @Override
+    public ITileDefinition advancedInscriber() {
+        return this.advancedInscriber;
     }
 
     @Override

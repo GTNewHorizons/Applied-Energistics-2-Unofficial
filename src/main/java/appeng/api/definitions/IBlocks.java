@@ -91,6 +91,8 @@ public interface IBlocks {
 
     ITileDefinition inscriber();
 
+    ITileDefinition advancedInscriber();
+
     ITileDefinition wireless();
 
     ITileDefinition charger();
