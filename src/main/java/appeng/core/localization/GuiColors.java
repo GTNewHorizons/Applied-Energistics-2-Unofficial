@@ -37,6 +37,8 @@ public enum GuiColors implements Localization {
 
     CraftingPinSlotBackground(0x38E6731A),
     PlayerPinSlotBackground(0x00000000),
+    CraftingDiagnosticTerminalLine(0x668C8C8C),
+    CraftingDiagnosticTerminalRowHover(0x33808080),
 
     // RGB Colors: Name and default value
     SearchboxText(0xFFFFFF),

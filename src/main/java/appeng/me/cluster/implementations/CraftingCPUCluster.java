@@ -28,12 +28,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntConsumer;
@@ -107,6 +109,7 @@ import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.container.ContainerNull;
 import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
@@ -121,6 +124,7 @@ import appeng.helpers.ICustomNameObject;
 import appeng.hooks.CraftingNotificationManager;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.IAECluster;
+import appeng.me.diagnostics.CraftingDiagnosticSessionId;
 import appeng.me.helpers.IGridProxyable;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
@@ -173,6 +177,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private long elapsedTime;
     private long startItemCount;
     private long remainingItemCount;
+    private final CraftingCpuDiagnostics diagnostics = new CraftingCpuDiagnostics();
     private int countToTryExtractItems;
     private boolean isMissingMode;
     private CraftingAllow craftingAllowMode = CraftingAllow.ALLOW_ALL;
@@ -224,6 +229,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final HashMap<ICraftingPatternDetails, ScheduledReason> reasonProvider = new HashMap<>();
     private BaseActionSource currentJobSource = null;
     private String sourcePlayer = null;
+    private CraftingDiagnosticSessionId currentPlanningDiagnosticSessionId;
 
     public CraftingCPUCluster(final WorldCoord min, final WorldCoord max) {
         this.min = min;
@@ -425,6 +431,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     if (ism != null) ism.decStackSize(what.getStackSize());
 
                     this.updateElapsedTime(what);
+                    this.recordReturnedOutputs(what);
                     this.markDirty();
                     this.postCraftingStatusChange(is);
                     for (CraftUpdateListener craftUpdateListener : craftUpdateListeners) {
@@ -466,6 +473,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                 is.setStackSize(0);
                 if (ism != null) ism.setStackSize(0);
+
+                this.updateElapsedTime(insert);
+                this.recordReturnedOutputs(insert);
 
                 if (this.finalOutput.isFinalOutput(insert)) {
                     final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(insert, type);
@@ -572,6 +582,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.startItemCount = 0;
         this.lastTime = 0;
         this.elapsedTime = 0;
+        this.diagnostics.clear();
         this.isComplete = true;
         this.playersFollowingCurrentCraft.clear();
         this.craftCompleteListeners = initializeDefaultOnCompleteListener();
@@ -694,6 +705,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (this.myLastLink != null) {
             this.myLastLink.cancel();
         }
+
+        this.finalizeActiveDiagnosticSessions();
 
         final IItemList<IAEStack<?>> list;
         this.getModernListOfItem(list = AEApi.instance().storage().createAEStackList(), CraftingItemList.ALL);
@@ -939,8 +952,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
                         }
 
+                        final CraftingDiagnosticSessionId diagnosticSessionId = craftingEntry.getValue()
+                                .consumeCraftSession();
+                        final long patternStartTimeMillis = currentDiagnosticTimeMillis();
                         // Process output items.
                         for (final IAEStack<?> outputItemStack : details.getCondensedAEOutputs()) {
+                            this.diagnostics
+                                    .trackProducedOutput(outputItemStack, patternStartTimeMillis, diagnosticSessionId);
                             this.postChange(outputItemStack, this.machineSrc);
                             this.waitingFor.add(outputItemStack.copy());
                             this.postCraftingStatusChange(outputItemStack.copy());
@@ -1092,8 +1110,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
         ci.setMissingMode(this.isMissingMode);
         ci.setCpuInventory(this.inventory);
+        this.diagnostics.clear();
 
         try {
+            this.currentPlanningDiagnosticSessionId = this.generateDiagnosticSessionId();
             this.waitingFor.resetStatus();
             this.waitingForMissing.resetStatus();
             job.startCrafting(ci, this, src);
@@ -1154,20 +1174,26 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     return whatLink;
                 }
             } else {
+                this.finalizeActiveDiagnosticSessions();
                 this.finalOutput.reset();
                 this.waitingForMissing.resetStatus();
                 this.tasks.clear();
                 this.providers.clear();
                 this.inventory.resetStatus();
+                this.diagnostics.clear();
             }
         } catch (final CraftBranchFailure e) {
             handleCraftBranchFailure(e, src);
 
+            this.finalizeActiveDiagnosticSessions();
             this.finalOutput.reset();
             this.waitingForMissing.resetStatus();
             this.tasks.clear();
             this.providers.clear();
             this.inventory.resetStatus();
+            this.diagnostics.clear();
+        } finally {
+            this.currentPlanningDiagnosticSessionId = null;
         }
 
         return null;
@@ -1212,10 +1238,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         for (Entry<ICraftingPatternDetails, TaskProgress> entry : tasks.entrySet()) {
             TaskProgress newTaskProgress = new TaskProgress();
             newTaskProgress.value = entry.getValue().value;
+            newTaskProgress.diagnosticSessionCrafts.addAll(entry.getValue().diagnosticSessionCrafts);
             tasksBackup.put(entry.getKey(), newTaskProgress);
         }
 
         try {
+            this.currentPlanningDiagnosticSessionId = this.generateDiagnosticSessionId();
             job.startCrafting(ci, this, src);
             if (ci.commit(src)) {
                 this.finalOutput.merge(job.getOutput());
@@ -1248,6 +1276,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             tasks.clear();
             tasks.putAll(tasksBackup);
             handleCraftBranchFailure(e, src);
+        } finally {
+            this.currentPlanningDiagnosticSessionId = null;
         }
 
         return null;
@@ -1430,6 +1460,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         i.value += crafts;
+        i.addCraftsToSession(this.currentPlanningDiagnosticSessionId, crafts);
     }
 
     public long getStackAmount(final IAEStack what, final CraftingItemList storage2) {
@@ -1526,16 +1557,21 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             final NBTTagCompound item = new NBTTagCompound();
             AEItemStack.create(e.getKey().getPattern()).writeToNBT(item);
             item.setLong("craftingProgress", e.getValue().value);
+            if (!e.getValue().diagnosticSessionCrafts.isEmpty()) {
+                item.setTag("diagnosticSessions", e.getValue().writeDiagnosticSessionsToNBT());
+            }
             list.appendTag(item);
         }
         data.setTag("tasks", list);
 
         data.setTag("waitingFor", writeAEStackListNBT(this.waitingFor));
         data.setTag("waitingForMissing", writeAEStackListNBT(this.waitingForMissing));
+        data.setTag("outputTimingRecords", this.diagnostics.writeToNBT());
 
         data.setLong("elapsedTime", this.getElapsedTime());
         data.setLong("startItemCount", this.getStartItemCount());
         data.setLong("remainingItemCount", this.getRemainingItemCount());
+        data.setLong("diagnosticSessionCounter", this.diagnostics.getSessionCounter());
     }
 
     void done() {
@@ -1591,6 +1627,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 if (details != null) {
                     final TaskProgress tp = new TaskProgress();
                     tp.value = item.getLong("craftingProgress");
+                    tp.readDiagnosticSessionsFromNBT(item.getTagList("diagnosticSessions", NBT.TAG_COMPOUND));
+                    if (tp.diagnosticSessionCrafts.isEmpty() && tp.value > 0L) {
+                        tp.addCraftsToSession(this.getCurrentDiagnosticSessionId(), tp.value);
+                    }
                     this.tasks.put(details, tp);
                 }
             }
@@ -1602,13 +1642,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.postCraftingStatusChange(is.copy());
         }
         this.waitingForMissing = readAEStackListNBT((NBTTagList) data.getTag("waitingForMissing"), true);
+        this.diagnostics.readFromNBT(data.getTagList("outputTimingRecords", NBT.TAG_COMPOUND));
 
         this.lastTime = System.nanoTime();
         this.elapsedTime = data.getLong("elapsedTime");
         this.startItemCount = data.getLong("startItemCount");
         this.remainingItemCount = data.getLong("remainingItemCount");
+        this.diagnostics.setSessionCounter(data.getLong("diagnosticSessionCounter"));
         this.isMissingMode = data.getBoolean("isMissingMode");
-
         NBTBase tag = data.getTag("playerNameList");
         if (tag instanceof NBTTagList ntl) {
             this.playersFollowingCurrentCraft.clear();
@@ -1708,9 +1749,102 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     private void updateElapsedTime(final IAEStack<?> is) {
         final long nextStartTime = System.nanoTime();
-        this.elapsedTime = this.getElapsedTime() + nextStartTime - this.lastTime;
+        final long observedElapsed = nextStartTime - this.lastTime;
+        this.elapsedTime = this.getElapsedTime() + observedElapsed;
         this.lastTime = nextStartTime;
         this.remainingItemCount = this.getRemainingItemCount() - is.getStackSize();
+    }
+
+    private void recordReturnedOutputs(final IAEStack<?> returnedStack) {
+        for (final CraftingCpuDiagnostics.CompletedDiagnosticRecord record : this.diagnostics
+                .recordReturnedOutputs(returnedStack)) {
+            this.pushDiagnosticSample(record);
+            this.completeDiagnosticSessionIfFinished(record.getDiagnosticSessionId());
+        }
+    }
+
+    private void pushDiagnosticSample(final CraftingCpuDiagnostics.CompletedDiagnosticRecord record) {
+        if (record.getElapsedTimeMillis() <= 0L || this.getGrid() == null) {
+            return;
+        }
+
+        final ICraftingGrid craftingGrid = this.getGrid().getCache(ICraftingGrid.class);
+        if (AEConfig.instance.enableCraftingDiagnostics && craftingGrid instanceof CraftingGridCache cache
+                && cache.isDiagnosticsEnabled()) {
+            cache.recordDiagnosticSample(
+                    record.getOutput(),
+                    record.getDiagnosticSessionId(),
+                    record.getProducedAmount(),
+                    record.getStartTimeMillis(),
+                    record.getEndTimeMillis());
+        }
+    }
+
+    private void completeDiagnosticSessionIfFinished(final CraftingDiagnosticSessionId diagnosticSessionId) {
+        if (diagnosticSessionId == null || this.isDiagnosticSessionActive(diagnosticSessionId)
+                || this.getGrid() == null) {
+            return;
+        }
+
+        final ICraftingGrid craftingGrid = this.getGrid().getCache(ICraftingGrid.class);
+        if (AEConfig.instance.enableCraftingDiagnostics && craftingGrid instanceof CraftingGridCache cache
+                && cache.isDiagnosticsEnabled()) {
+            cache.completeDiagnosticSession(diagnosticSessionId);
+        }
+    }
+
+    private boolean isDiagnosticSessionActive(final CraftingDiagnosticSessionId diagnosticSessionId) {
+        for (final TaskProgress progress : this.tasks.values()) {
+            if (progress.diagnosticSessionCrafts.contains(diagnosticSessionId)) {
+                return true;
+            }
+        }
+
+        return this.diagnostics.hasPendingRecordsForSession(diagnosticSessionId);
+    }
+
+    private Set<CraftingDiagnosticSessionId> collectActiveDiagnosticSessions() {
+        final Set<CraftingDiagnosticSessionId> sessionIds = new LinkedHashSet<>();
+
+        for (final TaskProgress progress : this.tasks.values()) {
+            sessionIds.addAll(progress.diagnosticSessionCrafts);
+        }
+
+        sessionIds.addAll(this.diagnostics.getPendingSessionIds());
+
+        if (this.currentPlanningDiagnosticSessionId != null) {
+            sessionIds.add(this.currentPlanningDiagnosticSessionId);
+        }
+
+        return sessionIds;
+    }
+
+    private void finalizeActiveDiagnosticSessions() {
+        if (this.getGrid() == null) {
+            return;
+        }
+
+        final ICraftingGrid craftingGrid = this.getGrid().getCache(ICraftingGrid.class);
+        if (!(craftingGrid instanceof CraftingGridCache cache)) {
+            return;
+        }
+
+        for (final CraftingDiagnosticSessionId sessionId : this.collectActiveDiagnosticSessions()) {
+            cache.completeDiagnosticSession(sessionId);
+        }
+    }
+
+    private CraftingDiagnosticSessionId getCurrentDiagnosticSessionId() {
+        return this.myLastLink == null ? null
+                : CraftingDiagnosticSessionId.fromSerializedString(this.myLastLink.getCraftingID());
+    }
+
+    private CraftingDiagnosticSessionId generateDiagnosticSessionId() {
+        return this.diagnostics.nextSessionId();
+    }
+
+    private static long currentDiagnosticTimeMillis() {
+        return System.currentTimeMillis();
     }
 
     @Override
@@ -1930,6 +2064,43 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private static class TaskProgress {
 
         private long value;
+        private final LinkedList<CraftingDiagnosticSessionId> diagnosticSessionCrafts = new LinkedList<>();
+
+        private void addCraftsToSession(final CraftingDiagnosticSessionId diagnosticSessionId, final long crafts) {
+            if (diagnosticSessionId == null || crafts <= 0L) {
+                return;
+            }
+
+            for (long i = 0; i < crafts; i++) {
+                this.diagnosticSessionCrafts.addLast(diagnosticSessionId);
+            }
+        }
+
+        private CraftingDiagnosticSessionId consumeCraftSession() {
+            if (this.diagnosticSessionCrafts.isEmpty()) {
+                return null;
+            }
+
+            return this.diagnosticSessionCrafts.removeFirst();
+        }
+
+        private NBTTagList writeDiagnosticSessionsToNBT() {
+            final NBTTagList sessionsTag = new NBTTagList();
+            for (final CraftingDiagnosticSessionId diagnosticSessionId : this.diagnosticSessionCrafts) {
+                final NBTTagCompound sessionTag = new NBTTagCompound();
+                diagnosticSessionId.writeToNBT(sessionTag, "id");
+                sessionsTag.appendTag(sessionTag);
+            }
+            return sessionsTag;
+        }
+
+        private void readDiagnosticSessionsFromNBT(final NBTTagList sessionsTag) {
+            this.diagnosticSessionCrafts.clear();
+            for (int i = 0; i < sessionsTag.tagCount(); i++) {
+                final NBTTagCompound sessionTag = sessionsTag.getCompoundTagAt(i);
+                this.addCraftsToSession(CraftingDiagnosticSessionId.fromNBT(sessionTag, "id"), 1L);
+            }
+        }
     }
 
     public static class CraftNotification {

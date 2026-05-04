@@ -32,6 +32,7 @@ import appeng.api.config.CraftingAllow;
 import appeng.api.config.CraftingMode;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
+import appeng.api.config.DiagnosticSortButton;
 import appeng.api.config.ExtractionMode;
 import appeng.api.config.FullnessMode;
 import appeng.api.config.FuzzyMode;
@@ -384,6 +385,22 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CraftingSortOrder.PERCENT,
                     ButtonToolTips.SortBy,
                     ButtonToolTips.UsedPercent);
+
+            this.registerApp(64, Settings.DIAGNOSTIC_SORT_BY, DiagnosticSortButton.NAME, ButtonToolTips.SortBy, "Name");
+            this.registerApp(65, Settings.DIAGNOSTIC_SORT_BY, DiagnosticSortButton.QTY, ButtonToolTips.SortBy, "Qty");
+            this.registerApp(93, Settings.DIAGNOSTIC_SORT_BY, DiagnosticSortButton.TIME, ButtonToolTips.SortBy, "Time");
+            this.registerApp(
+                    92,
+                    Settings.DIAGNOSTIC_SORT_BY,
+                    DiagnosticSortButton.AVG_PER_SECOND,
+                    ButtonToolTips.SortBy,
+                    "Avg/s");
+            this.registerApp(
+                    215,
+                    Settings.ACTIONS,
+                    ActionItems.RESET_STATS,
+                    ButtonToolTips.ResetDiagnostics,
+                    ButtonToolTips.ResetStats);
 
             this.registerApp(
                     66,

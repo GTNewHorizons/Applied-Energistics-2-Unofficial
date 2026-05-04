@@ -37,7 +37,10 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -90,6 +93,8 @@ import appeng.crafting.CraftingLinkNexus;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.me.diagnostics.CraftingDiagnosticSessionId;
+import appeng.me.diagnostics.CraftingNetworkDiagnostics;
 import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
@@ -132,6 +137,12 @@ public class CraftingGridCache
 
     private final Set<ICraftingPostPatternChangeListener> postPatternChangeListeners = Collections
             .newSetFromMap(new WeakHashMap<>());
+    private final CraftingNetworkDiagnostics diagnostics = new CraftingNetworkDiagnostics();
+    private final Set<Long> loadedDiagnosticStorageIds = new HashSet<>();
+    private boolean diagnosticsEnabled = false;
+    private long diagnosticsRevision = 0L;
+    private static final String DIAGNOSTICS_KEY = "CraftingDiagnostics";
+    private static final String DIAGNOSTICS_ENABLED_KEY = "CraftingDiagnosticsEnabled";
 
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
@@ -215,17 +226,32 @@ public class CraftingGridCache
     }
 
     @Override
-    public void onSplit(final IGridStorage destinationStorage) { // nothing!
+    public void onSplit(final IGridStorage destinationStorage) {
+        destinationStorage.dataObject().removeTag(DIAGNOSTICS_KEY);
+        destinationStorage.dataObject().removeTag(DIAGNOSTICS_ENABLED_KEY);
     }
 
     @Override
     public void onJoin(final IGridStorage sourceStorage) {
-        // nothing!
+        if (sourceStorage == null || sourceStorage.getID() == 0
+                || !this.loadedDiagnosticStorageIds.add(sourceStorage.getID())) {
+            return;
+        }
+
+        final NBTTagCompound data = sourceStorage.dataObject();
+        if (data.hasKey(DIAGNOSTICS_ENABLED_KEY)) {
+            this.diagnosticsEnabled = this.diagnosticsEnabled || data.getBoolean(DIAGNOSTICS_ENABLED_KEY);
+        }
+
+        this.readDiagnosticsFromNBT(
+                data.getTagList(DIAGNOSTICS_KEY, Constants.NBT.TAG_COMPOUND),
+                !this.diagnostics.isEmpty());
     }
 
     @Override
     public void populateGridStorage(final IGridStorage destinationStorage) {
-        // nothing!
+        destinationStorage.dataObject().setBoolean(DIAGNOSTICS_ENABLED_KEY, this.diagnosticsEnabled);
+        destinationStorage.dataObject().setTag(DIAGNOSTICS_KEY, this.writeDiagnosticsToNBT());
     }
 
     public static void pauseRebuilds() {
@@ -714,6 +740,87 @@ public class CraftingGridCache
 
     public void removePostPatternChangeListeners(final ICraftingPostPatternChangeListener listener) {
         this.postPatternChangeListeners.remove(listener);
+    }
+
+    public void recordDiagnosticSample(final IAEStack<?> output, final CraftingDiagnosticSessionId sessionId,
+            final long producedAmount, final long observedStartMillis, final long observedEndMillis) {
+        this.diagnostics.recordSample(output, sessionId, producedAmount, observedStartMillis, observedEndMillis);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
+    }
+
+    public void completeDiagnosticSession(final CraftingDiagnosticSessionId sessionId) {
+        this.diagnostics.completeSession(sessionId);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
+    }
+
+    public void clearDiagnosticStats() {
+        this.diagnostics.clear();
+        this.diagnosticsRevision = this.diagnostics.getRevision();
+    }
+
+    public void clearDiagnosticStats(final IAEStack<?> stack) {
+        this.diagnostics.clear(stack);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
+    }
+
+    public boolean isDiagnosticsEnabled() {
+        return this.diagnosticsEnabled;
+    }
+
+    public void setDiagnosticsEnabled(final boolean enabled) {
+        if (this.diagnosticsEnabled == enabled) {
+            return;
+        }
+
+        this.diagnosticsEnabled = enabled;
+        this.diagnosticsRevision++;
+    }
+
+    public long getDiagnosticsRevision() {
+        return this.diagnosticsRevision;
+    }
+
+    public List<DiagnosticRowView> createDiagnosticRows(final String search, final DiagnosticSortMode sortMode,
+            final boolean ascending) {
+        return this.diagnostics.createRows(search, sortMode, ascending);
+    }
+
+    private NBTTagList writeDiagnosticsToNBT() {
+        return this.diagnostics.writeToNBT();
+    }
+
+    private void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
+        this.diagnostics.readFromNBT(list, merge);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
+    }
+
+    public enum DiagnosticSortMode {
+
+        CUMULATIVE_TIME,
+        AVG_PER_SECOND,
+        CRAFTED,
+        SAMPLES,
+        NAME;
+
+        public DiagnosticSortMode next() {
+            return values()[(this.ordinal() + 1) % values().length];
+        }
+    }
+
+    public static final class DiagnosticRowView {
+
+        public final IAEStack<?> stack;
+        public final long totalProduced;
+        public final long elapsedTimeMillis;
+        public final long sampleCount;
+
+        public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long elapsedTimeMillis,
+                final long sampleCount) {
+            this.stack = stack;
+            this.totalProduced = totalProduced;
+            this.elapsedTimeMillis = elapsedTimeMillis;
+            this.sampleCount = sampleCount;
+        }
     }
 
     private static class ActiveCpuIterator implements Iterator<ICraftingCPU> {

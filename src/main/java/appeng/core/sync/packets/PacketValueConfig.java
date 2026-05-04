@@ -30,6 +30,7 @@ import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerNetworkStatus;
@@ -120,6 +121,9 @@ public class PacketValueConfig extends AppEngPacket {
                 case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
                 case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
             }
+        } else if (this.Name.equals("CraftingDiagnostics.Search")
+                && c instanceof final ContainerCraftingDiagnosticTerminal qk) {
+            qk.setSearchText(this.Value);
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {
@@ -175,13 +179,18 @@ public class PacketValueConfig extends AppEngPacket {
             }
         } else if (this.Name.equals("cellRestriction") && c instanceof final ContainerCellRestriction ccr) {
             ccr.setCellRestriction(this.Value);
-        } else if (c instanceof ContainerNetworkTool) {
-            if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
-                ((ContainerNetworkTool) c).toggleFacadeMode();
+        } else if (this.Name.equals("NetworkStatus") && c instanceof final ContainerNetworkStatus qk) {
+            if (this.Value.equals("ToggleDiagnostics")) {
+                qk.toggleDiagnosticsMode();
+            } else if (this.Value.equals("OpenReshuffle")) {
+                qk.openReshuffle(player);
             }
-        } else if (this.Name.equals("NetworkStatus") && this.Value.equals("OpenReshuffle")
-                && c instanceof ContainerNetworkStatus cns) {
-            cns.openReshuffle(player);
+        } else if (c instanceof ContainerNetworkTool) {
+            if (this.Name.equals("NetworkTool")) {
+                if (this.Value.equals("Toggle")) {
+                    ((ContainerNetworkTool) c).toggleFacadeMode();
+                }
+            }
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 

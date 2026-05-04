@@ -64,6 +64,7 @@ import appeng.container.implementations.ContainerCondenser;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.container.implementations.ContainerCraftingTerm;
 import appeng.container.implementations.ContainerDrive;
@@ -140,6 +141,9 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_CRAFTING_TERMINAL(ContainerCraftingTerm.class, ICraftingTerminal.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
+
+    GUI_CRAFTING_DIAGNOSTIC_TERMINAL(ContainerCraftingDiagnosticTerminal.class, ITerminalHost.class,
+            GuiHostType.ITEM_OR_WORLD, SecurityPermissions.CRAFT),
 
     GUI_PATTERN_TERMINAL(ContainerPatternTerm.class, IPatternTerminal.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),

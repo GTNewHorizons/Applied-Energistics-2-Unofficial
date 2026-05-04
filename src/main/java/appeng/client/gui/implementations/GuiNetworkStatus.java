@@ -41,6 +41,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
@@ -63,6 +64,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private GuiImgButton units;
     private GuiImgButton cell;
     private GuiImgButton tReshuffle;
+    private GuiToggleButton diagnostics;
     private int tooltip = -1;
     private final DecimalFormat df;
     private final boolean isAdvanced;
@@ -201,6 +203,15 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             } catch (final IOException e) {
                 AELog.debug(e);
             }
+        } else if (btn == this.diagnostics) {
+            final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
+            if (container.isDiagnosticsGloballyEnabled()) {
+                try {
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "ToggleDiagnostics"));
+                } catch (IOException ignored) {
+                    // XD
+                }
+            }
         }
 
         if (oldConsume != this.isConsume) {
@@ -236,10 +247,23 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     ActionItems.OPEN_RESHUFFLE_ON);
             this.buttonList.add(this.tReshuffle);
         }
+        this.diagnostics = new GuiToggleButton(
+                this.guiLeft - 18,
+                this.guiTop + (this.isAdvanced ? 68 : 28),
+                129,
+                128,
+                GuiText.CraftingDiagnostics.getLocal(),
+                GuiText.CraftingDiagnosticsHint.getLocal());
+        this.buttonList.add(this.diagnostics);
     }
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        if (this.diagnostics != null) {
+            final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
+            this.diagnostics.setState(container.isDiagnosticsMode());
+            this.diagnostics.enabled = container.isDiagnosticsGloballyEnabled();
+        }
 
         final int gx = (this.width - this.xSize) / 2;
         final int gy = (this.height - this.ySize) / 2;
