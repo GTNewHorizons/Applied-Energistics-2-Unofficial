@@ -110,7 +110,15 @@ public class WireLessToolHelper {
 
     @Nullable
     public static TileWirelessBase getAndCheckTile(DimensionalCoord dc, World w, @Nullable EntityPlayer p) {
-        if (dc == null) throw new NullPointerException("dc is null"); // maybe return null instead
+        if (dc == null) {
+            if (p != null) p.addChatMessage(WirelessMessages.InvalidTarget.toChat());
+            return null;
+        }
+
+        if (dc.getDimension() != w.provider.dimensionId) {
+            if (p != null) p.addChatMessage(WirelessMessages.DimensionMismatch.toChat());
+            return null;
+        }
 
         final TileEntity te = w.getTileEntity(dc.x, dc.y, dc.z);
         if (te instanceof TileWirelessBase twb) return twb;
@@ -179,6 +187,9 @@ public class WireLessToolHelper {
             return BindResult.INVALID_SOURCE;
         }
 
+        if (!target.isHub()) target.doUnlink();
+        if (!source.isHub()) source.doUnlink();
+
         final BindResult result = target.doLink(source);
         switch (result) {
             case SUCCESS -> {
@@ -220,8 +231,16 @@ public class WireLessToolHelper {
 
     public static boolean bindSimple(TileWirelessBase target, ItemStack tool, World w, EntityPlayer p) {
         NBTTagCompound tag = tool.getTagCompound().getCompoundTag(NbtSimple);
+        final PlayerSource playerSource = new PlayerSource(p, null);
+
+        if (!securityCheck(target, playerSource)) return false;
 
         if (tag.hasNoTags()) {
+            if (target.isHub() && !target.canAddLink()) {
+                p.addChatMessage(WirelessMessages.TargetHubFull.toChat());
+                return false;
+            }
+
             DimensionalCoord dc = target.getLocation();
             dc.writeToNBT(tag);
             tool.getTagCompound().setTag(NbtSimple, tag);
@@ -229,20 +248,32 @@ public class WireLessToolHelper {
             return true;
         }
 
-        TileWirelessBase tile = getAndCheckTile(DimensionalCoord.readFromNBT(tag), w, p);
-        if (tile == null) return false;
+        final DimensionalCoord sourceLocation = DimensionalCoord.readFromNBT(tag);
 
-        if (target.isConnectedTo(tile)) {
-            breakConnection(target, tile, new PlayerSource(p, null));
+        if (sourceLocation.getDimension() != w.provider.dimensionId) {
+            p.addChatMessage(WirelessMessages.DimensionMismatch.toChat());
+            return false;
+        }
+
+        if (target.getLocation().isEqual(sourceLocation)) {
             tool.getTagCompound().setTag(NbtSimple, new NBTTagCompound());
             return true;
         }
 
-        if (performConnection(target, tile, new PlayerSource(p, null)) == BindResult.SUCCESS) {
+        TileWirelessBase tile = getAndCheckTile(sourceLocation, w, p);
+        if (tile == null) {
             tool.getTagCompound().setTag(NbtSimple, new NBTTagCompound());
-            return true;
+            return false;
         }
-        return false;
+
+        if (!securityCheck(tile, playerSource)) {
+            tool.getTagCompound().setTag(NbtSimple, new NBTTagCompound());
+            return false;
+        }
+
+        final BindResult result = performConnection(target, tile, playerSource);
+        tool.getTagCompound().setTag(NbtSimple, new NBTTagCompound());
+        return result == BindResult.SUCCESS;
     }
 
     private static boolean isLine(DimensionalCoord firstPoint, DimensionalCoord secondPoint) {
@@ -406,36 +437,57 @@ public class WireLessToolHelper {
             return false;
         }
 
-        TileWirelessBase tile = getAndCheckTile(locList.get(0), w, p);
-        if (tile == null) {
-            locList.remove(0);
+        final PlayerSource playerSource = new PlayerSource(p, null);
+        final boolean bindMultiple = Platform.keyBindLCtrl.isKeyDown(p) && target.isHub();
+        boolean success = false;
+        int boundCount = 0;
+
+        if (bindMultiple && !target.canAddLink()) {
+            p.addChatMessage(WirelessMessages.TargetHubFull.toChat());
             return false;
         }
 
-        boolean success = false;
-        if (Platform.keyBindLCtrl.isKeyDown(p) && target.isHub()) {
-            int i = 0;
-            while (tile != null && target.canAddLink()) {
-                if (performConnection(target, tile, new PlayerSource(p, null)) == BindResult.SUCCESS) {
-                    locList.remove(0);
-                    tile = locList.isEmpty() ? null : getAndCheckTile(locList.get(0), w, p);
-                    i++;
-                    success = true;
-                } else break;
+        while (!locList.isEmpty()) {
+            final DimensionalCoord sourceLocation = locList.get(0);
+
+            if (sourceLocation.getDimension() != w.provider.dimensionId) {
+                p.addChatMessage(WirelessMessages.DimensionMismatch.toChat());
+                break;
             }
-            p.addChatMessage(WirelessMessages.AdvancedBindingHub.toChat(i));
-        } else if (performConnection(target, tile, new PlayerSource(p, null)) == BindResult.SUCCESS) {
-            locList.remove(0);
-            success = true;
+
+            if (target.getLocation().isEqual(sourceLocation)) {
+                locList.remove(0);
+                success = true;
+            } else {
+                final TileWirelessBase tile = getAndCheckTile(sourceLocation, w, p);
+                if (tile == null) {
+                    locList.remove(0);
+                } else if (!securityCheck(tile, playerSource)) {
+                    locList.remove(0);
+                } else {
+                    final BindResult result = performConnection(target, tile, playerSource);
+                    locList.remove(0);
+                    if (result == BindResult.SUCCESS) {
+                        boundCount++;
+                        success = true;
+                    }
+                }
+            }
+
+            if (!bindMultiple || !target.canAddLink()) break;
         }
 
         NBTTagCompound tag = new NBTTagCompound();
         DimensionalCoord.writeListToNBT(tag, locList);
         tool.getTagCompound().setTag(NbtAdvanced, tag);
+
+        if (bindMultiple) p.addChatMessage(WirelessMessages.AdvancedBindingHub.toChat(boundCount));
         return success;
     }
 
     public static boolean bindAdvanced(TileWirelessBase target, ItemStack tool, World w, EntityPlayer p) {
+        if (!securityCheck(target, new PlayerSource(p, null))) return false;
+
         AdvancedWirelessToolMode mod = (AdvancedWirelessToolMode) getConfigManager(tool)
                 .getSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE);
 
