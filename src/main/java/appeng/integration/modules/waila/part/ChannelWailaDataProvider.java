@@ -20,8 +20,6 @@ import net.minecraft.world.World;
 import appeng.api.parts.IPart;
 import appeng.core.localization.WailaText;
 import appeng.parts.networking.IUsedChannelProvider;
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 
@@ -41,17 +39,6 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider {
     private static final String ID_MAX_CHANNELS = "maxChannels";
 
     /**
-     * Used cache for channels if the channel was not transmitted through the server.
-     * <p/>
-     * This is useful, when a player just started to look at a tile and thus just requested the new information from the
-     * server.
-     * <p/>
-     * The cache will be updated from the server.
-     */
-    private final TObjectIntMap<IPart> usedChannelsCache = new TObjectIntHashMap<>();
-    private final TObjectIntMap<IPart> maxChannelsCache = new TObjectIntHashMap<>();
-
-    /**
      * Adds the used and max channel to the tool tip
      *
      * @param part           being looked at part
@@ -64,56 +51,14 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider {
     public List<String> getWailaBody(final IPart part, final List<String> currentToolTip,
             final IWailaDataAccessor accessor, final IWailaConfigHandler config) {
         if (part instanceof IUsedChannelProvider) {
-            final int usedChannels = this.getUsedChannels(part, accessor.getNBTData());
-            final int maxChannels = this.getMaxChannels(part, accessor.getNBTData());
-
+            final int usedChannels = accessor.getNBTData().getInteger(ID_USED_CHANNELS);
+            final int maxChannels = accessor.getNBTData().getInteger(ID_MAX_CHANNELS);
             final String formattedToolTip;
             if (maxChannels <= 0) formattedToolTip = String.format(WailaText.ChannelsUnbound.getLocal(), usedChannels);
             else formattedToolTip = String.format(WailaText.Channels.getLocal(), usedChannels, maxChannels);
             currentToolTip.add(formattedToolTip);
         }
-
         return currentToolTip;
-    }
-
-    /**
-     * Determines the source of the channel.
-     * <p/>
-     * If the client received information of the channels on the server, they are used, else if the cache contains a
-     * previous stored value, this will be used. Default value is 0.
-     *
-     * @param part part to be looked at
-     * @param tag  tag maybe containing the channel information
-     * @return used channels on the cable
-     */
-    private int getUsedChannels(final IPart part, final NBTTagCompound tag) {
-        final int usedChannels;
-
-        if (tag.hasKey(ID_USED_CHANNELS)) {
-            usedChannels = tag.getInteger(ID_USED_CHANNELS);
-            this.usedChannelsCache.put(part, usedChannels);
-        } else if (this.usedChannelsCache.containsKey(part)) {
-            usedChannels = this.usedChannelsCache.get(part);
-        } else {
-            usedChannels = 0;
-        }
-
-        return usedChannels;
-    }
-
-    private int getMaxChannels(final IPart part, final NBTTagCompound tag) {
-        final int maxChannels;
-
-        if (tag.hasKey(ID_MAX_CHANNELS)) {
-            maxChannels = tag.getInteger(ID_MAX_CHANNELS);
-            this.maxChannelsCache.put(part, maxChannels);
-        } else if (this.maxChannelsCache.containsKey(part)) {
-            maxChannels = this.maxChannelsCache.get(part);
-        } else {
-            maxChannels = 0;
-        }
-
-        return maxChannels;
     }
 
     /**
@@ -139,7 +84,6 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider {
             tag.setInteger(ID_USED_CHANNELS, channelProvider.getUsedChannelsInfo());
             tag.setInteger(ID_MAX_CHANNELS, channelProvider.getMaxChannelsInfo());
         }
-
         return tag;
     }
 }

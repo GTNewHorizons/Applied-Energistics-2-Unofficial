@@ -124,6 +124,7 @@ import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
 import appeng.util.inv.AdaptorDualityInterface;
+import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.AdaptorMEChest;
 import appeng.util.inv.IInventoryDestination;
@@ -1041,7 +1042,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         stack -> !AEApi.instance().registries().blockingModeIgnoreItem()
                                 .isIgnored(stack.toStackFast()));
 
-                return present.orElse(0) == 0;
+                return present.orElse(0) == 0
+                        && !(isFluidInterface && ad instanceof AdaptorFluidHandler afh && afh.containsFluid());
             }
         }
 
