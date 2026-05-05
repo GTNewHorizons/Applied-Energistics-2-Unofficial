@@ -4,7 +4,6 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -208,14 +207,15 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                 lines.add(GuiText.Sticky.getLocal());
             }
         }
-        List<Object> restricted = handler.getRestricted();
-        if (restricted != null && ((long) restricted.get(0) != 0 || (byte) restricted.get(1) != 0)) {
+        final CellRestrictionData cellRestrictionData = this.getCellRestrictionData(stack);
+        if (cellRestrictionData.restrictionTypes != 0 || cellRestrictionData.restrictionAmount != 0) {
             lines.add(GuiText.Restricted.getLocal());
             if (GuiScreen.isShiftKeyDown()) {
-                NumberFormat nf = NumberFormat.getNumberInstance();
-                if ((long) restricted.get(0) != 0)
-                    lines.add(GuiText.MaxItems.getLocal() + " " + nf.format((long) restricted.get(0)));
-                if ((byte) restricted.get(1) != 0) lines.add(GuiText.MaxTypes.getLocal() + " " + restricted.get(1));
+                final NumberFormat nf = NumberFormat.getNumberInstance();
+                if (cellRestrictionData.restrictionTypes != 0)
+                    lines.add(GuiText.MaxTypes.getLocal(cellRestrictionData.restrictionTypes));
+                if (cellRestrictionData.restrictionAmount != 0)
+                    lines.add(GuiText.MaxItems.getLocal(nf.format(cellRestrictionData.restrictionAmount)));
             }
         }
     }
@@ -391,29 +391,32 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
     }
 
     @Override
-    public String getCellData(ItemStack is) {
-        return totalBytes + ","
-                + this.getTotalTypes(null)
-                + ","
-                + perType
-                + ","
-                + 8
-                + ","
-                + ItemStackNBT.getByte(is, "cellRestrictionTypes")
-                + ","
-                + ItemStackNBT.getLong(is, "cellRestrictionAmount")
-                + ","
-                + "item";
+    public CellData getCellData(ItemStack is) {
+        return new CellData(this.totalBytes, this.totalTypes, this.perType, 8);
     }
 
     @Override
-    public void setCellRestriction(ItemStack is, String newData) {
-        List<String> data = Arrays.asList(newData.split(",", 2));
-        ItemStackNBT.setByte(is, "cellRestrictionTypes", Byte.parseByte(data.get(0)));
-        ItemStackNBT.setLong(is, "cellRestrictionAmount", Long.parseLong(data.get(1)));
+    public CellRestrictionData getCellRestrictionData(ItemStack is) {
+        return new CellRestrictionData(
+                ItemStackNBT.getByte(is, "cellRestrictionTypes"),
+                ItemStackNBT.getLong(is, "cellRestrictionAmount"));
+    }
+
+    @Override
+    public void setCellRestriction(ItemStack is, CellRestrictionData newRestriction) {
+        if (newRestriction.isReset()) {
+            ItemStackNBT.removeTag(is, "cellRestrictionTypes");
+            ItemStackNBT.removeTag(is, "cellRestrictionAmount");
+        } else {
+            ItemStackNBT.setByte(is, "cellRestrictionTypes", newRestriction.restrictionTypes);
+            ItemStackNBT.setLong(is, "cellRestrictionAmount", newRestriction.restrictionAmount);
+        }
     }
 
     @Override
     @NotNull
     public abstract IAEStackType<?> getStackType();
+
+    @Override
+    public abstract int getTypeWeight();
 }
