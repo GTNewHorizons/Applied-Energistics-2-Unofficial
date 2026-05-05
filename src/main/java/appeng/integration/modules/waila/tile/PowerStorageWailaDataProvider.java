@@ -11,7 +11,6 @@
 package appeng.integration.modules.waila.tile;
 
 import java.util.List;
-import java.util.WeakHashMap;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -42,16 +41,6 @@ public final class PowerStorageWailaDataProvider extends BaseWailaDataProvider {
     private static final String ID_CURRENT_POWER = "currentPower";
 
     /**
-     * Used cache for power if the power was not transmitted through the server.
-     * <p/>
-     * This is useful, when a player just started to look at a tile and thus just requested the new information from the
-     * server.
-     * <p/>
-     * The cache will be updated from the server.
-     */
-    private final WeakHashMap<TileEntity, Long> cache = new WeakHashMap<>();
-
-    /**
      * Adds the current and max power to the tool tip Will ignore if the tile has an energy buffer ( &gt; 0 )
      *
      * @param itemStack      stack of power storage
@@ -73,7 +62,7 @@ public final class PowerStorageWailaDataProvider extends BaseWailaDataProvider {
             if (maxPower > 0) {
                 final NBTTagCompound tag = accessor.getNBTData();
 
-                final long internalCurrentPower = this.getInternalCurrentPower(tag, te);
+                final long internalCurrentPower = tag.getLong(ID_CURRENT_POWER);
                 final long internalMaxPower = (long) (100 * maxPower);
 
                 final String formatCurrentPower = Platform.formatPowerLong(internalCurrentPower, false);
@@ -116,28 +105,4 @@ public final class PowerStorageWailaDataProvider extends BaseWailaDataProvider {
         return tag;
     }
 
-    /**
-     * Determines the current power.
-     * <p/>
-     * If the client received power information on the server, they are used, else if the cache contains a previous
-     * stored value, this will be used. Default value is 0.
-     *
-     * @param te  te to be looked at
-     * @param tag tag maybe containing the channel information
-     * @return used channels on the cable
-     */
-    private long getInternalCurrentPower(final NBTTagCompound tag, final TileEntity te) {
-        final long internalCurrentPower;
-
-        if (tag.hasKey(ID_CURRENT_POWER)) {
-            internalCurrentPower = tag.getLong(ID_CURRENT_POWER);
-            this.cache.put(te, internalCurrentPower);
-        } else if (this.cache.containsKey(te)) {
-            internalCurrentPower = this.cache.get(te);
-        } else {
-            internalCurrentPower = 0;
-        }
-
-        return internalCurrentPower;
-    }
 }
