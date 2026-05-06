@@ -25,7 +25,6 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
     public void initGui() {
         super.initGui();
         this.addButtons();
-        this.buttonsVisibility();
     }
 
     private void addButtons() {
@@ -55,14 +54,16 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
     protected void actionPerformed(GuiButton button) {
         for (int i = 0; i < 16; i++) {
             if (button == this.colorButtons[i]) {
-                this.containerWirelessNetworkManager.color.set(i);
+                this.containerWirelessNetworkManager.color.set(isShiftKeyDown() ? i + 100 : i);
                 this.containerWirelessNetworkManager.tickClientSync();
             }
         }
     }
 
     @Override
-    public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {}
+    public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
+        this.buttonsVisibility();
+    }
 
     @Override
     public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {

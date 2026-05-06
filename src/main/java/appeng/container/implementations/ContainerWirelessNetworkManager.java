@@ -52,8 +52,9 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
     private void setCurrent(final int color) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
-        ItemStackNBT.of(this.terminal).setString("encryptionKey", keys.getString(AEColor.values()[color].name()));
+        if (color >= 100) keys.removeTag(AEColor.values()[color - 100].name());
+        else ItemStackNBT.of(this.terminal).setString("encryptionKey", keys.getString(AEColor.values()[color].name()));
         this.checkItem(this.getTarget());
-        Minecraft.getMinecraft().thePlayer.closeScreen();
+        if (color < 100) Minecraft.getMinecraft().thePlayer.closeScreen();
     }
 }
