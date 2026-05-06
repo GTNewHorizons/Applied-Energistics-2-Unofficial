@@ -668,4 +668,9 @@ public class ToolColorApplicator extends AEBasePoweredItem
     public void setOreFilter(ItemStack is, String filter) {
         ItemStackNBT.setString(is, "OreFilter", filter);
     }
+
+    @Override
+    public int getTypeWeight() {
+        return 8;
+    }
 }

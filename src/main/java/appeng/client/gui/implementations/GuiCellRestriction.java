@@ -1,122 +1,129 @@
 package appeng.client.gui.implementations;
 
-import java.io.IOException;
-
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Keyboard;
 
+import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
+
 import appeng.client.gui.GuiSub;
+import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerCellRestriction;
-import appeng.container.implementations.ContainerCellRestriction.CellData;
-import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICellRestriction;
+import appeng.helpers.ICellRestriction.CellData;
+import appeng.helpers.ICellRestriction.CellRestrictionData;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
 public class GuiCellRestriction extends GuiSub {
 
-    private MEGuiTextField amountField;
-    private MEGuiTextField typesField;
-    private CellData cellData;
+    private final MEGuiTextField amountField;
+    private final MEGuiTextField typesField;
+    private final ContainerCellRestriction cellRestriction;
+    private final GuiAeButton reset;
+
+    private CellData cellData = new CellData(0, 0, 0, 0);
+    private CellRestrictionData cellRestrictionData = new CellRestrictionData((byte) 0, 0);
+
+    private static final int BASE_LINE_X = 48;
 
     public GuiCellRestriction(InventoryPlayer ip, ICellRestriction obj) {
         super(new ContainerCellRestriction(ip, obj));
-        this.xSize = 204;
+        this.xSize = 213;
 
-        this.amountField = new MEGuiTextField(85, 12);
+        this.cellRestriction = (ContainerCellRestriction) this.inventorySlots;
+        this.amountField = new MEGuiTextField(95, 12);
         this.typesField = new MEGuiTextField(30, 12);
-        this.cellData = new CellData();
+        this.typesField.setMaxStringLength(3);
 
+        this.reset = new GuiAeButton(
+                0,
+                0,
+                0,
+                12,
+                12,
+                GuiText.ResetRestriction.getLocal(),
+                GuiText.ResetRestrictionHint.getLocal());
     }
 
     @Override
     public void initGui() {
         super.initGui();
 
-        this.amountField.x = this.guiLeft + 64;
+        this.amountField.x = this.guiLeft + 62;
+        this.typesField.x = this.guiLeft + 170;
+
         this.amountField.y = this.guiTop + 32;
+        this.typesField.y = this.amountField.y;
 
-        this.typesField.x = this.guiLeft + 162;
-        this.typesField.y = this.guiTop + 32;
+        this.reset.xPosition = this.guiLeft + BASE_LINE_X;
+        this.reset.yPosition = this.amountField.y;
 
-        if (this.inventorySlots instanceof ContainerCellRestriction ccr) {
-            ccr.setAmountField(this.amountField);
-            ccr.setTypesField(this.typesField);
-            ccr.setCellData(cellData);
-        }
-    }
-
-    @Override
-    public void onGuiClosed() {
-        super.onGuiClosed();
-    }
-
-    public String filterCellRestriction() {
-
-        String types = this.typesField.getText();
-        long amount = getAmount();
-
-        int restrictionTypes = 0;
-        long restrictionAmount = 0;
-
-        try {
-            restrictionTypes = Math.min(Integer.parseInt(types), cellData.getTotalTypes());
-        } catch (Exception ignored) {
-            //
-        }
-        try {
-            restrictionAmount = Math
-                    .min(amount, (cellData.getTotalBytes() - cellData.getPerType()) * cellData.getPerByte());
-        } catch (Exception ignored) {
-            //
-        }
-        return restrictionTypes + "," + restrictionAmount;
+        this.buttonList.add(this.reset);
     }
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        this.fontRendererObj.drawString(GuiText.CellRestriction.getLocal(), 58, 6, GuiColors.DefaultBlack.getColor());
-        String type = cellData.getCellType();
-        switch (type) {
-            case "item":
-                this.fontRendererObj
-                        .drawString(GuiText.NumberOfItems.getLocal(), 64, 23, GuiColors.DefaultBlack.getColor());
-                break;
-            case "fluid":
-                this.fontRendererObj
-                        .drawString(GuiText.NumberOfFluids.getLocal(), 64, 23, GuiColors.DefaultBlack.getColor());
-                break;
+        if (this.cellRestriction.updated) {
+            this.cellData = this.cellRestriction.cellDataSync.get();
+            this.cellRestrictionData = this.cellRestriction.cellRestrictionDataSync.get();
+            this.typesField.setText(String.valueOf(this.cellRestrictionData.restrictionTypes));
+            this.amountField.setText(String.valueOf(this.cellRestrictionData.restrictionAmount));
+
+            this.cellRestriction.updated = false;
         }
-        this.fontRendererObj.drawString(GuiText.Types.getLocal(), 162, 23, GuiColors.DefaultBlack.getColor());
+
         this.fontRendererObj
-                .drawString(GuiText.CellRestrictionTips.getLocal(), 64, 50, GuiColors.DefaultBlack.getColor());
-        switch (type) {
-            case "item":
-                this.fontRendererObj.drawString(
-                        GuiText.ItemsPerByte.getLocal() + " " + cellData.getPerByte(),
-                        64,
-                        60,
-                        GuiColors.DefaultBlack.getColor());
-                break;
-            case "fluid":
-                this.fontRendererObj.drawString(
-                        GuiText.FluidsPerByte.getLocal() + " " + cellData.getPerByte() + " mB",
-                        64,
-                        60,
-                        GuiColors.DefaultBlack.getColor());
-                break;
-        }
+                .drawString(GuiText.CellRestriction.getLocal(), BASE_LINE_X, 6, GuiColors.DefaultBlack.getColor());
+
+        this.fontRendererObj
+                .drawString(GuiText.ResourceAmount.getLocal(), BASE_LINE_X, 22, GuiColors.DefaultBlack.getColor());
+
+        this.fontRendererObj
+                .drawString(GuiText.Types.getLocal(), BASE_LINE_X + 122, 22, GuiColors.DefaultBlack.getColor());
+
+        int cellDataLine = 37;
+        final int types = this.getTypes();
+        final long bytesAllocated = this.getBytesAllocated(types);
         this.fontRendererObj.drawString(
-                GuiText.BytesPerType.getLocal() + " " + cellData.getPerType(),
-                64,
-                70,
+                GuiText.MaximumOfResource.getLocal(fmt(this.getMaxAmount(types))),
+                BASE_LINE_X,
+                cellDataLine += 10,
+                GuiColors.DefaultBlack.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.BytesTotal.getLocal(fmt(this.cellData.totalBytes)),
+                BASE_LINE_X,
+                cellDataLine += 10,
+                GuiColors.DefaultBlack.getColor());
+
+        this.fontRendererObj.drawString(
+                GuiText.BytesAllocated.getLocal(fmt(bytesAllocated)),
+                BASE_LINE_X,
+                cellDataLine += 10,
+                GuiColors.DefaultBlack.getColor());
+
+        this.fontRendererObj.drawString(
+                GuiText.BytesFree.getLocal(fmt(this.getFreeBytes(bytesAllocated))),
+                BASE_LINE_X,
+                cellDataLine += 10,
+                GuiColors.DefaultBlack.getColor());
+
+        this.fontRendererObj.drawString(
+                GuiText.ResourcesPerByte.getLocal(fmt(this.cellData.perByte)),
+                BASE_LINE_X,
+                cellDataLine += 10,
+                GuiColors.DefaultBlack.getColor());
+
+        this.fontRendererObj.drawString(
+                GuiText.BytesPerType.getLocal(fmt(this.cellData.perType)),
+                BASE_LINE_X,
+                cellDataLine += 10,
                 GuiColors.DefaultBlack.getColor());
     }
 
@@ -136,28 +143,68 @@ public class GuiCellRestriction extends GuiSub {
     }
 
     @Override
-    protected void keyTyped(final char character, final int key) {
-        if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-            try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("cellRestriction", filterCellRestriction()));
-            } catch (IOException e) {
-                AELog.debug(e);
-            }
-            NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
-        } else if (!(this.amountField.textboxKeyTyped(character, key)
-                || this.typesField.textboxKeyTyped(character, key))) {
-                    super.keyTyped(character, key);
-                }
+    protected void actionPerformed(GuiButton btn) {
+        if (btn == this.reset) {
+            this.cellRestriction.cellRestrictionDataSync.set(new CellRestrictionData((byte) 0, 0));
+            this.cellRestriction.updated = true;
+        } else super.actionPerformed(btn);
     }
 
-    private long getAmount() {
-        String out = this.amountField.getText();
-        double resultD = Calculator.conversion(out);
+    @Override
+    protected void keyTyped(final char character, final int key) {
+        if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
+            this.cellRestriction.cellRestrictionDataSync.set(filterCellRestriction());
+            this.cellRestriction.tickClientSync();
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
+        } else
+            if (!(this.amountField.textboxKeyTyped(character, key) || this.typesField.textboxKeyTyped(character, key)))
+                super.keyTyped(character, key);
+    }
 
-        if (resultD <= 0 || Double.isNaN(resultD)) {
+    private static String fmt(double v) {
+        return NumberFormatUtil.formatNumber(v);
+    }
+
+    private CellRestrictionData filterCellRestriction() {
+        final byte types = (byte) this.getTypes();
+        return new CellRestrictionData(types, this.getAmount(types));
+    }
+
+    private long getFreeBytes(final long bytesAllocated) {
+        return this.cellData.totalBytes - bytesAllocated;
+    }
+
+    private long getBytesAllocated(final int types) {
+        final int nTypes = types == 0 ? this.cellData.totalTypes : types;
+        return (long) this.cellData.perType * nTypes
+                + (long) Math.ceil((double) this.getAmount(types) / this.cellData.perByte);
+    }
+
+    private long getMaxAmount(final int types) {
+        final int nTypes = types == 0 ? this.cellData.totalTypes : types;
+        return (this.cellData.totalBytes - (long) this.cellData.perType * nTypes) * this.cellData.perByte;
+    }
+
+    private long getAmount(final int types) {
+        try {
+            final double resultD = Calculator.conversion(this.amountField.getText());
+
+            if (resultD <= 0 || Double.isNaN(resultD)) return 0;
+            else return (long) Math.min(ArithHelper.round(resultD, 0), this.getMaxAmount(types));
+        } catch (Exception ignored) {
             return 0;
-        } else {
-            return (long) ArithHelper.round(resultD, 0);
+        }
+    }
+
+    private int getTypes() {
+        try {
+            return Math.max(
+                    0,
+                    Math.min(
+                            Integer.parseInt(this.typesField.getText()),
+                            this.cellRestriction.cellDataSync.get().totalTypes));
+        } catch (Exception ignored) {
+            return 0;
         }
     }
 }

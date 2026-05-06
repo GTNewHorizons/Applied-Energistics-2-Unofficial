@@ -146,7 +146,7 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
             ItemStack is = this.cell.getStackInSlot(0);
             if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
                 if (is != null && is.getItem() instanceof ICellRestriction icr)
-                    icr.setCellRestriction(is, cellRestrictTypes + "," + cellRestrictAmount);
+                    icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
             }
 
             if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
@@ -251,22 +251,28 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
     }
 
     @Override
-    public String getCellData(ItemStack n) {
+    public CellData getCellData(ItemStack n) {
         ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellRestriction icr) return icr.getCellData(is);
         return null;
     }
 
     @Override
-    public void setCellRestriction(ItemStack n, String newData) {
+    public CellRestrictionData getCellRestrictionData(ItemStack n) {
+        ItemStack is = this.cell.getStackInSlot(0);
+        if (is != null && is.getItem() instanceof ICellRestriction icr) return icr.getCellRestrictionData(is);
+        return null;
+    }
+
+    @Override
+    public void setCellRestriction(ItemStack n, CellRestrictionData newRestriction) {
         if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
-            String[] s = newData.split(",", 2);
-            cellRestrictTypes = Byte.parseByte(s[0]);
-            cellRestrictAmount = Long.parseLong(s[1]);
+            this.cellRestrictTypes = newRestriction.restrictionTypes;
+            this.cellRestrictAmount = newRestriction.restrictionAmount;
         }
 
         ItemStack is = this.cell.getStackInSlot(0);
-        if (is != null && is.getItem() instanceof ICellRestriction icr) icr.setCellRestriction(is, newData);
+        if (is != null && is.getItem() instanceof ICellRestriction icr) icr.setCellRestriction(is, newRestriction);
     }
 
     @Override
