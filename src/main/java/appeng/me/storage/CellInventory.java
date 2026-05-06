@@ -13,9 +13,6 @@ package appeng.me.storage;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
-import java.util.Arrays;
-import java.util.List;
-
 import javax.annotation.Nonnull;
 
 import net.minecraft.inventory.IInventory;
@@ -59,7 +56,7 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
     private boolean cardDistribution = false;
     private byte restrictionTypes = 0;
     private long restrictionLong = 0;
-    private int typeWeight = 8;
+    private int typeWeight = 1;
     private final int distTypesCount;
 
     protected CellInventory(final ItemStack o, final ISaveProvider container) throws AppEngException {
@@ -72,6 +69,7 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         if (this.cellItem.getItem() instanceof IStorageCell type) {
             this.cellType = type;
             this.maxTypes = this.cellType.getTotalTypes(this.cellItem);
+            this.typeWeight = type.getTypeWeight();
         } else this.cellType = null;
 
         if (this.cellType == null) {
@@ -591,14 +589,6 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
             return 3;
         }
         return 4;
-    }
-
-    public List<Object> getRestriction() {
-        return Arrays.asList(restrictionLong, restrictionTypes);
-    }
-
-    protected void setTypeWeight(int typeWeight) {
-        this.typeWeight = typeWeight;
     }
 
     @Override

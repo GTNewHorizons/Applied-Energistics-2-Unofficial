@@ -179,4 +179,9 @@ public abstract class AEBasePortableCell extends AEBasePoweredItem implements IS
     public void setOreFilter(ItemStack is, String filter) {
         ItemStackNBT.setString(is, "OreFilter", filter);
     }
+
+    @Override
+    public int getTypeWeight() {
+        return 8;
+    }
 }
