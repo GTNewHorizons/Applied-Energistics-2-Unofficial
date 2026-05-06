@@ -48,6 +48,7 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
+import appeng.client.texture.TextureUtils;
 import appeng.util.Platform;
 import codechicken.nei.recipe.StackInfo;
 import cpw.mods.fml.relauncher.Side;
@@ -436,10 +437,20 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         return null;
     }
 
+    private IIcon getIcon() {
+        final IIcon fluidIcon = this.fluid.getIcon();
+        if (fluidIcon != null) return fluidIcon;
+
+        final IIcon blockIcon = this.fluid.getBlock().getIcon(0, 0);
+        if (blockIcon != null) return blockIcon;
+
+        return TextureUtils.getMissingBlock();
+    }
+
     @Override
     @SideOnly(Side.CLIENT)
     public void drawInGui(Minecraft mc, int x, int y) {
-        final IIcon icon = this.fluid.getIcon();
+        final IIcon icon = this.getIcon();
         final int color = this.fluid.getColor();
         final Tessellator tessellator = Tessellator.instance;
 
@@ -480,7 +491,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
 
         final int color = this.fluid.getColor();
-        final IIcon icon = this.fluid.getIcon();
+        final IIcon icon = this.getIcon();
 
         final Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
