@@ -191,7 +191,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     8,
                     8,
                     AEColor.values()[i],
-                    AEColor.values()[i].name());
+                    AEColor.values()[i].toString());
             this.buttonList.add(this.colorButtons[i]);
         }
 
@@ -203,7 +203,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     8,
                     8,
                     AEColor.values()[i],
-                    AEColor.values()[i].name());
+                    AEColor.values()[i].toString());
             this.buttonList.add(this.colorButtons[i]);
         }
 
@@ -214,7 +214,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                 8,
                 8,
                 AEColor.values()[16],
-                AEColor.values()[16].name());
+                AEColor.values()[16].toString());
 
         this.buttonList.add(this.colorButtons[16]);
 
