@@ -457,11 +457,11 @@ gui.appliedenergistics2.MaxTypes=Max Types: %s
 
 gui.appliedenergistics2.ResourceAmount=Resource amount
 gui.appliedenergistics2.MaximumOfResource=Max: §6%s
-gui.appliedenergistics2.BytesAllocated=B allocated: §c%s
-gui.appliedenergistics2.BytesTotal=B total: §5%s
-gui.appliedenergistics2.BytesFree=B free: §2%s
-gui.appliedenergistics2.ResourcesPerByte=Resources ⅌ B: §6%s
-gui.appliedenergistics2.BytesPerType=B ⅌ type: §6%s
+gui.appliedenergistics2.BytesAllocated=Allocated bytes: §c%s
+gui.appliedenergistics2.BytesTotal=Total bytes: §5%s
+gui.appliedenergistics2.BytesFree=Free bytes: §2%s
+gui.appliedenergistics2.ResourcesPerByte=Resources per byte: §6%s
+gui.appliedenergistics2.BytesPerType=Byte per type: §6%s
 gui.appliedenergistics2.ResetRestriction=R
 gui.appliedenergistics2.ResetRestrictionHint=Reset restriction
 
