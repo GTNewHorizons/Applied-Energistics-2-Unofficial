@@ -179,8 +179,6 @@ public class PacketValueConfig extends AppEngPacket {
             } else if (this.Name.equals("CellWorkbench.Fuzzy")) {
                 ccw.setFuzzy(FuzzyMode.valueOf(this.Value));
             }
-        } else if (this.Name.equals("cellRestriction") && c instanceof final ContainerCellRestriction ccr) {
-            ccr.setCellRestriction(this.Value);
         } else if (c instanceof ContainerNetworkTool) {
             if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
                 ((ContainerNetworkTool) c).toggleFacadeMode();
