@@ -26,6 +26,7 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
+import appeng.container.implementations.ContainerAdvancedInscriber;
 import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
@@ -110,6 +111,11 @@ public class PacketValueConfig extends AppEngPacket {
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
                 case "Reshuffle.View" -> qk.setView(this.Value);
+            }
+        } else if (this.Name.equals("AdvancedInscriber.Lock") && c instanceof final ContainerAdvancedInscriber qk) {
+            final String[] parts = this.Value.split(":", 2);
+            if (parts.length == 2) {
+                qk.setLock(parts[0], Boolean.parseBoolean(parts[1]));
             }
         } else if (this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk) {
             qk.doublePatterns(Integer.parseInt(this.Value));
