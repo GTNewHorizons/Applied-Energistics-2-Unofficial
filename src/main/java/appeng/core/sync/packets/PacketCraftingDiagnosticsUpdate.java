@@ -11,7 +11,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.implementations.GuiCraftingDiagnosticTerminal;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
-import appeng.me.cache.CraftingGridCache;
+import appeng.me.diagnostics.DiagnosticRowView;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -20,7 +20,7 @@ import io.netty.buffer.Unpooled;
 
 public class PacketCraftingDiagnosticsUpdate extends AppEngPacket {
 
-    private final List<CraftingGridCache.DiagnosticRowView> rows;
+    private final List<DiagnosticRowView> rows;
 
     public PacketCraftingDiagnosticsUpdate(final ByteBuf stream) {
         final int rowCount = stream.readInt();
@@ -30,18 +30,17 @@ public class PacketCraftingDiagnosticsUpdate extends AppEngPacket {
             final long totalProduced = stream.readLong();
             final long elapsedTimeMillis = stream.readLong();
             final long sampleCount = stream.readLong();
-            this.rows
-                    .add(new CraftingGridCache.DiagnosticRowView(stack, totalProduced, elapsedTimeMillis, sampleCount));
+            this.rows.add(new DiagnosticRowView(stack, totalProduced, elapsedTimeMillis, sampleCount));
         }
     }
 
-    public PacketCraftingDiagnosticsUpdate(final List<CraftingGridCache.DiagnosticRowView> rows) {
+    public PacketCraftingDiagnosticsUpdate(final List<DiagnosticRowView> rows) {
         this.rows = rows;
 
         final ByteBuf data = Unpooled.buffer();
         data.writeInt(this.getPacketID());
         data.writeInt(rows.size());
-        for (final CraftingGridCache.DiagnosticRowView row : rows) {
+        for (final DiagnosticRowView row : rows) {
             Platform.writeStackByte(row.stack, data);
             data.writeLong(row.totalProduced);
             data.writeLong(row.elapsedTimeMillis);

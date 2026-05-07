@@ -954,11 +954,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                         final CraftingDiagnosticSessionId diagnosticSessionId = craftingEntry.getValue()
                                 .consumeCraftSession();
-                        final long patternStartTimeMillis = currentDiagnosticTimeMillis();
+                        final long outputObservedAtMillis = System.currentTimeMillis();
                         // Process output items.
                         for (final IAEStack<?> outputItemStack : details.getCondensedAEOutputs()) {
                             this.diagnostics
-                                    .trackProducedOutput(outputItemStack, patternStartTimeMillis, diagnosticSessionId);
+                                    .recordExpectedOutput(outputItemStack, outputObservedAtMillis, diagnosticSessionId);
                             this.postChange(outputItemStack, this.machineSrc);
                             this.waitingFor.add(outputItemStack.copy());
                             this.postCraftingStatusChange(outputItemStack.copy());
@@ -1841,10 +1841,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     private CraftingDiagnosticSessionId generateDiagnosticSessionId() {
         return this.diagnostics.nextSessionId();
-    }
-
-    private static long currentDiagnosticTimeMillis() {
-        return System.currentTimeMillis();
     }
 
     @Override

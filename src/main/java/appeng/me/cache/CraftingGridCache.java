@@ -55,6 +55,7 @@ import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.CraftingAllow;
 import appeng.api.config.CraftingMode;
+import appeng.api.config.DiagnosticSortMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
@@ -95,6 +96,7 @@ import appeng.crafting.v2.CraftingJobV2;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.diagnostics.CraftingDiagnosticSessionId;
 import appeng.me.diagnostics.CraftingNetworkDiagnostics;
+import appeng.me.diagnostics.DiagnosticRowView;
 import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
@@ -792,35 +794,6 @@ public class CraftingGridCache
     private void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
         this.diagnostics.readFromNBT(list, merge);
         this.diagnosticsRevision = this.diagnostics.getRevision();
-    }
-
-    public enum DiagnosticSortMode {
-
-        CUMULATIVE_TIME,
-        AVG_PER_SECOND,
-        CRAFTED,
-        SAMPLES,
-        NAME;
-
-        public DiagnosticSortMode next() {
-            return values()[(this.ordinal() + 1) % values().length];
-        }
-    }
-
-    public static final class DiagnosticRowView {
-
-        public final IAEStack<?> stack;
-        public final long totalProduced;
-        public final long elapsedTimeMillis;
-        public final long sampleCount;
-
-        public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long elapsedTimeMillis,
-                final long sampleCount) {
-            this.stack = stack;
-            this.totalProduced = totalProduced;
-            this.elapsedTimeMillis = elapsedTimeMillis;
-            this.sampleCount = sampleCount;
-        }
     }
 
     private static class ActiveCpuIterator implements Iterator<ICraftingCPU> {

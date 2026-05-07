@@ -42,7 +42,7 @@ final class CraftingCpuDiagnostics {
         this.outputTimingRecords.clear();
     }
 
-    void trackProducedOutput(final IAEStack<?> output, final long startTimeMillis,
+    void recordExpectedOutput(final IAEStack<?> output, final long outputObservedAtMillis,
             final CraftingDiagnosticSessionId diagnosticSessionId) {
         if (output == null || output.getStackSize() <= 0 || diagnosticSessionId == null) {
             return;
@@ -57,7 +57,7 @@ final class CraftingCpuDiagnostics {
                 .computeIfAbsent(key, ignored -> new TreeSet<>());
         final CraftingTimingRecord probe = new CraftingTimingRecord(
                 output.getStackSize(),
-                startTimeMillis,
+                outputObservedAtMillis,
                 diagnosticSessionId);
         final CraftingTimingRecord existing = records.ceiling(probe);
         if (existing != null && existing.compareTo(probe) == 0) {
@@ -83,7 +83,7 @@ final class CraftingCpuDiagnostics {
         }
 
         long remainingReturned = returnedStack.getStackSize();
-        final long endTimeMillis = currentDiagnosticTimeMillis();
+        final long endTimeMillis = System.currentTimeMillis();
         final List<CompletedDiagnosticRecord> completedRecords = new ArrayList<>();
         while (remainingReturned > 0 && !records.isEmpty()) {
             final CraftingTimingRecord record = records.first();
@@ -196,10 +196,6 @@ final class CraftingCpuDiagnostics {
         return normalized;
     }
 
-    private static long currentDiagnosticTimeMillis() {
-        return System.currentTimeMillis();
-    }
-
     static final class CompletedDiagnosticRecord {
 
         private final IAEStack<?> output;
@@ -306,7 +302,7 @@ final class CraftingCpuDiagnostics {
             tag.setLong(
                     "elapsedTimeMillis",
                     this.accumulatedElapsedTimeMillis
-                            + Math.max(0L, currentDiagnosticTimeMillis() - this.startTimeMillis));
+                            + Math.max(0L, System.currentTimeMillis() - this.startTimeMillis));
             this.diagnosticSessionId.writeToNBT(tag, "diagnosticSessionId");
             return tag;
         }
@@ -320,7 +316,7 @@ final class CraftingCpuDiagnostics {
 
             final CraftingTimingRecord record = new CraftingTimingRecord(
                     tag.getLong("originalToProduce"),
-                    currentDiagnosticTimeMillis(),
+                    System.currentTimeMillis(),
                     diagnosticSessionId);
             record.accumulatedElapsedTimeMillis = tag.hasKey("elapsedTimeMillis", NBT.TAG_LONG)
                     ? tag.getLong("elapsedTimeMillis")

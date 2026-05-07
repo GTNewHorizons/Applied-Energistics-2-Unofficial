@@ -8,6 +8,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.DiagnosticSortButton;
+import appeng.api.config.DiagnosticSortMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.networking.IGrid;
@@ -22,6 +23,7 @@ import appeng.container.guisync.GuiSync;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingDiagnosticsUpdate;
 import appeng.me.cache.CraftingGridCache;
+import appeng.me.diagnostics.DiagnosticRowView;
 import appeng.util.Platform;
 
 public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
@@ -38,7 +40,7 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
     private int syncDelay = FULL_SYNC_INTERVAL;
 
     @GuiSync(0)
-    public int sortMode = CraftingGridCache.DiagnosticSortMode.CUMULATIVE_TIME.ordinal();
+    public int sortMode = DiagnosticSortMode.CUMULATIVE_TIME.ordinal();
 
     @GuiSync(1)
     public boolean ascending = false;
@@ -50,10 +52,7 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
         this.syncSortSettingsFromHost();
 
         if (host instanceof IGridHost gridHost) {
-            this.findNode(gridHost, ForgeDirection.UNKNOWN);
-            for (final ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
-                this.findNode(gridHost, direction);
-            }
+            this.findNode(gridHost);
         }
 
         if (this.network == null && Platform.isServer()) {
@@ -61,12 +60,12 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
         }
     }
 
-    private void findNode(final IGridHost host, final ForgeDirection direction) {
+    private void findNode(final IGridHost host) {
         if (this.network != null) {
             return;
         }
 
-        final IGridNode node = host.getGridNode(direction);
+        final IGridNode node = host.getGridNode(ForgeDirection.UNKNOWN);
         if (node != null) {
             this.network = node.getGrid();
         }
@@ -102,10 +101,8 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
     }
 
     private void sendRows(final CraftingGridCache cache, final long revision) {
-        final List<CraftingGridCache.DiagnosticRowView> rows = cache.createDiagnosticRows(
-                this.searchText,
-                CraftingGridCache.DiagnosticSortMode.values()[this.sortMode],
-                this.ascending);
+        final List<DiagnosticRowView> rows = cache
+                .createDiagnosticRows(this.searchText, DiagnosticSortMode.values()[this.sortMode], this.ascending);
 
         for (final Object crafter : this.crafters) {
             if (crafter instanceof EntityPlayerMP player) {
@@ -128,10 +125,10 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
 
     private int toSortMode(final DiagnosticSortButton sortButton) {
         return switch (sortButton) {
-            case NAME -> CraftingGridCache.DiagnosticSortMode.NAME.ordinal();
-            case QTY -> CraftingGridCache.DiagnosticSortMode.CRAFTED.ordinal();
-            case TIME -> CraftingGridCache.DiagnosticSortMode.CUMULATIVE_TIME.ordinal();
-            case AVG_PER_SECOND -> CraftingGridCache.DiagnosticSortMode.AVG_PER_SECOND.ordinal();
+            case NAME -> DiagnosticSortMode.NAME.ordinal();
+            case QTY -> DiagnosticSortMode.CRAFTED.ordinal();
+            case TIME -> DiagnosticSortMode.CUMULATIVE_TIME.ordinal();
+            case AVG_PER_SECOND -> DiagnosticSortMode.AVG_PER_SECOND.ordinal();
         };
     }
 
@@ -144,7 +141,7 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
     }
 
     public void setSortMode(final int sortMode) {
-        if (sortMode < 0 || sortMode >= CraftingGridCache.DiagnosticSortMode.values().length) {
+        if (sortMode < 0 || sortMode >= DiagnosticSortMode.values().length) {
             return;
         }
 

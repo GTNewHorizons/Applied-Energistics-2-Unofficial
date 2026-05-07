@@ -18,6 +18,7 @@ import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.ActionItems;
 import appeng.api.config.DiagnosticSortButton;
+import appeng.api.config.DiagnosticSortMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.TerminalStyle;
@@ -35,7 +36,8 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketCraftingDiagnosticReset;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.me.cache.CraftingGridCache;
+import appeng.me.diagnostics.DiagnosticRowView;
+import appeng.util.Platform;
 
 public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
@@ -49,9 +51,6 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     private static final int EXTRA_BOTTOM_MARGIN = 32;
     private static final long RESET_DOUBLE_CLICK_MILLIS = 500L;
     private static final Layout LAYOUT = new Layout();
-    private static final CraftingGridCache.DiagnosticSortMode[] SORT_BUTTON_ORDER = {
-            CraftingGridCache.DiagnosticSortMode.NAME, CraftingGridCache.DiagnosticSortMode.CRAFTED,
-            CraftingGridCache.DiagnosticSortMode.CUMULATIVE_TIME, CraftingGridCache.DiagnosticSortMode.AVG_PER_SECOND };
 
     private final ContainerCraftingDiagnosticTerminal container;
     private final List<Row> rows = new ArrayList<>();
@@ -147,11 +146,12 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
         if (btn == this.sortModeBox) {
             this.clearResetConfirmation();
-            final int current = this.getSortButtonIndex();
             final boolean backwards = Mouse.isButtonDown(1);
-            final int next = backwards ? (current + SORT_BUTTON_ORDER.length - 1) % SORT_BUTTON_ORDER.length
-                    : (current + 1) % SORT_BUTTON_ORDER.length;
-            this.container.sortMode = SORT_BUTTON_ORDER[next].ordinal();
+            final DiagnosticSortButton nextSortMode = Platform.rotateEnum(
+                    this.getSortModeAppearance(),
+                    backwards,
+                    this.sortModeBox.getSetting().getPossibleValues());
+            this.container.sortMode = this.toSortMode(nextSortMode);
             this.applyClientSort();
             NetworkHandler.instance.sendToServer(new PacketConfigButton(Settings.DIAGNOSTIC_SORT_BY, backwards));
         } else if (btn == this.sortDirectionBox) {
@@ -405,7 +405,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     }
 
     private void applyClientSort() {
-        Comparator<Row> comparator = switch (CraftingGridCache.DiagnosticSortMode.values()[this.container.sortMode]) {
+        Comparator<Row> comparator = switch (DiagnosticSortMode.values()[this.container.sortMode]) {
             case NAME -> Comparator.comparing(Row::getDisplayName, String.CASE_INSENSITIVE_ORDER);
             case CRAFTED -> Comparator.comparingLong(row -> row.totalProduced);
             case SAMPLES -> Comparator.comparingLong(row -> row.sampleCount);
@@ -475,7 +475,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     }
 
     private DiagnosticSortButton getSortModeAppearance() {
-        return switch (CraftingGridCache.DiagnosticSortMode.values()[this.container.sortMode]) {
+        return switch (DiagnosticSortMode.values()[this.container.sortMode]) {
             case NAME -> DiagnosticSortButton.NAME;
             case CRAFTED, SAMPLES -> DiagnosticSortButton.QTY;
             case CUMULATIVE_TIME -> DiagnosticSortButton.TIME;
@@ -483,16 +483,13 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         };
     }
 
-    private int getSortButtonIndex() {
-        final CraftingGridCache.DiagnosticSortMode mode = CraftingGridCache.DiagnosticSortMode
-                .values()[this.container.sortMode];
-        for (int i = 0; i < SORT_BUTTON_ORDER.length; i++) {
-            if (SORT_BUTTON_ORDER[i] == mode) {
-                return i;
-            }
-        }
-
-        return 1;
+    private int toSortMode(final DiagnosticSortButton sortButton) {
+        return switch (sortButton) {
+            case NAME -> DiagnosticSortMode.NAME.ordinal();
+            case QTY -> DiagnosticSortMode.CRAFTED.ordinal();
+            case TIME -> DiagnosticSortMode.CUMULATIVE_TIME.ordinal();
+            case AVG_PER_SECOND -> DiagnosticSortMode.AVG_PER_SECOND.ordinal();
+        };
     }
 
     private void repositionSlots() {
@@ -503,9 +500,9 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
     }
 
-    public void postUpdate(final List<CraftingGridCache.DiagnosticRowView> updatedRows) {
+    public void postUpdate(final List<DiagnosticRowView> updatedRows) {
         this.rows.clear();
-        for (final CraftingGridCache.DiagnosticRowView row : updatedRows) {
+        for (final DiagnosticRowView row : updatedRows) {
             this.rows.add(Row.fromPacket(row));
         }
         this.applyClientSort();
@@ -520,7 +517,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         private long elapsedTimeMillis;
         private long sampleCount;
 
-        private static Row fromPacket(final CraftingGridCache.DiagnosticRowView packetRow) {
+        private static Row fromPacket(final DiagnosticRowView packetRow) {
             final Row row = new Row();
             row.stack = packetRow.stack;
             row.totalProduced = packetRow.totalProduced;

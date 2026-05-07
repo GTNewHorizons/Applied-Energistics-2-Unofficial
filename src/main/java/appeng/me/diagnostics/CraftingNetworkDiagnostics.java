@@ -11,8 +11,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 
+import appeng.api.config.DiagnosticSortMode;
 import appeng.api.storage.data.IAEStack;
-import appeng.me.cache.CraftingGridCache;
 import appeng.util.Platform;
 
 public final class CraftingNetworkDiagnostics {
@@ -82,8 +82,8 @@ public final class CraftingNetworkDiagnostics {
         return this.revision;
     }
 
-    public List<CraftingGridCache.DiagnosticRowView> createRows(final String search,
-            final CraftingGridCache.DiagnosticSortMode sortMode, final boolean ascending) {
+    public List<DiagnosticRowView> createRows(final String search, final DiagnosticSortMode sortMode,
+            final boolean ascending) {
         final List<Map.Entry<IAEStack<?>, DiagnosticStats>> rows = new ArrayList<>();
         final String normalizedSearch = search == null ? "" : search.trim().toLowerCase();
 
@@ -108,10 +108,10 @@ public final class CraftingNetworkDiagnostics {
             return comparison;
         });
 
-        final List<CraftingGridCache.DiagnosticRowView> result = new ArrayList<>(rows.size());
+        final List<DiagnosticRowView> result = new ArrayList<>(rows.size());
         for (final Map.Entry<IAEStack<?>, DiagnosticStats> row : rows) {
             result.add(
-                    new CraftingGridCache.DiagnosticRowView(
+                    new DiagnosticRowView(
                             row.getKey().copy(),
                             row.getValue().getTotalProduced(),
                             row.getValue().getElapsedObservedTimeMillis(),
@@ -157,7 +157,7 @@ public final class CraftingNetworkDiagnostics {
     }
 
     private static int compareRows(final Map.Entry<IAEStack<?>, DiagnosticStats> left,
-            final Map.Entry<IAEStack<?>, DiagnosticStats> right, final CraftingGridCache.DiagnosticSortMode sortMode) {
+            final Map.Entry<IAEStack<?>, DiagnosticStats> right, final DiagnosticSortMode sortMode) {
         return switch (sortMode) {
             case CRAFTED -> Long.compare(left.getValue().getTotalProduced(), right.getValue().getTotalProduced());
             case AVG_PER_SECOND -> Double
