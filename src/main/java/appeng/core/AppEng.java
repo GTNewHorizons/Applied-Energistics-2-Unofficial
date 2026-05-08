@@ -41,6 +41,8 @@ import appeng.services.export.ExportProcess;
 import appeng.services.export.ForgeExportConfig;
 import appeng.util.InvTweakSortingModule;
 import appeng.util.Platform;
+import appeng.util.ThEConvertor;
+import appeng.util.ae2fcConvertor;
 import baubles.api.expanded.BaubleExpandedSlots;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
@@ -212,6 +214,10 @@ public final class AppEng {
 
         NetworkRegistry.INSTANCE.registerGuiHandler(this, GuiBridge.GUI_Handler);
         NetworkHandler.instance = new NetworkHandler("AE2");
+
+        if (Platform.isPosteaLoaded && Platform.isAE2FCLoaded) new ae2fcConvertor().run();
+
+        if (Platform.isPosteaLoaded && Platform.isThaumicEnergisticsLoaded) new ThEConvertor().run();
 
         AELog.info("Post Initialization ( ended after " + start.elapsed(TimeUnit.MILLISECONDS) + "ms )");
     }
