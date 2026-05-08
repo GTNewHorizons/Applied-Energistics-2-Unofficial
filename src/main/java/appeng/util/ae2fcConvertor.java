@@ -68,6 +68,7 @@ public class ae2fcConvertor implements Runnable {
                                             && extra.hasKey("configuredItem")) {
                                                 final NBTTagCompound myItem = extra.getCompoundTag("configuredItem");
                                                 final IAEFluidStack ifs = AEFluidStack.loadFluidStackFromNBT(myItem);
+                                                if (ifs == null) continue;
                                                 extra.setTag(
                                                         "configuredItem",
                                                         Platform.writeStackNBT(ifs, new NBTTagCompound(), true));

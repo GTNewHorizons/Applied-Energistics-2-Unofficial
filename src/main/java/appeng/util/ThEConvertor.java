@@ -20,6 +20,7 @@ import thaumicenergistics.common.storage.AEEssentiaStack;
 public class ThEConvertor implements Runnable {
 
     private final static String thePart = "thaumicenergistics:part.base";
+    private final static String wireless = "thaumicenergistics:wireless.essentia.terminal";
     private final static int terminal = 4;
     private final static int mon = 7;
     private final static int conMon = 4;
@@ -100,6 +101,11 @@ public class ThEConvertor implements Runnable {
                 thePart,
                 terminal,
                 AEApi.instance().definitions().parts().terminal().maybeStack(1).get(),
+                true);
+
+        ItemStackReplacementManager.addSimpleReplacement(
+                wireless,
+                AEApi.instance().definitions().items().wirelessTerminal().maybeStack(1).get(),
                 true);
     }
 
