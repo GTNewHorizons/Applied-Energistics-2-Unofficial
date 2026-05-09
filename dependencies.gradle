@@ -32,6 +32,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:ae2stuff:0.10.19-GTNH:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
+    compileOnly('curse.maven:rotarycraft-235596:4721191')
 
     compileOnly('com.github.GTNewHorizons:Baubles-Expanded:2.2.11-GTNH:dev')
 

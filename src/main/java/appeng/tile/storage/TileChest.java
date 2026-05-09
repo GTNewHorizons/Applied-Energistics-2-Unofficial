@@ -882,7 +882,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     }
 
     @Override
-    public GuiText getName() {
+    public GuiText getHostName() {
         return GuiText.Chest;
     }
 
