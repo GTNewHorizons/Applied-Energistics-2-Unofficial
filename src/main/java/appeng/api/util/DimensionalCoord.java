@@ -21,6 +21,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+import appeng.core.localization.GuiText;
+import io.netty.buffer.ByteBuf;
+
 /**
  * Represents a location in the Minecraft Universe
  */
@@ -113,6 +116,37 @@ public class DimensionalCoord extends WorldCoord {
         return list;
     }
 
+    public void writeToPacket(final ByteBuf data) {
+        data.writeInt(this.x);
+        data.writeInt(this.y);
+        data.writeInt(this.z);
+        data.writeInt(this.dimId);
+    }
+
+    public static void writeListToPacket(final ByteBuf data, final List<DimensionalCoord> list) {
+        data.writeInt(list == null ? 0 : list.size());
+        if (list == null) {
+            return;
+        }
+
+        for (final DimensionalCoord coord : list) {
+            coord.writeToPacket(data);
+        }
+    }
+
+    public static DimensionalCoord readFromPacket(final ByteBuf data) {
+        return new DimensionalCoord(data.readInt(), data.readInt(), data.readInt(), data.readInt());
+    }
+
+    public static List<DimensionalCoord> readAsListPacket(final ByteBuf data) {
+        final int count = data.readInt();
+        final List<DimensionalCoord> list = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            list.add(readFromPacket(data));
+        }
+        return list;
+    }
+
     @Override
     public String toString() {
         return "dimension=" + this.dimId + ", " + super.toString();
@@ -128,5 +162,21 @@ public class DimensionalCoord extends WorldCoord {
 
     public int getDimension() {
         return dimId;
+    }
+
+    public String getGuiText() {
+        return GuiText.GuiDimensionalCoord.getLocal(this.x, this.y, this.z, this.dimId);
+    }
+
+    public String getGuiTextNoDim() {
+        return GuiText.GuiDimensionalCoordNoDim.getLocal(this.x, this.y, this.z);
+    }
+
+    public String getGuiTextShort() {
+        return GuiText.GuiDimensionalCoordShort.getLocal(this.x, this.y, this.z, this.dimId);
+    }
+
+    public String getGuiTextShortNoDim() {
+        return GuiText.GuiDimensionalCoordShortNoDim.getLocal(this.x, this.y, this.z);
     }
 }
