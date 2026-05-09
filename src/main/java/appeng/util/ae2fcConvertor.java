@@ -55,13 +55,14 @@ public class ae2fcConvertor implements Runnable {
                                         config.readFromNBT(extra, "config");
                                         final IAEStack<?> aes = config.getAEStackInSlot(0);
                                         if (aes == null) {
-                                            final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
-                                            typeFilters.setOnlyEnabled(AEFluidStackType.FLUID_STACK_TYPE);
-                                            typeFilters.writeToNBT(extra);
+                                            if (!extra.hasKey(AEStackTypeFilter.NBT_FILTERS)) {
+                                                final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
+                                                typeFilters.setOnlyEnabled(AEFluidStackType.FLUID_STACK_TYPE);
+                                                typeFilters.writeToNBT(extra);
+                                            }
                                         } else if (aes instanceof IAEItemStack ais
-                                                && ais.getItem() instanceof ItemFluidPacket) {
-                                                    config.putAEStackInSlot(0, ItemFluidPacket.getFluidAEStack(ais));
-                                                }
+                                                && ais.getItem() instanceof ItemFluidPacket)
+                                            config.putAEStackInSlot(0, ItemFluidPacket.getFluidAEStack(ais));
                                         config.writeToNBT(extra, "config");
                                         emitter.writeToNBT(def);
                                     } else if ((Platform.isSameItem(is, mon) || Platform.isSameItem(is, conMon))
