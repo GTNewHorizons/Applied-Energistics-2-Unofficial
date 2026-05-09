@@ -185,7 +185,7 @@ public class GuiMEMonitorable extends AEBaseGui
 
         this.viewCell = te instanceof IViewCellStorage;
 
-        this.myName = te.getName();
+        this.myName = te.getHostName();
 
         hasPinHost = te instanceof ITerminalPins;
 
