@@ -18,7 +18,7 @@ import appeng.core.localization.GuiText;
 
 public interface ITerminalHost extends IStorageMonitorable, IConfigurableObject {
 
-    default GuiText getName() {
+    default GuiText getHostName() {
         return GuiText.Terminal;
     }
 
