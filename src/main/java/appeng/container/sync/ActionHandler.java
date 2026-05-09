@@ -52,6 +52,10 @@ public class ActionHandler<T> extends AbstractSyncHandler {
     }
 
     public @NotNull ActionHandler<T> onClientAction(final @NotNull Consumer<T> listener) {
+        if (!this.direction.canReceiveFrom(SyncEndpoint.SERVER)) {
+            throw new IllegalStateException("Handler " + this.fullKey + " does not receive actions on the client.");
+        }
+
         this.clientActionListener = Objects.requireNonNull(listener, "listener");
         return this;
     }
@@ -62,6 +66,10 @@ public class ActionHandler<T> extends AbstractSyncHandler {
     }
 
     public @NotNull ActionHandler<T> onServerAction(final @NotNull Consumer<T> listener) {
+        if (!this.direction.canReceiveFrom(SyncEndpoint.CLIENT)) {
+            throw new IllegalStateException("Handler " + this.fullKey + " does not receive actions on the server.");
+        }
+
         this.serverActionListener = Objects.requireNonNull(listener, "listener");
         return this;
     }
