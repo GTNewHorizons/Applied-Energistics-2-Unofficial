@@ -177,6 +177,8 @@ public class Platform {
     public static final boolean isMultiPartLoaded = Loader.isModLoaded("ForgeMultipart");
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
+    public static final boolean isPosteaLoaded = Loader.isModLoaded("postea");
+    public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");
 
     static {
         BYTE_LIMIT = new double[10];
@@ -1991,7 +1993,7 @@ public class Platform {
     }
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag) {
-        return writeStackNBT(stack, tag, false);
+        return writeStackNBT(stack, tag, true);
     }
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag, boolean isModern) {
