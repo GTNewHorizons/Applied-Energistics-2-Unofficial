@@ -4,11 +4,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.glodblock.github.common.item.ItemFluidLevelEmitter;
 import com.glodblock.github.common.item.ItemFluidPacket;
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 import com.gtnewhorizons.postea.utility.BlockInfo;
+import com.gtnewhorizons.postea.utility.IDRegistry;
 
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEFluidStack;
@@ -42,15 +42,18 @@ public class ae2fcConvertor implements Runnable {
                                     .get();
                             final ItemStack conMon = AEApi.instance().definitions().parts().conversionMonitor()
                                     .maybeStack(1).get();
+                            final int ae2fcEmitterID = IDRegistry.getItemId(ae2fcFluidEmitter);
 
                             for (int x = 0; x < 7; x++) {
                                 final ForgeDirection side = ForgeDirection.getOrientation(x);
                                 final NBTTagCompound def = tag.getCompoundTag("def:" + side.ordinal());
                                 final NBTTagCompound extra = tag.getCompoundTag("extra:" + side.ordinal());
+
                                 if (!def.hasNoTags() && !extra.hasNoTags()) {
+                                    final int currentPartID = def.getInteger("id");
                                     final ItemStack is = ItemStack.loadItemStackFromNBT(def);
                                     if (is == null) continue;
-                                    if (is.getItem() instanceof ItemFluidLevelEmitter) {
+                                    if (currentPartID == ae2fcEmitterID) {
                                         final IAEStackInventory config = new IAEStackInventory(null, 1);
                                         config.readFromNBT(extra, "config");
                                         final IAEStack<?> aes = config.getAEStackInSlot(0);
@@ -84,6 +87,11 @@ public class ae2fcConvertor implements Runnable {
         ItemStackReplacementManager.addSimpleReplacement(
                 ae2fcPatternEx,
                 AEApi.instance().definitions().parts().patternTerminalEx().maybeStack(1).get(),
+                true);
+
+        ItemStackReplacementManager.addSimpleReplacement(
+                ae2fcFluidEmitter,
+                AEApi.instance().definitions().parts().levelEmitter().maybeStack(1).get(),
                 true);
 
         ItemStackReplacementManager.addSimpleReplacement(

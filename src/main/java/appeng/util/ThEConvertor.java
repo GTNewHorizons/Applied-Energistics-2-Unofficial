@@ -28,6 +28,7 @@ public class ThEConvertor implements Runnable {
     private static final String NBT_KEY_REDSTONE_MODE = "mode";
     private static final String NBT_KEY_WANTED_AMOUNT = "wantedAmount";
     private static final String NBT_KEY_LOCKED = "Locked", NBT_KEY_TRACKED_ASPECT = "TrackedAspect";
+    private static final String NBT_KEY_OWNER = "Owner";
 
     @Override
     public void run() {
@@ -52,7 +53,8 @@ public class ThEConvertor implements Runnable {
                                     final ItemStack is = ItemStack.loadItemStackFromNBT(def);
 
                                     if (is == null) continue;
-                                    if (extra.hasKey(NBT_KEY_REDSTONE_MODE)) {
+                                    if (!extra.hasKey(NBT_KEY_OWNER)) continue;
+                                    if (Platform.isSameItem(is, lEmitter)) {
                                         extra.setString(
                                                 "REDSTONE_EMITTER",
                                                 extra.getInteger(NBT_KEY_REDSTONE_MODE) == 1
