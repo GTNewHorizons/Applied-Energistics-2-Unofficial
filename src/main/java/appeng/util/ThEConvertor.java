@@ -1,6 +1,5 @@
 package appeng.util;
 
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -11,24 +10,23 @@ import com.gtnewhorizons.postea.utility.BlockInfo;
 import appeng.api.AEApi;
 import appeng.api.config.RedstoneMode;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
-import appeng.tile.inventory.IAEStackInventory;
 
 public class ThEConvertor implements Runnable {
 
-    private final static String thePart = "thaumicenergistics:part.base";
-    private final static String wireless = "thaumicenergistics:wireless.essentia.terminal";
-    private final static int emitter = 1;
-    private final static int terminal = 4;
-    private final static int mon = 7;
-    private final static int conMon = 8;
+    private final static String thePart = "thaumicenergistics:part.base",
+            wireless = "thaumicenergistics:wireless.essentia.terminal";
 
-    private static final String NBT_KEY_ASPECT_FILTER = "aspect";
-    private static final String NBT_KEY_REDSTONE_MODE = "mode";
-    private static final String NBT_KEY_WANTED_AMOUNT = "wantedAmount";
-    private static final String NBT_KEY_LOCKED = "Locked", NBT_KEY_TRACKED_ASPECT = "TrackedAspect";
-    private static final String NBT_KEY_OWNER = "Owner";
+    private final static int emitter = 1, terminal = 4, mon = 7, conMon = 8;
+    private static int thePartID;
+
+    private static final String NBT_KEY_ASPECT_FILTER = "aspect", NBT_KEY_REDSTONE_MODE = "mode",
+            NBT_KEY_WANTED_AMOUNT = "wantedAmount", NBT_KEY_LOCKED = "Locked", NBT_KEY_TRACKED_ASPECT = "TrackedAspect",
+            NBT_KEY_OWNER = "Owner";
+
+    public static void postLoad() {
+        ItemStackReplacementManager.registerIDResolver(thePart, i -> thePartID = i);
+    }
 
     @Override
     public void run() {
@@ -38,23 +36,19 @@ public class ThEConvertor implements Runnable {
                         AEApi.instance().definitions().blocks().multiPart().maybeBlock().get(),
                         0,
                         tag -> {
-                            final ItemStack lEmitter = AEApi.instance().definitions().parts().levelEmitter()
-                                    .maybeStack(1).get();
-                            final ItemStack mon = AEApi.instance().definitions().parts().storageMonitor().maybeStack(1)
-                                    .get();
-                            final ItemStack conMon = AEApi.instance().definitions().parts().conversionMonitor()
-                                    .maybeStack(1).get();
-
                             for (int x = 0; x < 7; x++) {
                                 final ForgeDirection side = ForgeDirection.getOrientation(x);
                                 final NBTTagCompound def = tag.getCompoundTag("def:" + side.ordinal());
                                 final NBTTagCompound extra = tag.getCompoundTag("extra:" + side.ordinal());
                                 if (!def.hasNoTags() && !extra.hasNoTags()) {
-                                    final ItemStack is = ItemStack.loadItemStackFromNBT(def);
-
-                                    if (is == null) continue;
                                     if (!extra.hasKey(NBT_KEY_OWNER)) continue;
-                                    if (Platform.isSameItem(is, lEmitter)) {
+
+                                    final int currentPartID = def.getInteger("id");
+                                    final int currentPartDamage = def.getInteger("Damage");
+
+                                    if (currentPartID != thePartID) continue;
+
+                                    if (currentPartDamage == emitter) {
                                         extra.setString(
                                                 "REDSTONE_EMITTER",
                                                 extra.getInteger(NBT_KEY_REDSTONE_MODE) == 1
@@ -62,17 +56,13 @@ public class ThEConvertor implements Runnable {
                                                         : RedstoneMode.HIGH_SIGNAL.name());
 
                                         if (extra.hasKey(NBT_KEY_ASPECT_FILTER)) {
-                                            final IAEStackInventory config = new IAEStackInventory(null, 1);
+                                            final NBTTagCompound config = extra.getCompoundTag("config");
                                             final NBTTagCompound aspectNbt = new NBTTagCompound();
 
                                             aspectNbt.setString("AspectTag", extra.getString(NBT_KEY_ASPECT_FILTER));
-
-                                            final IAEStackType<?> type = AEStackTypeRegistry.getType("essentia");
-                                            final IAEStack<?> eas = type.loadStackFromNBT(aspectNbt);
-
-                                            config.putAEStackInSlot(0, eas);
-                                            config.writeToNBT(extra, "config");
-
+                                            aspectNbt.setString("StackType", "essentia");
+                                            config.setTag("#0", aspectNbt);
+                                            extra.setTag("config", config);
                                         }
 
                                         if (!extra.hasKey(AEStackTypeFilter.NBT_FILTERS)) {
@@ -85,8 +75,19 @@ public class ThEConvertor implements Runnable {
                                         if (extra.hasKey(NBT_KEY_WANTED_AMOUNT))
                                             extra.setLong("reportingValue", extra.getLong(NBT_KEY_WANTED_AMOUNT));
 
-                                    } else if (Platform.isSameItem(is, mon) || Platform.isSameItem(is, conMon))
-                                        this.monitorConvert(extra);
+                                    } else if (currentPartDamage == mon || currentPartDamage == conMon) {
+                                        if (extra.hasKey(NBT_KEY_TRACKED_ASPECT)) {
+                                            final NBTTagCompound aspectNbt = new NBTTagCompound();
+
+                                            aspectNbt.setString("AspectTag", extra.getString(NBT_KEY_TRACKED_ASPECT));
+                                            aspectNbt.setString("StackType", "essentia");
+                                            extra.setTag("configuredItem", aspectNbt);
+                                        }
+
+                                        if (extra.hasKey(NBT_KEY_LOCKED)) {
+                                            extra.setBoolean("isLocked", extra.getBoolean(NBT_KEY_LOCKED));
+                                        }
+                                    }
                                 }
                             }
                             return tag;
@@ -120,21 +121,5 @@ public class ThEConvertor implements Runnable {
                 wireless,
                 AEApi.instance().definitions().items().wirelessTerminal().maybeStack(1).get(),
                 true);
-    }
-
-    private void monitorConvert(final NBTTagCompound extra) {
-        if (extra.hasKey(NBT_KEY_TRACKED_ASPECT)) {
-            final NBTTagCompound aspectNbt = new NBTTagCompound();
-
-            aspectNbt.setString("AspectTag", extra.getString(NBT_KEY_TRACKED_ASPECT));
-
-            final IAEStackType<?> type = AEStackTypeRegistry.getType("essentia");
-            final IAEStack<?> eas = type.loadStackFromNBT(aspectNbt);
-
-            extra.setTag("configuredItem", eas.toNBTGeneric());
-        }
-        if (extra.hasKey(NBT_KEY_LOCKED)) {
-            extra.setBoolean("isLocked", extra.getBoolean(NBT_KEY_LOCKED));
-        }
     }
 }
