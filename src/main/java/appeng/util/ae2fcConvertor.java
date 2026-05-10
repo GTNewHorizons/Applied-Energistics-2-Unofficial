@@ -10,7 +10,7 @@ import com.gtnewhorizons.postea.utility.BlockInfo;
 import appeng.api.AEApi;
 import appeng.util.item.AEFluidStackType;
 
-public class ae2fcConvertor implements Runnable {
+public final class ae2fcConvertor {
 
     private final static String ae2fcPatternEx = "ae2fc:part_fluid_pattern_terminal_ex",
             ae2fcFluidEmitter = "ae2fc:part_fluid_level_emitter",
@@ -26,10 +26,7 @@ public class ae2fcConvertor implements Runnable {
         ItemStackReplacementManager.registerIDResolver(ae2fcMon, i -> ae2fcMonID = i);
         ItemStackReplacementManager.registerIDResolver(ae2fcConvMon, i -> ae2fcConMonID = i);
         ItemStackReplacementManager.registerIDResolver(ae2fcFluidPacket, i -> ae2fcPacketID = i);
-    }
 
-    @Override
-    public void run() {
         TileEntityReplacementManager.tileEntityTransformer(
                 "BlockCableBus",
                 ((tagCompound, world, chunk) -> new BlockInfo(

@@ -12,7 +12,7 @@ import appeng.api.config.RedstoneMode;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
 
-public class ThEConvertor implements Runnable {
+public final class ThEConvertor {
 
     private final static String thePart = "thaumicenergistics:part.base",
             wireless = "thaumicenergistics:wireless.essentia.terminal";
@@ -26,10 +26,7 @@ public class ThEConvertor implements Runnable {
 
     public static void postLoad() {
         ItemStackReplacementManager.registerIDResolver(thePart, i -> thePartID = i);
-    }
 
-    @Override
-    public void run() {
         TileEntityReplacementManager.tileEntityTransformer(
                 "BlockCableBus",
                 (tagCompound, world, chunk) -> new BlockInfo(

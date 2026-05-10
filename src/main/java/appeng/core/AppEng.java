@@ -215,11 +215,6 @@ public final class AppEng {
         NetworkRegistry.INSTANCE.registerGuiHandler(this, GuiBridge.GUI_Handler);
         NetworkHandler.instance = new NetworkHandler("AE2");
 
-        if (Platform.isPosteaLoaded) {
-            if (Platform.isAE2FCLoaded) new ae2fcConvertor().run();
-            if (Platform.isThaumicEnergisticsLoaded) new ThEConvertor().run();
-        }
-
         AELog.info("Post Initialization ( ended after " + start.elapsed(TimeUnit.MILLISECONDS) + "ms )");
     }
 
