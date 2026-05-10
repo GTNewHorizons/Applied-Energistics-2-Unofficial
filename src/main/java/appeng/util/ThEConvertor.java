@@ -5,7 +5,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
-import com.gtnewhorizons.postea.utility.BlockInfo;
 
 import appeng.api.AEApi;
 import appeng.api.config.RedstoneMode;
@@ -27,68 +26,63 @@ public final class ThEConvertor {
     public static void postLoad() {
         ItemStackReplacementManager.registerIDResolver(thePart, i -> thePartID = i);
 
-        TileEntityReplacementManager.tileEntityTransformer(
-                "BlockCableBus",
-                (tagCompound, world, chunk) -> new BlockInfo(
-                        AEApi.instance().definitions().blocks().multiPart().maybeBlock().get(),
-                        0,
-                        tag -> {
-                            for (int x = 0; x < 7; x++) {
-                                final ForgeDirection side = ForgeDirection.getOrientation(x);
-                                final NBTTagCompound def = tag.getCompoundTag("def:" + side.ordinal());
-                                final NBTTagCompound extra = tag.getCompoundTag("extra:" + side.ordinal());
-                                if (!def.hasNoTags() && !extra.hasNoTags()) {
-                                    if (!extra.hasKey(NBT_KEY_OWNER)) continue;
+        TileEntityReplacementManager.tileEntityTransformer("BlockCableBus", (tag, world, chunk) -> {
+            for (int x = 0; x < 7; x++) {
+                final ForgeDirection side = ForgeDirection.getOrientation(x);
+                final NBTTagCompound def = tag.getCompoundTag("def:" + side.ordinal());
+                final NBTTagCompound extra = tag.getCompoundTag("extra:" + side.ordinal());
+                if (!def.hasNoTags() && !extra.hasNoTags()) {
+                    if (!extra.hasKey(NBT_KEY_OWNER)) continue;
 
-                                    final int currentPartID = def.getInteger("id");
-                                    final int currentPartDamage = def.getInteger("Damage");
+                    final int currentPartID = def.getInteger("id");
+                    final int currentPartDamage = def.getInteger("Damage");
 
-                                    if (currentPartID != thePartID) continue;
+                    if (currentPartID != thePartID) continue;
 
-                                    if (currentPartDamage == emitter) {
-                                        extra.setString(
-                                                "REDSTONE_EMITTER",
-                                                extra.getInteger(NBT_KEY_REDSTONE_MODE) == 1
-                                                        ? RedstoneMode.LOW_SIGNAL.name()
-                                                        : RedstoneMode.HIGH_SIGNAL.name());
+                    if (currentPartDamage == emitter) {
+                        extra.setString(
+                                "REDSTONE_EMITTER",
+                                extra.getInteger(NBT_KEY_REDSTONE_MODE) == 1 ? RedstoneMode.LOW_SIGNAL.name()
+                                        : RedstoneMode.HIGH_SIGNAL.name());
 
-                                        if (extra.hasKey(NBT_KEY_ASPECT_FILTER)) {
-                                            final NBTTagCompound config = extra.getCompoundTag("config");
-                                            final NBTTagCompound aspectNbt = new NBTTagCompound();
+                        if (extra.hasKey(NBT_KEY_ASPECT_FILTER)) {
+                            final NBTTagCompound config = extra.getCompoundTag("config");
+                            final NBTTagCompound aspectNbt = new NBTTagCompound();
 
-                                            aspectNbt.setString("AspectTag", extra.getString(NBT_KEY_ASPECT_FILTER));
-                                            aspectNbt.setString("StackType", "essentia");
-                                            config.setTag("#0", aspectNbt);
-                                            extra.setTag("config", config);
-                                        }
+                            aspectNbt.setString("AspectTag", extra.getString(NBT_KEY_ASPECT_FILTER));
+                            aspectNbt.setString("StackType", "essentia");
+                            config.setTag("#0", aspectNbt);
+                            extra.setTag("config", config);
+                        }
 
-                                        if (!extra.hasKey(AEStackTypeFilter.NBT_FILTERS)) {
-                                            final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
-                                            final IAEStackType<?> type = AEStackTypeRegistry.getType("essentia");
-                                            typeFilters.setOnlyEnabled(type);
-                                            typeFilters.writeToNBT(extra);
-                                        }
+                        if (!extra.hasKey(AEStackTypeFilter.NBT_FILTERS)) {
+                            final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
+                            final IAEStackType<?> type = AEStackTypeRegistry.getType("essentia");
+                            typeFilters.setOnlyEnabled(type);
+                            typeFilters.writeToNBT(extra);
+                        }
 
-                                        if (extra.hasKey(NBT_KEY_WANTED_AMOUNT))
-                                            extra.setLong("reportingValue", extra.getLong(NBT_KEY_WANTED_AMOUNT));
+                        if (extra.hasKey(NBT_KEY_WANTED_AMOUNT))
+                            extra.setLong("reportingValue", extra.getLong(NBT_KEY_WANTED_AMOUNT));
 
-                                    } else if (currentPartDamage == mon || currentPartDamage == conMon) {
-                                        if (extra.hasKey(NBT_KEY_TRACKED_ASPECT)) {
-                                            final NBTTagCompound aspectNbt = new NBTTagCompound();
+                    } else if (currentPartDamage == mon || currentPartDamage == conMon) {
+                        if (extra.hasKey(NBT_KEY_TRACKED_ASPECT)) {
+                            final NBTTagCompound aspectNbt = new NBTTagCompound();
 
-                                            aspectNbt.setString("AspectTag", extra.getString(NBT_KEY_TRACKED_ASPECT));
-                                            aspectNbt.setString("StackType", "essentia");
-                                            extra.setTag("configuredItem", aspectNbt);
-                                        }
+                            aspectNbt.setString("AspectTag", extra.getString(NBT_KEY_TRACKED_ASPECT));
+                            aspectNbt.setString("StackType", "essentia");
+                            extra.setTag("configuredItem", aspectNbt);
+                        }
 
-                                        if (extra.hasKey(NBT_KEY_LOCKED)) {
-                                            extra.setBoolean("isLocked", extra.getBoolean(NBT_KEY_LOCKED));
-                                        }
-                                    }
-                                }
-                            }
-                            return tag;
-                        }));
+                        if (extra.hasKey(NBT_KEY_LOCKED)) {
+                            extra.setBoolean("isLocked", extra.getBoolean(NBT_KEY_LOCKED));
+                        }
+                    }
+                }
+            }
+
+            return null;
+        });
 
         ItemStackReplacementManager.addSimpleReplacement(
                 thePart,
