@@ -1,6 +1,5 @@
 package appeng.util;
 
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -15,7 +14,6 @@ import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.tile.inventory.IAEStackInventory;
-import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ThEConvertor implements Runnable {
 
@@ -46,9 +44,6 @@ public class ThEConvertor implements Runnable {
                             final ItemStack conMon = AEApi.instance().definitions().parts().conversionMonitor()
                                     .maybeStack(1).get();
 
-                            final Item item = GameRegistry.findItem("thaumicenergistics", "part.base");
-                            final ItemStack theEmitter = new ItemStack(item, 1, emitter);
-
                             for (int x = 0; x < 7; x++) {
                                 final ForgeDirection side = ForgeDirection.getOrientation(x);
                                 final NBTTagCompound def = tag.getCompoundTag("def:" + side.ordinal());
@@ -57,7 +52,12 @@ public class ThEConvertor implements Runnable {
                                     final ItemStack is = ItemStack.loadItemStackFromNBT(def);
 
                                     if (is == null) continue;
-                                    if (Platform.isSameItem(is, theEmitter)) {
+                                    if (extra.hasKey(NBT_KEY_REDSTONE_MODE)) {
+                                        extra.setString(
+                                                "REDSTONE_EMITTER",
+                                                extra.getInteger(NBT_KEY_REDSTONE_MODE) == 1
+                                                        ? RedstoneMode.LOW_SIGNAL.name()
+                                                        : RedstoneMode.HIGH_SIGNAL.name());
 
                                         if (extra.hasKey(NBT_KEY_ASPECT_FILTER)) {
                                             final IAEStackInventory config = new IAEStackInventory(null, 1);
@@ -71,25 +71,18 @@ public class ThEConvertor implements Runnable {
                                             config.putAEStackInSlot(0, eas);
                                             config.writeToNBT(extra, "config");
 
-                                        } else if (!extra.hasKey(AEStackTypeFilter.NBT_FILTERS)) {
+                                        }
+
+                                        if (!extra.hasKey(AEStackTypeFilter.NBT_FILTERS)) {
                                             final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
                                             final IAEStackType<?> type = AEStackTypeRegistry.getType("essentia");
                                             typeFilters.setOnlyEnabled(type);
                                             typeFilters.writeToNBT(extra);
                                         }
 
-                                        if (extra.hasKey(NBT_KEY_REDSTONE_MODE)) {
-                                            extra.setString(
-                                                    "REDSTONE_EMITTER",
-                                                    extra.getInteger(NBT_KEY_REDSTONE_MODE) == 1
-                                                            ? RedstoneMode.LOW_SIGNAL.name()
-                                                            : RedstoneMode.HIGH_SIGNAL.name());
-                                        }
-
                                         if (extra.hasKey(NBT_KEY_WANTED_AMOUNT))
                                             extra.setLong("reportingValue", extra.getLong(NBT_KEY_WANTED_AMOUNT));
 
-                                        lEmitter.writeToNBT(def);
                                     } else if (Platform.isSameItem(is, mon) || Platform.isSameItem(is, conMon))
                                         this.monitorConvert(extra);
                                 }
@@ -101,6 +94,12 @@ public class ThEConvertor implements Runnable {
                 thePart,
                 terminal,
                 AEApi.instance().definitions().parts().terminal().maybeStack(1).get(),
+                true);
+
+        ItemStackReplacementManager.addSimpleReplacement(
+                thePart,
+                emitter,
+                AEApi.instance().definitions().parts().levelEmitter().maybeStack(1).get(),
                 true);
 
         ItemStackReplacementManager.addSimpleReplacement(
