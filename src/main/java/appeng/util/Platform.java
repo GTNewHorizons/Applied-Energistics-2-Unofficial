@@ -184,6 +184,7 @@ public class Platform {
     public static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     public static final SyncedKeybind keyBindLCtrl = SyncedKeybind.create(Keyboard.KEY_LCONTROL);
     public static final SyncedKeybind keyBindTab = SyncedKeybind.create(Keyboard.KEY_TAB);
+    public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");
 
     static {
         BYTE_LIMIT = new double[10];
@@ -1998,7 +1999,7 @@ public class Platform {
     }
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag) {
-        return writeStackNBT(stack, tag, false);
+        return writeStackNBT(stack, tag, true);
     }
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag, boolean isModern) {

@@ -34,10 +34,13 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:ae2stuff:0.10.19-GTNH:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
+    compileOnly('curse.maven:rotarycraft-235596:4721191')
 
     compileOnly('com.github.GTNewHorizons:Baubles-Expanded:2.2.11-GTNH:dev')
 
     compileOnly("org.jetbrains:annotations:26.0.2")
+
+    compileOnly("com.github.GTNewHorizons:Postea:1.2.5:dev")
 
     //Uncomment to add thermal expansion + foundation for testing
     //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
@@ -59,6 +62,8 @@ dependencies {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "Hodgepodge"
     }
+
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:DuraDisplay:1.4.2:dev")
 	runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.11-GTNH:dev')

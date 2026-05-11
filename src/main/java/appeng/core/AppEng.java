@@ -42,6 +42,8 @@ import appeng.services.export.ForgeExportConfig;
 import appeng.util.InvTweakSortingModule;
 import appeng.util.Platform;
 import appeng.util.ae2stuffConvertor;
+import appeng.util.ThEConvertor;
+import appeng.util.ae2fcConvertor;
 import baubles.api.expanded.BaubleExpandedSlots;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
@@ -217,6 +219,14 @@ public final class AppEng {
         AELog.info("Post Initialization ( ended after " + start.elapsed(TimeUnit.MILLISECONDS) + "ms )");
 
         if (Platform.isPosteaLoaded) new ae2stuffConvertor().run();
+    }
+
+    @Mod.EventHandler
+    public void PostLoad(FMLPostInitializationEvent PostEvent) {
+        if (Platform.isPosteaLoaded) {
+            if (Platform.isAE2FCLoaded) ae2fcConvertor.postLoad();
+            if (Platform.isThaumicEnergisticsLoaded) ThEConvertor.postLoad();
+        }
     }
 
     @EventHandler
