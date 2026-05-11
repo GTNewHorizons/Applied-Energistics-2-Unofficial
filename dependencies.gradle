@@ -58,6 +58,7 @@ dependencies {
     functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.411:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "Hodgepodge"
+        exclude module: "waila"
     }
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
