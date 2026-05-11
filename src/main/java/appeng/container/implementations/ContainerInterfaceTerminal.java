@@ -49,6 +49,7 @@ import appeng.helpers.IInterfaceHost;
 import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.AEBasePart;
+import appeng.parts.misc.PartPatternRepeater;
 import appeng.parts.p2p.PartP2PTunnel;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
@@ -286,6 +287,36 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         return playerInv.addItems(stack);
     }
 
+    private Iterator<IGrid> gridIterator = null;
+    private IGrid currentGrid = null;
+
+    private void initIterator() {
+        Set<IGrid> gridSet = new HashSet<>();
+        gridSet.add(this.grid);
+        this.fletchRepeaters(this.grid, gridSet);
+        this.gridIterator = gridSet.iterator();
+    }
+
+    private void fletchRepeaters(final IGrid grid, final Set<IGrid> gridSet) {
+        for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
+            final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+            if (!rep.isProvider() || rep.getPair() == null) continue;
+            final IGridNode n = rep.getPair().getGridNode();
+            if (n == null) continue;
+            final IGrid currentGrid = n.getGrid();
+            if (!gridSet.contains(currentGrid)) {
+                gridSet.add(currentGrid);
+                this.fletchRepeaters(currentGrid, gridSet);
+            }
+        }
+    }
+
+    private boolean hasNext() {
+        final boolean result = this.gridIterator.hasNext();
+        if (result) this.currentGrid = this.gridIterator.next();
+        return result;
+    }
+
     /**
      * Finds out whether any updates are needed, and if so, incrementally updates the list.
      */
@@ -293,9 +324,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         PacketInterfaceTerminalUpdate update = null;
         var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
         Set<IInterfaceViewable> visited = new HashSet<>();
+        this.initIterator();
+        this.hasNext();
 
-        for (Class<? extends IInterfaceViewable> c : supported) {
-            for (IGridNode node : grid.getMachines(c)) {
+        gridLoop: do for (Class<? extends IInterfaceViewable> c : supported) {
+            if (this.currentGrid == null) break gridLoop;
+            for (IGridNode node : this.currentGrid.getMachines(c)) {
                 IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
                 /* First check if we are already tracking this node */
                 if (tracked.containsKey(machine)) {
@@ -377,6 +411,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                 }
             }
         }
+        while (this.hasNext());
 
         /* Now find any entries that we need to remove */
         Iterator<Entry<IInterfaceViewable, InvTracker>> it = tracked.entrySet().iterator();

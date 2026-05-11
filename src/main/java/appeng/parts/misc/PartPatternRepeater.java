@@ -14,10 +14,12 @@ import static appeng.util.Platform.readAEStackListNBT;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
@@ -74,7 +76,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartPatternRepeater extends PartBasicState
         implements ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
 
-    private final List<ICraftingPatternDetails> craftingList = new ArrayList<>();
+    private final Set<ICraftingPatternDetails> craftingList = new HashSet<>();
     private IItemList<IAEStack<?>> waitingStacks = AEApi.instance().storage().createAEStackList();
     private CraftingGridCache targetCraftingGrid = null;
     private CraftingGridCache currentCraftingGrid = null;
@@ -259,6 +261,8 @@ public class PartPatternRepeater extends PartBasicState
         }
     }
 
+    private boolean duringFletchPatterns = false;
+
     public void init() {
         this.craftingList.clear();
         this.targetCraftingGrid = null;
@@ -281,6 +285,9 @@ public class PartPatternRepeater extends PartBasicState
                 final IGridNode gn = tcb.getGridNode(ForgeDirection.UNKNOWN);
                 if (gn == null) return;
 
+                if (this.duringFletchPatterns) return;
+                this.duringFletchPatterns = true;
+
                 this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
 
                 final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
@@ -298,6 +305,8 @@ public class PartPatternRepeater extends PartBasicState
                         // :P
                     }
                 }
+
+                this.duringFletchPatterns = false;
             } else {
                 final IGridNode gn = this.getGridNode(ForgeDirection.UNKNOWN);
                 if (gn == null) return;
@@ -405,7 +414,7 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void onPostPatternChange() {
-        if (!this.provider && pairPatternRepeater != null) pairPatternRepeater.init();
+        if (!this.provider && this.pairPatternRepeater != null) this.pairPatternRepeater.init();
     }
 
     @Override
@@ -429,5 +438,9 @@ public class PartPatternRepeater extends PartBasicState
 
     public IItemList<IAEStack<?>> getWaitingStacks() {
         return this.waitingStacks;
+    }
+
+    public PartPatternRepeater getPair() {
+        return this.pairPatternRepeater;
     }
 }
