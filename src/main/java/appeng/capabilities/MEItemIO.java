@@ -101,28 +101,10 @@ public class MEItemIO implements ItemIO {
 
         if (!duality.getProxy().isActive()) return stack.getStackSize();
 
-        int[] slots = allowedSinkSlots == null ? SLOTS : AbstractInventoryIterator.intersect(SLOTS, allowedSinkSlots);
-
-        if (isFiltered() && !matchesFilter(stack, slots)) return stack.getStackSize();
-
         IAEItemStack rejected = storage
                 .injectItems(AEItemStack.create(stack.toStack()), Actionable.MODULATE, duality.getActionSource());
 
         return rejected == null ? 0 : Platform.longToInt(rejected.getStackSize());
-    }
-
-    private boolean isFiltered() {
-        AppEngInternalAEInventory configInv = duality.getConfig();
-
-        boolean isFiltered = false;
-
-        for (ItemStack config : configInv) {
-            if (config != null) {
-                isFiltered = true;
-                break;
-            }
-        }
-        return isFiltered;
     }
 
     private boolean matchesFilter(ImmutableItemStack stack, int[] slots) {
