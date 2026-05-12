@@ -224,7 +224,7 @@ public class MEItemIO implements ItemIO {
 
             ItemStack out = null;
 
-            if (stored != null) {
+            if (ItemUtil.areStacksEqual(config.getItemStack(), stored)) {
                 out = stored.splitStack(0);
                 total += stored.stackSize;
             }
@@ -265,7 +265,8 @@ public class MEItemIO implements ItemIO {
 
             // Only extract from the slot if there wasn't enough in the network because interface ticks are
             // comparatively expensive
-            if (amount > 0 && !ItemUtil.isStackEmpty(stored)) {
+            if (amount > 0 && !ItemUtil.isStackEmpty(stored)
+                    && ItemUtil.areStacksEqual(config.getItemStack(), stored)) {
                 ItemStack fromSlot = duality.getStorage()
                         .decrStackSize(getCurrentSlot(), Math.min(amount, stored.stackSize));
 
