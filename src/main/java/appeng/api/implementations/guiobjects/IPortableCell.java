@@ -24,7 +24,7 @@ import appeng.core.localization.GuiText;
 public interface IPortableCell extends ITerminalHost, IEnergySource, IGuiItemObject, IInventorySlotAware {
 
     @Override
-    default GuiText getName() {
+    default GuiText getHostName() {
         return GuiText.PortableCell;
     }
 }

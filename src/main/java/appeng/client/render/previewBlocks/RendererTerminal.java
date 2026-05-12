@@ -6,7 +6,6 @@ import com.glodblock.github.common.parts.PartFluidInterface;
 import com.glodblock.github.common.parts.PartFluidPatternTerminal;
 import com.glodblock.github.common.parts.PartFluidPatternTerminalEx;
 import com.glodblock.github.common.parts.PartFluidStorageBus;
-import com.glodblock.github.common.parts.PartFluidTerminal;
 import com.glodblock.github.common.parts.PartLevelTerminal;
 
 import appeng.parts.misc.PartInterface;
@@ -33,7 +32,6 @@ public class RendererTerminal extends AbstractRendererPreview implements IRender
         if (Platform.isAE2FCLoaded) {
             return ViewHelper.getValidClasses(
                     AbstractPartDisplay.class,
-                    PartFluidTerminal.class,
                     PartP2PTunnel.class,
                     PartPanel.class,
                     PartSemiDarkPanel.class,

@@ -17,7 +17,7 @@ public class BlockAdvancedCraftingUnit extends BlockCraftingUnit {
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
         return switch (metadata) {
-            default -> ExtraBlockTextures.BlockCraftingAccelerator64x.getIcon();
+            default -> super.getIcon(0, 0);
             case FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator64xFit.getIcon();
             case 1 -> ExtraBlockTextures.BlockCraftingAccelerator256x.getIcon();
             case 1 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator256xFit.getIcon();
@@ -40,5 +40,10 @@ public class BlockAdvancedCraftingUnit extends BlockCraftingUnit {
             return "tile.appliedenergistics2.BlockCraftingAccelerator4096x";
         }
         return this.getItemUnlocalizedName(is);
+    }
+
+    @Override
+    public String getTextureName() {
+        return "appliedenergistics2:BlockCraftingAccelerator64x";
     }
 }
