@@ -25,7 +25,6 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.helpers.DualityInterface;
 import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
-import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.misc.TileInterface;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
@@ -105,22 +104,6 @@ public class MEItemIO implements ItemIO {
                 .injectItems(AEItemStack.create(stack.toStack()), Actionable.MODULATE, duality.getActionSource());
 
         return rejected == null ? 0 : Platform.longToInt(rejected.getStackSize());
-    }
-
-    private boolean matchesFilter(ImmutableItemStack stack, int[] slots) {
-        AppEngInternalAEInventory configInv = duality.getConfig();
-
-        for (int slot : slots) {
-            ItemStack config = configInv.getStackInSlot(slot);
-
-            if (config == null) continue;
-
-            if (stack.matches(config)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     @Override
