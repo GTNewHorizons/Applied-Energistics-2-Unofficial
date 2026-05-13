@@ -21,8 +21,7 @@ public class BlockSingularityCraftingStorage extends BlockCraftingStorage {
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
         return switch (metadata & (~6)) {
-            default -> super.getIcon(0, -1);
-            case 0 -> ExtraBlockTextures.BlockCraftingStorageSingularity.getIcon();
+            default -> super.getIcon(0, 0);
             case FLAG_FORMED -> ExtraBlockTextures.BlockCraftingStorageSingularityFit.getIcon();
         };
     }
@@ -36,5 +35,10 @@ public class BlockSingularityCraftingStorage extends BlockCraftingStorage {
     @Override
     public String getUnlocalizedName(final ItemStack is) {
         return "tile.appliedenergistics2.BlockCraftingStorageSingularity";
+    }
+
+    @Override
+    public String getTextureName() {
+        return "appliedenergistics2:BlockCraftingStorageSingularity";
     }
 }

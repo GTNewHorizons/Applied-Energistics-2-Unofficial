@@ -26,7 +26,6 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
-import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
@@ -177,8 +176,6 @@ public class PacketValueConfig extends AppEngPacket {
             } else if (this.Name.equals("CellWorkbench.Fuzzy")) {
                 ccw.setFuzzy(FuzzyMode.valueOf(this.Value));
             }
-        } else if (this.Name.equals("cellRestriction") && c instanceof final ContainerCellRestriction ccr) {
-            ccr.setCellRestriction(this.Value);
         } else if (this.Name.equals("NetworkStatus") && c instanceof final ContainerNetworkStatus qk) {
             if (this.Value.equals("ToggleDiagnostics")) {
                 qk.toggleDiagnosticsMode();

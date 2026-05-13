@@ -39,8 +39,6 @@ public enum IntegrationType {
 
     RB(IntegrationSide.BOTH, "Rotatable Blocks", "RotatableBlocks"),
 
-    CLApi(IntegrationSide.BOTH, "Colored Lights Core", "coloredlightscore"),
-
     Waila(IntegrationSide.BOTH, "Waila", "Waila"),
 
     InvTweaks(IntegrationSide.CLIENT, "Inventory Tweaks", "inventorytweaks"),

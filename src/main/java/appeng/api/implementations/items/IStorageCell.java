@@ -128,4 +128,8 @@ public interface IStorageCell extends ICellWorkbenchItem {
     default IAEStackType<?> getStackType() {
         return ITEM_STACK_TYPE;
     }
+
+    default int getTypeWeight() {
+        return 1;
+    }
 }

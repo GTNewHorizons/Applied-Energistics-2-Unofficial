@@ -21,6 +21,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEMonitor;
@@ -180,11 +181,15 @@ public class PartConversionMonitor extends AbstractPartMonitor {
     }
 
     private void injectExtraToMonitor(final EntityPlayer player) {
-        final ItemStack hand = player.getCurrentEquippedItem();
+        ItemStack hand = player.getCurrentEquippedItem();
         if (hand == null) return;
 
         for (IAEStackType type : AEStackTypeRegistry.getAllTypes()) {
             if (!type.isContainerItemForType(hand)) continue;
+
+            final int stackSize = hand.stackSize;
+            hand = hand.copy();
+            hand.stackSize = 1;
 
             IAEStack<?> stack = type.getStackFromContainerItem(hand);
             if (stack == null || stack.getStackSize() <= 0
@@ -196,20 +201,24 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                 final IMEMonitor monitor = this.getProxy().getStorage().getMEMonitor(type);
                 if (monitor == null) return;
 
-                IAEStack<?> leftover = Platform.poweredInsert(energy, monitor, stack, new PlayerSource(player, this));
-                ItemStack result;
-                if (leftover == null) {
-                    result = type.clearFilledContainer(hand);
-                } else {
-                    stack.decStackSize(leftover.getStackSize());
-                    type.drainStackFromContainer(hand, stack);
-                    result = hand;
-                }
+                final PlayerSource source = new PlayerSource(player, this);
+                IAEStack<?> leftover = Platform.poweredInsert(energy, monitor, stack, source, Actionable.SIMULATE);
+                if (leftover != null && leftover.getStackSize() == stack.getStackSize()) return;
 
-                if (hand.stackSize == 1) {
+                long amountToInject = leftover == null ? stack.getStackSize()
+                        : stack.getStackSize() - leftover.getStackSize();
+
+                ObjectLongPair<ItemStack> drained = type
+                        .drainStackFromContainer(hand, stack.setStackSize(amountToInject));
+                if (drained.rightLong() == 0 || drained.left() == null) return;
+
+                Platform.poweredInsert(energy, monitor, stack.setStackSize(drained.rightLong()), source);
+                ItemStack result = drained.left();
+
+                if (stackSize == 1) {
                     player.inventory.setInventorySlotContents(player.inventory.currentItem, result);
                 } else {
-                    hand.stackSize--;
+                    player.getCurrentEquippedItem().stackSize -= 1;
                     if (result != null && !player.inventory.addItemStackToInventory(result)) {
                         player.entityDropItem(result, 0);
                     }

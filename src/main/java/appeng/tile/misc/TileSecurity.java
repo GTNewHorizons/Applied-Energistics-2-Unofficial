@@ -309,7 +309,7 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
     }
 
     @Override
-    public GuiText getName() {
+    public GuiText getHostName() {
         return GuiText.Security;
     }
 }
