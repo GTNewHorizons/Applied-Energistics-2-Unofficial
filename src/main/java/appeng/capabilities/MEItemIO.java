@@ -161,40 +161,50 @@ public class MEItemIO implements ItemIO {
         @Override
         protected ItemStack getStackInSlot(int slot) {
             IAEItemStack config = duality.getConfig().getAEStackInSlot(slot);
-
-            if (config == null) return null;
-
             ItemStack stored = duality.getStorage().getStackInSlot(slot);
+
+            if (config == null) return stored;
 
             final IAEItemStack blindCheck = config.copy().setStackSize(Integer.MAX_VALUE);
             IAEItemStack inMESystem = storage.extractItems(blindCheck, Actionable.SIMULATE, duality.getActionSource());
 
-            long total = 0;
+            ItemStack output = null;
+            long totalAmount = 0;
+            boolean isStorageEmpty = ItemUtil.isStackEmpty(stored);
 
-            ItemStack out = null;
-
-            if (ItemUtil.areStacksEqual(config.getItemStack(), stored)) {
-                out = stored.splitStack(0);
-                total += stored.stackSize;
+            if (!isStorageEmpty) {
+                output = stored.splitStack(0);
+                totalAmount = stored.stackSize;
             }
 
             if (inMESystem != null) {
-                if (out == null) out = inMESystem.getItemStack();
-                total += inMESystem.getStackSize();
+                ItemStack inSystem = inMESystem.getItemStack();
+                if (isStorageEmpty) {
+                    output = inSystem;
+                    totalAmount = inMESystem.getStackSize();
+                } else if (ItemUtil.areStacksEqual(output, inSystem)) {
+                    totalAmount += inMESystem.getStackSize();
+                }
             }
 
-            if (out != null) {
-                out.stackSize = Platform.longToInt(total);
+            if (output != null) {
+                output.stackSize = Platform.longToInt(totalAmount);
             }
 
-            return out;
+            return output;
         }
 
         @Override
         public ItemStack extract(int amount, boolean force) {
-            IAEItemStack config = duality.getConfig().getAEStackInSlot(getCurrentSlot());
+            int slot = getCurrentSlot();
+            IAEItemStack config = duality.getConfig().getAEStackInSlot(slot);
+            ItemStack stored = duality.getStorage().getStackInSlot(slot);
 
-            if (config == null) return null;
+            if (config == null) return stored;
+
+            if (!ItemUtil.areStacksEqual(stored, config.getItemStack())) {
+                return stored;
+            }
 
             ItemStack result = config.getItemStack();
             result.stackSize = 0;
@@ -210,11 +220,9 @@ public class MEItemIO implements ItemIO {
                 amount -= Platform.longToInt(extracted.getStackSize());
             }
 
-            ItemStack stored = duality.getStorage().getStackInSlot(getCurrentSlot());
-
             // Only extract from the slot if there wasn't enough in the network because interface ticks are
             // comparatively expensive
-            if (amount > 0 && !ItemUtil.isStackEmpty(stored) && ItemUtil.areStacksEqual(result, stored)) {
+            if (amount > 0 && !ItemUtil.isStackEmpty(stored)) {
                 ItemStack fromSlot = duality.getStorage()
                         .decrStackSize(getCurrentSlot(), Math.min(amount, stored.stackSize));
 
