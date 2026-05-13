@@ -1085,6 +1085,10 @@ public class Platform {
         return StatCollector.translateToLocal(string);
     }
 
+    public static boolean isItemStackIdentical(@Nullable final ItemStack is, @Nullable final ItemStack filter) {
+        return isSameItemPrecise(is, filter) && is.stackSize == filter.stackSize;
+    }
+
     public static boolean isSameItemPrecise(@Nullable final ItemStack is, @Nullable final ItemStack filter) {
         return isSameItem(is, filter) && sameStackStags(is, filter);
     }
