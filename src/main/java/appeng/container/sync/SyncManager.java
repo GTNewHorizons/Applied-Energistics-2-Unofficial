@@ -38,6 +38,7 @@ public final class SyncManager {
 
     private final AEBaseContainer owner;
     private final List<AbstractSyncHandler> handlers = new ArrayList<>();
+    private final List<PendingAction> pendingInitialActions = new ArrayList<>();
     private final Object2ObjectMap<String, AbstractSyncHandler> handlersByFullKey = new Object2ObjectOpenHashMap<>();
     private final Int2ObjectMap<AbstractSyncHandler> handlersById = new Int2ObjectOpenHashMap<>();
     private final SyncRegistrar rootRegistrar = new ScopedSyncRegistrar("");
@@ -184,6 +185,10 @@ public final class SyncManager {
             }
         }
 
+        if (localEndpoint == SyncEndpoint.SERVER && initialSync && !this.pendingInitialActions.isEmpty()) {
+            updates += this.writePendingInitialActions(data);
+        }
+
         if (updates == 0) {
             return;
         }
@@ -200,6 +205,54 @@ public final class SyncManager {
         }
     }
 
+    void sendAction(final AbstractSyncHandler handler, final SyncEndpoint localEndpoint, final ByteBuf payload) {
+        Objects.requireNonNull(handler, "handler");
+        Objects.requireNonNull(localEndpoint, "localEndpoint");
+        Objects.requireNonNull(payload, "payload");
+
+        if (!handler.canSendFrom(localEndpoint)) {
+            throw new IllegalStateException(
+                    "Handler " + handler.getFullKey() + " cannot send actions from " + localEndpoint + ".");
+        }
+
+        if (localEndpoint == SyncEndpoint.SERVER && !this.initialServerSyncSent) {
+            this.pendingInitialActions.add(PendingAction.copyOf(handler, payload));
+            return;
+        }
+
+        this.freezeLayout();
+
+        final ByteBuf data = Unpooled.buffer();
+        data.writeInt(this.layoutHash);
+        data.writeBoolean(false);
+        data.writeInt(handler.getId());
+        data.writeByte(SyncMode.FULL.ordinal());
+        data.writeBytes(payload, payload.readerIndex(), payload.readableBytes());
+        data.writeInt(-1);
+
+        final PacketContainerSync packet = new PacketContainerSync(this.owner.windowId, data);
+        if (localEndpoint == SyncEndpoint.SERVER) {
+            if (this.owner.getInventoryPlayer().player instanceof EntityPlayerMP playerMP) {
+                NetworkHandler.instance.sendTo(packet, playerMP);
+            }
+        } else {
+            NetworkHandler.instance.sendToServer(packet);
+        }
+    }
+
+    private int writePendingInitialActions(final ByteBuf data) {
+        int updates = 0;
+        for (final PendingAction action : this.pendingInitialActions) {
+            updates++;
+            data.writeInt(action.handler.getId());
+            data.writeByte(SyncMode.FULL.ordinal());
+            data.writeBytes(action.payload);
+        }
+
+        this.pendingInitialActions.clear();
+        return updates;
+    }
+
     private <T extends AbstractSyncHandler> T register(final T handler) {
         if (this.frozen) {
             throw new IllegalStateException("Cannot register sync handler after synchronization has started.");
@@ -212,6 +265,23 @@ public final class SyncManager {
 
         this.handlers.add(handler);
         return handler;
+    }
+
+    private static final class PendingAction {
+
+        private final AbstractSyncHandler handler;
+        private final byte[] payload;
+
+        private PendingAction(final AbstractSyncHandler handler, final byte[] payload) {
+            this.handler = handler;
+            this.payload = payload;
+        }
+
+        private static PendingAction copyOf(final AbstractSyncHandler handler, final ByteBuf payload) {
+            final byte[] payloadCopy = new byte[payload.readableBytes()];
+            payload.getBytes(payload.readerIndex(), payloadCopy);
+            return new PendingAction(handler, payloadCopy);
+        }
     }
 
     private static void validateKey(final String key) {
@@ -383,6 +453,49 @@ public final class SyncManager {
                             SyncDirection.BIDIRECTIONAL,
                             codec,
                             initialValue));
+        }
+
+        @Override
+        public <T> @NotNull ActionHandler<T> actionS2C(final @NotNull String key, final @NotNull StreamCodec<T> codec) {
+            return register(
+                    new ActionHandler<>(
+                            SyncManager.this,
+                            key,
+                            this.qualify(key),
+                            SyncDirection.SERVER_TO_CLIENT,
+                            codec));
+        }
+
+        @Override
+        public @NotNull ActionHandler<Void> actionS2C(final @NotNull String key) {
+            return this.actionS2C(key, StreamCodecs.empty());
+        }
+
+        @Override
+        public <T> @NotNull ActionHandler<T> actionC2S(final @NotNull String key, final @NotNull StreamCodec<T> codec) {
+            return register(
+                    new ActionHandler<>(
+                            SyncManager.this,
+                            key,
+                            this.qualify(key),
+                            SyncDirection.CLIENT_TO_SERVER,
+                            codec));
+        }
+
+        @Override
+        public @NotNull ActionHandler<Void> actionC2S(final @NotNull String key) {
+            return this.actionC2S(key, StreamCodecs.empty());
+        }
+
+        @Override
+        public <T> @NotNull ActionHandler<T> action(final @NotNull String key, final @NotNull StreamCodec<T> codec) {
+            return register(
+                    new ActionHandler<>(SyncManager.this, key, this.qualify(key), SyncDirection.BIDIRECTIONAL, codec));
+        }
+
+        @Override
+        public @NotNull ActionHandler<Void> action(final @NotNull String key) {
+            return this.action(key, StreamCodecs.empty());
         }
 
         @Override

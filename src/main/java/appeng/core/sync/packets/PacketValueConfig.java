@@ -31,7 +31,6 @@ import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.implementations.ContainerInterface;
-import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
@@ -101,8 +100,6 @@ public class PacketValueConfig extends AppEngPacket {
             qk.startJob();
         } else if (this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
             qk.optimizePatterns();
-        } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
-            qk.toggleViewCell(Integer.parseInt(this.Value));
         } else if (this.Name.startsWith("Reshuffle.") && c instanceof final ContainerStorageReshuffle qk) {
             switch (this.Name) {
                 case "Reshuffle.TypeFilter" -> qk.toggleTypeFilter(this.Value);
