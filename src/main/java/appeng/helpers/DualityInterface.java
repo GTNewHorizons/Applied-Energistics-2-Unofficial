@@ -38,6 +38,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -171,6 +172,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private int lastInputHash = 0;
     private final boolean isFluidInterface;
     private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
+    private long busyCache = Long.MIN_VALUE;
     public boolean somethingStuck = false;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
@@ -1357,9 +1359,17 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     @Override
     public boolean isBusy() {
+        final int currentTick = getCurrentServerTick();
+        if (currentTick != Integer.MIN_VALUE) {
+            final long cache = this.busyCache;
+            if ((int) (cache >>> 1) == currentTick) {
+                return (cache & 1L) != 0L;
+            }
+        }
+
         if (this.hasItemsToSend()) {
             scheduledReason = ScheduledReason.SOMETHING_STUCK;
-            return true;
+            return this.cacheBusyResult(currentTick, true);
         }
 
         boolean busy = false;
@@ -1399,6 +1409,21 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             busy = true;
         }
 
+        return this.cacheBusyResult(currentTick, busy);
+    }
+
+    private static int getCurrentServerTick() {
+        final MinecraftServer server = MinecraftServer.getServer();
+        if (server == null) {
+            return Integer.MIN_VALUE;
+        }
+        return server.getTickCounter();
+    }
+
+    private boolean cacheBusyResult(final int currentTick, final boolean busy) {
+        if (currentTick != Integer.MIN_VALUE) {
+            this.busyCache = (((long) currentTick) << 1) | (busy ? 1L : 0L);
+        }
         return busy;
     }
 
