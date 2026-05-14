@@ -1409,6 +1409,21 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             busy = true;
         }
 
+        return busy ? this.cacheBusyResult(currentTick, busy) : busy;
+    }
+
+    private static int getCurrentServerTick() {
+        final MinecraftServer server = MinecraftServer.getServer();
+        if (server == null) {
+            return Integer.MIN_VALUE;
+        }
+        return server.getTickCounter();
+    }
+
+    private boolean cacheBusyResult(final int currentTick, final boolean busy) {
+        if (currentTick != Integer.MIN_VALUE) {
+            this.busyCache = (((long) currentTick) << 1) | (busy ? 1L : 0L);
+        }
         return this.cacheBusyResult(currentTick, busy);
     }
 
