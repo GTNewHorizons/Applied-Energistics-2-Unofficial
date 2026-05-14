@@ -54,6 +54,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 public class TickHandler {
 
     public static final TickHandler INSTANCE = new TickHandler();
+
     private final Queue<IWorldCallable<?>> serverQueue = new LinkedList<>();
     private final Multimap<World, ICraftingJob> craftingJobs = LinkedListMultimap.create();
     private final WeakHashMap<World, Queue<IWorldCallable<?>>> callQueue = new WeakHashMap<>();
@@ -118,11 +119,13 @@ public class TickHandler {
 
     public void shutdown() {
         this.getRepo().clear();
+        serverQueue.clear();
+        craftingJobs.clear();
     }
 
     @SubscribeEvent
     public void unloadWorld(final WorldEvent.Unload ev) {
-        if (Platform.isServer()) // for no there is no reason to care about this on the client...
+        if (!ev.world.isRemote) // for no there is no reason to care about this on the client...
         {
             final LinkedList<IGridNode> toDestroy = new LinkedList<>();
 
@@ -137,6 +140,8 @@ public class TickHandler {
             for (final IGridNode n : toDestroy) {
                 n.destroy();
             }
+
+            callQueue.remove(ev.world);
         }
     }
 
