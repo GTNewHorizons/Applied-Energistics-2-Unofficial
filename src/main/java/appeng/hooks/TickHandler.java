@@ -11,7 +11,6 @@
 package appeng.hooks;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -50,6 +49,7 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.gameevent.TickEvent.Type;
 import cpw.mods.fml.common.gameevent.TickEvent.WorldTickEvent;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class TickHandler {
 
@@ -59,13 +59,13 @@ public class TickHandler {
     private final WeakHashMap<World, Queue<IWorldCallable<?>>> callQueue = new WeakHashMap<>();
     private final HandlerRep server = new HandlerRep();
     private final HandlerRep client = new HandlerRep();
-    private final HashMap<Integer, PlayerColor> cliPlayerColors = new HashMap<>();
-    private final HashMap<Integer, PlayerColor> srvPlayerColors = new HashMap<>();
+    private final Int2ObjectOpenHashMap<PlayerColor> cliPlayerColors = new Int2ObjectOpenHashMap<>();
+    private final Int2ObjectOpenHashMap<PlayerColor> srvPlayerColors = new Int2ObjectOpenHashMap<>();
     private CableRenderMode crm = CableRenderMode.Standard;
     // must be a thread safe collection since this can be called from finalizer thread
     private final BlockingDeque<Integer> callListToDelete = new LinkedBlockingDeque<>();
 
-    public HashMap<Integer, PlayerColor> getPlayerColors() {
+    public Int2ObjectOpenHashMap<PlayerColor> getPlayerColors() {
         if (Platform.isServer()) {
             return this.srvPlayerColors;
         }
@@ -80,9 +80,7 @@ public class TickHandler {
         if (w == null) {
             this.serverQueue.add(c);
         } else {
-            Queue<IWorldCallable<?>> queue = this.callQueue.computeIfAbsent(w, k -> new LinkedList<>());
-
-            queue.add(c);
+            this.callQueue.computeIfAbsent(w, k -> new LinkedList<>()).add(c);
         }
     }
 
@@ -218,7 +216,7 @@ public class TickHandler {
         while (!callListToDelete.isEmpty()) GLAllocation.deleteDisplayLists(callListToDelete.remove());
     }
 
-    private void tickColors(final HashMap<Integer, PlayerColor> playerSet) {
+    private void tickColors(final Int2ObjectOpenHashMap<PlayerColor> playerSet) {
         final Iterator<PlayerColor> i = playerSet.values().iterator();
         while (i.hasNext()) {
             final PlayerColor pc = i.next();
