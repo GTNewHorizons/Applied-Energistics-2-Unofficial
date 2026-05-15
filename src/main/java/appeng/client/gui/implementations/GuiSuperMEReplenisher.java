@@ -1,38 +1,17 @@
 package appeng.client.gui.implementations;
 
-import appeng.api.config.AccessRestriction;
-import appeng.api.config.ActionItems;
-import appeng.api.config.ExtractionMode;
-import appeng.api.config.FuzzyMode;
-import appeng.api.config.Settings;
-import appeng.api.config.StorageFilter;
-import appeng.api.config.Upgrades;
-import appeng.api.parts.IStorageBus;
+import net.minecraft.entity.player.InventoryPlayer;
+
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
-import appeng.client.gui.widgets.GuiImgButton;
-import appeng.client.gui.widgets.GuiTabButton;
-import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerSuperMEReplenisher;
-import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
-import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketConfigButton;
-import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.core.sync.packets.PacketValueConfig;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TileSuperMEReplenisher;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.player.InventoryPlayer;
-import org.lwjgl.input.Mouse;
-
-import java.io.IOException;
 
 public class GuiSuperMEReplenisher extends AEBaseGui {
+
     private VirtualMEPatternSlot[] configSlots;
     private final ContainerSuperMEReplenisher containerSuperMEReplenisher;
 

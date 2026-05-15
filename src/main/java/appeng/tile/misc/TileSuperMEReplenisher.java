@@ -1,5 +1,8 @@
 package appeng.tile.misc;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 import appeng.api.config.Actionable;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.security.BaseActionSource;
@@ -14,10 +17,8 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 public class TileSuperMEReplenisher extends AENetworkTile implements IMEInventory<IAEStack<?>>, IIAEStackInventory {
+
     private final Map<IAEStackType<?>, IItemList> lists = new IdentityHashMap<>();
     private final IAEStackInventory config = new IAEStackInventory(this, 11 * 9, StorageName.CONFIG);
     private final AppEngInternalInventory cells = new AppEngInternalInventory(null, 6) {
@@ -58,8 +59,7 @@ public class TileSuperMEReplenisher extends AENetworkTile implements IMEInventor
         if (stack == null || stack.getStackSize() <= 0) return null;
 
         if (stack.getStackSize() >= request.getStackSize()) {
-            if (mode == Actionable.MODULATE)
-                stack.decStackSize(request.getStackSize());
+            if (mode == Actionable.MODULATE) stack.decStackSize(request.getStackSize());
             return request;
         }
 

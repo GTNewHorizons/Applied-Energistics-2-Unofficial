@@ -16,8 +16,6 @@ import static appeng.util.Platform.itemGuiSlotOffset;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
-import appeng.container.implementations.ContainerSuperMEReplenisher;
-import appeng.tile.misc.TileSuperMEReplenisher;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -99,6 +97,7 @@ import appeng.container.implementations.ContainerSpatialIOPort;
 import appeng.container.implementations.ContainerSpatialLinkChamber;
 import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerStorageReshuffle;
+import appeng.container.implementations.ContainerSuperMEReplenisher;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
 import appeng.core.stats.Achievements;
@@ -119,6 +118,7 @@ import appeng.tile.misc.TileCondenser;
 import appeng.tile.misc.TileInscriber;
 import appeng.tile.misc.TileSecurity;
 import appeng.tile.misc.TileStorageReshuffle;
+import appeng.tile.misc.TileSuperMEReplenisher;
 import appeng.tile.misc.TileVibrationChamber;
 import appeng.tile.networking.TileWireless;
 import appeng.tile.qnb.TileQuantumBridge;
@@ -240,7 +240,8 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null),
 
-    GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD, SecurityPermissions.BUILD);
+    GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
+            SecurityPermissions.BUILD);
 
     private final Class tileClass;
     private final Class containerClass;

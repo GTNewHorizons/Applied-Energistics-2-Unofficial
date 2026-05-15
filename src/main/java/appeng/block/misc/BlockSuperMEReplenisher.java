@@ -1,17 +1,17 @@
 package appeng.block.misc;
 
-import appeng.block.AEBaseTileBlock;
-import appeng.core.features.AEFeature;
-import appeng.core.sync.GuiBridge;
-import appeng.tile.misc.TileStorageReshuffle;
-import appeng.tile.misc.TileSuperMEReplenisher;
-import appeng.util.Platform;
+import java.util.EnumSet;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+import appeng.block.AEBaseTileBlock;
+import appeng.core.features.AEFeature;
+import appeng.core.sync.GuiBridge;
+import appeng.tile.misc.TileSuperMEReplenisher;
+import appeng.util.Platform;
 
 public class BlockSuperMEReplenisher extends AEBaseTileBlock {
 
@@ -25,7 +25,7 @@ public class BlockSuperMEReplenisher extends AEBaseTileBlock {
 
     @Override
     public boolean onActivated(final World w, final int x, final int y, final int z, final EntityPlayer p,
-                               final int side, final float hitX, final float hitY, final float hitZ) {
+            final int side, final float hitX, final float hitY, final float hitZ) {
         if (p.isSneaking()) {
             return false;
         }
