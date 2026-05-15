@@ -1362,8 +1362,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final int currentTick = getCurrentServerTick();
         if (currentTick != Integer.MIN_VALUE) {
             final long cache = this.busyCache;
-            if ((int) (cache >>> 1) == currentTick) {
-                return (cache & 1L) != 0L;
+            // we specifically only return if busy to prevent the case where multiple try to
+            // happen in a tick which may update the busy state.
+            // since this evaluation is done in onPostTick, it is highly unlikely that we become un-busy this exact tick
+            if ((int) (cache >>> 1) == currentTick && (cache & 1L) != 0L) {
+                return true;
             }
         }
 
