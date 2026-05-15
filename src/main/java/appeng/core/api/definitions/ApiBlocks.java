@@ -13,6 +13,7 @@ package appeng.core.api.definitions;
 import java.util.EnumSet;
 import java.util.Set;
 
+import appeng.block.misc.BlockSuperMEReplenisher;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.definitions.IBlockDefinition;
@@ -177,6 +178,7 @@ public final class ApiBlocks implements IBlocks {
     private final IBlockDefinition chunkLoader;
     private final IBlockDefinition phantomNode;
     private final IBlockDefinition cubeGenerator;
+    private final IBlockDefinition superMEReplenisher;
 
     private final Set<IOrientableBlock> orientables;
 
@@ -332,6 +334,7 @@ public final class ApiBlocks implements IBlocks {
         this.chunkLoader = constructor.registerBlockDefinition(new BlockChunkloader());
         this.phantomNode = constructor.registerBlockDefinition(new BlockPhantomNode());
         this.cubeGenerator = constructor.registerBlockDefinition(new BlockCubeGenerator());
+        this.superMEReplenisher = constructor.registerBlockDefinition(new BlockSuperMEReplenisher());
     }
 
     @Override

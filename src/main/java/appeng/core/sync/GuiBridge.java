@@ -16,6 +16,8 @@ import static appeng.util.Platform.itemGuiSlotOffset;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
+import appeng.container.implementations.ContainerSuperMEReplenisher;
+import appeng.tile.misc.TileSuperMEReplenisher;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -236,7 +238,9 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_ORE_FILTER(ContainerOreFilter.class, IOreFilterable.class, GuiHostType.ITEM_OR_WORLD, null),
 
-    GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null);
+    GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null),
+
+    GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD, SecurityPermissions.BUILD);
 
     private final Class tileClass;
     private final Class containerClass;
