@@ -13,7 +13,6 @@ package appeng.me.storage;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
-import appeng.tile.misc.TileSuperMEReplenisher;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -23,6 +22,7 @@ import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.data.IAEStackType;
 import appeng.tile.misc.TileCondenser;
+import appeng.tile.misc.TileSuperMEReplenisher;
 
 public class AEExternalHandler implements IExternalStorageHandler {
 

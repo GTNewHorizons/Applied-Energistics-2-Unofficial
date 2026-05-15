@@ -13,7 +13,6 @@ package appeng.core.api.definitions;
 import java.util.EnumSet;
 import java.util.Set;
 
-import appeng.block.misc.BlockSuperMEReplenisher;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.definitions.IBlockDefinition;
@@ -43,6 +42,7 @@ import appeng.block.misc.BlockQuartzTorch;
 import appeng.block.misc.BlockSecurity;
 import appeng.block.misc.BlockSkyCompass;
 import appeng.block.misc.BlockStorageReshuffle;
+import appeng.block.misc.BlockSuperMEReplenisher;
 import appeng.block.misc.BlockTinyTNT;
 import appeng.block.misc.BlockVibrationChamber;
 import appeng.block.networking.BlockCableBus;
