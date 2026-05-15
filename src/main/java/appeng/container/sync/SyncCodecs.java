@@ -19,8 +19,8 @@ public final class SyncCodecs {
 
     private SyncCodecs() {}
 
-    public static <T> SyncCodec<T> of(final String typeKey, final SyncCodec.Writer<T> writer,
-            final SyncCodec.Reader<T> reader, final UnaryOperator<T> copier, final BiPredicate<T, T> equality) {
+    public static <T> SyncCodec<T> of(final String typeKey, final StreamCodec.Writer<T> writer,
+            final StreamCodec.Reader<T> reader, final UnaryOperator<T> copier, final BiPredicate<T, T> equality) {
         Objects.requireNonNull(typeKey, "typeKey");
         Objects.requireNonNull(writer, "writer");
         Objects.requireNonNull(reader, "reader");
@@ -57,7 +57,7 @@ public final class SyncCodecs {
     }
 
     public static <T extends IGuiPacketWritable> SyncCodec<T> packetWritable(final Class<T> type,
-            final SyncCodec.Reader<T> reader, final UnaryOperator<T> copier, final BiPredicate<T, T> equality) {
+            final StreamCodec.Reader<T> reader, final UnaryOperator<T> copier, final BiPredicate<T, T> equality) {
         Objects.requireNonNull(type, "type");
         return of(type.getName(), (buf, value) -> value.writeToPacket(buf), reader, copier, equality);
     }
@@ -65,15 +65,13 @@ public final class SyncCodecs {
     public static <E extends Enum<E>> SyncCodec<E> enumValue(final Class<E> enumClass) {
         Objects.requireNonNull(enumClass, "enumClass");
 
-        final E[] values = enumClass.getEnumConstants();
-        return of(enumClass.getName(), (buf, value) -> buf.writeInt(value.ordinal()), buf -> {
-            final int ordinal = buf.readInt();
-            if (ordinal < 0 || ordinal >= values.length) {
-                throw new java.io.IOException("Invalid enum ordinal " + ordinal + " for " + enumClass.getName());
-            }
-
-            return values[ordinal];
-        }, UnaryOperator.identity(), Objects::equals);
+        final StreamCodec<E> streamCodec = StreamCodecs.enumValue(enumClass);
+        return of(
+                streamCodec.getTypeKey(),
+                streamCodec::write,
+                streamCodec::read,
+                UnaryOperator.identity(),
+                Objects::equals);
     }
 
     public static SyncCodec<IAEStack<?>> aeStack() {

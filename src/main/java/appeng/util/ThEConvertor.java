@@ -5,6 +5,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
+import com.gtnewhorizons.postea.utility.BlockInfo;
 
 import appeng.api.AEApi;
 import appeng.api.config.RedstoneMode;
@@ -14,14 +15,15 @@ import appeng.api.storage.data.IAEStackType;
 public final class ThEConvertor {
 
     private final static String thePart = "thaumicenergistics:part.base",
-            wireless = "thaumicenergistics:wireless.essentia.terminal";
+            wireless = "thaumicenergistics:wireless.essentia.terminal",
+            cellBench = "thaumicenergistics:thaumicenergistics.block.essentia.cell.workbench";
 
     private final static int emitter = 1, terminal = 4, mon = 7, conMon = 8;
     private static int thePartID;
 
     private static final String NBT_KEY_ASPECT_FILTER = "aspect", NBT_KEY_REDSTONE_MODE = "mode",
             NBT_KEY_WANTED_AMOUNT = "wantedAmount", NBT_KEY_LOCKED = "Locked", NBT_KEY_TRACKED_ASPECT = "TrackedAspect",
-            NBT_KEY_OWNER = "Owner";
+            NBT_KEY_OWNER = "Owner", OLD_NBT_KEY_CELL = "EssentiaCell";
 
     public static void postLoad() {
         ItemStackReplacementManager.registerIDResolver(thePart, i -> thePartID = i);
@@ -83,6 +85,31 @@ public final class ThEConvertor {
 
             return null;
         });
+
+        TileEntityReplacementManager.tileEntityTransformer(
+                "thaumicenergistics.TileEssentiaCellWorkbench",
+                (tag, world, chunk) -> new BlockInfo(
+                        AEApi.instance().definitions().blocks().cellWorkbench().maybeBlock().get(),
+                        0,
+                        NbtTag -> {
+                            if (NbtTag.hasKey(OLD_NBT_KEY_CELL)) {
+                                final NBTTagCompound cellInventoryTag = new NBTTagCompound();
+                                final NBTTagCompound cellTag = NbtTag.getCompoundTag(OLD_NBT_KEY_CELL);
+                                cellInventoryTag.setTag("#0", cellTag);
+                                NbtTag.setTag("cell", cellInventoryTag);
+                            }
+
+                            NbtTag.setString("id", "BlockCellWorkbench");
+                            NbtTag.setString("orientation_up", "UP");
+                            NbtTag.setString("orientation_forward", "NORTH");
+
+                            return NbtTag;
+                        }));
+
+        ItemStackReplacementManager.addSimpleReplacement(
+                cellBench,
+                AEApi.instance().definitions().blocks().cellWorkbench().maybeStack(1).get(),
+                true);
 
         ItemStackReplacementManager.addSimpleReplacement(
                 thePart,

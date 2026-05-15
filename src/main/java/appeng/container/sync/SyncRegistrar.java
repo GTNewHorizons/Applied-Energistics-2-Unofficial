@@ -81,6 +81,24 @@ public interface SyncRegistrar {
     <T> ObjectSyncHandler<T> object(@NotNull String key, @NotNull SyncCodec<T> codec, T initialValue);
 
     @NotNull
+    <T> ActionHandler<T> actionS2C(@NotNull String key, @NotNull StreamCodec<T> codec);
+
+    @NotNull
+    ActionHandler<Void> actionS2C(@NotNull String key);
+
+    @NotNull
+    <T> ActionHandler<T> actionC2S(@NotNull String key, @NotNull StreamCodec<T> codec);
+
+    @NotNull
+    ActionHandler<Void> actionC2S(@NotNull String key);
+
+    @NotNull
+    <T> ActionHandler<T> action(@NotNull String key, @NotNull StreamCodec<T> codec);
+
+    @NotNull
+    ActionHandler<Void> action(@NotNull String key);
+
+    @NotNull
     <E extends Enum<E>> ConfigEnumSyncHandler<E> configEnum(@NotNull String key, @NotNull Settings setting,
             @NotNull Class<E> enumClass, @NotNull IConfigManager configManager);
 
