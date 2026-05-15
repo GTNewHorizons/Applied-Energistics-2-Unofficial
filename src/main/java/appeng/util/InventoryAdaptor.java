@@ -13,7 +13,6 @@ package appeng.util;
 import static appeng.util.Platform.isEIOLoaded;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -119,8 +118,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
     }
 
     /**
-     * Packs {@code d} and {@code flags} into a single long that fits entirely in the lower 32 bits.
-     * {@code d.ordinal()} occupies bits 0-2 (ForgeDirection has 7 values), {@code flags} bits 3-6+.
+     * Packs {@code d} and {@code flags} into a single long that fits entirely in the lower 32 bits. {@code d.ordinal()}
+     * occupies bits 0-2 (ForgeDirection has 7 values), {@code flags} bits 3-6+.
      */
     private static long packSideAndFlags(ForgeDirection d, int flags) {
         return ((long) flags << 3) | (d.ordinal() & 0x7L);
@@ -139,8 +138,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
     }
 
     /**
-     * Returns {@code true} iff the cache contains an entry for the given arguments and the
-     * stored reference matches the supplied {@code te}.
+     * Returns {@code true} iff the cache contains an entry for the given arguments and the stored reference matches the
+     * supplied {@code te}.
      */
     private static boolean isCached(Object te, ForgeDirection d, int flags) {
         final long key = makeCacheKey(te, d, flags);
@@ -148,8 +147,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
     }
 
     /**
-     * Returns the cached adaptor, or {@code null} if a null result was cached.
-     * Must only be called after confirming a cache hit via {@link #isCached}.
+     * Returns the cached adaptor, or {@code null} if a null result was cached. Must only be called after confirming a
+     * cache hit via {@link #isCached}.
      */
     private static InventoryAdaptor cacheGet(Object te, ForgeDirection d, int flags) {
         final long key = makeCacheKey(te, d, flags);
