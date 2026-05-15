@@ -2,7 +2,9 @@ package appeng.container.implementations;
 
 import static appeng.util.Platform.isServer;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
 
 import appeng.api.config.SecurityPermissions;
 import appeng.api.storage.StorageName;
@@ -19,7 +21,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVirtualSlotHolder {
 
     private final TileSuperMEReplenisher tile;
-    private final IAEStack<?>[] configClientSlot = new IAEStack[11 * 9];
+    private final IAEStack<?>[] configClientSlot = new IAEStack[3 * 9];
 
     public ContainerSuperMEReplenisher(final InventoryPlayer ip, final TileSuperMEReplenisher te) {
         super(ip, te);
@@ -41,12 +43,20 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
                             SlotRestrictedInput.PlacableItemType.WORKBENCH_CELL,
                             cells,
                             3 + i,
-                            234,
+                            232,
                             8 + i * 18,
                             this.getInventoryPlayer()));
         }
 
         bindPlayerInventory(ip, 40, 174);
+    }
+
+    @Override
+    public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
+        if (slotId == 0 && player.inventory.getItemStack() == null) {
+            return null;
+        }
+        return super.slotClick(slotId, clickedButton, mode, player);
     }
 
     @Override
@@ -57,6 +67,8 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
             final IAEStackInventory config = this.tile.getAEInventoryByName(StorageName.CONFIG);
             this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
         }
+
+        super.detectAndSendChanges();
     }
 
     @Override
@@ -66,9 +78,7 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
             config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
         }
 
-        if (isServer()) {
-            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
-        }
+        if (isServer()) this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
     }
 
     public IAEStackInventory getConfig() {

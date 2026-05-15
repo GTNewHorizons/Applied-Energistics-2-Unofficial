@@ -19,7 +19,7 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
         super(new ContainerSuperMEReplenisher(inventoryPlayer, te));
         this.containerSuperMEReplenisher = (ContainerSuperMEReplenisher) inventorySlots;
         this.ySize = 256;
-        this.xSize = 256;
+        this.xSize = 220;
     }
 
     @Override
@@ -34,11 +34,11 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
     @Override
     public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
         this.bindTexture("guis/superMEReplenisher.png");
-        this.drawTexturedModalRect(offsetX, offsetY, 0, 0, 256, this.ySize);
+        this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
     }
 
     private void initVirtualSlots() {
-        this.configSlots = new VirtualMEPatternSlot[11 * 9];
+        this.configSlots = new VirtualMEPatternSlot[3 * 9];
         final IAEStackInventory inputInv = this.containerSuperMEReplenisher.getConfig();
         final int xo = 30;
         final int yo = -190;

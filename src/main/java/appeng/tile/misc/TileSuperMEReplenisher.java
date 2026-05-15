@@ -16,12 +16,25 @@ import appeng.tile.grid.AENetworkTile;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 public class TileSuperMEReplenisher extends AENetworkTile implements IMEInventory<IAEStack<?>>, IIAEStackInventory {
 
     private final Map<IAEStackType<?>, IItemList> lists = new IdentityHashMap<>();
-    private final IAEStackInventory config = new IAEStackInventory(this, 11 * 9, StorageName.CONFIG);
+    private final Map<IAEStackType<?>, IItemList> out = new IdentityHashMap<>();
+    private final IAEStackInventory config = new IAEStackInventory(this, 3 * 9, StorageName.CONFIG);
+
+    private final Object2LongOpenHashMap<IAEStackType<?>> stored = new Object2LongOpenHashMap<>();
+
+    private long totalBytes = 0;
+    private long usedBytes = 0;
+
     private final AppEngInternalInventory cells = new AppEngInternalInventory(null, 6) {
+        /*
+         * if (added != null) { if (added.getItem() instanceof ItemBasicStorageCell ibsc) { totalBytes =
+         * ibsc.getBytesLong(added); } else if (added.getItem() instanceof FCBaseItemCell fcbic) { totalBytes =
+         * fcbic.getBytes(added); } getProxy().setIdlePowerUsage(Math.sqrt(Math.pow(totalBytes, 0.576D))); }
+         */
 
         @Override
         public void markDirty() {
@@ -35,6 +48,7 @@ public class TileSuperMEReplenisher extends AENetworkTile implements IMEInventor
 
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
             this.lists.put(type, type.createList());
+            this.out.put(type, type.createList());
         }
     }
 
@@ -47,7 +61,17 @@ public class TileSuperMEReplenisher extends AENetworkTile implements IMEInventor
 
     @Override
     public IAEStack<?> injectItems(IAEStack<?> input, Actionable type, BaseActionSource src) {
-        if (!(type == Actionable.SIMULATE)) this.lists.get(input.getStackType()).add(input);
+        if (input == null) return null;
+        if (type == Actionable.SIMULATE) {
+            final int typeWeight = input.getStackType().getTypeWeight();
+            final long stackSize = input.getStackSize();
+            final long needBytes = (long) Math.ceil((double) stackSize / typeWeight);
+            if (this.totalBytes - this.usedBytes > needBytes) return null;
+
+        } else {
+            this.out.get(input.getStackType()).add(input);
+        }
+
         return null;
     }
 

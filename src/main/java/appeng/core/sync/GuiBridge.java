@@ -219,7 +219,7 @@ public enum GuiBridge implements IGuiHandler {
     GUI_CRAFTING_AMOUNT(ContainerCraftAmount.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
 
-    GUI_PATTERN_VALUE_AMOUNT(ContainerPatternValueAmount.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
+    GUI_PATTERN_VALUE_AMOUNT(ContainerPatternValueAmount.class, Object.class, GuiHostType.ITEM_OR_WORLD, null),
 
     GUI_PATTERN_MULTI(ContainerPatternMulti.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
 
