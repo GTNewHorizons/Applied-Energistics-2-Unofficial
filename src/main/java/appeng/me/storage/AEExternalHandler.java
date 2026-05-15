@@ -13,6 +13,7 @@ package appeng.me.storage;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import appeng.tile.misc.TileSuperMEReplenisher;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -29,6 +30,7 @@ public class AEExternalHandler implements IExternalStorageHandler {
     public boolean canHandle(TileEntity te, ForgeDirection d, IAEStackType<?> type, BaseActionSource mySrc) {
         if (te instanceof ITileStorageMonitorable)
             return ((ITileStorageMonitorable) te).getMonitorable(d, mySrc) != null;
+        else if (te instanceof TileSuperMEReplenisher) return true;
         else return te instanceof TileCondenser && (type == ITEM_STACK_TYPE || type == FLUID_STACK_TYPE);
     }
 
@@ -43,7 +45,7 @@ public class AEExternalHandler implements IExternalStorageHandler {
 
         if (te instanceof ITileStorageMonitorable iface) {
             return iface.getMonitorable(d, src).getMEMonitor(type);
-        }
+        } else if (te instanceof TileSuperMEReplenisher tSMR) return tSMR;
 
         return null;
     }

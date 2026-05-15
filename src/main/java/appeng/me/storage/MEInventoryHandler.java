@@ -41,6 +41,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     private AccessRestriction myAccess;
     private IPartitionList<T> myPartitionList;
     private IPartitionList<T> myExtractPartitionList;
+    private final IAEStackType<T> myStackType;
 
     private AccessRestriction cachedAccessRestriction;
     protected boolean hasReadAccess;
@@ -60,6 +61,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         this.setBaseAccess(AccessRestriction.READ_WRITE);
         this.myPartitionList = new DefaultPriorityList<>();
         this.myExtractPartitionList = new DefaultPriorityList<>();
+        this.myStackType = type;
     }
 
     public IncludeExclude getWhitelist() {
@@ -196,7 +198,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public @NotNull IAEStackType<?> getStackType() {
-        return this.internal.getStackType();
+        return this.myStackType;
     }
 
     @Override
