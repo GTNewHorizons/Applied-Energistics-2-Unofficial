@@ -1,11 +1,11 @@
 package appeng.client.gui.implementations;
 
+import static appeng.util.Platform.fmt;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Keyboard;
-
-import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 
 import appeng.client.gui.GuiSub;
 import appeng.client.gui.widgets.GuiAeButton;
@@ -159,10 +159,6 @@ public class GuiCellRestriction extends GuiSub {
         } else
             if (!(this.amountField.textboxKeyTyped(character, key) || this.typesField.textboxKeyTyped(character, key)))
                 super.keyTyped(character, key);
-    }
-
-    private static String fmt(double v) {
-        return NumberFormatUtil.formatNumber(v);
     }
 
     private CellRestrictionData filterCellRestriction() {

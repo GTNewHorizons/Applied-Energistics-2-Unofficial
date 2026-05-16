@@ -71,6 +71,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.glodblock.github.common.item.ItemFluidDrop;
 import com.glodblock.github.common.item.ItemFluidPacket;
+import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
@@ -2163,5 +2164,9 @@ public class Platform {
         } else {
             return null;
         }
+    }
+
+    public static String fmt(double v) {
+        return NumberFormatUtil.formatNumber(v);
     }
 }

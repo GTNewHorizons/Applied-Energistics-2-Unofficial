@@ -218,7 +218,10 @@ public enum GuiColors implements Localization {
     ReshuffleTooltipSecondary(0xAAAAAA),
     ReshuffleTooltipDimmed(0x555555),
 
-    ReshuffleToggleDisabledOverlay(0x80000000);
+    ReshuffleToggleDisabledOverlay(0x80000000),
+
+    SuperMEReplenisherInventory(0x404040),
+    SuperMEReplenisherStatus(0x404040),;
 
     private final int color;
 
