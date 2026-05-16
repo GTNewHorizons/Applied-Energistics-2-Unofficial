@@ -10,8 +10,8 @@
 
 package appeng.integration;
 
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -24,7 +24,7 @@ public enum IntegrationRegistry {
 
     private static final String PACKAGE_PREFIX = "appeng.integration.modules.";
 
-    private final Collection<IntegrationNode> modules = new LinkedList<>();
+    private final Map<IntegrationType, IntegrationNode> modules = new LinkedHashMap<>();
 
     public void add(final IntegrationType type) {
         if (type.side == IntegrationSide.CLIENT && FMLLaunchHandler.side() == Side.SERVER) {
@@ -35,21 +35,21 @@ public enum IntegrationRegistry {
             return;
         }
 
-        this.modules.add(new IntegrationNode(type.dspName, type.modID, type, PACKAGE_PREFIX + type.name()));
+        this.modules.put(type, new IntegrationNode(type.dspName, type.modID, type, PACKAGE_PREFIX + type.name()));
     }
 
     public void init() {
-        for (final IntegrationNode node : this.modules) {
+        for (final IntegrationNode node : this.modules.values()) {
             node.call(IntegrationStage.PRE_INIT);
         }
 
-        for (final IntegrationNode node : this.modules) {
+        for (final IntegrationNode node : this.modules.values()) {
             node.call(IntegrationStage.INIT);
         }
     }
 
     public void postInit() {
-        for (final IntegrationNode node : this.modules) {
+        for (final IntegrationNode node : this.modules.values()) {
             node.call(IntegrationStage.POST_INIT);
         }
     }
@@ -57,7 +57,7 @@ public enum IntegrationRegistry {
     public String getStatus() {
         final StringBuilder builder = new StringBuilder(this.modules.size() * 3);
 
-        for (final IntegrationNode node : this.modules) {
+        for (final IntegrationNode node : this.modules.values()) {
             if (builder.length() != 0) {
                 builder.append(", ");
             }
@@ -71,33 +71,27 @@ public enum IntegrationRegistry {
     }
 
     public boolean isEnabled(final IntegrationType name) {
-        for (final IntegrationNode node : this.modules) {
-            if (node.getShortName() == name) {
-                return node.isActive();
-            }
-        }
-        return false;
+        final IntegrationNode node = this.modules.get(name);
+        return node != null && node.isActive();
     }
 
     @Nonnull
     public Object getInstance(final IntegrationType name) {
-        for (final IntegrationNode node : this.modules) {
-            if (node.getShortName() == name && node.isActive()) {
-                return node.getInstance();
-            }
+        final IntegrationNode node = this.modules.get(name);
+        if (node != null && node.isActive()) {
+            return node.getInstance();
         }
 
         throw new IllegalStateException("integration with " + name.name() + " is disabled.");
     }
 
     public <T> T getInstanceIfEnabled(final IntegrationType name) {
-        for (final IntegrationNode node : this.modules) {
-            if (node.getShortName() == name) {
-                // noinspection unchecked
-                return node.isActive() ? (T) node.getInstance() : null;
-            }
+        final IntegrationNode node = this.modules.get(name);
+        if (node == null) {
+            return null;
         }
 
-        return null;
+        // noinspection unchecked
+        return node.isActive() ? (T) node.getInstance() : null;
     }
 }

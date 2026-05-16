@@ -398,7 +398,7 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
 
     @Override
     public CellData getCellData(ItemStack is) {
-        return new CellData(this.totalBytes, this.totalTypes, this.perType, 8);
+        return new CellData(this.totalBytes, this.totalTypes, this.perType, this.getTypeWeight());
     }
 
     @Override
