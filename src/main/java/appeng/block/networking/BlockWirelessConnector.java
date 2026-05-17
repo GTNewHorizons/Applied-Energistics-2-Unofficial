@@ -52,7 +52,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
         super(Material.iron);
         this.hasSubtypes = true;
         this.setTileEntity(TileWirelessConnector.class);
-        this.setFeature(EnumSet.of(AEFeature.Channels));
+        this.setFeature(EnumSet.of(AEFeature.Core));
         setHardness(1);
     }
 
