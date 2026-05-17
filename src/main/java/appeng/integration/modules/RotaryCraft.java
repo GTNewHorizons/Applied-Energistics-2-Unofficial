@@ -8,11 +8,26 @@
  * Applied Energistics 2. If not, see <http://www.gnu.org/licenses/lgpl>.
  */
 
-package appeng.integration.abstraction;
+package appeng.integration.modules;
 
-import appeng.api.util.AEColor;
+import appeng.helpers.Reflected;
+import appeng.integration.IIntegrationModule;
+import appeng.integration.IntegrationHelper;
 
-public interface ICLApi {
+public class RotaryCraft implements IIntegrationModule {
 
-    int colorLight(AEColor color, int light);
+    @Reflected
+    public static RotaryCraft instance;
+
+    @Reflected
+    public RotaryCraft() {
+        IntegrationHelper.testClassExistence(this, Reika.RotaryCraft.API.Power.AdvancedShaftPowerReceiver.class);
+        IntegrationHelper.testClassExistence(this, Reika.RotaryCraft.API.Interfaces.Transducerable.class);
+    }
+
+    @Override
+    public void init() throws Throwable {}
+
+    @Override
+    public void postInit() {}
 }

@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
+import appeng.integration.IntegrationHelper;
 import appeng.integration.abstraction.IMekanism;
 import cpw.mods.fml.common.event.FMLInterModComms;
 
@@ -25,7 +26,7 @@ public final class Mekanism implements IMekanism, IIntegrationModule {
 
     @Reflected
     public Mekanism() {
-        // IntegrationHelper.testClassExistence( this, mekanism.api.energy.IStrictEnergyAcceptor.class );
+        IntegrationHelper.testClassExistence(this, mekanism.api.energy.IStrictEnergyAcceptor.class);
     }
 
     @Override

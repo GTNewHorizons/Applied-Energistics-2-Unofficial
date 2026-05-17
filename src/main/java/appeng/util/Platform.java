@@ -181,6 +181,7 @@ public class Platform {
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
     public static final boolean isPosteaLoaded = Loader.isModLoaded("postea");
+    public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");
     public static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     public static final SyncedKeybind keyBindLCtrl = SyncedKeybind.create(Keyboard.KEY_LCONTROL);
     public static final SyncedKeybind keyBindTab = SyncedKeybind.create(Keyboard.KEY_TAB);
@@ -1088,6 +1089,10 @@ public class Platform {
     @SideOnly(Side.CLIENT)
     public static String gui_localize(final String string) {
         return StatCollector.translateToLocal(string);
+    }
+
+    public static boolean isItemStackIdentical(@Nullable final ItemStack is, @Nullable final ItemStack filter) {
+        return isSameItemPrecise(is, filter) && is.stackSize == filter.stackSize;
     }
 
     public static boolean isSameItemPrecise(@Nullable final ItemStack is, @Nullable final ItemStack filter) {
@@ -1998,7 +2003,7 @@ public class Platform {
     }
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag) {
-        return writeStackNBT(stack, tag, false);
+        return writeStackNBT(stack, tag, true);
     }
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag, boolean isModern) {

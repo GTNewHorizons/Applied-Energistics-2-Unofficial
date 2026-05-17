@@ -1,7 +1,5 @@
 package appeng.items;
 
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
-
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -36,7 +34,6 @@ import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -320,16 +317,20 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
             }
             final InventoryPlayer playerInventory = player.inventory;
             final IMEInventoryHandler inv = AEApi.instance().registries().cell()
-                    .getCellInventory(stack, null, ITEM_STACK_TYPE);
+                    .getCellInventory(stack, null, this.getStackType());
             if (inv != null && playerInventory.getCurrentItem() == stack) {
                 final InventoryAdaptor ia = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-                final IItemList<IAEItemStack> list = inv
-                        .getAvailableItems(ITEM_STACK_TYPE.createList(), IterationCounter.fetchNewId());
+                final IItemList<?> list = inv
+                        .getAvailableItems(this.getStackType().createList(), IterationCounter.fetchNewId());
                 if (list.isEmpty() && ia != null) {
                     playerInventory.setInventorySlotContents(playerInventory.currentItem, null);
 
+                    final ItemStack comp = this.getComponent();
+
+                    if (comp == null) return false;
+
                     // drop core
-                    final ItemStack extraB = ia.addItems(this.component.stack(1));
+                    final ItemStack extraB = ia.addItems(comp);
                     if (extraB != null) {
                         player.dropPlayerItemWithRandomChoice(extraB, false);
                     }
@@ -345,12 +346,9 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                     }
 
                     // drop empty storage cell case
-                    for (final ItemStack storageCellStack : getStorageCellCase().maybeStack(1).asSet()) {
-                        final ItemStack extraA = ia.addItems(storageCellStack);
-                        if (extraA != null) {
-                            player.dropPlayerItemWithRandomChoice(extraA, false);
-                        }
-                    }
+                    final ItemStack storageCellStack = this.getHousing();
+                    final ItemStack extraA = ia.addItems(storageCellStack);
+                    if (extraA != null) player.dropPlayerItemWithRandomChoice(extraA, false);
 
                     if (player.inventoryContainer != null) {
                         player.inventoryContainer.detectAndSendChanges();
@@ -361,6 +359,14 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
             }
         }
         return false;
+    }
+
+    public ItemStack getHousing() {
+        return this.getStorageCellCase().maybeStack(1).orNull();
+    }
+
+    public ItemStack getComponent() {
+        return this.component.stack(1);
     }
 
     protected IItemDefinition getStorageCellCase() {
@@ -392,7 +398,7 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
 
     @Override
     public CellData getCellData(ItemStack is) {
-        return new CellData(this.totalBytes, this.totalTypes, this.perType, 8);
+        return new CellData(this.totalBytes, this.totalTypes, this.perType, this.getTypeWeight());
     }
 
     @Override
