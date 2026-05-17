@@ -145,6 +145,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         int lastPriority = inv.getPriority();
         outer: while (true) {
             int passTwoIndex = -1;
+            final T cache = input.copy();
             // Pass 1
             while (true) {
                 // If the next if-statement computes this value, we can use it later. If it doesn't we're just being
@@ -184,8 +185,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 if (prioritySwitch) break;
             }
 
-            // Simulate doesn't have memory, if try to inject in same inventory we get false positive
-            if (type == Actionable.SIMULATE) i++;
+            // Simulate doesn't have memory
+            if (type == Actionable.SIMULATE) input = cache;
 
             // Pass 2
             if (passTwoIndex != -1) {
