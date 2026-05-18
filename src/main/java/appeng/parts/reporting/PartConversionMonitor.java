@@ -263,6 +263,9 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                         stored.copy().setStackSize(amountToFill),
                         new PlayerSource(player, this));
                 if (extracted == null) return;
+                else if (extracted.getStackSize() != amountToFill) {
+                    Platform.poweredInsert(energy, monitor, extracted, new PlayerSource(player, this));
+                }
 
                 ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), extracted);
                 ItemStack result = filled.left();
