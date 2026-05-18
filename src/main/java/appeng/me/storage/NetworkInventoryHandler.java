@@ -46,6 +46,7 @@ import appeng.util.SortedArrayList;
 import appeng.util.inv.ItemListIgnoreCrafting;
 import appeng.util.item.NetworkItemList;
 import appeng.util.item.PrioritizedNetworkItemList;
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 
 public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetworkInventory<T> {
 
@@ -144,8 +145,10 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         IMEInventoryHandler<T> inv = priorityInventory.get(i);
         int lastPriority = inv.getPriority();
         outer: while (true) {
-            int passTwoIndex = -1;
             final T cache = input.copy();
+            final Int2LongOpenHashMap cacheInjected = new Int2LongOpenHashMap();
+
+            int passTwoIndex = -1;
             // Pass 1
             while (true) {
                 // If the next if-statement computes this value, we can use it later. If it doesn't we're just being
@@ -163,6 +166,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 // inventory accepts the item at all, to avoid doing the exact same check again in the second pass.
                 // This als assumes that canAccept is not dependent on stack size
                 if (canAcceptInput && passTwoIndex == -1 && inv.validForPass(2)) {
+                    if (type == Actionable.SIMULATE) cacheInjected.put(i, cache.getStackSize() - input.getStackSize());
                     passTwoIndex = i;
                     // If we're at a pass 2 only inventory, we can stop here and continue with pass 2
                     if (!validForPass1) break;
@@ -185,9 +189,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 if (prioritySwitch) break;
             }
 
-            // Simulate doesn't have memory
-            if (type == Actionable.SIMULATE) input = cache;
-
             // Pass 2
             if (passTwoIndex != -1) {
                 i = passTwoIndex;
@@ -195,6 +196,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 lastPriority = inv.getPriority();
                 while (true) {
                     if (inv.canAccept(input) && !inv.isPrioritized(input)) {
+                        if (type == Actionable.SIMULATE)
+                            input.setStackSize(input.getStackSize() + cacheInjected.getOrDefault(i, 0));
                         input = inv.injectItems(input, type, src);
                         if (input == null) break outer;
                     }
