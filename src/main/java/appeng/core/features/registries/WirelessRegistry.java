@@ -107,6 +107,31 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
         return false;
     }
 
+    @Override
+    public boolean checkRange(ItemStack item, EntityPlayer player) {
+        if (Platform.isClient()) {
+            return false;
+        }
+
+        final IWirelessTermHandler handler = this.getWirelessTerminalHandler(item);
+        if (handler == null) {
+            return false;
+        }
+
+        final String unparsedKey = handler.getEncryptionKey(item);
+        if (unparsedKey.isEmpty()) {
+            return false;
+        }
+
+        final long parsedKey = Long.parseLong(unparsedKey);
+        final ILocatable locatable = AEApi.instance().registries().locatable().getLocatableBy(parsedKey);
+        if (locatable == null) {
+            return false;
+        }
+
+        return checkRange(player, locatable, handler.hasInfinityRange(item));
+    }
+
     public boolean performCheck(final ItemStack item, final EntityPlayer player) {
         if (Platform.isClient()) {
             return false;
