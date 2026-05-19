@@ -132,11 +132,11 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
         ItemStack is = this.getStack();
 
         if (is != null && Platform.isSameItemPrecise(request, is)) {
-            final ItemStack[] set = new ItemStack[this.getPattern().getSizeInventory()];
             int multiple = request.stackSize / is.stackSize;
             int crafted = 0;
 
             for (int i = 0; i < multiple; i++) {
+                final ItemStack[] set = new ItemStack[this.getPattern().getSizeInventory()];
                 // add one of each item to the items on the board...
                 if (Platform.isServer()) {
                     final InventoryCrafting ic = new InventoryCrafting(new ContainerNull(), 3, 3);
