@@ -191,10 +191,11 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                     // otherwise we need to leave the grid repopulated, to try another extraction & recipe match
                     if (!this.postCraft(p, inv, set, is) && i < (multiple - 1)) break;
                 }
+
+                cleanup(p, inv, set);
             }
 
             is.stackSize *= crafted;
-            cleanup(p, inv, set);
 
             // shouldn't be necessary...
             p.openContainer.onCraftMatrixChanged(this.craftInv);
