@@ -29,6 +29,13 @@ public interface IMovableHandler {
     boolean canHandle(Class<? extends TileEntity> myClass, TileEntity tile);
 
     /**
+     * Called immediately before the tile is invalidated for movement.
+     *
+     * @param tile to be moved tile
+     */
+    default void prepareToMove(TileEntity tile) {}
+
+    /**
      * request that the handler move the the tile from its current location to the new one. the tile has already been
      * invalidated, and the blocks have already been fully moved.
      * <p>

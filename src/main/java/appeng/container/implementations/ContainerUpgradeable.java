@@ -99,6 +99,7 @@ public abstract class ContainerUpgradeable extends AEBaseContainer implements IO
             int size = this.tbInventory.getSize();
             // For advanced toolbox to move down a little bit
             int yBias = size == 3 ? 0 : 7;
+            int toolboxY = this.getToolboxY();
             for (int v = 0; v < size; v++) {
                 for (int u = 0; u < size; u++) {
                     this.addSlotToContainer(
@@ -107,7 +108,7 @@ public abstract class ContainerUpgradeable extends AEBaseContainer implements IO
                                     this.tbInventory,
                                     u + v * size,
                                     186 + u * 18,
-                                    this.getHeight() - 82 - yBias + v * 18,
+                                    toolboxY - yBias + v * 18,
                                     this.getInventoryPlayer())).setPlayerSide());
                 }
             }
@@ -134,50 +135,24 @@ public abstract class ContainerUpgradeable extends AEBaseContainer implements IO
         return 184;
     }
 
+    protected int getToolboxY() {
+        return this.getHeight() - 82;
+    }
+
     protected void setupConfig() {
         this.setupUpgrades();
     }
 
     protected void setupUpgrades() {
         final IInventory upgrades = this.getUpgradeable().getInventoryByName("upgrades");
-        if (this.availableUpgrades() > 0) {
+        for (int slot = 0; slot < this.availableUpgrades(); slot++) {
             this.addSlotToContainer(
                     (new SlotRestrictedInput(
                             SlotRestrictedInput.PlacableItemType.UPGRADES,
                             upgrades,
-                            0,
+                            slot,
                             187,
-                            8,
-                            this.getInventoryPlayer())).setNotDraggable());
-        }
-        if (this.availableUpgrades() > 1) {
-            this.addSlotToContainer(
-                    (new SlotRestrictedInput(
-                            SlotRestrictedInput.PlacableItemType.UPGRADES,
-                            upgrades,
-                            1,
-                            187,
-                            8 + 18,
-                            this.getInventoryPlayer())).setNotDraggable());
-        }
-        if (this.availableUpgrades() > 2) {
-            this.addSlotToContainer(
-                    (new SlotRestrictedInput(
-                            SlotRestrictedInput.PlacableItemType.UPGRADES,
-                            upgrades,
-                            2,
-                            187,
-                            8 + 18 * 2,
-                            this.getInventoryPlayer())).setNotDraggable());
-        }
-        if (this.availableUpgrades() > 3) {
-            this.addSlotToContainer(
-                    (new SlotRestrictedInput(
-                            SlotRestrictedInput.PlacableItemType.UPGRADES,
-                            upgrades,
-                            3,
-                            187,
-                            8 + 18 * 3,
+                            8 + 18 * slot,
                             this.getInventoryPlayer())).setNotDraggable());
         }
     }
