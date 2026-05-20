@@ -17,6 +17,7 @@ import java.security.InvalidParameterException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -2170,5 +2171,11 @@ public class Platform {
         } else {
             return null;
         }
+    }
+
+    public static void add2Player(final EntityPlayer p, final ItemStack is) {
+        final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(p, ForgeDirection.UNKNOWN);
+        final ItemStack leftOver = adaptor.addItems(is);
+        if (leftOver != null) p.entityDropItem(leftOver, 0);
     }
 }

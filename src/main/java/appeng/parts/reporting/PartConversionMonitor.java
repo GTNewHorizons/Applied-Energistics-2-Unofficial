@@ -157,18 +157,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                         .poweredExtraction(energy, cell, input, new PlayerSource(player, this));
                 if (retrieved != null) {
                     ItemStack newItems = retrieved.getItemStack();
-                    final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-                    newItems = adaptor.addItems(newItems);
-                    if (newItems != null) {
-                        final TileEntity te = this.getTile();
-                        final List<ItemStack> list = Collections.singletonList(newItems);
-                        Platform.spawnDrops(
-                                player.worldObj,
-                                te.xCoord + this.getSide().offsetX,
-                                te.yCoord + this.getSide().offsetY,
-                                te.zCoord + this.getSide().offsetZ,
-                                list);
-                    }
+                    Platform.add2Player(player, newItems);
 
                     if (player.openContainer != null) {
                         player.openContainer.detectAndSendChanges();
