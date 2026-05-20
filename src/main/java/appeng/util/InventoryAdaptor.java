@@ -18,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -59,8 +60,16 @@ import appeng.util.inv.ItemSlot;
 import appeng.util.inv.WrapperMCISidedInventory;
 import appeng.util.item.AEItemStack;
 import crazypants.enderio.conduit.TileConduitBundle;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
+
+    // Two flat maps keyed by packObjectIdentity(te)|packSideAndFlags(d,flags).
+    // ADAPTOR_CACHE_REFS stores the actual te reference for identity-hash collision safety.
+    // ADAPTOR_CACHE stores the resolved adaptor (may be null for cached null results).
+    private static final Long2ObjectOpenHashMap<Object> ADAPTOR_CACHE = new Long2ObjectOpenHashMap<>();
+    private static final Long2ObjectOpenHashMap<Object> ADAPTOR_CACHE_REFS = new Long2ObjectOpenHashMap<>();
+    private static int adaptorCacheTick = Integer.MIN_VALUE;
 
     private static int counter = 0;
     /// Item adaptors may be returned. Absence means item adaptors will not be returned, if possible.
@@ -80,6 +89,90 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
     // returns an appropriate adaptor, or null
     public static InventoryAdaptor getAdaptor(Object te, final ForgeDirection d,
+            @MagicConstant(flagsFromClass = InventoryAdaptor.class) int flags) {
+        if (te == null) {
+            return null;
+        }
+
+        final int currentTick = getCurrentServerTick();
+        if (currentTick != Integer.MIN_VALUE) {
+            cacheInvalidateIfStale(currentTick);
+
+            if (isCached(te, d, flags)) {
+                return cacheGet(te, d, flags);
+            }
+
+            final InventoryAdaptor adaptor = getAdaptorUncached(te, d, flags);
+            cachePut(te, d, flags, adaptor);
+            return adaptor;
+        }
+
+        return getAdaptorUncached(te, d, flags);
+    }
+
+    // ---- Cache helpers -------------------------------------------------------
+
+    /** Packs the identity hash of {@code te} into the upper 32 bits of a long. */
+    private static long packObjectIdentity(Object te) {
+        return (long) System.identityHashCode(te) << 32;
+    }
+
+    /**
+     * Packs {@code d} and {@code flags} into a single long that fits entirely in the lower 32 bits. {@code d.ordinal()}
+     * occupies bits 0-2 (ForgeDirection has 7 values), {@code flags} bits 3-6+.
+     */
+    private static long packSideAndFlags(ForgeDirection d, int flags) {
+        return ((long) flags << 3) | (d.ordinal() & 0x7L);
+    }
+
+    private static long makeCacheKey(Object te, ForgeDirection d, int flags) {
+        return packObjectIdentity(te) | packSideAndFlags(d, flags);
+    }
+
+    private static void cacheInvalidateIfStale(int currentTick) {
+        if (currentTick != adaptorCacheTick) {
+            ADAPTOR_CACHE.clear();
+            ADAPTOR_CACHE_REFS.clear();
+            adaptorCacheTick = currentTick;
+        }
+    }
+
+    /**
+     * Returns {@code true} iff the cache contains an entry for the given arguments and the stored reference matches the
+     * supplied {@code te}.
+     */
+    private static boolean isCached(Object te, ForgeDirection d, int flags) {
+        final long key = makeCacheKey(te, d, flags);
+        return ADAPTOR_CACHE_REFS.get(key) == te;
+    }
+
+    /**
+     * Returns the cached adaptor, or {@code null} if a null result was cached. Must only be called after confirming a
+     * cache hit via {@link #isCached}.
+     */
+    private static InventoryAdaptor cacheGet(Object te, ForgeDirection d, int flags) {
+        final long key = makeCacheKey(te, d, flags);
+        return (InventoryAdaptor) ADAPTOR_CACHE.get(key);
+    }
+
+    private static void cachePut(Object te, ForgeDirection d, int flags, InventoryAdaptor adaptor) {
+        final long key = makeCacheKey(te, d, flags);
+        ADAPTOR_CACHE_REFS.put(key, te);
+        ADAPTOR_CACHE.put(key, adaptor);
+    }
+
+    // -------------------------------------------------------------------------
+
+    private static int getCurrentServerTick() {
+        final MinecraftServer server = MinecraftServer.getServer();
+        if (server == null) {
+            return Integer.MIN_VALUE;
+        }
+        return server.getTickCounter();
+    }
+
+    // returns an appropriate adaptor, or null
+    private static InventoryAdaptor getAdaptorUncached(Object te, final ForgeDirection d,
             @MagicConstant(flagsFromClass = InventoryAdaptor.class) int flags) {
         if (te == null) {
             return null;
