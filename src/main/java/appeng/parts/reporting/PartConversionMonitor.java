@@ -12,14 +12,9 @@ package appeng.parts.reporting;
 
 import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 
-import java.util.Collections;
-import java.util.List;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergySource;
@@ -33,7 +28,6 @@ import appeng.client.texture.CableBusTextures;
 import appeng.core.AELog;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
-import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
