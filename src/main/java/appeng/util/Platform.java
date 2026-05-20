@@ -181,10 +181,11 @@ public class Platform {
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
     public static final boolean isPosteaLoaded = Loader.isModLoaded("postea");
-    public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");
     public static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     public static final SyncedKeybind keyBindLCtrl = SyncedKeybind.create(Keyboard.KEY_LCONTROL);
     public static final SyncedKeybind keyBindTab = SyncedKeybind.create(Keyboard.KEY_TAB);
+    public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");
+    public static final boolean isEndlessIdsLoaded = Loader.isModLoaded("endlessids");
 
     static {
         BYTE_LIMIT = new double[10];
