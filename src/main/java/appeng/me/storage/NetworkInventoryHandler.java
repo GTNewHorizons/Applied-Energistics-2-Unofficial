@@ -147,8 +147,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         outer: while (true) {
             // Simulate doesn't have memory, so when we try to inject in same inventory we get false positive
             // This for resolve this issue without lose functional of pass 2
-            final T cache = input.copy();
-            final Int2LongOpenHashMap cacheInjected = new Int2LongOpenHashMap();
+            final Int2LongOpenHashMap simulatedPass1Inserted = new Int2LongOpenHashMap();
 
             int passTwoIndex = -1;
             // Pass 1
