@@ -3,6 +3,7 @@ package appeng.crafting.v2;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -81,6 +82,9 @@ public class CraftingRequest implements ITreeSerializable {
      * An item/fluid + count representing how many need to be crafted
      */
     public final IAEStack<?> stack;
+
+    public ICraftingPatternDetails pattern;
+    public final ArrayList<IAEStack<?>> patternInputs = new ArrayList<>();
 
     public final SubstitutionMode substitutionMode;
     public final Predicate<IAEStack<?>> acceptableSubstituteFn;
@@ -168,6 +172,14 @@ public class CraftingRequest implements ITreeSerializable {
         } else {
             Builder<CraftingRequest> builder = ImmutableSet.builder();
             builder.addAll(parentRequest.parentRequests);
+
+            for (final IAEStack<?> aes : parentRequest.pattern.isCraftable() ? parentRequest.pattern.getAEInputs()
+                    : parentRequest.pattern.getCondensedAEInputs()) {
+                if (aes == null) continue;
+                this.patternInputs.add(aes.copy());
+            }
+            this.patternInputs.sort(Comparator.comparingLong(IAEStack::getStackSize));
+
             builder.add(parentRequest);
             this.parentRequests = builder.build();
         }
