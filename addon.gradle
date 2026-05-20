@@ -1,4 +1,6 @@
 
+import org.gradle.api.tasks.GradleBuild
+
 SourceSet functionalTestSet = null
 
 sourceSets {
@@ -22,19 +24,39 @@ tasks.register(functionalTestSet.jarTaskName, Jar) {
     archiveClassifier.set("functionalTests")
     // we don't care about the version number here, keep it stable to avoid polluting the tmp directory
     archiveVersion.set("1.0")
-    destinationDirectory.set(new File(buildDir, "tmp"))
+    destinationDirectory.set(layout.buildDirectory.dir("tmp"))
 }
 tasks.named("assemble").configure {
     dependsOn(functionalTestSet.jarTaskName)
 }
 
-// Run tests in the default runServer/runClient configurations
-tasks.named("runServer", JavaExec).configure {
-    dependsOn(functionalTestSet.jarTaskName)
-    classpath(configurations.named(functionalTestSet.runtimeClasspathConfigurationName), tasks.named(functionalTestSet.jarTaskName))
+def functionalTestRunProperty = "ae2.withFunctionalTests"
+def withFunctionalTests = providers.gradleProperty(functionalTestRunProperty).map { it.toBoolean() }.orElse(false).get()
+def isCi = providers.environmentVariable("CI").map { it.toBoolean() }.orElse(false).get()
+
+def addFunctionalTestsToRun = { JavaExec task ->
+    task.dependsOn(functionalTestSet.jarTaskName)
+    task.classpath(configurations.named(functionalTestSet.runtimeClasspathConfigurationName), tasks.named(functionalTestSet.jarTaskName))
 }
 
-tasks.named("runClient", JavaExec).configure {
-    dependsOn(functionalTestSet.jarTaskName)
-    classpath(configurations.named(functionalTestSet.runtimeClasspathConfigurationName), tasks.named(functionalTestSet.jarTaskName))
+tasks.register("runFunctionalTestServer", GradleBuild) {
+    group = project.tasks.named("runServer").get().group
+    description = "Runs the deobfuscated server with the AE2 functional test mod"
+    setTasks(["runServer"])
+    startParameter.projectProperties.put(functionalTestRunProperty, "true")
+}
+
+tasks.register("runFunctionalTestClient", GradleBuild) {
+    group = project.tasks.named("runClient").get().group
+    description = "Runs the deobfuscated client with the AE2 functional test mod"
+    setTasks(["runClient"])
+    startParameter.projectProperties.put(functionalTestRunProperty, "true")
+}
+
+if (withFunctionalTests || isCi) {
+    tasks.named("runServer", JavaExec).configure(addFunctionalTestsToRun)
+}
+
+if (withFunctionalTests) {
+    tasks.named("runClient", JavaExec).configure(addFunctionalTestsToRun)
 }
