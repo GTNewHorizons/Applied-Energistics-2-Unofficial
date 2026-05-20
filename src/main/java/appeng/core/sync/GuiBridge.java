@@ -33,6 +33,7 @@ import appeng.api.definitions.IMaterials;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.implementations.guiobjects.IGuiItem;
+import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.implementations.tiles.ICellWorkbench;
@@ -55,6 +56,7 @@ import appeng.client.gui.GuiNull;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
+import appeng.container.implementations.ContainerAdvancedInscriber;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
 import appeng.container.implementations.ContainerBusIO;
 import appeng.container.implementations.ContainerCellRestriction;
@@ -67,6 +69,7 @@ import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.container.implementations.ContainerCraftingTerm;
+import appeng.container.implementations.ContainerCrystalGrowthChamber;
 import appeng.container.implementations.ContainerDrive;
 import appeng.container.implementations.ContainerFormationPlane;
 import appeng.container.implementations.ContainerGrinder;
@@ -100,6 +103,7 @@ import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerStorageReshuffle;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
+import appeng.container.implementations.ContainerWirelessKit;
 import appeng.core.stats.Achievements;
 import appeng.helpers.ICellRestriction;
 import appeng.helpers.ICustomNameObject;
@@ -110,12 +114,14 @@ import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.ColorizerObj;
 import appeng.items.contents.PriorityCardObject;
 import appeng.items.contents.QuartzKnifeObj;
-import appeng.parts.automation.PartFormationPlane;
+import appeng.parts.automation.PartBaseFormationPlane;
 import appeng.parts.automation.PartSharedItemBus;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.grindstone.TileGrinder;
+import appeng.tile.misc.TileAdvancedInscriber;
 import appeng.tile.misc.TileCondenser;
+import appeng.tile.misc.TileCrystalGrowthChamber;
 import appeng.tile.misc.TileInscriber;
 import appeng.tile.misc.TileSecurity;
 import appeng.tile.misc.TileStorageReshuffle;
@@ -190,7 +196,7 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_STORAGEBUS(ContainerStorageBus.class, IStorageBus.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
-    GUI_FORMATION_PLANE(ContainerFormationPlane.class, PartFormationPlane.class, GuiHostType.WORLD,
+    GUI_FORMATION_PLANE(ContainerFormationPlane.class, PartBaseFormationPlane.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
 
     GUI_PRIORITY(ContainerPriority.class, IPriorityHost.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
@@ -211,6 +217,8 @@ public enum GuiBridge implements IGuiHandler {
             SecurityPermissions.BUILD),
 
     GUI_INSCRIBER(ContainerInscriber.class, TileInscriber.class, GuiHostType.WORLD, null),
+
+    GUI_ADVANCED_INSCRIBER(ContainerAdvancedInscriber.class, TileAdvancedInscriber.class, GuiHostType.WORLD, null),
 
     GUI_CELL_WORKBENCH(ContainerCellWorkbench.class, ICellWorkbench.class, GuiHostType.WORLD, null),
 
@@ -240,7 +248,12 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null),
 
-    GUI_COLORIZER(ContainerColorizer.class, ColorizerObj.class, GuiHostType.ITEM, null);
+    GUI_COLORIZER(ContainerColorizer.class, ColorizerObj.class, GuiHostType.ITEM, null),
+
+    GUI_CRYSTAL_GROWTH_CHAMBER(ContainerCrystalGrowthChamber.class, TileCrystalGrowthChamber.class, GuiHostType.WORLD,
+            null),
+
+    GUI_SUPER_WIRELESS_KIT(ContainerWirelessKit.class, IGuiItemObject.class, GuiHostType.ITEM, null);
 
     private final Class tileClass;
     private final Class containerClass;

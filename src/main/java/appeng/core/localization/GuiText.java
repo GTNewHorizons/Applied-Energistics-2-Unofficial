@@ -77,6 +77,10 @@ public enum GuiText implements Localization {
     CraftingTerminal,
     FormationPlane,
     Inscriber,
+    AdvancedInscriber,
+    AdvancedInscriberLockOn,
+    AdvancedInscriberLockOff,
+    AdvancedInscriberLockNote,
     QuartzCuttingKnife,
     Colorizer,
 
@@ -279,16 +283,20 @@ public enum GuiText implements Localization {
     ToFollow,
     ToUnfollow,
     CellRestriction,
-    CellRestrictionTips,
     Restricted,
     MaxItems,
-    MaxFluid,
     MaxTypes,
-    NumberOfItems,
-    NumberOfFluids,
-    ItemsPerByte,
-    FluidsPerByte,
+
+    ResourceAmount,
+    MaximumOfResource,
+    BytesTotal,
+    BytesFree,
+    BytesAllocated,
+    ResourcesPerByte,
     BytesPerType,
+    ResetRestriction,
+    ResetRestrictionHint,
+
     ControlButtonValuesDesc1,
     ControlButtonValuesDesc2,
 
@@ -366,7 +374,19 @@ public enum GuiText implements Localization {
     ReshuffleReportTextColorPositive,
     ReshuffleReportTextColorNegative,
     ReshuffleReportTextColorNeutral,
-    ReshuffleReportTextColorWarning,;
+    ReshuffleReportTextColorWarning,
+
+    GuiWirelessKitColor,
+    GuiWirelessKitNetwork,
+    GuiWirelessKitSelfPos,
+    GuiWirelessKitTargetPos,
+    GuiWirelessKitChannelsUsage,
+    GuiWirelessKitNameFieldDesc,
+
+    GuiDimensionalCoord,
+    GuiDimensionalCoordShort,
+    GuiDimensionalCoordNoDim,
+    GuiDimensionalCoordShortNoDim;
 
     private final String root;
 

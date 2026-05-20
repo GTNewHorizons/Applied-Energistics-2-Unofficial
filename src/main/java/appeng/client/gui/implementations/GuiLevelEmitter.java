@@ -10,7 +10,6 @@
 
 package appeng.client.gui.implementations;
 
-import java.io.IOException;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -29,7 +28,6 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
-import appeng.api.storage.StorageName;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
@@ -39,11 +37,7 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.gui.widgets.TypeToggleButton;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.core.AEConfig;
-import appeng.core.AELog;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketConfigButton;
-import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
@@ -81,16 +75,17 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.amountTextField = new MEGuiTextField(90, 12);
         this.amountTextField.x = this.guiLeft + 39;
         this.amountTextField.y = this.guiTop + 44;
+        this.amountTextField.setText(Long.toString(this.container.getEmitterValue()));
         this.amountTextField.setFocused(true);
-        ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.amountTextField);
+        this.container.setTextField(this.amountTextField);
         this.validateText();
 
         this.config = new VirtualMEPhantomSlot(
                 17,
                 42,
-                ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.CONFIG),
-                0,
-                GuiLevelEmitter::acceptType);
+                GuiLevelEmitter::acceptType,
+                this.container::getConfigStack,
+                this.container::setConfigStack);
         this.registerVirtualSlots(this.config);
     }
 
@@ -281,17 +276,13 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         final boolean backwards = Mouse.isButtonDown(1);
 
         if (btn == this.setButton && this.setButton.enabled) {
-            try {
-                final String amountString = Long.toString(this.getAmountLong());
-                this.amountTextField.setText(amountString);
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("LevelEmitter.Value", amountString));
-            } catch (final IOException e) {
-                AELog.debug(e);
-            }
+            final String amountString = Long.toString(this.getAmountLong());
+            this.amountTextField.setText(amountString);
+            this.container.setLevel(Long.parseLong(amountString));
         } else if (btn == this.craftingMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.craftingMode.getSetting(), backwards));
+            this.container.rotateCraftingMode(backwards);
         } else if (btn == this.levelMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.levelMode.getSetting(), backwards));
+            this.container.rotateLevelMode(backwards);
         } else {
             final boolean isPlus = btn == this.plus1 || btn == this.plus10
                     || btn == this.plus100
@@ -313,16 +304,9 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 return;
             }
             if (type != null) {
-                final boolean next = this.container.getTypeFilters().toggle(type);
-                tbtn.setEnabled(next);
-
-                try {
-                    NetworkHandler.instance.sendToServer(new PacketValueConfig("LevelEmitter.TypeFilter", type.getId()));
-                } catch (final IOException e) {
-                    AELog.debug(e);
-                }
+                this.container.toggleTypeFilter(type);
+                tbtn.setEnabled(this.container.getTypeFilters().isEnabled(type));
             }
-            return;
         }
     }
 

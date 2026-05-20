@@ -17,7 +17,12 @@ import java.lang.annotation.Target;
 
 /**
  * Annotates that this field should be synchronized between the server and client.
+ *
+ * @deprecated Use {@link appeng.container.AEBaseContainer#syncRegistrar()} and
+ *             {@link appeng.container.sync.SyncRegistrar} to register sync handlers explicitly. See
+ *             {@link appeng.container.implementations.ContainerLevelEmitter} for an example.
  */
+@Deprecated
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface GuiSync {
@@ -26,7 +31,10 @@ public @interface GuiSync {
 
     /**
      * Recurse into the class in search of more @GuiSync-ed values. The child IDs are offset by the value.
+     *
+     * @deprecated Use {@link appeng.container.sync.SyncRegistrar#child(String)} to create scoped handler keys.
      */
+    @Deprecated
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     public static @interface Recurse {

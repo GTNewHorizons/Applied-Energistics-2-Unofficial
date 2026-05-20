@@ -23,6 +23,7 @@ import appeng.core.sync.packets.PacketCompassRequest;
 import appeng.core.sync.packets.PacketCompassResponse;
 import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.core.sync.packets.PacketConfigButton;
+import appeng.core.sync.packets.PacketContainerSync;
 import appeng.core.sync.packets.PacketCraftRequest;
 import appeng.core.sync.packets.PacketCraftingCPUTableUpdate;
 import appeng.core.sync.packets.PacketCraftingCompleteNotification;
@@ -43,6 +44,7 @@ import appeng.core.sync.packets.PacketMultiPart;
 import appeng.core.sync.packets.PacketNEIBookmark;
 import appeng.core.sync.packets.PacketNEIRecipe;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
+import appeng.core.sync.packets.PacketNetworkVisualiserData;
 import appeng.core.sync.packets.PacketNewStorageDimension;
 import appeng.core.sync.packets.PacketOptimizePatterns;
 import appeng.core.sync.packets.PacketPaintedEntity;
@@ -61,6 +63,8 @@ import appeng.core.sync.packets.PacketToggleInterfaceVisibility;
 import appeng.core.sync.packets.PacketTransitionEffect;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.core.sync.packets.PacketVirtualSlot;
+import appeng.core.sync.packets.PacketWirelessToolCommand;
+import appeng.core.sync.packets.PacketWirelessToolData;
 import io.netty.buffer.ByteBuf;
 
 public class AppEngPacketHandlerBase {
@@ -94,6 +98,7 @@ public class AppEngPacketHandlerBase {
         PACKET_TRANSITION_EFFECT(PacketTransitionEffect.class),
 
         PACKET_GUI_DATA_SYNC(PacketGuiDataSync.class),
+        PACKET_CONTAINER_SYNC(PacketContainerSync.class),
 
         PACKET_CLICK(PacketClick.class),
 
@@ -141,7 +146,10 @@ public class AppEngPacketHandlerBase {
         PACKET_COLOR_SELECT(PacketColorSelect.class),
         PACKET_REMOTE_RENAME(PacketRemoteRename.class),
         PACKET_SPATIAL_ACTION(PacketSpatialAction.class),
-        PACKET_TOGGLE_INTERFACE_VISIBILITY(PacketToggleInterfaceVisibility.class);
+        PACKET_TOGGLE_INTERFACE_VISIBILITY(PacketToggleInterfaceVisibility.class),
+        PACKET_NETWORK_VISUALISER_DATA(PacketNetworkVisualiserData.class),
+        PACKET_SUPER_WIRELESS_TOOL_DATA(PacketWirelessToolData.class),
+        PACKET_SUPER_WIRELESS_TOOL_COMMAND(PacketWirelessToolCommand.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;
