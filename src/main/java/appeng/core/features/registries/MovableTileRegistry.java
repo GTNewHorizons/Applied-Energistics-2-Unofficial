@@ -65,6 +65,7 @@ public class MovableTileRegistry implements IMovableRegistry {
                 ((IMovableTile) te).prepareToMove();
             }
 
+            canMove.prepareToMove(te);
             te.invalidate();
             return true;
         }

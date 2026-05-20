@@ -10,6 +10,7 @@ import appeng.integration.IntegrationHelper;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IGT;
+import appeng.spatial.NBTSpatialHandler;
 import cpw.mods.fml.common.Loader;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
@@ -35,7 +36,9 @@ public class GT implements IIntegrationModule, IGT {
     }
 
     @Override
-    public void postInit() {}
+    public void postInit() {
+        AEApi.instance().registries().movable().addHandler(new NBTSpatialHandler(IGregTechTileEntity.class));
+    }
 
     @Override
     public boolean isGTMachine(TileEntity te) {
