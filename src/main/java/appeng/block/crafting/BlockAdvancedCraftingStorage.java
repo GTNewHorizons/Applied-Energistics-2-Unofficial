@@ -19,8 +19,7 @@ public class BlockAdvancedCraftingStorage extends BlockCraftingStorage {
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
         return switch (metadata & (~4)) {
-            default -> super.getIcon(0, -1);
-            case 0 -> ExtraBlockTextures.BlockCraftingStorage256k.getIcon();
+            default -> super.getIcon(0, 0);
             case 1 -> ExtraBlockTextures.BlockCraftingStorage1024k.getIcon();
             case 2 -> ExtraBlockTextures.BlockCraftingStorage4096k.getIcon();
             case 3 -> ExtraBlockTextures.BlockCraftingStorage16384k.getIcon();
@@ -40,5 +39,10 @@ public class BlockAdvancedCraftingStorage extends BlockCraftingStorage {
             case 3 -> "tile.appliedenergistics2.BlockCraftingStorage16384k";
             default -> this.getItemUnlocalizedName(is);
         };
+    }
+
+    @Override
+    public String getTextureName() {
+        return "appliedenergistics2:BlockCraftingStorage256k";
     }
 }

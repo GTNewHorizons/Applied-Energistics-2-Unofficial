@@ -26,13 +26,11 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
-import appeng.container.implementations.ContainerCellRestriction;
+import appeng.container.implementations.ContainerAdvancedInscriber;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerInterface;
-import appeng.container.implementations.ContainerLevelEmitter;
-import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
@@ -102,8 +100,6 @@ public class PacketValueConfig extends AppEngPacket {
             qk.startJob();
         } else if (this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
             qk.optimizePatterns();
-        } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
-            qk.toggleViewCell(Integer.parseInt(this.Value));
         } else if (this.Name.startsWith("Reshuffle.") && c instanceof final ContainerStorageReshuffle qk) {
             switch (this.Name) {
                 case "Reshuffle.TypeFilter" -> qk.toggleTypeFilter(this.Value);
@@ -111,6 +107,11 @@ public class PacketValueConfig extends AppEngPacket {
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
                 case "Reshuffle.View" -> qk.setView(this.Value);
+            }
+        } else if (this.Name.equals("AdvancedInscriber.Lock") && c instanceof final ContainerAdvancedInscriber qk) {
+            final String[] parts = this.Value.split(":", 2);
+            if (parts.length == 2) {
+                qk.setLock(parts[0], Boolean.parseBoolean(parts[1]));
             }
         } else if (this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk) {
             qk.doublePatterns(Integer.parseInt(this.Value));
@@ -137,10 +138,6 @@ public class PacketValueConfig extends AppEngPacket {
             pc.setPriority(Integer.parseInt(this.Value), player);
         } else if (this.Name.equals("OreFilter") && c instanceof ContainerOreFilter fc) {
             fc.setFilter(this.Value);
-        } else if (this.Name.equals("LevelEmitter.Value") && c instanceof ContainerLevelEmitter lvc) {
-            lvc.setLevel(Long.parseLong(this.Value), player);
-        } else if (this.Name.equals("LevelEmitter.TypeFilter") && c instanceof ContainerLevelEmitter lvc) {
-            lvc.toggleTypeFilter(this.Value, player);
         } else if (this.Name.startsWith("PatternTerminal.") && c instanceof final ContainerPatternTerm cpt) {
             switch (this.Name) {
                 case "PatternTerminal.CraftMode" -> cpt.getPatternTerminal().setCraftingRecipe(this.Value.equals("1"));
@@ -178,8 +175,6 @@ public class PacketValueConfig extends AppEngPacket {
             } else if (this.Name.equals("CellWorkbench.Fuzzy")) {
                 ccw.setFuzzy(FuzzyMode.valueOf(this.Value));
             }
-        } else if (this.Name.equals("cellRestriction") && c instanceof final ContainerCellRestriction ccr) {
-            ccr.setCellRestriction(this.Value);
         } else if (c instanceof ContainerNetworkTool) {
             if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
                 ((ContainerNetworkTool) c).toggleFacadeMode();

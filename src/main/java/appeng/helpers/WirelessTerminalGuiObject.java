@@ -256,7 +256,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     }
 
     @Override
-    public GuiText getName() {
+    public GuiText getHostName() {
         return GuiText.WirelessTerminal;
     }
 

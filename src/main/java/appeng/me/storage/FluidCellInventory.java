@@ -12,8 +12,6 @@ public class FluidCellInventory extends CellInventory<IAEFluidStack> {
 
     public FluidCellInventory(ItemStack o, ISaveProvider container2) throws AppEngException {
         super(o, container2);
-
-        this.setTypeWeight(256 * 8);
     }
 
     @Override

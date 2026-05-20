@@ -518,4 +518,9 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
     public void setOreFilter(ItemStack is, String filter) {
         ItemStackNBT.setString(is, "OreFilter", filter);
     }
+
+    @Override
+    public int getTypeWeight() {
+        return 8;
+    }
 }

@@ -76,6 +76,9 @@ import appeng.container.guisync.GuiSync;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
+import appeng.container.sync.ActionHandler;
+import appeng.container.sync.StreamCodecs;
+import appeng.container.sync.SyncRegistrar;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
@@ -122,6 +125,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
     private IGridNode networkNode;
 
     private boolean needListUpdate = false;
+
+    public final ActionHandler<Integer> toggleViewCellAction;
 
     public ContainerMEMonitorable(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
@@ -192,6 +197,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
         if (bindInventory) {
             this.bindPlayerInventory(ip, 0, 0);
         }
+
+        final SyncRegistrar sync = this.syncRegistrar();
+        this.toggleViewCellAction = sync.actionC2S("toggleViewCell", StreamCodecs.intValue())
+                .onServerAction(this::toggleViewCell);
     }
 
     public IGridNode getNetworkNode() {
