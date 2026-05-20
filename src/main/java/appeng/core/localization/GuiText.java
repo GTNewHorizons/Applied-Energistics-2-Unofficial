@@ -80,6 +80,10 @@ public enum GuiText implements Localization {
     CraftingDiagnosticTerminal,
     FormationPlane,
     Inscriber,
+    AdvancedInscriber,
+    AdvancedInscriberLockOn,
+    AdvancedInscriberLockOff,
+    AdvancedInscriberLockNote,
     QuartzCuttingKnife,
 
     PatternOptimizer,
@@ -383,7 +387,19 @@ public enum GuiText implements Localization {
     ReshuffleReportTextColorPositive,
     ReshuffleReportTextColorNegative,
     ReshuffleReportTextColorNeutral,
-    ReshuffleReportTextColorWarning,;
+    ReshuffleReportTextColorWarning,
+
+    GuiWirelessKitColor,
+    GuiWirelessKitNetwork,
+    GuiWirelessKitSelfPos,
+    GuiWirelessKitTargetPos,
+    GuiWirelessKitChannelsUsage,
+    GuiWirelessKitNameFieldDesc,
+
+    GuiDimensionalCoord,
+    GuiDimensionalCoordShort,
+    GuiDimensionalCoordNoDim,
+    GuiDimensionalCoordShortNoDim;
 
     private final String root;
 

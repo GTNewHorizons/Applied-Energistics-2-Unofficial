@@ -293,7 +293,32 @@ public enum ButtonToolTips implements Localization {
 
     ToggleShowHiddenInterfaces,
     ToggleShowHiddenInterfacesOnDesc,
-    ToggleShowHiddenInterfacesOffDesc;
+    ToggleShowHiddenInterfacesOffDesc,
+
+    WirelessToolGroupBySingleName,
+    WirelessToolGroupBySingleDesc,
+    WirelessToolGroupByNetworkName,
+    WirelessToolGroupByNetworkDesc,
+    WirelessToolGroupByColorName,
+    WirelessToolGroupByColorDesc,
+    WirelessToolHideBoundedYesName,
+    WirelessToolHideBoundedYesDesc,
+    WirelessToolHideBoundedNoName,
+    WirelessToolHideBoundedNoDesc,
+    WirelessKitPinButtonName,
+    WirelessKitPinButtonDesc,
+    WirelessKitMadChameleonRecolorName,
+    WirelessKitMadChameleonRecolorDesc,
+    WirelessKitIncludeConnectorsName,
+    WirelessKitIncludeConnectorsDesc,
+    WirelessKitIncludeHubsName,
+    WirelessKitIncludeHubsDesc,
+    WirelessKitDeleteName,
+    WirelessKitDeleteDesc,
+    WirelessKitBindName,
+    WirelessKitBindDesc,
+    WirelessKitUnbindName,
+    WirelessKitUnbindDesc;
 
     ButtonToolTips() {}
 
