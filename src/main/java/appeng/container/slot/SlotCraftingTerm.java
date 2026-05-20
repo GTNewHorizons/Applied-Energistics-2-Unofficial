@@ -189,7 +189,9 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                     ++crafted;
                     // last craft may use up all the rest of the items in the system
                     // otherwise we need to leave the grid repopulated, to try another extraction & recipe match
-                    if (!this.postCraft(p, inv, set, is) && i < (multiple - 1)) break;
+                    boolean canContinue = this.postCraft(p, inv, set, is);
+                    cleanup(p, inv, set);
+                    if (!canContinue && i < (multiple - 1)) break;
                 }
 
                 cleanup(p, inv, set);
