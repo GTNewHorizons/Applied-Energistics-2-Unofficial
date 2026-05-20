@@ -26,11 +26,11 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
+import appeng.container.implementations.ContainerAdvancedInscriber;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerInterface;
-import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
@@ -100,8 +100,6 @@ public class PacketValueConfig extends AppEngPacket {
             qk.startJob();
         } else if (this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
             qk.optimizePatterns();
-        } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
-            qk.toggleViewCell(Integer.parseInt(this.Value));
         } else if (this.Name.startsWith("Reshuffle.") && c instanceof final ContainerStorageReshuffle qk) {
             switch (this.Name) {
                 case "Reshuffle.TypeFilter" -> qk.toggleTypeFilter(this.Value);
@@ -109,6 +107,11 @@ public class PacketValueConfig extends AppEngPacket {
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
                 case "Reshuffle.View" -> qk.setView(this.Value);
+            }
+        } else if (this.Name.equals("AdvancedInscriber.Lock") && c instanceof final ContainerAdvancedInscriber qk) {
+            final String[] parts = this.Value.split(":", 2);
+            if (parts.length == 2) {
+                qk.setLock(parts[0], Boolean.parseBoolean(parts[1]));
             }
         } else if (this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk) {
             qk.doublePatterns(Integer.parseInt(this.Value));

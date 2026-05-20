@@ -2,10 +2,7 @@ package appeng.client.render.previewBlocks;
 
 import java.util.List;
 
-import com.glodblock.github.common.parts.PartFluidLevelEmitter;
-
 import appeng.parts.automation.PartLevelEmitter;
-import appeng.util.Platform;
 
 public class RendererLevelEmitter extends AbstractRendererPreview implements IRenderPreview {
 
@@ -16,8 +13,6 @@ public class RendererLevelEmitter extends AbstractRendererPreview implements IRe
 
     @Override
     public List<Class<?>> validItemClass() {
-        if (Platform.isAE2FCLoaded)
-            return ViewHelper.getValidClasses(PartLevelEmitter.class, PartFluidLevelEmitter.class);
-        else return ViewHelper.getValidClasses(PartLevelEmitter.class);
+        return ViewHelper.getValidClasses(PartLevelEmitter.class);
     }
 }

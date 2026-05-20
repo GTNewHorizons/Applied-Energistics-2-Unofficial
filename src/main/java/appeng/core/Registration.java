@@ -416,6 +416,7 @@ public final class Registration {
         target.blockGrindStone = this.converter.of(source.grindStone());
         target.blockCrankHandle = this.converter.of(source.crankHandle());
         target.blockInscriber = this.converter.of(source.inscriber());
+        target.blockAdvancedInscriber = this.converter.of(source.advancedInscriber());
         target.blockWireless = this.converter.of(source.wireless());
         target.blockTinyTNT = this.converter.of(source.tinyTNT());
 
@@ -776,6 +777,10 @@ public final class Registration {
 
         // Inscriber
         Upgrades.SPEED.registerItem(blocks.inscriber(), 3);
+        Upgrades.SPEED.registerItem(blocks.advancedInscriber(), 5);
+
+        // Grower
+        Upgrades.SPEED.registerItem(blocks.crystalGrowthChamber(), 3);
 
         for (final Item wirelessTerminalItem : items.wirelessTerminal().maybeItem().asSet()) {
             registries.wireless().registerWirelessHandler((IWirelessTermHandler) wirelessTerminalItem);

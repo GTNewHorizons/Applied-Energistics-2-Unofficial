@@ -21,8 +21,11 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 
+import com.falsepattern.endlessids.mixin.helpers.ChunkBiomeHook;
+
 import appeng.api.AEApi;
 import appeng.core.AEConfig;
+import appeng.util.Platform;
 
 public class StorageChunkProvider extends ChunkProviderGenerate {
 
@@ -49,10 +52,15 @@ public class StorageChunkProvider extends ChunkProviderGenerate {
     public Chunk provideChunk(final int x, final int z) {
         final Chunk chunk = new Chunk(this.world, BLOCKS, x, z);
 
-        final byte[] biomes = chunk.getBiomeArray();
-        final AEConfig config = AEConfig.instance;
+        final int biomeId = AEConfig.instance.storageBiomeID;
 
-        Arrays.fill(biomes, (byte) config.storageBiomeID);
+        if (Platform.isEndlessIdsLoaded) {
+            final short[] biomes = ((ChunkBiomeHook) chunk).getBiomeShortArray();
+            Arrays.fill(biomes, (short) biomeId);
+        } else {
+            final byte[] biomes = chunk.getBiomeArray();
+            Arrays.fill(biomes, (byte) biomeId);
+        }
 
         if (!chunk.isTerrainPopulated) {
             chunk.isTerrainPopulated = true;

@@ -772,12 +772,7 @@ public class GuiMEMonitorable extends AEBaseGui
                 if (!(cvs.getStack().getItem() instanceof ItemViewCell)) return false;
 
                 // update the view cell
-                try {
-                    NetworkHandler.instance.sendToServer(
-                            new PacketValueConfig("Terminal.UpdateViewCell", Integer.toString(cvs.getSlotIndex())));
-                } catch (IOException e) {
-                    AELog.debug(e);
-                }
+                this.monitorableContainer.toggleViewCellAction.send(cvs.getSlotIndex());
 
                 // eat the right-click input if a view cell was successfully toggled
                 return true;
