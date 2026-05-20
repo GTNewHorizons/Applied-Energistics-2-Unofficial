@@ -18,7 +18,7 @@ import appeng.transformer.annotations.Integration.Interface;
 import cofh.api.energy.IEnergyReceiver;
 
 @Interface(iname = IntegrationType.RF, iface = "cofh.api.energy.IEnergyReceiver")
-public abstract class RedstoneFlux extends IC2 implements IEnergyReceiver {
+public abstract class RedstoneFlux extends RotaryCraft implements IEnergyReceiver {
 
     @Override
     public final int receiveEnergy(final ForgeDirection from, final int maxReceive, final boolean simulate) {

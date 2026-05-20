@@ -23,6 +23,7 @@ import appeng.core.sync.packets.PacketCompassRequest;
 import appeng.core.sync.packets.PacketCompassResponse;
 import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.core.sync.packets.PacketConfigButton;
+import appeng.core.sync.packets.PacketContainerSync;
 import appeng.core.sync.packets.PacketCraftRequest;
 import appeng.core.sync.packets.PacketCraftingCPUTableUpdate;
 import appeng.core.sync.packets.PacketCraftingCompleteNotification;
@@ -94,6 +95,7 @@ public class AppEngPacketHandlerBase {
         PACKET_TRANSITION_EFFECT(PacketTransitionEffect.class),
 
         PACKET_GUI_DATA_SYNC(PacketGuiDataSync.class),
+        PACKET_CONTAINER_SYNC(PacketContainerSync.class),
 
         PACKET_CLICK(PacketClick.class),
 

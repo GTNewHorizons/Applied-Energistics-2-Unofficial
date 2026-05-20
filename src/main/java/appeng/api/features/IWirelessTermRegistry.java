@@ -46,5 +46,7 @@ public interface IWirelessTermRegistry {
      */
     void openWirelessTerminalGui(ItemStack item, World w, EntityPlayer player);
 
+    boolean checkRange(final ItemStack item, final EntityPlayer player);
+
     boolean performCheck(final ItemStack item, final EntityPlayer player);
 }

@@ -218,10 +218,10 @@ public class GuiCraftingCPUTable {
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
                     AEBaseGui.drawRect(
-                            x,
-                            y + CPU_TABLE_SLOT_HEIGHT - 3,
-                            x + (int) ((CPU_TABLE_SLOT_WIDTH - 1) * craftingPercentage),
+                            x + 1,
                             y + CPU_TABLE_SLOT_HEIGHT - 2,
+                            x + (int) ((CPU_TABLE_SLOT_WIDTH - 1) * craftingPercentage) - 1,
+                            y + CPU_TABLE_SLOT_HEIGHT - 1,
                             this.calculateGradientColor(craftingPercentage));
                 } else {
                     parent.bindTexture("guis/states.png");

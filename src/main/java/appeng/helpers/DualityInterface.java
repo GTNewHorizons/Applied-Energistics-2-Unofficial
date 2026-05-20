@@ -38,6 +38,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -124,6 +125,7 @@ import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
 import appeng.util.inv.AdaptorDualityInterface;
+import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.AdaptorMEChest;
 import appeng.util.inv.IInventoryDestination;
@@ -170,6 +172,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private int lastInputHash = 0;
     private final boolean isFluidInterface;
     private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
+    private long busyCache = Long.MIN_VALUE;
     public boolean somethingStuck = false;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
@@ -738,6 +741,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
+                this.duringPushOut = true;
                 final Iterator<IAEStack<?>> iter = this.waitingToSend.iterator();
                 while (iter.hasNext()) {
                     IAEStack<?> aes = iter.next();
@@ -761,8 +765,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         iter.remove();
                     }
                 }
+                this.duringPushOut = false;
             }
-
         }
 
         if (this.waitingToSend.isEmpty()) {
@@ -1040,7 +1044,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         stack -> !AEApi.instance().registries().blockingModeIgnoreItem()
                                 .isIgnored(stack.toStackFast()));
 
-                return present.orElse(0) == 0;
+                return present.orElse(0) == 0
+                        && !(isFluidInterface && ad instanceof AdaptorFluidHandler afh && afh.containsFluid());
             }
         }
 
@@ -1354,9 +1359,20 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     @Override
     public boolean isBusy() {
+        final int currentTick = getCurrentServerTick();
+        if (currentTick != Integer.MIN_VALUE) {
+            final long cache = this.busyCache;
+            // we specifically only return if busy to prevent the case where multiple try to
+            // happen in a tick which may update the busy state.
+            // since this evaluation is done in onPostTick, it is highly unlikely that we become un-busy this exact tick
+            if ((int) (cache >>> 1) == currentTick && (cache & 1L) != 0L) {
+                return true;
+            }
+        }
+
         if (this.hasItemsToSend()) {
             scheduledReason = ScheduledReason.SOMETHING_STUCK;
-            return true;
+            return this.cacheBusyResult(currentTick, true);
         }
 
         boolean busy = false;
@@ -1396,6 +1412,21 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             busy = true;
         }
 
+        return busy ? this.cacheBusyResult(currentTick, busy) : busy;
+    }
+
+    private static int getCurrentServerTick() {
+        final MinecraftServer server = MinecraftServer.getServer();
+        if (server == null) {
+            return Integer.MIN_VALUE;
+        }
+        return server.getTickCounter();
+    }
+
+    private boolean cacheBusyResult(final int currentTick, final boolean busy) {
+        if (currentTick != Integer.MIN_VALUE) {
+            this.busyCache = (((long) currentTick) << 1) | (busy ? 1L : 0L);
+        }
         return busy;
     }
 
@@ -1795,7 +1826,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return unlockStacks;
     }
 
+    private boolean duringPushOut = false;
+
     public void updateRedstoneState() {
+        if (this.gridProxy.isActive() && !duringPushOut) this.pushItemsOut(this.iHost.getTargets());
         // reset cache to undecided
         redstoneState = YesNo.UNDECIDED;
 

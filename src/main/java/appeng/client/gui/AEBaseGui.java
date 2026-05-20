@@ -699,6 +699,14 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         aeRenderItem.parent = null;
     }
 
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (this.inventorySlots instanceof AEBaseContainer container) {
+            container.tickClientSync();
+        }
+    }
+
     @Nullable
     protected Slot getSlot(final int mouseX, final int mouseY) {
         final List<Slot> slots = this.getInventorySlots();

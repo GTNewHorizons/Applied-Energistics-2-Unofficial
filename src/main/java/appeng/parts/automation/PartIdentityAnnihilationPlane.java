@@ -18,13 +18,9 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.parts.IPart;
-import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.client.texture.CableBusTextures;
 import appeng.util.Platform;
@@ -32,8 +28,6 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class PartIdentityAnnihilationPlane extends PartAnnihilationPlane {
-
-    private static final IIcon ACTIVE_ICON = CableBusTextures.BlockIdentityAnnihilationPlaneOn.getIcon();
 
     private static final float SILK_TOUCH_FACTOR = 16;
 
@@ -45,16 +39,7 @@ public class PartIdentityAnnihilationPlane extends PartAnnihilationPlane {
     @SideOnly(Side.CLIENT)
     public void renderStatic(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer) {
-        this.renderStaticWithIcon(x, y, z, rh, renderer, ACTIVE_ICON);
-    }
-
-    @Override
-    protected boolean isAnnihilationPlane(final TileEntity blockTileEntity, final ForgeDirection side) {
-        if (blockTileEntity instanceof IPartHost) {
-            final IPart p = ((IPartHost) blockTileEntity).getPart(side);
-            return p != null && p.getClass() == this.getClass();
-        }
-        return false;
+        this.renderStaticWithIcon(x, y, z, rh, renderer);
     }
 
     @Override
@@ -87,5 +72,10 @@ public class PartIdentityAnnihilationPlane extends PartAnnihilationPlane {
         } else {
             return super.obtainBlockDrops(w, x, y, z);
         }
+    }
+
+    @Override
+    public IIcon getActiveIcon() {
+        return CableBusTextures.BlockIdentityAnnihilationPlaneOn.getIcon();
     }
 }

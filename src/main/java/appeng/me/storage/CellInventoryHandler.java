@@ -10,8 +10,6 @@
 
 package appeng.me.storage;
 
-import java.util.List;
-
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -159,14 +157,5 @@ public abstract class CellInventoryHandler<StackType extends IAEStack<StackType>
     @Override
     public TYPE getCellType() {
         return this.getStorageChannel() == StorageChannel.FLUIDS ? TYPE.FLUID : TYPE.ITEM;
-    }
-
-    public List<Object> getRestricted() {
-        ICellInventory<?> cellInventory = this.getCellInv();
-        if (cellInventory instanceof CellInventory<?>ci) {
-            return ci.getRestriction();
-
-        }
-        return null;
     }
 }
