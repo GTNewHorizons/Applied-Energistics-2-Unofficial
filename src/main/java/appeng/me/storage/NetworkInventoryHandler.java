@@ -177,7 +177,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 // inventory accepts the item at all, to avoid doing the exact same check again in the second pass.
                 // This als assumes that canAccept is not dependent on stack size
                 if (canAcceptInput && passTwoIndex == -1 && inv.validForPass(2)) {
-                    if (type == Actionable.SIMULATE) cacheInjected.put(i, cache.getStackSize() - input.getStackSize());
                     passTwoIndex = i;
                     // If we're at a pass 2 only inventory, we can stop here and continue with pass 2
                     if (!validForPass1) break;
