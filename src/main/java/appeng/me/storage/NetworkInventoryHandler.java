@@ -164,7 +164,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
                     input = inv.injectItems(input, type, src);
                     if (input == null) break outer;
-                    
+
                     if (type == Actionable.SIMULATE && inv.validForPass(2)) {
                         long accepted = before - input.getStackSize();
                         if (accepted > 0) {
