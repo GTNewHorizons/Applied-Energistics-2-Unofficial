@@ -212,8 +212,14 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                         .drainStackFromContainer(hand, stack.setStackSize(amountToInject));
                 if (drained.rightLong() == 0 || drained.left() == null) return;
 
-                Platform.poweredInsert(energy, monitor, stack.setStackSize(drained.rightLong()), source);
+                final IAEStack<?> modulateLeftover = Platform
+                        .poweredInsert(energy, monitor, stack.setStackSize(drained.rightLong()), source);
                 ItemStack result = drained.left();
+                // for make sure, simulate not reliable
+                if (modulateLeftover != null) {
+                    ObjectLongPair<ItemStack> filled = type.fillContainer(result, modulateLeftover);
+                    result = filled.left();
+                }
 
                 if (stackSize == 1) {
                     player.inventory.setInventorySlotContents(player.inventory.currentItem, result);
@@ -257,6 +263,9 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                         stored.copy().setStackSize(amountToFill),
                         new PlayerSource(player, this));
                 if (extracted == null) return;
+                else if (extracted.getStackSize() != amountToFill) {
+                    Platform.poweredInsert(energy, monitor, extracted, new PlayerSource(player, this));
+                }
 
                 ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), extracted);
                 ItemStack result = filled.left();
