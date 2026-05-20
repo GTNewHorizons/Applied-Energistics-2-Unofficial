@@ -180,7 +180,7 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     }
 
     @Override
-    public int getTypeWeight() {
+    public int getAmountPerByte() {
         return 8;
     }
 }
