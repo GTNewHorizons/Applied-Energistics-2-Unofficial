@@ -179,6 +179,7 @@ public class Platform {
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
     public static final boolean isPosteaLoaded = Loader.isModLoaded("postea");
     public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");
+    public static final boolean isEndlessIdsLoaded = Loader.isModLoaded("endlessids");
 
     static {
         BYTE_LIMIT = new double[10];
