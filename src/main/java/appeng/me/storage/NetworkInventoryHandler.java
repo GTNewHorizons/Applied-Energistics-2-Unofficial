@@ -160,7 +160,17 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 if (validForPass1 && (canAcceptInput = inv.canAccept(input))
                         && (inv.isPrioritized(input) || inv.extractItems(input, Actionable.SIMULATE, src) != null)) {
                     input = inv.injectItems(input, type, src);
+                    long before = input.getStackSize();
+
+                    input = inv.injectItems(input, type, src);
                     if (input == null) break outer;
+                    
+                    if (type == Actionable.SIMULATE && inv.validForPass(2)) {
+                        long accepted = before - input.getStackSize();
+                        if (accepted > 0) {
+                            simulatedPass1Inserted.addTo(i, accepted);
+                        }
+                    }
                 }
 
                 // We remember at which index the second pass should start iterating. Additionally, we check if the
