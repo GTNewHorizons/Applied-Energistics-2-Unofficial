@@ -919,12 +919,15 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
         }
 
         public void drawTextBox(final int mouseX, final int mouseY) {
+            final int localMouseX = mouseX - guiLeft;
+            final int localMouseY = mouseY - guiTop;
+
             GL11.glPushMatrix();
             GL11.glScaled(0.5, 0.5, 0.5);
             nameField[totalPos].drawTextBox();
             if (nameField[totalPos].isVisible()
-                    && nameField[totalPos].isMouseIn((mouseX - guiLeft) * 2, (mouseY - guiTop) * 2)) {
-                drawTooltip(mouseX + 11, Math.max(mouseY, 15) + 4, nameField[totalPos].getMessage());
+                    && nameField[totalPos].isMouseIn(localMouseX * 2, localMouseY * 2)) {
+                drawTooltip(localMouseX + 11, Math.max(localMouseY, 15) + 4, nameField[totalPos].getMessage());
             }
 
             if (!nameField[totalPos].isFocused()) nameField[totalPos].setText(this.getTitleName());
