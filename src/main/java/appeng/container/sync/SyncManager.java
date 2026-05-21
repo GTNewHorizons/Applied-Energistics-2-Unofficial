@@ -104,6 +104,15 @@ public final class SyncManager {
         this.sendUpdates(SyncEndpoint.CLIENT, false);
     }
 
+    public void flushClient() {
+        if (!Platform.isClient()) {
+            return;
+        }
+
+        this.freezeLayout();
+        this.sendUpdates(SyncEndpoint.CLIENT, false);
+    }
+
     public void readIncoming(final SyncEndpoint remoteEndpoint, final ByteBuf buf) {
         this.freezeLayout();
 

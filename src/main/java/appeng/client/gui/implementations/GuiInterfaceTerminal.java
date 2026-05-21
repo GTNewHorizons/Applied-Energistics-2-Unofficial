@@ -1918,7 +1918,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                                                 PlayerMessages.MachineInOtherDimNamed.getUnlocalized() }),
                         selfRep.getDisplayName());
 
-                mc.thePlayer.closeScreen();
+                GuiInterfaceTerminal.this.closeGui();
                 return true;
             }
 

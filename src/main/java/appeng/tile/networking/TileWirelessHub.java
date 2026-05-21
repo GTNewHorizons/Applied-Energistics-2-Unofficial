@@ -79,6 +79,10 @@ public class TileWirelessHub extends TileWirelessBase {
             final DimensionalCoord target = iterator.next();
             TileWirelessBase tile = getAndCheckTile(target, worldObj, null);
             if (tile == null) continue;
+            if (isConnectedTo(tile)) {
+                iterator.remove();
+                continue;
+            }
             final BindResult result = WireLessToolHelper.performConnection(tile, this, new MachineSource(this));
             if (result == BindResult.SUCCESS || result == BindResult.ALREADY_BIND) iterator.remove();
         }
