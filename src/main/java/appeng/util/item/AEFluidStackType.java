@@ -213,4 +213,9 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     public IAEFluidStack getTestStack() {
         return this.testStack.copy();
     }
+
+    @Override
+    public int getAmountPerByte() {
+        return 8 * 256;
+    }
 }
