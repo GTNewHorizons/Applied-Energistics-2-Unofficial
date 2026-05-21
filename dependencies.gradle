@@ -48,7 +48,7 @@ dependencies {
     //runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
 
     //Uncomment to test with GT5 machines
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.527:dev') {transitive = false} 
+    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.527:dev') {transitive = false}
     //runtimeOnlyNonPublishable('com.github.GTNewHorizons:StructureLib:1.4.34:dev') {transitive = false}
     //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ModularUI:1.3.4:dev') {transitive = false}
     //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ModularUI2:2.3.65-1.7.10:dev') {transitive = false}
