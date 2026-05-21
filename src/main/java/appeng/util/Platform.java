@@ -73,6 +73,7 @@ import org.lwjgl.input.Keyboard;
 
 import com.glodblock.github.common.item.ItemFluidDrop;
 import com.glodblock.github.common.item.ItemFluidPacket;
+import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
 import com.mojang.authlib.GameProfile;
 
@@ -2170,5 +2171,9 @@ public class Platform {
         } else {
             return null;
         }
+    }
+
+    public static String fmt(double v) {
+        return NumberFormatUtil.formatNumber(v);
     }
 }

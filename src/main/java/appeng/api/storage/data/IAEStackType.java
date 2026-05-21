@@ -105,4 +105,8 @@ public interface IAEStackType<T extends IAEStack> {
     IIcon getButtonIcon();
 
     T getTestStack();
+
+    default int getTypeWeight() {
+        return 1;
+    };
 }

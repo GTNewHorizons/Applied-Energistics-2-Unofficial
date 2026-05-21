@@ -100,6 +100,7 @@ import appeng.container.implementations.ContainerSpatialIOPort;
 import appeng.container.implementations.ContainerSpatialLinkChamber;
 import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerStorageReshuffle;
+import appeng.container.implementations.ContainerSuperMEReplenisher;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
 import appeng.container.implementations.ContainerWirelessKit;
@@ -123,6 +124,7 @@ import appeng.tile.misc.TileCrystalGrowthChamber;
 import appeng.tile.misc.TileInscriber;
 import appeng.tile.misc.TileSecurity;
 import appeng.tile.misc.TileStorageReshuffle;
+import appeng.tile.misc.TileSuperMEReplenisher;
 import appeng.tile.misc.TileVibrationChamber;
 import appeng.tile.networking.TileWireless;
 import appeng.tile.qnb.TileQuantumBridge;
@@ -225,7 +227,7 @@ public enum GuiBridge implements IGuiHandler {
     GUI_CRAFTING_AMOUNT(ContainerCraftAmount.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
 
-    GUI_PATTERN_VALUE_AMOUNT(ContainerPatternValueAmount.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
+    GUI_PATTERN_VALUE_AMOUNT(ContainerPatternValueAmount.class, Object.class, GuiHostType.ITEM_OR_WORLD, null),
 
     GUI_PATTERN_MULTI(ContainerPatternMulti.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
 
@@ -246,6 +248,8 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null),
 
+    GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
+            SecurityPermissions.BUILD);
     GUI_CRYSTAL_GROWTH_CHAMBER(ContainerCrystalGrowthChamber.class, TileCrystalGrowthChamber.class, GuiHostType.WORLD,
             null),
 

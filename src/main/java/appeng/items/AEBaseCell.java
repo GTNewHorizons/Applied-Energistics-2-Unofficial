@@ -398,7 +398,7 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
 
     @Override
     public CellData getCellData(ItemStack is) {
-        return new CellData(this.totalBytes, this.totalTypes, this.perType, this.getTypeWeight());
+        return new CellData(this.totalBytes, this.totalTypes, this.perType, this.getStackType().getTypeWeight());
     }
 
     @Override
@@ -422,7 +422,4 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
     @Override
     @NotNull
     public abstract IAEStackType<?> getStackType();
-
-    @Override
-    public abstract int getTypeWeight();
 }

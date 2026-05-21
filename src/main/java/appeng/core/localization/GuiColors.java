@@ -221,6 +221,8 @@ public enum GuiColors implements Localization {
 
     ReshuffleToggleDisabledOverlay(0x80000000),
 
+    SuperMEReplenisherInventory(0x404040),
+    SuperMEReplenisherStatus(0x404040),;
     ColorButtonOutline(0xFF404040),
 
     WirelessKitGood(AEColor.Lime.mediumVariant),
