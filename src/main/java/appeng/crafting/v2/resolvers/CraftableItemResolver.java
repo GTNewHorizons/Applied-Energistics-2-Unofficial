@@ -424,6 +424,7 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                 return new StepOutput(Collections.emptyList());
             } else {
                 request.patternParents.add(this.pattern);
+                request.pattern = this.pattern;
                 ArrayList<CraftingRequest> newChildren = new ArrayList<>(
                         patternRecursionInputs.length + patternInputs.length);
                 if (isComplex) {
