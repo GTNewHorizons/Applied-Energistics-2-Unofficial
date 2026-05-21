@@ -77,6 +77,10 @@ public enum GuiText implements Localization {
     CraftingTerminal,
     FormationPlane,
     Inscriber,
+    AdvancedInscriber,
+    AdvancedInscriberLockOn,
+    AdvancedInscriberLockOff,
+    AdvancedInscriberLockNote,
     QuartzCuttingKnife,
 
     PatternOptimizer,
@@ -378,6 +382,17 @@ public enum GuiText implements Localization {
     SuperMEReplenisherThreshold,
     SuperMEReplenisherTarget,
     SuperMEReplenisherStored;
+    GuiWirelessKitColor,
+    GuiWirelessKitNetwork,
+    GuiWirelessKitSelfPos,
+    GuiWirelessKitTargetPos,
+    GuiWirelessKitChannelsUsage,
+    GuiWirelessKitNameFieldDesc,
+
+    GuiDimensionalCoord,
+    GuiDimensionalCoordShort,
+    GuiDimensionalCoordNoDim,
+    GuiDimensionalCoordShortNoDim;
 
     private final String root;
 
