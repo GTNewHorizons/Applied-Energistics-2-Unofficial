@@ -234,7 +234,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                 this.mc.thePlayer,
                 messages,
                 ((Localization) () -> "tile.appliedenergistics2.BlockInterface.name").getLocal());
-        this.mc.thePlayer.closeScreen();
+        this.closeGui();
     }
 
     @Override

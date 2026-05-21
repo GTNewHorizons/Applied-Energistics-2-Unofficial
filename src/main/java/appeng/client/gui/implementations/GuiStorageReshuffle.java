@@ -387,7 +387,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                         }
 
                         BlockPosHighlighter.highlightNamedBlocks(this.mc.thePlayer, ndcm, highlightGroupName);
-                        this.mc.thePlayer.closeScreen();
+                        this.closeGui();
                         return;
                     }
                 }
