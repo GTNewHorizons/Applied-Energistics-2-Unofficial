@@ -85,6 +85,7 @@ public enum GuiText implements Localization {
     AdvancedInscriberLockOff,
     AdvancedInscriberLockNote,
     QuartzCuttingKnife,
+    Colorizer,
 
     PatternOptimizer,
     StepsPerCraft,
