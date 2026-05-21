@@ -178,4 +178,9 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     public IAEItemStack getTestStack() {
         return this.testStack.copy();
     }
+
+    @Override
+    public int getAmountPerByte() {
+        return 8;
+    }
 }
