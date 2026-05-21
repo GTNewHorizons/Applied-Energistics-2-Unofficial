@@ -901,7 +901,7 @@ public class GuiMEMonitorable extends AEBaseGui
                                 this.getInventorySlots().size(),
                                 0);
                         NetworkHandler.instance.sendToServer(p);
-                        this.mc.thePlayer.closeScreen();
+                        this.closeGui();
                         return;
                     }
                 }

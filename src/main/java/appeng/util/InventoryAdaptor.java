@@ -94,6 +94,10 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             return null;
         }
 
+        if (d == null) {
+            return getAdaptorUncached(te, d, flags);
+        }
+
         final int currentTick = getCurrentServerTick();
         if (currentTick != Integer.MIN_VALUE) {
             cacheInvalidateIfStale(currentTick);

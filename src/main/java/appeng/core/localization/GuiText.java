@@ -381,6 +381,9 @@ public enum GuiText implements Localization {
     GuiWirelessKitSelfPos,
     GuiWirelessKitTargetPos,
     GuiWirelessKitChannelsUsage,
+    GuiWirelessKitUsageTooltip,
+    GuiWirelessKitUsedSlots,
+    GuiWirelessKitChannels,
     GuiWirelessKitNameFieldDesc,
 
     GuiDimensionalCoord,

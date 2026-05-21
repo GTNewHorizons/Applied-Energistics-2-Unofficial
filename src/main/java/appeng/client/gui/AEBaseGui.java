@@ -421,6 +421,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
             if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, keyBindPickBlockAction)) return;
         }
 
+        if (this.isCloseKey(keyCode)) {
+            this.flushPendingSync();
+        }
+
         super.keyTyped(typedChar, keyCode);
     }
 
@@ -695,6 +699,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     public void onGuiClosed() {
+        this.flushPendingSync();
         super.onGuiClosed();
         this.subGui = true; // in case the gui is reopened later ( i'm looking at you NEI )
         aeRenderItem.parent = null;
@@ -706,6 +711,21 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         if (this.inventorySlots instanceof AEBaseContainer container) {
             container.tickClientSync();
         }
+    }
+
+    protected void closeGui() {
+        this.flushPendingSync();
+        this.mc.thePlayer.closeScreen();
+    }
+
+    private void flushPendingSync() {
+        if (this.inventorySlots instanceof AEBaseContainer container) {
+            container.getSyncManager().flushClient();
+        }
+    }
+
+    protected boolean isCloseKey(final int keyCode) {
+        return keyCode == Keyboard.KEY_ESCAPE || keyCode == this.mc.gameSettings.keyBindInventory.getKeyCode();
     }
 
     @Nullable
