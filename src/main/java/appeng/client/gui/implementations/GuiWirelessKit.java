@@ -609,21 +609,25 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             GL11.glPopMatrix();
 
             int indicatorColor = GuiColors.WirelessKitGood.getColor();
-            String str;
+            final int usedSlots;
+            final int totalSlots;
             if (data.isHub) {
+                usedSlots = 32 - data.slots;
+                totalSlots = 32;
                 if (data.slots == 0) {
                     indicatorColor = GuiColors.WirelessKitBad.getColor();
                 } else if (data.slots < 32) {
                     indicatorColor = GuiColors.WirelessKitNeutral.getColor();
                 }
-                str = 32 - data.slots + "/32" + " | " + data.channels;
             } else {
+                usedSlots = 1 - data.slots;
+                totalSlots = 1;
                 if (data.slots == 0) {
                     indicatorColor = GuiColors.WirelessKitBad.getColor();
                 }
-                str = 1 - data.slots + "/1" + " | " + data.channels;
             }
-            drawSlotsIndicator(str, posY, indicatorColor);
+            String str = usedSlots + "/" + totalSlots + " | " + data.channels;
+            drawSlotsIndicator(str, posY, indicatorColor, mouseX, mouseY, usedSlots, totalSlots, data.channels);
             super.draw(mouseX, mouseY);
         }
 
@@ -823,7 +827,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                 }
             }
 
-            drawSlotsIndicator(str, posY, indicatorColor);
+            drawSlotsIndicator(str, posY, indicatorColor, mouseX, mouseY, this.usedSlots, this.slots, this.channels);
 
             super.draw(mouseX, mouseY);
         }
@@ -919,12 +923,14 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
         }
 
         public void drawTextBox(final int mouseX, final int mouseY) {
+            final int localMouseX = mouseX - guiLeft;
+            final int localMouseY = mouseY - guiTop;
+
             GL11.glPushMatrix();
             GL11.glScaled(0.5, 0.5, 0.5);
             nameField[totalPos].drawTextBox();
-            if (nameField[totalPos].isVisible()
-                    && nameField[totalPos].isMouseIn((mouseX - guiLeft) * 2, (mouseY - guiTop) * 2)) {
-                drawTooltip(mouseX + 11, Math.max(mouseY, 15) + 4, nameField[totalPos].getMessage());
+            if (nameField[totalPos].isVisible() && nameField[totalPos].isMouseIn(localMouseX * 2, localMouseY * 2)) {
+                drawTooltip(localMouseX + 11, Math.max(localMouseY, 15) + 4, nameField[totalPos].getMessage());
             }
 
             if (!nameField[totalPos].isFocused()) nameField[totalPos].setText(this.getTitleName());
@@ -943,7 +949,8 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             GL11.glPopMatrix();
         }
 
-        public void drawSlotsIndicator(String str, int posY, int indicatorColor) {
+        public void drawSlotsIndicator(String str, int posY, int indicatorColor, int mouseX, int mouseY, int usedSlots,
+                int totalSlots, int channels) {
             drawRect(xo, posY + 15, xo + 14, posY + 20, indicatorColor - 16777216);
             GL11.glPushMatrix();
             GL11.glScaled(0.25, 0.25, 0.25);
@@ -951,8 +958,21 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     str,
                     (xo + 7) * 4 - (fontRendererObj.getStringWidth(str) / 2),
                     posY * 4 + 66,
-                    GuiColors.CraftingCPUStored.getColor());
+                    GuiColors.WirelessKitIndicatorText.getColor());
             GL11.glPopMatrix();
+
+            final int localMouseX = mouseX - guiLeft;
+            final int localMouseY = mouseY - guiTop;
+            if (xo <= localMouseX && localMouseX < nameField[totalPos].x / 2
+                    && posY <= localMouseY
+                    && localMouseY < posY + h) {
+                drawTooltip(
+                        localMouseX + 11,
+                        Math.max(localMouseY, 15) + 4,
+                        new String[] { GuiText.GuiWirelessKitUsageTooltip.getLocal(),
+                                GuiText.GuiWirelessKitUsedSlots.getLocal(usedSlots, totalSlots),
+                                GuiText.GuiWirelessKitChannels.getLocal(channels) });
+            }
         }
 
         protected void renameCommand() {}
