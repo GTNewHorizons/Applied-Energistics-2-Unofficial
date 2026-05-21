@@ -241,9 +241,10 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     public void writeToNBT_TileWirelessConnector(final NBTTagCompound data) {
         data.setShort("Color", (short) color.ordinal());
 
-        getConnectedTiles().forEach(t -> locList.add(t.getLocation()));
+        final Set<DimensionalCoord> toSave = new HashSet<>(locList);
+        getConnectedTiles().forEach(t -> toSave.add(t.getLocation()));
         final NBTTagCompound nbt = new NBTTagCompound();
-        DimensionalCoord.writeListToNBT(nbt, new ArrayList<>(this.locList));
+        DimensionalCoord.writeListToNBT(nbt, new ArrayList<>(toSave));
         data.setTag("connectedTargets", nbt);
     }
 

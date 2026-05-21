@@ -105,4 +105,6 @@ public interface IAEStackType<T extends IAEStack> {
     IIcon getButtonIcon();
 
     T getTestStack();
+
+    int getAmountPerByte();
 }
