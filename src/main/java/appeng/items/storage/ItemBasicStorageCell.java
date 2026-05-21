@@ -35,9 +35,4 @@ public class ItemBasicStorageCell extends AEBaseCell {
     public IAEStackType<?> getStackType() {
         return ITEM_STACK_TYPE;
     }
-
-    @Override
-    public int getTypeWeight() {
-        return 8;
-    }
 }
