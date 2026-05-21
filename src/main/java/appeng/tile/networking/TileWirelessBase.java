@@ -22,7 +22,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.collect.ImmutableList;
 
 import appeng.api.AEApi;
-import appeng.api.config.PowerMultiplier;
 import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridConnection;
@@ -171,16 +170,15 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     }
 
     public void setConnectionsPowerDraw() {
-        double idlePowerUse = PowerMultiplier.CONFIG.multiply( // apply the AE2 configuration multiplier
-                getConnectedTiles().stream().mapToDouble(tile -> {
-                    int dx = this.xCoord - tile.xCoord;
-                    int dy = this.yCoord - tile.yCoord;
-                    int dz = this.zCoord - tile.zCoord;
-                    double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                    return AEConfig.instance.getWirelessConnectorPowerBase()
-                            + AEConfig.instance.getWirelessConnectorPowerDistanceMultiplier() * dist
-                                    * Math.log(dist * dist + 3);
-                }).sum());
+        double idlePowerUse = getConnectedTiles().stream().mapToDouble(tile -> {
+            int dx = this.xCoord - tile.xCoord;
+            int dy = this.yCoord - tile.yCoord;
+            int dz = this.zCoord - tile.zCoord;
+            double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            return AEConfig.instance.getWirelessConnectorPowerBase()
+                    + AEConfig.instance.getWirelessConnectorPowerDistanceMultiplier() * dist
+                            * Math.log(dist * dist + 3);
+        }).sum();
         this.setPowerDraw(idlePowerUse);
     }
 
