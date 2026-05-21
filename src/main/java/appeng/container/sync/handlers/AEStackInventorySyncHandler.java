@@ -22,6 +22,9 @@ import io.netty.buffer.Unpooled;
 
 public class AEStackInventorySyncHandler extends AbstractSyncHandler {
 
+    private static final int DEFAULT_SERVER_DIFF_CHECK_INTERVAL = 1;
+    private static final int DEFAULT_CLIENT_DIFF_CHECK_INTERVAL = 0;
+
     @FunctionalInterface
     public interface InventoryChangeListener {
 
@@ -31,6 +34,8 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
     private final @NotNull IAEStackInventory inventory;
     private final List<AEStackInventoryDelta> pendingDeltas = new ArrayList<>();
     private IAEStack<?>[] lastSentSnapshot;
+    private int diffCheckInterval;
+    private int diffCheckTicks;
     private @Nullable InventoryChangeListener clientChangeListener;
     private @Nullable InventoryChangeListener serverChangeListener;
 
@@ -39,6 +44,8 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
         super(manager, key, fullKey, direction);
         this.inventory = Objects.requireNonNull(inventory, "inventory");
         this.lastSentSnapshot = this.copyInventory();
+        this.diffCheckInterval = Platform.isClient() ? DEFAULT_CLIENT_DIFF_CHECK_INTERVAL
+                : DEFAULT_SERVER_DIFF_CHECK_INTERVAL;
         this.dirty = false;
     }
 
@@ -55,6 +62,22 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
         this.applyDelta(delta);
         this.pendingDeltas.add(delta);
         this.markDirtyInternal();
+    }
+
+    /**
+     * Sets how often the handler performs a periodic full inventory diff without a dirty mark. Dirty marks, queued
+     * deltas, and forced full resyncs are still sent immediately. Use 0 to disable periodic checks.
+     */
+    public @NotNull AEStackInventorySyncHandler setDiffCheckInterval(final int ticks,
+            final @NotNull SyncDirection applicableDirection) {
+        if (!applicableDirection.canSendFrom(this.getLocalEndpoint())) {
+            return this;
+        }
+
+        final int interval = Math.max(0, ticks);
+        this.diffCheckInterval = interval;
+        this.diffCheckTicks = this.initialDiffCheckTicks(interval);
+        return this;
     }
 
     public @NotNull AEStackInventorySyncHandler onClientChange(final InventoryChangeListener listener) {
@@ -79,13 +102,19 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
                 return null;
             }
         } else if (!this.dirty && !forceFullResync) {
-            return null;
+            if (!this.shouldRunDiffCheck()) {
+                return null;
+            }
         }
 
-        if (!initialSync && !forceFullResync && this.valuesEqual(this.lastSentSnapshot)) {
-            this.clearQueuedDeltas();
-            this.dirty = false;
-            return null;
+        List<AEStackInventoryDelta> detectedDeltas = null;
+        if (!initialSync && !forceFullResync && this.pendingDeltas.isEmpty()) {
+            detectedDeltas = this.diff();
+            if (detectedDeltas == null || detectedDeltas.isEmpty()) {
+                this.clearQueuedDeltas();
+                this.dirty = false;
+                return null;
+            }
         }
 
         SyncMode mode = SyncMode.FULL;
@@ -95,7 +124,7 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
             final ByteBuf fullPayload = Unpooled.buffer();
             this.writeFull(fullPayload);
 
-            final ByteBuf deltaPayload = this.writeDeltaPayload();
+            final ByteBuf deltaPayload = this.writeDeltaPayload(detectedDeltas);
             if (deltaPayload != null && deltaPayload.readableBytes() < fullPayload.readableBytes()) {
                 mode = SyncMode.DELTA;
                 payload = deltaPayload;
@@ -168,8 +197,9 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
         }
     }
 
-    private @Nullable ByteBuf writeDeltaPayload() throws IOException {
-        final List<AEStackInventoryDelta> deltas = this.pendingDeltas.isEmpty() ? this.diff() : this.pendingDeltas;
+    private @Nullable ByteBuf writeDeltaPayload(final @Nullable List<AEStackInventoryDelta> detectedDeltas)
+            throws IOException {
+        final List<AEStackInventoryDelta> deltas = this.pendingDeltas.isEmpty() ? detectedDeltas : this.pendingDeltas;
         if (deltas == null || deltas.isEmpty()) {
             return null;
         }
@@ -203,6 +233,37 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
         this.pendingDeltas.clear();
     }
 
+    private boolean shouldRunDiffCheck() {
+        final int interval = this.diffCheckInterval;
+        if (interval <= 0) {
+            return false;
+        }
+        if (interval <= 1) {
+            return true;
+        }
+
+        this.diffCheckTicks = Math.min(this.diffCheckTicks, interval - 1);
+        if (this.diffCheckTicks > 0) {
+            this.diffCheckTicks--;
+            return false;
+        }
+
+        this.diffCheckTicks = interval - 1;
+        return true;
+    }
+
+    private SyncEndpoint getLocalEndpoint() {
+        return Platform.isClient() ? SyncEndpoint.CLIENT : SyncEndpoint.SERVER;
+    }
+
+    private int initialDiffCheckTicks(final int interval) {
+        if (interval <= 1) {
+            return 0;
+        }
+
+        return Math.floorMod(this.fullKey.hashCode(), interval);
+    }
+
     private void applyDeltaPayload(final ByteBuf buf) throws IOException {
         final int deltaCount = buf.readInt();
         if (deltaCount <= 0) {
@@ -225,16 +286,6 @@ public class AEStackInventorySyncHandler extends AbstractSyncHandler {
         }
 
         this.inventory.putAEStackInSlot(slotIndex, delta.getStack());
-    }
-
-    private boolean valuesEqual(final IAEStack<?>[] snapshot) {
-        for (int slot = 0; slot < this.inventory.getSizeInventory(); slot++) {
-            if (!Platform.isStacksIdentical(this.inventory.getAEStackInSlot(slot), snapshot[slot])) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private IAEStack<?>[] copyInventory() {
