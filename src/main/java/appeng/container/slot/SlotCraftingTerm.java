@@ -193,8 +193,6 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                 boolean canContinue = this.postCraft(p, inv, set, is);
                 cleanup(p, inv, set);
                 if (!canContinue && i < (multiple - 1)) break;
-
-                cleanup(p, inv, set);
             }
 
             is.stackSize *= crafted;
