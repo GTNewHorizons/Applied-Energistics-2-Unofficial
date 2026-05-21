@@ -844,7 +844,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     final Map<NamedDimensionalCoord, String[]> messages = new HashMap<>();
                     this.cordList.forEach(c -> messages.put(c, this.getHighlightKeys()));
                     BlockPosHighlighter.highlightNamedBlocks(mc.thePlayer, messages, prefix);
-                    mc.thePlayer.closeScreen();
+                    GuiWirelessKit.this.closeGui();
                 } else {
                     if (includeConnectorsButtons[totalPos].mousePressed(null, xPos, yPos)) {
                         this.includeConnectors ^= true;
@@ -1008,7 +1008,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                             mc.thePlayer,
                             messages,
                             PlayerMessages.WirelessHighlighterPrefix.getLocal());
-                    mc.thePlayer.closeScreen();
+                    GuiWirelessKit.this.closeGui();
                     return;
                 }
 
