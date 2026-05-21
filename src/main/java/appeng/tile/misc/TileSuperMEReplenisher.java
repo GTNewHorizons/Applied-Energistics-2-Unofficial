@@ -412,7 +412,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
         this.markForUpdate();
 
         final IAEStackType<?> stackType = input.getStackType();
-        final int typeWeight = stackType.getTypeWeight();
+        final int typeWeight = stackType.getAmountPerByte();
         final long stackSize = input.getStackSize();
         final int unusedCount = this.unusedCount.getOrDefault(stackType, 0);
         final int freeUnusedCount = unusedCount == 0 ? 0 : typeWeight - unusedCount;
@@ -490,7 +490,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
         if (mode == Actionable.MODULATE) {
             stack.decStackSize(requestSize);
             if (!this.unlimited) {
-                final int typeWeight = stackType.getTypeWeight();
+                final int typeWeight = stackType.getAmountPerByte();
                 final int unusedCount = this.unusedCount.getOrDefault(stackType, 0);
 
                 final long needBytes;
@@ -516,7 +516,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
     private void countUsedBytes() {
         this.usedBytes = 0;
         this.lists.forEach((stackType, list) -> {
-            final int typeWeight = stackType.getTypeWeight();
+            final int typeWeight = stackType.getAmountPerByte();
             AtomicLong unusedCount = new AtomicLong();
             list.forEach(listItem -> {
                 final long stackSize = ((IAEStack<?>) listItem).getStackSize();

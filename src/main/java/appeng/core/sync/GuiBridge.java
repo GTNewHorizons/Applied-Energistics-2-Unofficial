@@ -248,12 +248,13 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null),
 
-    GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
-            SecurityPermissions.BUILD);
     GUI_CRYSTAL_GROWTH_CHAMBER(ContainerCrystalGrowthChamber.class, TileCrystalGrowthChamber.class, GuiHostType.WORLD,
             null),
 
-    GUI_SUPER_WIRELESS_KIT(ContainerWirelessKit.class, IGuiItemObject.class, GuiHostType.ITEM, null);
+    GUI_SUPER_WIRELESS_KIT(ContainerWirelessKit.class, IGuiItemObject.class, GuiHostType.ITEM, null),
+
+    GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
+            SecurityPermissions.BUILD);
 
     private final Class tileClass;
     private final Class containerClass;

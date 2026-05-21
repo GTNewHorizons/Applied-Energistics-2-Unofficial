@@ -221,8 +221,6 @@ public enum GuiColors implements Localization {
 
     ReshuffleToggleDisabledOverlay(0x80000000),
 
-    SuperMEReplenisherInventory(0x404040),
-    SuperMEReplenisherStatus(0x404040),;
     ColorButtonOutline(0xFF404040),
 
     WirelessKitGood(AEColor.Lime.mediumVariant),
@@ -244,7 +242,10 @@ public enum GuiColors implements Localization {
     GuiAeButtonUnderline(0xFF000000),
     GuiAeButtonLineBeforeUnderlineDefault(0xFF565656),
     GuiAeButtonLineBeforeUnderlineHover(0xFF5C669D),
-    GuiAeButtonLineBeforeUnderlineDisabled(0xFF2C2C2C);
+    GuiAeButtonLineBeforeUnderlineDisabled(0xFF2C2C2C),
+
+    SuperMEReplenisherInventory(0x404040),
+    SuperMEReplenisherStatus(0x404040),;
 
     private final int color;
 

@@ -82,7 +82,7 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
 
                 this.fontRendererObj.drawString(
                         GuiText.SuperMEReplenisherBytesUsed
-                                .getLocal(fmt((long) Math.ceil((double) storedSize / type.getTypeWeight()))),
+                                .getLocal(fmt((long) Math.ceil((double) storedSize / type.getAmountPerByte()))),
                         29,
                         85,
                         GuiColors.SuperMEReplenisherStatus.getColor());
