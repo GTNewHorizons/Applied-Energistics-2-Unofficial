@@ -106,7 +106,5 @@ public interface IAEStackType<T extends IAEStack> {
 
     T getTestStack();
 
-    default int getTypeWeight() {
-        return 1;
-    };
+    int getAmountPerByte();
 }

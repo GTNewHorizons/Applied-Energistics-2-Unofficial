@@ -497,6 +497,9 @@ gui.appliedenergistics2.GuiWirelessKitNetwork=N: %s
 gui.appliedenergistics2.GuiWirelessKitSelfPos=S: %s
 gui.appliedenergistics2.GuiWirelessKitTargetPos=T: %s
 gui.appliedenergistics2.GuiWirelessKitChannelsUsage=Channels Usage: %s
+gui.appliedenergistics2.GuiWirelessKitUsageTooltip=Wireless Usage
+gui.appliedenergistics2.GuiWirelessKitUsedSlots=Used Slots: %s / %s
+gui.appliedenergistics2.GuiWirelessKitChannels=Channels: %s
 gui.appliedenergistics2.GuiWirelessKitNameFieldDesc=Rename connector in world or group in gui
 
 gui.appliedenergistics2.GuiDimensionalCoord=§cX: %s§r,§aY: %s§r,§9Z: %s§r,§5DIM: %s

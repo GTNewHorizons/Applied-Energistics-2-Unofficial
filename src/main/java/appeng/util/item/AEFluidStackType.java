@@ -215,7 +215,7 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     }
 
     @Override
-    public int getTypeWeight() {
+    public int getAmountPerByte() {
         return 8 * 256;
     }
 }

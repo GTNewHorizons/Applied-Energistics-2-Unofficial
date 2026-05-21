@@ -69,7 +69,7 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         if (this.cellItem.getItem() instanceof IStorageCell type) {
             this.cellType = type;
             this.maxTypes = this.cellType.getTotalTypes(this.cellItem);
-            this.typeWeight = type.getStackType().getTypeWeight();
+            this.typeWeight = type.getStackType().getAmountPerByte();
         } else this.cellType = null;
 
         if (this.cellType == null) {

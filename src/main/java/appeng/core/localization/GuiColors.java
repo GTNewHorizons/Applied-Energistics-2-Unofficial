@@ -228,6 +228,7 @@ public enum GuiColors implements Localization {
     WirelessKitGood(AEColor.Lime.mediumVariant),
     WirelessKitNeutral(AEColor.Orange.mediumVariant),
     WirelessKitBad(AEColor.Red.mediumVariant),
+    WirelessKitIndicatorText(0x404040),
 
     NetworkVisualiserFloatingText(0xffffffff),
     NetworkVisualiserNodeMissing(0xffff0000),
