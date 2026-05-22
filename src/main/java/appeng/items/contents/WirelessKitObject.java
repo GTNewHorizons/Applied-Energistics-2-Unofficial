@@ -4,6 +4,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.Settings;
 import appeng.api.config.WirelessToolGroupBy;
 import appeng.api.config.YesNo;
@@ -11,7 +13,6 @@ import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.util.ConfigManager;
-import appeng.util.Platform;
 
 public class WirelessKitObject implements IGuiItemObject, IConfigurableObject {
 
@@ -35,14 +36,14 @@ public class WirelessKitObject implements IGuiItemObject, IConfigurableObject {
     @Override
     public IConfigManager getConfigManager() {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(WirelessKitObject.this.stack);
+            final NBTTagCompound data = ItemStackNBT.get(this.stack);
             manager.writeToNBT(data);
         });
 
         out.registerSetting(Settings.WIRELESS_TOOL_GROUP_BY, WirelessToolGroupBy.Single);
         out.registerSetting(Settings.WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
 
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(this.stack).copy());
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(this.stack).copy());
         return out;
     }
 }
