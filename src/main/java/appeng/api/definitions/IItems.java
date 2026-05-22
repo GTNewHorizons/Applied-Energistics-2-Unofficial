@@ -124,4 +124,6 @@ public interface IItems {
     IItemDefinition toolNetworkVisualiser();
 
     IItemDefinition toolWirelessKit();
+
+    IItemDefinition leftoverContainer();
 }

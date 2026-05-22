@@ -88,6 +88,7 @@ import appeng.helpers.IPinsHandler;
 import appeng.helpers.MonitorableAction;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.PinsHandler;
+import appeng.items.misc.ItemLeftoverContainer;
 import appeng.items.storage.ItemViewCell;
 import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
@@ -599,6 +600,24 @@ public class ContainerMEMonitorable extends AEBaseContainer
             slotItem = itemMonitor.getAvailableItem(ais, fetchNewId());
         }
 
+        final ItemStack tempHand = player.inventory.getItemStack();
+        if (tempHand != null && tempHand.getItem() instanceof ItemLeftoverContainer) {
+            final IAEStack<?> tempAes = Platform.handleLeftover(tempHand);
+            if (tempAes == null) return;
+            final IMEMonitor tempMonitor = getMonitorWithFilter(tempAes.getStackType());
+            if (tempMonitor == null) return;
+
+            player.inventory.setItemStack(null);
+            this.updateHeld(player);
+
+            final IAEStack<?> res = Platform
+                    .poweredInsert(this.getPowerSource(), tempMonitor, tempAes, this.getActionSource());
+
+            if (res != null) Platform.handleLeftover(player, res);
+
+            return;
+        }
+
         switch (action) {
             case AUTO_CRAFT -> {} // handled in PacketMonitorableAction
             case SET_PIN -> {
@@ -782,7 +801,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
                     ItemStack result = simulated.left();
 
-                    IAEStack<?> modulateLeftover = monitor.injectItems(
+                    final IAEStack<?> modulateLeftover = monitor.injectItems(
                             stack.setStackSize(simulated.rightLong()),
                             Actionable.MODULATE,
                             this.getActionSource());
@@ -790,10 +809,14 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     if (modulateLeftover != null) {
                         ObjectLongPair<ItemStack> modulateResult = type.fillContainer(result, modulateLeftover);
                         result = modulateResult.left();
+
+                        final long diff = modulateLeftover.getStackSize() - modulateResult.rightLong();
+                        if (diff != 0) Platform.handleLeftover(player, modulateLeftover.copy().setStackSize(diff));
+
+                        if (result == null) return;
                     }
 
-                    final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-                    if (adaptor.addItems(result) != null) player.dropItem(result.getItem(), result.stackSize);
+                    Platform.add2Player(player, result);
 
                     hand.stackSize--;
                     this.updateHeld(player);
@@ -838,10 +861,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
                                     .fillContainer(cleared.copy(), modulateLeftover);
                             ItemStack result = modulateResult.left();
 
-                            final InventoryAdaptor adaptor = InventoryAdaptor
-                                    .getAdaptor(player, ForgeDirection.UNKNOWN);
+                            final long diff = modulateLeftover.getStackSize() - modulateResult.rightLong();
+                            if (diff != 0) Platform.handleLeftover(player, modulateLeftover.copy().setStackSize(diff));
 
-                            if (adaptor.addItems(result) != null) player.dropItem(result.getItem(), result.stackSize);
+                            Platform.add2Player(player, result);
+                            hand.stackSize--;
                         }
 
                         cleared.stackSize = hand.stackSize;
@@ -851,25 +875,29 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     // If partial stack in hand will be empty
                     else {
                         int stackSize = hand.stackSize;
-
-                        final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                         for (int i = 0; i < stackSize; i++) {
                             toInject.setStackSize(amountPerItem);
                             leftover = monitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
                             injected = leftover == null ? amountPerItem : amountPerItem - leftover.getStackSize();
                             if (injected != amountPerItem) break;
                             toInject.setStackSize(amountPerItem);
-
                             ItemStack result = cleared.copy();
-                            IAEStack<?> modulateLeftover = monitor
+
+                            final IAEStack<?> modulateLeftover = monitor
                                     .injectItems(toInject, Actionable.MODULATE, this.getActionSource());
                             if (modulateLeftover != null) {
-                                ObjectLongPair<ItemStack> modulateResult = type
+                                final ObjectLongPair<ItemStack> modulateResult = type
                                         .fillContainer(cleared.copy(), modulateLeftover);
                                 result = modulateResult.left();
+
+                                final long diff = modulateLeftover.getStackSize() - modulateResult.rightLong();
+                                if (diff != 0)
+                                    Platform.handleLeftover(player, modulateLeftover.copy().setStackSize(diff));
+
+                                if (result == null) return;
                             }
 
-                            if (adaptor.addItems(result) != null) player.dropItem(result.getItem(), result.stackSize);
+                            Platform.add2Player(player, result);
 
                             hand.stackSize--;
                         }
@@ -888,7 +916,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.getAvailableItem(stackInSlot, fetchNewId());
+                stackInSlot = monitor.extractItems(stackInSlot, Actionable.MODULATE, this.getActionSource());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 if (hand.stackSize == 1) {
@@ -904,21 +932,30 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     long filledAmount = filledPair.rightLong();
                     if (filledContainer == null || filledAmount <= 0) return;
 
-                    final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-
-                    IAEStack<?> modulateResult = monitor.extractItems(
+                    final IAEStack<?> modulateResult = monitor.extractItems(
                             stackInSlot.copy().setStackSize(filledAmount),
                             Actionable.MODULATE,
                             this.getActionSource());
 
                     if (modulateResult == null) return;
-                    else if (modulateResult.getStackSize() != filledAmount) {
-                        ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), modulateResult);
+
+                    if (modulateResult.getStackSize() != filledAmount) {
+                        final ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), modulateResult);
                         filledContainer = filled.left();
+
+                        final long diff = modulateResult.getStackSize() - filled.rightLong();
+                        if (diff != 0) {
+                            final IAEStack<?> injectLeftover = monitor.injectItems(
+                                    modulateResult.copy().setStackSize(diff),
+                                    Actionable.MODULATE,
+                                    this.getActionSource());
+                            if (injectLeftover != null) Platform.handleLeftover(player, injectLeftover);
+                        }
+
+                        if (filledContainer == null) return;
                     }
 
-                    if (adaptor.addItems(filledContainer) != null)
-                        player.dropItem(filledContainer.getItem(), filledContainer.stackSize);
+                    Platform.add2Player(player, filledContainer);
 
                     hand.stackSize--;
                     this.updateHeld(player);
@@ -935,7 +972,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.getAvailableItem(stackInSlot, fetchNewId());
+                stackInSlot = monitor.extractItems(stackInSlot, Actionable.SIMULATE, this.getActionSource());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 // Set filled item to player hand
@@ -953,23 +990,30 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     if (fullFilledContainer.getMaxStackSize() >= hand.stackSize
                             && capacity * hand.stackSize <= stackInSlot.getStackSize()) {
                         // Fill all item in player hand
-                        IAEStack<?> modulateResult = monitor.extractItems(
+                        final IAEStack<?> modulateResult = monitor.extractItems(
                                 stackInSlot.copy().setStackSize(capacity * hand.stackSize),
                                 Actionable.MODULATE,
                                 this.getActionSource());
-
                         if (modulateResult == null) return;
-                        else if (modulateResult.getStackSize() != capacity * hand.stackSize) {
-                            ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), modulateResult);
+
+                        if (modulateResult.getStackSize() != capacity * hand.stackSize) {
+                            final ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), modulateResult);
+
+                            final long fillDiff = modulateResult.getStackSize() - filled.rightLong();
+                            if (fillDiff != 0) {
+                                final IAEStack<?> injectLeftover = monitor.extractItems(
+                                        modulateResult.copy().setStackSize(fillDiff),
+                                        Actionable.MODULATE,
+                                        this.getActionSource());
+                                if (injectLeftover != null) Platform.handleLeftover(player, injectLeftover);
+                            }
+
                             fullFilledContainer = filled.left();
 
                             final ItemStack restContainers = hand.copy();
                             restContainers.stackSize = hand.stackSize - fullFilledContainer.stackSize;
 
-                            final InventoryAdaptor adaptor = InventoryAdaptor
-                                    .getAdaptor(player, ForgeDirection.UNKNOWN);
-                            if (adaptor.addItems(restContainers) != null)
-                                player.dropItem(restContainers.getItem(), restContainers.stackSize);
+                            Platform.add2Player(player, restContainers);
 
                             hand.stackSize = hand.stackSize - restContainers.stackSize;
                         }
@@ -980,7 +1024,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     } else {
                         // Set all filled item to player hand
                         IAEStack<?> aes = stackInSlot.copy();
-                        final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                         int stackSize = hand.stackSize;
                         for (int i = 0; i < stackSize; i++) {
                             ItemStack itemToFill = hand.copy();
@@ -992,22 +1035,34 @@ public class ContainerMEMonitorable extends AEBaseContainer
                             if (filledContainer == null || filledAmount <= 0) break;
 
                             long amountBeforeExtract = aes.getStackSize();
-                            IAEStack<?> modulateResult = monitor.extractItems(
+                            final IAEStack<?> modulateResult = monitor.extractItems(
                                     aes.setStackSize(filledAmount),
                                     Actionable.MODULATE,
                                     this.getActionSource());
                             aes.setStackSize(amountBeforeExtract - filledAmount);
-
                             if (modulateResult == null) break;
-                            else if (modulateResult.getStackSize() != filledAmount) {
-                                ObjectLongPair<ItemStack> filled = type
+
+                            if (modulateResult.getStackSize() != filledAmount) {
+                                final ObjectLongPair<ItemStack> filled = type
                                         .fillContainer(itemToFill.copy(), modulateResult);
                                 filledContainer = filled.left();
+
+                                final long diff = modulateResult.getStackSize() - filled.rightLong();
+                                if (diff != 0) {
+                                    final IAEStack<?> injectLeftover = monitor.injectItems(
+                                            modulateResult.copy().setStackSize(diff),
+                                            Actionable.MODULATE,
+                                            this.getActionSource());
+                                    if (injectLeftover != null) Platform.handleLeftover(player, injectLeftover);
+                                }
+
+                                if (filledContainer == null) break;
+
+                                aes.setStackSize(0);
                             }
 
-                            if (hand.stackSize - 1 == 0) {
-                                player.inventory.setItemStack(filledContainer);
-                            } else if (adaptor.addItems(filledContainer) != null) break;
+                            if (hand.stackSize - 1 == 0) player.inventory.setItemStack(filledContainer);
+                            else Platform.add2Player(player, filledContainer);
 
                             hand.stackSize--;
                             if (aes.getStackSize() <= 0) break;
@@ -1120,9 +1175,20 @@ public class ContainerMEMonitorable extends AEBaseContainer
         IAEStack<?> modulateResult = monitor
                 .extractItems(stack.copy().setStackSize(filledAmount), Actionable.MODULATE, this.getActionSource());
         if (modulateResult == null) return;
-        else if (modulateResult.getStackSize() != filledAmount) {
+        if (modulateResult.getStackSize() != filledAmount) {
             ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), modulateResult);
             filledContainer = filled.left();
+
+            final long diff = modulateResult.getStackSize() - filled.rightLong();
+            if (diff != 0) {
+                final IAEStack<?> injectLeftover = monitor.injectItems(
+                        modulateResult.copy().setStackSize(diff),
+                        Actionable.MODULATE,
+                        this.getActionSource());
+                if (injectLeftover != null) Platform.handleLeftover(player, injectLeftover);
+            }
+
+            if (filledContainer == null) return;
         }
 
         player.inventory.setItemStack(filledContainer);
@@ -1145,11 +1211,17 @@ public class ContainerMEMonitorable extends AEBaseContainer
         if (simulated.rightLong() == 0 || simulated.left() == null) return;
         ItemStack result = simulated.left();
 
-        IAEStack<?> modulateLeftover = monitor
+        final IAEStack<?> modulateLeftover = monitor
                 .injectItems(stack.setStackSize(simulated.rightLong()), Actionable.MODULATE, this.getActionSource());
         if (modulateLeftover != null) {
-            ObjectLongPair<ItemStack> modulateResult = type.fillContainer(result, modulateLeftover);
-            result = modulateResult.left();
+            final ObjectLongPair<ItemStack> filled = type.fillContainer(result, modulateLeftover);
+            result = filled.left() != null ? filled.left() : hand;
+
+            final long leftoverAmount = modulateLeftover.getStackSize() - filled.rightLong();
+            if (leftoverAmount != 0)
+                Platform.handleLeftover(player, modulateLeftover.copy().setStackSize(leftoverAmount));
+
+            if (result == null) return;
         }
 
         player.inventory.setItemStack(result);

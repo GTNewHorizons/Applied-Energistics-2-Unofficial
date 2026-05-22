@@ -498,6 +498,9 @@ gui.appliedenergistics2.GuiDimensionalCoordShort=§c%s§r, §a%s§r, §9%s§r, �
 gui.appliedenergistics2.GuiDimensionalCoordNoDim=§cX: %s§r,§aY: %s§r,§9Z: %s
 gui.appliedenergistics2.GuiDimensionalCoordShortNoDim=§c%s§r, §a%s§r, §9%s
 
+gui.appliedenergistics2.LeftoverContainerDesc1=Leftover after inject in system operation
+gui.appliedenergistics2.LeftoverContainerDesc2=Make sure you have free space and then put this item in ME Terminal
+
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
 gui.color.appliedenergistics2.SearchboxUnfocused=00000000
@@ -916,6 +919,8 @@ item.appliedenergistics2.ItemCrystalSeed.name=Seed
 item.appliedenergistics2.ItemCrystalSeed.Certus.name=Certus Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Nether.name=Nether Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Fluix.name=Fluix Seed
+
+item.appliedenergistics2.ItemLeftoverContainer.name=Leftover Container
 
 item.appliedenergistics2.ItemPart.InvalidType.name=Disabled Item
 item.appliedenergistics2.ItemMaterial.InvalidType.name=This Item Is Disabled.

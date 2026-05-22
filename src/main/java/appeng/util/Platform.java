@@ -73,6 +73,7 @@ import org.lwjgl.input.Keyboard;
 
 import com.glodblock.github.common.item.ItemFluidDrop;
 import com.glodblock.github.common.item.ItemFluidPacket;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
 import com.mojang.authlib.GameProfile;
 
@@ -2173,8 +2174,20 @@ public class Platform {
     }
 
     public static void add2Player(final EntityPlayer p, final ItemStack is) {
+        if (is == null) return;
         final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(p, ForgeDirection.UNKNOWN);
         final ItemStack leftOver = adaptor.addItems(is);
+        p.openContainer.detectAndSendChanges();
         if (leftOver != null) p.entityDropItem(leftOver, 0);
+    }
+
+    public static void handleLeftover(final EntityPlayer p, final IAEStack<?> aes) {
+        final ItemStack container = AEApi.instance().definitions().items().leftoverContainer().maybeStack(1).get();
+        Platform.writeStackNBT(aes, ItemStackNBT.get(container));
+        add2Player(p, container);
+    }
+
+    public static IAEStack<?> handleLeftover(final ItemStack is) {
+        return Platform.readStackNBT(ItemStackNBT.get(is));
     }
 }
