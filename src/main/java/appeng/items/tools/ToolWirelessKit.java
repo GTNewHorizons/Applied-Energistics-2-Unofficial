@@ -1,8 +1,5 @@
 package appeng.items.tools;
 
-import static appeng.api.config.AdvancedWirelessToolMode.Queueing;
-import static appeng.api.config.AdvancedWirelessToolMode.QueueingLine;
-
 import java.util.EnumSet;
 import java.util.List;
 
@@ -109,14 +106,12 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
             manager.writeToNBT(data);
         });
 
-        final ToolWirelessKit tool = (ToolWirelessKit) target.getItem();
-
         out.registerSetting(Settings.WIRELESS_TOOL_MODE, WirelessToolMode.Simple);
         out.registerSetting(Settings.WIRELESS_TOOL_GROUP_BY, WirelessToolGroupBy.Single);
         out.registerSetting(Settings.WIRELESS_TOOL_HIDE_BOUNDED, YesNo.NO);
-        out.registerSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE, Queueing);
+        out.registerSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE, AdvancedWirelessToolMode.Queueing);
 
-        out.readFromNBT(ItemStackNBT.get(target));
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(target).copy());
         return out;
     }
 
@@ -152,24 +147,28 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
                         final List<DimensionalCoord> dcl = DimensionalCoord
                                 .readAsListFromNBT(tag.getCompoundTag(WireLessToolHelper.NbtAdvanced));
                         if (dcl.isEmpty()) {
-                            if (mode == Queueing) lines.add(WirelessMessages.AdvancedQueueEmpty.getLocal());
+                            if (mode == AdvancedWirelessToolMode.Queueing)
+                                lines.add(WirelessMessages.AdvancedQueueEmpty.getLocal());
                             else lines.add(WirelessMessages.AdvancedBindingEmpty.getLocal());
                         } else {
                             if (GuiScreen.isShiftKeyDown()) {
-                                if (mode == Queueing) lines.add(WirelessMessages.AdvancedQueueNotEmpty.getLocal());
+                                if (mode == AdvancedWirelessToolMode.Queueing)
+                                    lines.add(WirelessMessages.AdvancedQueueNotEmpty.getLocal());
                                 else lines.add(WirelessMessages.AdvancedBindingNotEmpty.getLocal());
                                 dcl.forEach(dc -> lines.add(dc.getGuiTextShort()));
                                 return;
                             } else lines.add(WirelessMessages.AdvancedNext.getLocal(dcl.get(0).getGuiTextShortNoDim()));
                         }
 
-                        if (mode == Queueing) lines.add(WirelessMessages.AdvancedQueueingHubQol.getLocal());
+                        if (mode == AdvancedWirelessToolMode.Queueing)
+                            lines.add(WirelessMessages.AdvancedQueueingHubQol.getLocal());
                         else lines.add(WirelessMessages.AdvancedBindingHubQol.getLocal());
                     }
 
                     case QueueingLine, BindingLine -> {
                         final NBTTagCompound line;
-                        if (mode == QueueingLine) line = tag.getCompoundTag(WireLessToolHelper.NbtAdvancedLineQueue);
+                        if (mode == AdvancedWirelessToolMode.QueueingLine)
+                            line = tag.getCompoundTag(WireLessToolHelper.NbtAdvancedLineQueue);
                         else line = tag.getCompoundTag(WireLessToolHelper.NbtAdvancedLineBinding);
 
                         if (!line.hasKey(WireLessToolHelper.NbtAdvanced1StPoint))
