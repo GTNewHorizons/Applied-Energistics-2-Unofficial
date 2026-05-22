@@ -159,7 +159,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 final boolean validForPass1 = inv.validForPass(1);
                 if (validForPass1 && (canAcceptInput = inv.canAccept(input))
                         && (inv.isPrioritized(input) || inv.extractItems(input, Actionable.SIMULATE, src) != null)) {
-                    input = inv.injectItems(input, type, src);
                     long before = input.getStackSize();
 
                     input = inv.injectItems(input, type, src);
