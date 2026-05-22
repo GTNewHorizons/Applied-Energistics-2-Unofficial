@@ -221,6 +221,11 @@ public class CraftingV2Tests {
                 .addOutput(new ItemStack(Blocks.chest, 1)).buildAndAdd();
     }
 
+    private void addFuzzyProcessingChestPattern(MockAESystem aeSystem) {
+        aeSystem.newProcessingPattern().allowUsingSubstitutes().addInput(new ItemStack(Blocks.planks, 8, 0))
+                .addOutput(new ItemStack(Blocks.chest, 1)).buildAndAdd();
+    }
+
     @ParameterizedTest
     @ValueSource(ints = { 0, 1 })
     void craftChestFromLogs(int woodMetadata) {
@@ -263,6 +268,48 @@ public class CraftingV2Tests {
                 AEItemStack.create(new ItemStack(Blocks.planks, 0, 0)).setCountRequestable(4),
                 AEItemStack.create(new ItemStack(Blocks.planks, 0, 1)).setCountRequestable(4),
                 AEItemStack.create(new ItemStack(Blocks.chest, 0)).setCountRequestable(1));
+    }
+
+    @Test
+    void processingPatternFuzzySubstitutesCompleteInputGroupsOnly() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(new ItemStack(Blocks.planks, 12, 0));
+        aeSystem.addStoredItem(new ItemStack(Blocks.planks, 20, 1));
+        aeSystem.addStoredItem(new ItemStack(Blocks.planks, 8, 2));
+        aeSystem.addStoredItem(new ItemStack(Items.gold_ingot, 64));
+        addFuzzyProcessingChestPattern(aeSystem);
+        // Another pattern that shouldn't match
+        addDummyGappleRecipe(aeSystem);
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(new ItemStack(Blocks.chest, 4));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertFalse(job.isSimulation());
+        assertEquals(job.getOutput(), AEItemStack.create(new ItemStack(Blocks.chest, 4)));
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(new ItemStack(Blocks.planks, 8, 0)),
+                AEItemStack.create(new ItemStack(Blocks.planks, 16, 1)),
+                AEItemStack.create(new ItemStack(Blocks.planks, 8, 2)),
+                AEItemStack.create(new ItemStack(Blocks.chest, 0)).setCountRequestable(4));
+    }
+
+    @Test
+    void processingPatternFuzzyDoesNotTreatPartialGroupsAsCraftable() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(new ItemStack(Blocks.planks, 12, 0));
+        aeSystem.addStoredItem(new ItemStack(Blocks.planks, 20, 1));
+        aeSystem.addStoredItem(new ItemStack(Items.gold_ingot, 64));
+        addFuzzyProcessingChestPattern(aeSystem);
+        // Another pattern that shouldn't match
+        addDummyGappleRecipe(aeSystem);
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(new ItemStack(Blocks.chest, 4));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertTrue(job.isSimulation());
+        assertEquals(job.getOutput(), AEItemStack.create(new ItemStack(Blocks.chest, 4)));
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(new ItemStack(Blocks.planks, 16, 0)),
+                AEItemStack.create(new ItemStack(Blocks.planks, 16, 1)),
+                AEItemStack.create(new ItemStack(Blocks.chest, 0)).setCountRequestable(4));
     }
 
     @Test
