@@ -165,14 +165,7 @@ public class CraftingRequest implements ITreeSerializable {
      */
     public CraftingRequest(CraftingRequest parentRequest, @Nonnull IAEStack<?> stack, SubstitutionMode substitutionMode,
             boolean allowSimulation, CraftingMode craftingMode, Predicate<IAEStack<?>> acceptableSubstituteFn) {
-        this(
-                parentRequest,
-                stack,
-                substitutionMode,
-                allowSimulation,
-                craftingMode,
-                acceptableSubstituteFn,
-                stack.getStackSize());
+        this(parentRequest, stack, substitutionMode, allowSimulation, craftingMode, acceptableSubstituteFn, 1);
     }
 
     /**

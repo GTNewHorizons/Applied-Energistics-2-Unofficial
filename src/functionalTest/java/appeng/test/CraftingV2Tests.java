@@ -226,6 +226,18 @@ public class CraftingV2Tests {
                 .addOutput(new ItemStack(Blocks.chest, 1)).buildAndAdd();
     }
 
+    private void addFuzzyBedPattern(MockAESystem aeSystem) {
+        aeSystem.newCraftingPattern().allowUsingSubstitutes()
+                // row 1
+                .addInput(new ItemStack(Blocks.wool, 1, 0)).addInput(new ItemStack(Blocks.wool, 1, 0))
+                .addInput(new ItemStack(Blocks.wool, 1, 0))
+                // row 2
+                .addInput(new ItemStack(Blocks.planks, 1, 0)).addInput(new ItemStack(Blocks.planks, 1, 0))
+                .addInput(new ItemStack(Blocks.planks, 1, 0))
+                // end
+                .addOutput(new ItemStack(Items.bed, 1)).buildAndAdd();
+    }
+
     @ParameterizedTest
     @ValueSource(ints = { 0, 1 })
     void craftChestFromLogs(int woodMetadata) {
@@ -268,6 +280,28 @@ public class CraftingV2Tests {
                 AEItemStack.create(new ItemStack(Blocks.planks, 0, 0)).setCountRequestable(4),
                 AEItemStack.create(new ItemStack(Blocks.planks, 0, 1)).setCountRequestable(4),
                 AEItemStack.create(new ItemStack(Blocks.chest, 0)).setCountRequestable(1));
+    }
+
+    @Test
+    void craftingPatternFuzzyCanUseMixedSubstitutes() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(new ItemStack(Blocks.wool, 1, 0));
+        aeSystem.addStoredItem(new ItemStack(Blocks.wool, 2, 1));
+        aeSystem.addStoredItem(new ItemStack(Blocks.planks, 3, 0));
+        aeSystem.addStoredItem(new ItemStack(Items.gold_ingot, 64));
+        addFuzzyBedPattern(aeSystem);
+        // Another pattern that shouldn't match
+        addDummyGappleRecipe(aeSystem);
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(new ItemStack(Items.bed, 1));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertFalse(job.isSimulation());
+        assertEquals(job.getOutput(), AEItemStack.create(new ItemStack(Items.bed, 1)));
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(new ItemStack(Blocks.wool, 1, 0)),
+                AEItemStack.create(new ItemStack(Blocks.wool, 2, 1)),
+                AEItemStack.create(new ItemStack(Blocks.planks, 3, 0)),
+                AEItemStack.create(new ItemStack(Items.bed, 0)).setCountRequestable(1));
     }
 
     @Test
