@@ -132,11 +132,11 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
         ItemStack is = this.getStack();
 
         if (is != null && Platform.isSameItemPrecise(request, is)) {
-            final ItemStack[] set = new ItemStack[this.getPattern().getSizeInventory()];
             int multiple = request.stackSize / is.stackSize;
             int crafted = 0;
 
             for (int i = 0; i < multiple; i++) {
+                final ItemStack[] set = new ItemStack[this.getPattern().getSizeInventory()];
                 // add one of each item to the items on the board...
                 if (Platform.isServer()) {
                     final InventoryCrafting ic = new InventoryCrafting(new ContainerNull(), 3, 3);
@@ -184,17 +184,18 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                     }
                 }
 
-                if (this.preCraft(p, inv, set, is)) {
-                    this.makeItem(p, is);
-                    ++crafted;
-                    // last craft may use up all the rest of the items in the system
-                    // otherwise we need to leave the grid repopulated, to try another extraction & recipe match
-                    if (!this.postCraft(p, inv, set, is) && i < (multiple - 1)) break;
-                }
+                this.makeItem(p, is);
+
+                ++crafted;
+
+                // last craft may use up all the rest of the items in the system
+                // otherwise we need to leave the grid repopulated, to try another extraction & recipe match
+                boolean canContinue = this.postCraft(p, inv, set, is);
+                cleanup(p, inv, set);
+                if (!canContinue && i < (multiple - 1)) break;
             }
 
             is.stackSize *= crafted;
-            cleanup(p, inv, set);
 
             // shouldn't be necessary...
             p.openContainer.onCraftMatrixChanged(this.craftInv);
@@ -230,11 +231,6 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
                 }
             }
         }
-        return true;
-    }
-
-    private boolean preCraft(final EntityPlayer p, final IMEMonitor<IAEItemStack> inv, final ItemStack[] set,
-            final ItemStack result) {
         return true;
     }
 

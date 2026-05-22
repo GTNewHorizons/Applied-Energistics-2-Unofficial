@@ -25,6 +25,8 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.Settings;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
@@ -240,13 +242,13 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
     public static IConfigManager getConfigManager(final ItemStack target) {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(target);
+            final NBTTagCompound data = ItemStackNBT.get(target);
             manager.writeToNBT(data);
         });
 
         out.registerSetting(Settings.NETWORK_VISUALISER, VisualisationModes.FULL);
 
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(target).copy());
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(target).copy());
         return out;
     }
 
