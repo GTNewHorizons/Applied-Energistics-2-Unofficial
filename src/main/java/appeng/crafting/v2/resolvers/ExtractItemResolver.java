@@ -54,16 +54,16 @@ public class ExtractItemResolver implements CraftingRequestResolver {
 
         @Override
         public StepOutput calculateOneStep(CraftingContext context) {
+            final boolean isFuzzy = request.substitutionMode == CraftingRequest.SubstitutionMode.ACCEPT_FUZZY;
             state = State.SUCCESS;
             if (request.remainingToProcess <= 0) {
                 return new StepOutput(Collections.emptyList());
             }
-            extractExact(context, context.byproductsInventory, removedFromByproducts);
+            extractExact(context, context.byproductsInventory, removedFromByproducts, isFuzzy);
             if (request.remainingToProcess > 0) {
-                extractExact(context, context.itemModel, removedFromSystem);
+                extractExact(context, context.itemModel, removedFromSystem, isFuzzy);
             }
-            if (request.remainingToProcess > 0
-                    && request.substitutionMode == CraftingRequest.SubstitutionMode.ACCEPT_FUZZY) {
+            if (request.remainingToProcess > 0 && isFuzzy) {
                 extractFuzzy(context, context.byproductsInventory, removedFromByproducts);
                 if (request.remainingToProcess > 0) {
                     extractFuzzy(context, context.itemModel, removedFromSystem);
@@ -74,10 +74,12 @@ public class ExtractItemResolver implements CraftingRequestResolver {
             return new StepOutput(Collections.emptyList());
         }
 
-        private void extractExact(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
+        private void extractExact(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList,
+                boolean isFuzzy) {
             StackType exactMatching = source.extractItems((StackType) request.stack, Actionable.SIMULATE);
-            if (exactMatching != null) {
-                final long requestSize = Math.min(request.remainingToProcess, exactMatching.getStackSize());
+            if (exactMatching != null && exactMatching.getStackSize() > 0) {
+                final long requestSize = this.getRequestSize(exactMatching.getStackSize(), isFuzzy);
+                if (requestSize <= 0) return;
                 final StackType extracted = source
                         .extractItems(exactMatching.copy().setStackSize(requestSize), Actionable.MODULATE);
                 if (extracted != null && extracted.getStackSize() > 0) {
@@ -91,21 +93,27 @@ public class ExtractItemResolver implements CraftingRequestResolver {
         private void extractFuzzy(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
             Collection<StackType> fuzzyMatching = source.findFuzzy((StackType) request.stack, FuzzyMode.IGNORE_ALL);
             for (final StackType candidate : fuzzyMatching) {
-                if (candidate == null) {
-                    continue;
-                }
+                if (candidate == null || candidate.getStackSize() <= 0) continue;
                 if (request.acceptableSubstituteFn.test(candidate)) {
-                    final long requestSize = Math.min(request.remainingToProcess, candidate.getStackSize());
+                    final long requestSize = this.getRequestSize(candidate.getStackSize(), true);
+                    if (requestSize <= 0) continue;
                     final StackType extracted = source
                             .extractItems(candidate.copy().setStackSize(requestSize), Actionable.MODULATE);
-                    if (extracted == null || extracted.getStackSize() <= 0) {
-                        continue;
-                    }
+                    if (extracted == null || extracted.getStackSize() <= 0) continue;
                     extracted.setCraftable(false);
                     request.fulfill(this, extracted, context);
                     removedList.add(extracted.copy());
                 }
             }
+        }
+
+        private long getRequestSize(final long available, final boolean isFuzzy) {
+            final long upperBound = Math.min(request.remainingToProcess, available);
+            if (!isFuzzy) return upperBound;
+            // Fuzzy substitutions must not mix candidates inside one pattern input group. Extract as many complete
+            // groups as this candidate can cover, but ignore any remainder smaller than the group.
+            final long groupSize = request.substitutionGroupSize;
+            return upperBound / groupSize * groupSize;
         }
 
         @Override
