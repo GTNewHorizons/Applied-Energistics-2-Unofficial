@@ -375,7 +375,7 @@ public class WireLessToolHelper {
                 if (w.getTileEntity(next.x, next.y, next.z) instanceof TileWirelessBase twb) tiles.add(twb);
             }
         } else if (firstPoint.y != secondPoint.y) {
-            final int size = Math.abs(firstPoint.y - secondPoint.y);
+            final int size = Math.abs(firstPoint.y - secondPoint.y) + 1;
             final boolean direction = firstPoint.y < secondPoint.y;
             for (int i = 0; i < size; i++) {
                 final DimensionalCoord next = new DimensionalCoord(firstPoint);
@@ -384,7 +384,7 @@ public class WireLessToolHelper {
                 if (w.getTileEntity(next.x, next.y, next.z) instanceof TileWirelessBase twb) tiles.add(twb);
             }
         } else if (firstPoint.z != secondPoint.z) {
-            final int size = Math.abs(firstPoint.z - secondPoint.z);
+            final int size = Math.abs(firstPoint.z - secondPoint.z) + 1;
             final boolean direction = firstPoint.z < secondPoint.z;
             for (int i = 0; i < size; i++) {
                 final DimensionalCoord next = new DimensionalCoord(firstPoint);
