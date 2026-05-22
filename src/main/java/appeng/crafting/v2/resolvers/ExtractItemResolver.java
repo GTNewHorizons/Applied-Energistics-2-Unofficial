@@ -78,8 +78,8 @@ public class ExtractItemResolver implements CraftingRequestResolver {
                 boolean isFuzzy) {
             StackType exactMatching = source.extractItems((StackType) request.stack, Actionable.SIMULATE);
             if (exactMatching != null && exactMatching.getStackSize() > 0) {
-                final long requestSize = Math
-                        .min(request.remainingToProcess, this.patternExact(exactMatching.getStackSize(), isFuzzy));
+                final long requestSize = this.getRequestSize(exactMatching.getStackSize(), isFuzzy);
+                if (requestSize <= 0) return;
                 final StackType extracted = source
                         .extractItems(exactMatching.copy().setStackSize(requestSize), Actionable.MODULATE);
                 if (extracted != null && extracted.getStackSize() > 0) {
@@ -95,8 +95,8 @@ public class ExtractItemResolver implements CraftingRequestResolver {
             for (final StackType candidate : fuzzyMatching) {
                 if (candidate == null || candidate.getStackSize() <= 0) continue;
                 if (request.acceptableSubstituteFn.test(candidate)) {
-                    final long requestSize = Math
-                            .min(request.remainingToProcess, this.patternExact(candidate.getStackSize(), true));
+                    final long requestSize = this.getRequestSize(candidate.getStackSize(), true);
+                    if (requestSize <= 0) continue;
                     final StackType extracted = source
                             .extractItems(candidate.copy().setStackSize(requestSize), Actionable.MODULATE);
                     if (extracted == null || extracted.getStackSize() <= 0) continue;
@@ -107,33 +107,13 @@ public class ExtractItemResolver implements CraftingRequestResolver {
             }
         }
 
-        private long patternExact(final long request, boolean isFuzzy) {
-            if (!isFuzzy) return request;
-            final Iterator<IAEStack<?>> i = this.request.patternInputs.iterator();
-            long requestSize = request;
-
-            while (i.hasNext()) {
-                final IAEStack<?> aes = i.next();
-                if (this.request.stack.equals(aes)) {
-                    final long inputSize = aes.getStackSize();
-                    if (requestSize > inputSize) {
-                        requestSize -= inputSize;
-                        if (requestSize > 0) {
-                            i.remove();
-                        } else if (requestSize < 0) {
-                            return request + requestSize;
-                        } else {
-                            i.remove();
-                            return request;
-                        }
-                    } else if (requestSize == inputSize) {
-                        i.remove();
-                        return request;
-                    } else return 0;
-                }
-            }
-
-            return request;
+        private long getRequestSize(final long available, final boolean isFuzzy) {
+            final long upperBound = Math.min(request.remainingToProcess, available);
+            if (!isFuzzy) return upperBound;
+            // Fuzzy substitutions must not mix candidates inside one pattern input group. Extract as many complete
+            // groups as this candidate can cover, but ignore any remainder smaller than the group.
+            final long groupSize = request.substitutionGroupSize;
+            return upperBound / groupSize * groupSize;
         }
 
         @Override

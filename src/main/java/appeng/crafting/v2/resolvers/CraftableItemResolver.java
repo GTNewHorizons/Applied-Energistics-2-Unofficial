@@ -424,7 +424,6 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                 return new StepOutput(Collections.emptyList());
             } else {
                 request.patternParents.add(this.pattern);
-                request.pattern = this.pattern;
                 ArrayList<CraftingRequest> newChildren = new ArrayList<>(
                         patternRecursionInputs.length + patternInputs.length);
                 if (isComplex) {
@@ -447,7 +446,8 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                                 childMode,
                                 allowSimulation,
                                 request.craftingMode,
-                                stack -> this.isValidSubstitute(input, stack, context.world, finalSlot));
+                                stack -> this.isValidSubstitute(input, stack, context.world, finalSlot),
+                                input.getStackSize());
                         complexRequestPerSlot.add(req);
                         newChildren.add(req);
                         childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
@@ -473,7 +473,8 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                                     childMode,
                                     allowSimulation,
                                     request.craftingMode,
-                                    stack -> this.isValidSubstitute(recInput, stack, context.world));
+                                    stack -> this.isValidSubstitute(recInput, stack, context.world),
+                                    recInput.getStackSize());
                             newChildren.add(req);
                             childRecursionRequests.put(recInput, req);
                         }
@@ -501,7 +502,8 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                                 childMode,
                                 allowSimulation,
                                 request.craftingMode,
-                                stack -> this.isValidSubstitute(input, stack, context.world));
+                                stack -> this.isValidSubstitute(input, stack, context.world),
+                                input.getStackSize());
                         newChildren.add(req);
                         childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
                     }

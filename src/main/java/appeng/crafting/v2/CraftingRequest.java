@@ -3,7 +3,6 @@ package appeng.crafting.v2;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -83,11 +82,9 @@ public class CraftingRequest implements ITreeSerializable {
      */
     public final IAEStack<?> stack;
 
-    public ICraftingPatternDetails pattern;
-    public final ArrayList<IAEStack<?>> patternInputs = new ArrayList<>();
-
     public final SubstitutionMode substitutionMode;
     public final Predicate<IAEStack<?>> acceptableSubstituteFn;
+    public final long substitutionGroupSize;
     // (task, amount fulfilled by task)
 
     public final CraftingMode craftingMode;
@@ -128,6 +125,7 @@ public class CraftingRequest implements ITreeSerializable {
         buffer.writeBoolean(wasSimulated);
         buffer.writeBoolean(incomplete);
         buffer.writeInt(craftingMode.ordinal());
+        buffer.writeLong(substitutionGroupSize);
         return usedResolvers;
     }
 
@@ -155,6 +153,7 @@ public class CraftingRequest implements ITreeSerializable {
         if (index < 0 || index >= CraftingMode.values().length || CraftingMode.values()[index] == CraftingMode.STANDARD)
             craftingMode = CraftingMode.STANDARD;
         else craftingMode = CraftingMode.IGNORE_MISSING;
+        substitutionGroupSize = buffer.readLong();
         acceptableSubstituteFn = x -> true;
     }
 
@@ -166,26 +165,39 @@ public class CraftingRequest implements ITreeSerializable {
      */
     public CraftingRequest(CraftingRequest parentRequest, @Nonnull IAEStack<?> stack, SubstitutionMode substitutionMode,
             boolean allowSimulation, CraftingMode craftingMode, Predicate<IAEStack<?>> acceptableSubstituteFn) {
+        this(
+                parentRequest,
+                stack,
+                substitutionMode,
+                allowSimulation,
+                craftingMode,
+                acceptableSubstituteFn,
+                stack.getStackSize());
+    }
+
+    /**
+     * @param parentRequest          From which this crafting request is initiated. null if it's the root
+     * @param stack                  The item/fluid and stack to request
+     * @param substitutionMode       Whether and how to allow substitutions when resolving this request
+     * @param acceptableSubstituteFn A predicate testing if a given item (in fuzzy mode) can fulfill the request
+     * @param substitutionGroupSize  The amount that must be fulfilled by a single substitute stack in fuzzy mode
+     */
+    public CraftingRequest(CraftingRequest parentRequest, @Nonnull IAEStack<?> stack, SubstitutionMode substitutionMode,
+            boolean allowSimulation, CraftingMode craftingMode, Predicate<IAEStack<?>> acceptableSubstituteFn,
+            long substitutionGroupSize) {
         this.parentRequest = parentRequest;
         if (parentRequest == null) {
             this.parentRequests = Collections.emptySet();
         } else {
             Builder<CraftingRequest> builder = ImmutableSet.builder();
             builder.addAll(parentRequest.parentRequests);
-
-            for (final IAEStack<?> aes : parentRequest.pattern.isCraftable() ? parentRequest.pattern.getAEInputs()
-                    : parentRequest.pattern.getCondensedAEInputs()) {
-                if (aes == null) continue;
-                this.patternInputs.add(aes.copy());
-            }
-            this.patternInputs.sort(Comparator.comparingLong(IAEStack::getStackSize));
-
             builder.add(parentRequest);
             this.parentRequests = builder.build();
         }
         this.stack = stack;
         this.substitutionMode = substitutionMode;
         this.acceptableSubstituteFn = acceptableSubstituteFn;
+        this.substitutionGroupSize = Math.max(1, substitutionGroupSize);
         this.remainingToProcess = stack.getStackSize();
         this.allowSimulation = allowSimulation;
         this.craftingMode = craftingMode;
