@@ -182,7 +182,7 @@ public abstract class GuiAmount extends GuiSub {
     protected void keyTyped(final char character, final int key) {
         if (!this.checkHotbarKeys(key)) {
             if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-                this.actionPerformed(this.nextBtn);
+                this.triggerActionPerformed(this.nextBtn);
             } else if (!this.amountTextField.textboxKeyTyped(character, key)) super.keyTyped(character, key);
         }
     }

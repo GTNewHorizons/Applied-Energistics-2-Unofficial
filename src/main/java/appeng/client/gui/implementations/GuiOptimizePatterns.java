@@ -333,7 +333,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
     protected void keyTyped(final char character, final int key) {
         if (!this.checkHotbarKeys(key)) {
             if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-                this.actionPerformed(this.optimize);
+                this.triggerActionPerformed(this.optimize);
             }
             this.amountToCraft.textboxKeyTyped(character, key);
             super.keyTyped(character, key);
