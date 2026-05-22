@@ -264,11 +264,7 @@ public class PartPatternRepeater extends PartBasicState
     private boolean duringFletchPatterns = false;
 
     public void init() {
-        if (this.provider) {
-            if (this.duringFletchPatterns) return;
-            this.duringFletchPatterns = true;
-        }
-
+        if (this.duringFletchPatterns) return;
         this.craftingList.clear();
         this.targetCraftingGrid = null;
         this.targetNetworkProxy = null;
@@ -281,43 +277,41 @@ public class PartPatternRepeater extends PartBasicState
                 self.yCoord + this.getSide().offsetY,
                 self.zCoord + this.getSide().offsetZ);
 
-        while (true) {
-            if (target instanceof TileCableBus tcb
-                    && tcb.getPart(this.getSide().getOpposite()) instanceof PartPatternRepeater ppr) {
-                this.pairPatternRepeater = ppr;
-                this.targetNetworkProxy = ppr.getProxy();
+        if (target instanceof TileCableBus tcb
+                && tcb.getPart(this.getSide().getOpposite()) instanceof PartPatternRepeater ppr) {
+            this.pairPatternRepeater = ppr;
+            this.targetNetworkProxy = ppr.getProxy();
 
-                if (this.provider) {
-                    if (ppr.provider) break;
-                    final IGridNode gn = tcb.getGridNode(ForgeDirection.UNKNOWN);
-                    if (gn == null) break;
+            if (this.provider) {
+                if (ppr.provider) return;
+                final IGridNode gn = tcb.getGridNode(ForgeDirection.UNKNOWN);
+                if (gn == null) return;
 
-                    this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
+                this.duringFletchPatterns = true;
 
-                    final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
-                            .getCraftingMultiPatterns().entrySet();
+                this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
 
-                    tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
+                final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
+                        .getCraftingMultiPatterns().entrySet();
 
-                    try {
-                        this.getProxy().getGrid()
-                                .postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
-                    } catch (final GridAccessException e) {
-                        // :P
-                    }
-                } else {
-                    final IGridNode gn = this.getGridNode(ForgeDirection.UNKNOWN);
-                    if (gn == null) break;
+                tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
 
-                    this.currentCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
-                    this.currentCraftingGrid.addPostPatternChangeListeners(this);
+                try {
+                    this.getProxy().getGrid()
+                            .postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
+                } catch (final GridAccessException e) {
+                    // :P
                 }
+
+                this.duringFletchPatterns = false;
+            } else {
+                final IGridNode gn = this.getGridNode(ForgeDirection.UNKNOWN);
+                if (gn == null) return;
+
+                this.currentCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
+                this.currentCraftingGrid.addPostPatternChangeListeners(this);
             }
-
-            break;
         }
-
-        this.duringFletchPatterns = false;
     }
 
     @Override

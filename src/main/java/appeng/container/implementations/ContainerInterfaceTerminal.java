@@ -287,16 +287,6 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         return playerInv.addItems(stack);
     }
 
-    private Iterator<IGrid> gridIterator = null;
-    private IGrid currentGrid = null;
-
-    private void initIterator() {
-        Set<IGrid> gridSet = new HashSet<>();
-        gridSet.add(this.grid);
-        this.fletchRepeaters(this.grid, gridSet);
-        this.gridIterator = gridSet.iterator();
-    }
-
     private void fletchRepeaters(final IGrid grid, final Set<IGrid> gridSet) {
         for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
             final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
@@ -311,10 +301,11 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         }
     }
 
-    private boolean hasNext() {
-        final boolean result = this.gridIterator.hasNext();
-        if (result) this.currentGrid = this.gridIterator.next();
-        return result;
+    private Set<IGrid> collectReachableGrids() {
+        final Set<IGrid> gridSet = new HashSet<>();
+        gridSet.add(this.grid);
+        this.fletchRepeaters(this.grid, gridSet);
+        return gridSet;
     }
 
     /**
@@ -324,94 +315,92 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         PacketInterfaceTerminalUpdate update = null;
         var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
         Set<IInterfaceViewable> visited = new HashSet<>();
-        this.initIterator();
-        this.hasNext();
 
-        gridLoop: do for (Class<? extends IInterfaceViewable> c : supported) {
-            if (this.currentGrid == null) break gridLoop;
-            for (IGridNode node : this.currentGrid.getMachines(c)) {
-                IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
-                /* First check if we are already tracking this node */
-                if (tracked.containsKey(machine)) {
-                    /* Check for updates */
-                    InvTracker known = tracked.get(machine);
+        for (final IGrid currentGrid : this.collectReachableGrids()) {
+            for (Class<? extends IInterfaceViewable> c : supported) {
+                for (IGridNode node : currentGrid.getMachines(c)) {
+                    IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
+                    /* First check if we are already tracking this node */
+                    if (tracked.containsKey(machine)) {
+                        /* Check for updates */
+                        InvTracker known = tracked.get(machine);
 
-                    /* Name changed? */
-                    String rawName = machine.getRawName();
-                    String suffix = machine.getNameSuffix();
+                        /* Name changed? */
+                        String rawName = machine.getRawName();
+                        String suffix = machine.getNameSuffix();
 
-                    if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
+                        if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
+                            if (update == null) update = new PacketInterfaceTerminalUpdate();
+                            update.addRenamedEntry(known.id, rawName, suffix);
+                            known.name = rawName;
+                            known.suffix = suffix;
+                        }
+
+                        /* Status changed? */
+                        boolean isActive = node.isActive();
+
+                        if (!known.online && isActive) {
+                            /* Node offline -> online */
+                            known.online = true;
+                            if (update == null) update = new PacketInterfaceTerminalUpdate();
+                            known.updateNBT();
+                            update.addOverwriteEntry(known.id).setOnline(true).setItems(new int[0], known.invNbt);
+                        } else if (known.online && !isActive) {
+                            /* Node online -> offline */
+                            known.online = false;
+                            if (update == null) update = new PacketInterfaceTerminalUpdate();
+                            update.addOverwriteEntry(known.id).setOnline(false);
+                        }
+
+                        // visibility changed?
+                        final boolean machineShouldDisplay = getTerminalVisibility(machine);
+                        if (known.shouldDisplay != machineShouldDisplay) {
+                            known.shouldDisplay = machineShouldDisplay;
+                            if (update == null) update = new PacketInterfaceTerminalUpdate();
+                            update.addOverwriteEntry(known.id).setTerminalVisible(machineShouldDisplay);
+                        }
+
+                        // If the size changed, we need to do a full update of inventory
+                        if (known.rows != machine.rows() || known.rowSize != machine.rowSize()
+                                || known.numSlots != machine.numSlots()) {
+                            known.rows = machine.rows();
+                            known.rowSize = machine.rowSize();
+                            known.numSlots = machine.numSlots();
+                            known.updateNBT();
+                            if (update == null) update = new PacketInterfaceTerminalUpdate();
+                            update.addOverwriteEntry(known.id).setItems(new int[0], known.invNbt)
+                                    .setSize(known.rows, known.rowSize, known.numSlots);
+                        }
+
+                        int priority = machine.getPriority();
+                        if (known.priority != priority) {
+                            known.priority = priority;
+                            if (update == null) update = new PacketInterfaceTerminalUpdate();
+                            update.addOverwriteEntry(known.id).setPriority(priority);
+                        }
+
+                        visited.add(machine);
+                    } else {
+                        /* Add a new entry (always, including hidden ones) */
                         if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addRenamedEntry(known.id, rawName, suffix);
-                        known.name = rawName;
-                        known.suffix = suffix;
+                        InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
+                        update.addNewEntry(entry.id, entry.name, entry.online).setSuffix(entry.suffix)
+                                .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
+                                .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
+                                .setReps(machine.getSelfRep(), machine.getDisplayRep())
+                                .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
+                                .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority)
+                                .setTerminalVisible(entry.shouldDisplay);
+                        // Ensure the client applies the correct visibility even if PacketAdd state gets corrupted
+                        // client-side. PacketOverwrite handling is known to work reliably.
+                        update.addOverwriteEntry(entry.id).setTerminalVisible(entry.shouldDisplay);
+                        tracked.put(machine, entry);
+                        trackedById.put(entry.id, entry);
+                        visited.add(machine);
                     }
-
-                    /* Status changed? */
-                    boolean isActive = node.isActive();
-
-                    if (!known.online && isActive) {
-                        /* Node offline -> online */
-                        known.online = true;
-                        if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        known.updateNBT();
-                        update.addOverwriteEntry(known.id).setOnline(true).setItems(new int[0], known.invNbt);
-                    } else if (known.online && !isActive) {
-                        /* Node online -> offline */
-                        known.online = false;
-                        if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addOverwriteEntry(known.id).setOnline(false);
-                    }
-
-                    // visibility changed?
-                    final boolean machineShouldDisplay = getTerminalVisibility(machine);
-                    if (known.shouldDisplay != machineShouldDisplay) {
-                        known.shouldDisplay = machineShouldDisplay;
-                        if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addOverwriteEntry(known.id).setTerminalVisible(machineShouldDisplay);
-                    }
-
-                    // If the size changed, we need to do a full update of inventory
-                    if (known.rows != machine.rows() || known.rowSize != machine.rowSize()
-                            || known.numSlots != machine.numSlots()) {
-                        known.rows = machine.rows();
-                        known.rowSize = machine.rowSize();
-                        known.numSlots = machine.numSlots();
-                        known.updateNBT();
-                        if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addOverwriteEntry(known.id).setItems(new int[0], known.invNbt)
-                                .setSize(known.rows, known.rowSize, known.numSlots);
-                    }
-
-                    int priority = machine.getPriority();
-                    if (known.priority != priority) {
-                        known.priority = priority;
-                        if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addOverwriteEntry(known.id).setPriority(priority);
-                    }
-
-                    visited.add(machine);
-                } else {
-                    /* Add a new entry (always, including hidden ones) */
-                    if (update == null) update = new PacketInterfaceTerminalUpdate();
-                    InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
-                    update.addNewEntry(entry.id, entry.name, entry.online).setSuffix(entry.suffix)
-                            .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
-                            .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
-                            .setReps(machine.getSelfRep(), machine.getDisplayRep())
-                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
-                            .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority)
-                            .setTerminalVisible(entry.shouldDisplay);
-                    // Ensure the client applies the correct visibility even if PacketAdd state gets corrupted
-                    // client-side. PacketOverwrite handling is known to work reliably.
-                    update.addOverwriteEntry(entry.id).setTerminalVisible(entry.shouldDisplay);
-                    tracked.put(machine, entry);
-                    trackedById.put(entry.id, entry);
-                    visited.add(machine);
                 }
             }
         }
-        while (this.hasNext());
 
         /* Now find any entries that we need to remove */
         Iterator<Entry<IInterfaceViewable, InvTracker>> it = tracked.entrySet().iterator();
