@@ -508,7 +508,7 @@ public class WireLessToolHelper {
             while (twToBind.size() > i && twTarget.size() > ii && twTarget.get(ii).getFreeSlots() > 0) {
                 final TileWirelessBase source = twToBind.get(i);
                 final TileWirelessBase target = twTarget.get(ii);
-                switch (WireLessToolHelper.performConnection(source, target, new PlayerSource(p, null))) {
+                switch (WireLessToolHelper.performConnection(target, source, new PlayerSource(p, null))) {
                     case SUCCESS -> {
                         p.addChatMessage(
                                 WirelessMessages.rowBindSuccess.toChat(
