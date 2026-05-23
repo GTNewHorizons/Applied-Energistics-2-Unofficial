@@ -602,6 +602,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
         final ItemStack tempHand = player.inventory.getItemStack();
         if (tempHand != null && tempHand.getItem() instanceof ItemLeftoverContainer) {
+            if (this.getPowerSource() == null) return;
             final IAEStack<?> tempAes = ItemLeftoverContainer.toAEStack(tempHand);
             if (tempAes == null) return;
             final IMEMonitor tempMonitor = getMonitorWithFilter(tempAes.getStackType());
@@ -1126,6 +1127,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                                     Actionable.MODULATE);
 
                             if (leftover != null) {
+                                if (leftover.getStackSize() == stack.getStackSize()) return;
+
                                 Platform.handleLeftover(player, leftover);
                             }
 
