@@ -602,7 +602,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
         final ItemStack tempHand = player.inventory.getItemStack();
         if (tempHand != null && tempHand.getItem() instanceof ItemLeftoverContainer) {
-            final IAEStack<?> tempAes = Platform.handleLeftover(tempHand);
+            final IAEStack<?> tempAes = ItemLeftoverContainer.toAEStack(tempHand);
             if (tempAes == null) return;
             final IMEMonitor tempMonitor = getMonitorWithFilter(tempAes.getStackType());
             if (tempMonitor == null) return;
@@ -776,6 +776,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
             case DRAIN_SINGLE_CONTAINER -> {
                 ItemStack hand = player.inventory.getItemStack();
+                if (hand == null) return;
 
                 final IAEStackType type = getStackTypeForContainer(hand);
                 if (type == null) return;
@@ -796,7 +797,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                             : stack.getStackSize() - leftover.getStackSize();
 
                     ObjectLongPair<ItemStack> simulated = type.drainStackFromContainer(
-                            Platform.copyStackWithSize(hand, 1),
+                            Platform.copyStackWithSizeOne(hand),
                             stack.setStackSize(amountToInject));
                     if (simulated.rightLong() == 0 || simulated.left() == null) return;
 
@@ -817,7 +818,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                         if (diff != 0) Platform.handleLeftover(player, modulateLeftover.copy().setStackSize(diff));
                     }
 
-                    Platform.add2Player(player, result);
+                    Platform.addToPlayerInvOrDrop(player, result);
 
                     hand.stackSize--;
                     this.updateHeld(player);
@@ -865,7 +866,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                             final long diff = modulateLeftover.getStackSize() - modulateResult.rightLong();
                             if (diff != 0) Platform.handleLeftover(player, modulateLeftover.copy().setStackSize(diff));
 
-                            Platform.add2Player(player, result);
+                            Platform.addToPlayerInvOrDrop(player, result);
                             hand.stackSize--;
                         }
 
@@ -898,7 +899,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                                     Platform.handleLeftover(player, modulateLeftover.copy().setStackSize(diff));
                             }
 
-                            Platform.add2Player(player, result);
+                            Platform.addToPlayerInvOrDrop(player, result);
 
                             hand.stackSize--;
                         }
@@ -956,7 +957,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                         if (filledContainer == null) return;
                     }
 
-                    Platform.add2Player(player, filledContainer);
+                    Platform.addToPlayerInvOrDrop(player, filledContainer);
 
                     hand.stackSize--;
                     this.updateHeld(player);
@@ -984,7 +985,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     if (capacity <= 0) return;
 
                     ObjectLongPair<ItemStack> fullFilledPair = type.fillContainer(
-                            Platform.copyStackWithSize(hand, 1),
+                            Platform.copyStackWithSizeOne(hand),
                             stackInSlot.copy().setStackSize(Long.MAX_VALUE));
                     ItemStack fullFilledContainer = fullFilledPair.left();
                     if (fullFilledContainer == null) return;
@@ -1005,19 +1006,19 @@ public class ContainerMEMonitorable extends AEBaseContainer
                         // If the amount extracted from the network is not enough to fill all container
                         else {
                             final ObjectLongPair<ItemStack> filled = type
-                                    .fillContainer(Platform.copyStackWithSize(hand, 1), stackToFill);
+                                    .fillContainer(Platform.copyStackWithSizeOne(hand), stackToFill);
                             if (filled.left() != null && filled.rightLong() != 0) {
                                 final int filledContainerNum = (int) (stackToFill.getStackSize() / filled.rightLong());
-                                Platform.add2Player(
+                                Platform.addToPlayerInvOrDrop(
                                         player,
                                         Platform.copyStackWithSize(filled.left(), filledContainerNum));
                                 hand.stackSize -= filledContainerNum;
                                 stackToFill.decStackSize(filled.rightLong() * filledContainerNum);
 
                                 final ObjectLongPair<ItemStack> filled2 = type
-                                        .fillContainer(Platform.copyStackWithSize(hand, 1), stackToFill);
+                                        .fillContainer(Platform.copyStackWithSizeOne(hand), stackToFill);
                                 if (filled2.left() != null && filled2.rightLong() != 0) {
-                                    Platform.add2Player(player, filled2.left());
+                                    Platform.addToPlayerInvOrDrop(player, filled2.left());
                                     hand.stackSize -= 1;
                                     if (hand.stackSize <= 0) player.inventory.setItemStack(null);
                                     stackToFill.decStackSize(filled2.rightLong());
@@ -1073,7 +1074,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                             }
 
                             if (hand.stackSize - 1 == 0) player.inventory.setItemStack(filledContainer);
-                            else Platform.add2Player(player, filledContainer);
+                            else Platform.addToPlayerInvOrDrop(player, filledContainer);
 
                             hand.stackSize--;
                             if (aes.getStackSize() <= 0) break;

@@ -69,6 +69,8 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 
 import com.glodblock.github.common.item.ItemFluidDrop;
@@ -2173,7 +2175,15 @@ public class Platform {
         }
     }
 
-    public static void add2Player(final EntityPlayer p, final ItemStack is) {
+    @NotNull
+    @Contract("_ -> new")
+    public static ItemStack copyStackWithSizeOne(@NotNull ItemStack itemStack) {
+        ItemStack copy = itemStack.copy();
+        copy.stackSize = 1;
+        return copy;
+    }
+
+    public static void addToPlayerInvOrDrop(final EntityPlayer p, @Nullable final ItemStack is) {
         if (is == null) return;
         final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(p, ForgeDirection.UNKNOWN);
         final ItemStack leftOver = adaptor.addItems(is);
@@ -2184,10 +2194,6 @@ public class Platform {
     public static void handleLeftover(final EntityPlayer p, final IAEStack<?> aes) {
         final ItemStack container = AEApi.instance().definitions().items().leftoverContainer().maybeStack(1).get();
         Platform.writeStackNBT(aes, ItemStackNBT.get(container));
-        add2Player(p, container);
-    }
-
-    public static IAEStack<?> handleLeftover(final ItemStack is) {
-        return Platform.readStackNBT(ItemStackNBT.get(is));
+        addToPlayerInvOrDrop(p, container);
     }
 }

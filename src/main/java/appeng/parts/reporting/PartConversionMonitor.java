@@ -150,7 +150,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                         .poweredExtraction(energy, cell, input, new PlayerSource(player, this));
                 if (retrieved != null) {
                     ItemStack newItems = retrieved.getItemStack();
-                    Platform.add2Player(player, newItems);
+                    Platform.addToPlayerInvOrDrop(player, newItems);
 
                     if (player.openContainer != null) {
                         player.openContainer.detectAndSendChanges();
@@ -213,7 +213,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                     player.inventory.setInventorySlotContents(player.inventory.currentItem, result);
                 } else {
                     player.getCurrentEquippedItem().stackSize -= 1;
-                    Platform.add2Player(player, result);
+                    Platform.addToPlayerInvOrDrop(player, result);
                 }
             } catch (GridAccessException e) {
                 AELog.error(e);
@@ -242,14 +242,14 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                 IAEStack<?> stored = monitor.extractItems(displayed, Actionable.SIMULATE, src);
                 if (stored == null || stored.getStackSize() <= 0) return;
 
-                long amountToFill = type.fillContainer(Platform.copyStackWithSize(hand, 1), stored).rightLong();
+                long amountToFill = type.fillContainer(Platform.copyStackWithSizeOne(hand), stored).rightLong();
 
                 IAEStack<?> extracted = Platform
                         .poweredExtraction(energy, monitor, stored.copy().setStackSize(amountToFill), src);
 
                 if (extracted == null) return;
 
-                ObjectLongPair<ItemStack> filled = type.fillContainer(Platform.copyStackWithSize(hand, 1), extracted);
+                ObjectLongPair<ItemStack> filled = type.fillContainer(Platform.copyStackWithSizeOne(hand), extracted);
 
                 ItemStack result = filled.left();
 
@@ -266,7 +266,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                     player.inventory.setInventorySlotContents(player.inventory.currentItem, result);
                 } else {
                     hand.stackSize--;
-                    Platform.add2Player(player, result);
+                    Platform.addToPlayerInvOrDrop(player, result);
                 }
             } catch (final GridAccessException e) {
                 AELog.error(e);
