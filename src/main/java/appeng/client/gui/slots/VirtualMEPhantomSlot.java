@@ -17,6 +17,8 @@ import appeng.api.storage.StorageName;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
+import appeng.container.sync.deltas.AEStackInventoryDelta;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.sync.network.NetworkHandler;
@@ -64,6 +66,18 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
     public VirtualMEPhantomSlot(int x, int y, TypeAcceptPredicate acceptType, StackGetter stackGetter,
             StackSetter stackSetter) {
         this(x, y, null, 0, acceptType, stackGetter, stackSetter);
+    }
+
+    public VirtualMEPhantomSlot(int x, int y, AEStackInventorySyncHandler syncHandler, int slotIndex,
+            TypeAcceptPredicate acceptType) {
+        this(
+                x,
+                y,
+                syncHandler.get(),
+                slotIndex,
+                acceptType,
+                () -> syncHandler.get().getAEStackInSlot(slotIndex),
+                (stack) -> { syncHandler.applyAndQueueDelta(new AEStackInventoryDelta(slotIndex, stack)); });
     }
 
     private VirtualMEPhantomSlot(int x, int y, @Nullable IAEStackInventory inventory, int slotIndex,
