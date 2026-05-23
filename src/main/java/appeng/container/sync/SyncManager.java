@@ -211,6 +211,7 @@ public final class SyncManager {
         }
 
         this.freezeLayout();
+        this.sendUpdates(localEndpoint, false);
 
         final ByteBuf data = Unpooled.buffer();
         data.writeInt(this.layoutHash);
