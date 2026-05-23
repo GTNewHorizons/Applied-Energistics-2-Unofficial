@@ -67,7 +67,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         SyncRegistrar sync = this.syncRegistrar();
         this.copyModeSync = sync.configEnum("copyMode", Settings.COPY_MODE, CopyMode.class, te.getConfigManager());
         this.configSync = sync.aeStackInventory("config", te.getAEInventoryByName(StorageName.CONFIG))
-                .setDiffCheckInterval(20, SyncDirection.SERVER_TO_CLIENT);
+                .setDiffCheckInterval(2, SyncDirection.SERVER_TO_CLIENT);
 
         this.clearAction = sync.actionC2S("clear").onServerAction(this::clear);
         this.partitionAction = sync.actionC2S("partition").onServerAction(this::partition);
