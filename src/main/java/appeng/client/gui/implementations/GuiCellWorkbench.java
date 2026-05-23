@@ -192,7 +192,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
 
     @Override
     protected void handleButtonVisibility() {
-        this.copyMode.setState(this.workbench.getCopyMode() == CopyMode.CLEAR_ON_REMOVE);
+        this.copyMode.setState(this.workbench.copyModeSync.get() == CopyMode.CLEAR_ON_REMOVE);
 
         final boolean hasFuzzy = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.FUZZY) != 0;
         final boolean hasOreFilter = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER) != 0;
@@ -223,11 +223,11 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     protected void actionPerformed(final GuiButton btn) {
         try {
             if (btn == this.copyMode) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Action", "CopyMode"));
+                this.workbench.copyModeSync.rotate(false);
             } else if (btn == this.partition) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Action", "Partition"));
+                this.workbench.partitionAction.send();
             } else if (btn == this.clear) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Action", "Clear"));
+                this.workbench.clearAction.send();
             } else if (btn == this.fuzzyMode) {
                 final boolean backwards = Mouse.isButtonDown(1);
 
