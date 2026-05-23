@@ -1097,7 +1097,7 @@ item.appliedenergistics2.WirelessMessages.Connected=§aConnected to %s
 item.appliedenergistics2.WirelessMessages.TargetHubFull=§cTarget hub is full
 item.appliedenergistics2.WirelessMessages.SourceHubFull=§cHub at %s §cis full
 item.appliedenergistics2.WirelessMessages.HubToHub=§cHub-to-hub connections are not allowed
-item.appliedenergistics2.WirelessMessages.ModeToggle=Tab + R-click to toggle mode
+item.appliedenergistics2.WirelessMessages.ModeToggle="Wireless Mode Switch" + R-click to toggle mode
 item.appliedenergistics2.WirelessMessages.Security=Security violation - you are not allowed to modify this network
 item.appliedenergistics2.WirelessMessages.DimensionMismatch=Both connectors must be in the same dimension
 item.appliedenergistics2.WirelessMessages.InvalidTarget=§cInvalid target - must be Wireless Connector or Wireless Hub
@@ -1121,14 +1121,14 @@ item.appliedenergistics2.WirelessMessages.AdvancedQueueEmpty=§9Click Wireless C
 item.appliedenergistics2.WirelessMessages.AdvancedQueueNotEmpty=§9Current wireless connectors in queue:
 item.appliedenergistics2.WirelessMessages.AdvancedQueueingLineNotEmpty=§9Switch to Binding Line mode to perform the connection
 item.appliedenergistics2.WirelessMessages.AdvancedQueued=§aAdded connector at %s §ato queue
-item.appliedenergistics2.WirelessMessages.AdvancedQueueingHubQol=Ctrl + R-click to add all free hub slots to queue
+item.appliedenergistics2.WirelessMessages.AdvancedQueueingHubQol="Wireless Extra Action" + R-click to add all free hub slots to queue
 item.appliedenergistics2.WirelessMessages.AdvancedQueueingHub=§a%s hub slots added to queue
 item.appliedenergistics2.WirelessMessages.AdvancedQueueingTargetHubFull=All free slots of target hub already queued
 
 item.appliedenergistics2.WirelessMessages.AdvancedBinding=§aBinding Mode
 item.appliedenergistics2.WirelessMessages.AdvancedBindingEmpty=§9Switch to Queuing Mode to add connectors to queue
 item.appliedenergistics2.WirelessMessages.AdvancedBindingNotEmpty=§9Current wireless connectors in queue to be bound:
-item.appliedenergistics2.WirelessMessages.AdvancedBindingHubQol=Ctrl + R-click to connect to all free hub slots
+item.appliedenergistics2.WirelessMessages.AdvancedBindingHubQol="Wireless Extra Action" + R-click to connect to all free hub slots
 item.appliedenergistics2.WirelessMessages.AdvancedBindingHub=%s hub slots added to queue
 
 item.appliedenergistics2.WirelessMessages.AdvancedQueueingLine=§aQueuing Line
@@ -1145,7 +1145,7 @@ item.appliedenergistics2.WirelessMessages.AdvancedLineEmpty2nd=§9Click Wireless
 item.appliedenergistics2.WirelessMessages.Super=§eSuper
 item.appliedenergistics2.WirelessMessages.SuperBound=§aNetwork at %s §aadded to the list
 item.appliedenergistics2.WirelessMessages.SuperBoundFailed=§cNetwork already in list
-item.appliedenergistics2.WirelessMessages.SuperClear=Shift + Ctrl + R-click to clear current tool mode
+item.appliedenergistics2.WirelessMessages.SuperClear=Shift + "Wireless Extra Action" + R-click to clear current tool mode
 item.appliedenergistics2.WirelessMessages.SuperNetworkList=Network list:
 item.appliedenergistics2.WirelessMessages.Network=Network %sat %s
 item.appliedenergistics2.WirelessMessages.SuperNetworkListEmpty=There are no networks in the list
@@ -1235,6 +1235,8 @@ key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=Toggle search box focus
 key.search_connected_inventories.desc=Search network inventories for an item
 key.container_interaction.desc=Container Item Interaction
+key.wireless_extra_action.desc=Wireless Extra Action
+key.wireless_mode_switch.desc=Wireless Mode Switch
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern
