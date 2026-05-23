@@ -30,6 +30,7 @@ import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.features.IWirelessTermHandler;
+import appeng.api.util.AEColor;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;
 import appeng.core.AppEng;
@@ -62,7 +63,9 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
 
     @Override
     public ItemStack onItemRightClick(final ItemStack item, final World w, final EntityPlayer player) {
-        if (ForgeEventFactory.onItemUseStart(player, item, 1) > 0)
+        if (Platform.keyBindTab.isKeyDown(player))
+            Platform.openGUI(player, null, null, GuiBridge.GUI_WIRELESS_NETWORK_MANAGER);
+        else if (ForgeEventFactory.onItemUseStart(player, item, 1) > 0)
             AEApi.instance().registries().wireless().openWirelessTerminalGui(item, w, player);
         return item;
     }
@@ -125,6 +128,16 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
 
     @Override
     public void setEncryptionKey(final ItemStack item, final String encKey, final String name) {
+        final NBTTagCompound data = ItemStackNBT.get(item);
+        final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
+        String freeKey = "";
+        for (int i = 0; i < 16; i++) {
+            final String key = AEColor.values()[i].name();
+            if (keys.hasKey(key) && keys.getString(key).equals(encKey)) return;
+            else if (freeKey.isEmpty()) freeKey = key;
+        }
+        keys.setString(freeKey, encKey);
+        data.setTag("encryptionKeys", keys);
         ItemStackNBT.of(item).setString("encryptionKey", encKey).setString("name", name);
     }
 
