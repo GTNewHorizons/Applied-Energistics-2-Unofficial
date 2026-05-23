@@ -32,6 +32,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridBlock;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
@@ -44,6 +45,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.helpers.ICustomNameObject;
+import appeng.me.cache.CraftingGridCache;
 import appeng.me.cache.GridStorageCache;
 import appeng.tile.misc.TileStorageReshuffle;
 import appeng.util.Platform;
@@ -150,6 +152,12 @@ public class ContainerNetworkStatus extends AEBaseContainer {
     @GuiSync(32)
     public boolean reshufflePresent;
 
+    @GuiSync(33)
+    public boolean diagnosticsMode;
+
+    @GuiSync(34)
+    public boolean diagnosticsGloballyEnabled;
+
     private IGrid network;
     private int delay = 40;
     private boolean isConsume = true;
@@ -179,11 +187,39 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         }
     }
 
+    private CraftingGridCache getCraftingGridCache() {
+        if (this.network == null) {
+            return null;
+        }
+
+        final ICraftingGrid craftingGrid = this.network.getCache(ICraftingGrid.class);
+        return craftingGrid instanceof CraftingGridCache cache ? cache : null;
+    }
+
+    private void refreshDiagnosticsState() {
+        final CraftingGridCache cache = this.getCraftingGridCache();
+        this.diagnosticsMode = cache != null && cache.isDiagnosticsEnabled();
+        this.diagnosticsGloballyEnabled = AEConfig.instance.enableCraftingDiagnostics;
+    }
+
+    public void toggleDiagnosticsMode() {
+        final CraftingGridCache cache = this.getCraftingGridCache();
+        if (cache == null || !AEConfig.instance.enableCraftingDiagnostics) {
+            return;
+        }
+
+        cache.setDiagnosticsEnabled(!cache.isDiagnosticsEnabled());
+        this.refreshDiagnosticsState();
+        super.detectAndSendChanges();
+    }
+
     @Override
     public void detectAndSendChanges() {
         this.delay++;
         if (Platform.isServer() && this.delay > 15 && this.network != null) {
             this.delay = 0;
+
+            this.refreshDiagnosticsState();
 
             final IEnergyGrid eg = this.network.getCache(IEnergyGrid.class);
             if (eg != null) {
@@ -465,5 +501,13 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
     public void setPowerInfinite(boolean powerInfinite) {
         this.powerInfinite = powerInfinite;
+    }
+
+    public boolean isDiagnosticsMode() {
+        return this.diagnosticsMode;
+    }
+
+    public boolean isDiagnosticsGloballyEnabled() {
+        return this.diagnosticsGloballyEnabled;
     }
 }
