@@ -10,8 +10,6 @@
 
 package appeng.container.implementations;
 
-import static appeng.util.Platform.isServer;
-
 import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -36,18 +34,19 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.GuiSync;
-import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.sync.SyncDirection;
+import appeng.container.sync.SyncRegistrar;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.helpers.ICellRestriction;
 import appeng.tile.inventory.AppEngNullInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.IUpgradeInventory;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerCellWorkbench extends ContainerUpgradeable implements IVirtualSlotHolder {
+public class ContainerCellWorkbench extends ContainerUpgradeable {
 
     private final ICellWorkbench workBench;
     private final AppEngNullInventory nullInventory = new AppEngNullInventory();
@@ -58,11 +57,15 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
     private ItemStack prevStack = null;
     private int lastUpgrades = 0;
 
-    private final IAEStack<?>[] configClientSlot = new IAEStack[63];
+    public final AEStackInventorySyncHandler configSync;
 
     public ContainerCellWorkbench(final InventoryPlayer ip, final ICellWorkbench te) {
         super(ip, te);
         this.workBench = te;
+
+        SyncRegistrar sync = this.syncRegistrar();
+        this.configSync = sync.aeStackInventory("config", te.getAEInventoryByName(StorageName.CONFIG))
+                .setDiffCheckInterval(20, SyncDirection.SERVER_TO_CLIENT);
     }
 
     public void setFuzzy(final FuzzyMode valueOf) {
@@ -151,11 +154,6 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
 
             this.setCopyMode(this.getWorkBenchCopyMode());
             this.setFuzzyMode(this.getWorkBenchFuzzyMode());
-
-            this.updateVirtualSlots(
-                    StorageName.NONE,
-                    this.workBench.getAEInventoryByName(StorageName.NONE),
-                    this.configClientSlot);
         }
 
         this.prevStack = is;
@@ -195,7 +193,8 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         for (int x = 0; x < inv.getSizeInventory(); x++) {
             inv.putAEStackInSlot(x, null);
         }
-        this.detectAndSendChanges();
+        this.configSync.markDirty();
+        this.getSyncManager().flushSync();
     }
 
     private FuzzyMode getWorkBenchFuzzyMode() {
@@ -231,7 +230,8 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
             }
         }
 
-        this.detectAndSendChanges();
+        this.configSync.markDirty();
+        this.getSyncManager().flushSync();
     }
 
     public CopyMode getCopyMode() {
@@ -240,18 +240,6 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
 
     private void setCopyMode(final CopyMode copyMode) {
         this.copyMode = copyMode;
-    }
-
-    @Override
-    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
-        final IAEStackInventory config = this.workBench.getAEInventoryByName(StorageName.NONE);
-        for (var entry : slotStacks.int2ObjectEntrySet()) {
-            config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
-        }
-
-        if (isServer()) {
-            this.updateVirtualSlots(StorageName.NONE, config, this.configClientSlot);
-        }
     }
 
     @Nullable

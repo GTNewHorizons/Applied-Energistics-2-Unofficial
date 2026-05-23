@@ -33,7 +33,6 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
 
 public class GuiCellWorkbench extends GuiUpgradeable {
@@ -174,7 +173,6 @@ public class GuiCellWorkbench extends GuiUpgradeable {
 
     private void initVirtualSlots() {
         this.configSlots = new VirtualMEPhantomSlot[63];
-        final IAEStackInventory inputInv = this.workbench.getConfig();
         final int xo = 8;
         final int yo = -133;
 
@@ -183,7 +181,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
                 VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(
                         xo + x * 18,
                         yo + y * 18 + 9 * 18,
-                        inputInv,
+                        this.workbench.configSync,
                         x + y * 9,
                         this::acceptType);
                 this.configSlots[x + y * 9] = slot;

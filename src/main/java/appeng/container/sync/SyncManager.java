@@ -80,37 +80,18 @@ public final class SyncManager {
         this.frozen = true;
     }
 
-    public void tickServer() {
-        if (!Platform.isServer()) {
-            return;
-        }
-
+    public void flushSync() {
         this.freezeLayout();
 
-        if (!this.initialServerSyncSent) {
-            this.sendUpdates(SyncEndpoint.SERVER, true);
-            this.initialServerSyncSent = true;
+        if (Platform.isServer()) {
+            if (!this.initialServerSyncSent) {
+                this.sendUpdates(SyncEndpoint.SERVER, true);
+                this.initialServerSyncSent = true;
+            }
+            this.sendUpdates(SyncEndpoint.SERVER, false);
+        } else {
+            this.sendUpdates(SyncEndpoint.CLIENT, false);
         }
-
-        this.sendUpdates(SyncEndpoint.SERVER, false);
-    }
-
-    public void tickClient() {
-        if (!Platform.isClient()) {
-            return;
-        }
-
-        this.freezeLayout();
-        this.sendUpdates(SyncEndpoint.CLIENT, false);
-    }
-
-    public void flushClient() {
-        if (!Platform.isClient()) {
-            return;
-        }
-
-        this.freezeLayout();
-        this.sendUpdates(SyncEndpoint.CLIENT, false);
     }
 
     public void readIncoming(final SyncEndpoint remoteEndpoint, final ByteBuf buf) {
