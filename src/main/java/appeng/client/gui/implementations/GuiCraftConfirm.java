@@ -939,7 +939,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     protected void keyTyped(final char character, final int key) {
         if (!this.checkHotbarKeys(key)) {
             if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-                this.actionPerformed(this.start);
+                this.triggerActionPerformed(this.start);
             }
             if (!(this.searchField.textboxKeyTyped(character, key))) {
                 super.keyTyped(character, key);
