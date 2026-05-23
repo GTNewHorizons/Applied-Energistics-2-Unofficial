@@ -88,7 +88,7 @@ import appeng.helpers.IPinsHandler;
 import appeng.helpers.MonitorableAction;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.PinsHandler;
-import appeng.items.misc.ItemLeftoverContainer;
+import appeng.items.misc.ItemMEStackPacket;
 import appeng.items.storage.ItemViewCell;
 import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
@@ -601,9 +601,9 @@ public class ContainerMEMonitorable extends AEBaseContainer
         }
 
         final ItemStack tempHand = player.inventory.getItemStack();
-        if (tempHand != null && tempHand.getItem() instanceof ItemLeftoverContainer) {
+        if (tempHand != null && tempHand.getItem() instanceof ItemMEStackPacket) {
             if (this.getPowerSource() == null) return;
-            final IAEStack<?> tempAes = ItemLeftoverContainer.toAEStack(tempHand);
+            final IAEStack<?> tempAes = ItemMEStackPacket.toAEStack(tempHand);
             if (tempAes == null) return;
             final IMEMonitor tempMonitor = getMonitorWithFilter(tempAes.getStackType());
             if (tempMonitor == null) return;

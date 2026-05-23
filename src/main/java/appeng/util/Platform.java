@@ -2192,7 +2192,7 @@ public class Platform {
     }
 
     public static void handleLeftover(final EntityPlayer p, final IAEStack<?> aes) {
-        final ItemStack container = AEApi.instance().definitions().items().leftoverContainer().maybeStack(1).get();
+        final ItemStack container = AEApi.instance().definitions().items().itemMEStackPacket().maybeStack(1).get();
         Platform.writeStackNBT(aes, ItemStackNBT.get(container));
         addToPlayerInvOrDrop(p, container);
     }

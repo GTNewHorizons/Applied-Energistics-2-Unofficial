@@ -22,7 +22,7 @@ import appeng.items.materials.MaterialType;
 import appeng.items.misc.ItemCrystalSeed;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.items.misc.ItemEncodedUltimatePattern;
-import appeng.items.misc.ItemLeftoverContainer;
+import appeng.items.misc.ItemMEStackPacket;
 import appeng.items.misc.ItemPaintBall;
 import appeng.items.misc.ItemTunnelPattern;
 import appeng.items.parts.ItemFacade;
@@ -129,7 +129,7 @@ public final class ApiItems implements IItems {
     private final IItemDefinition toolNetworkVisualiser;
     private final IItemDefinition toolWirelessKit;
 
-    private final IItemDefinition leftoverContainer;
+    private final IItemDefinition itemMEStackPacket;
 
     public ApiItems(final DefinitionConstructor constructor) {
         this.certusQuartzAxe = constructor.registerItemDefinition(new ToolQuartzAxe(AEFeature.CertusQuartzTools));
@@ -210,7 +210,7 @@ public final class ApiItems implements IItems {
         this.toolNetworkVisualiser = constructor.registerItemDefinition(new ToolNetworkVisualiser());
         this.toolWirelessKit = constructor.registerItemDefinition(new ToolWirelessKit());
 
-        this.leftoverContainer = constructor.registerItemDefinition(new ItemLeftoverContainer());
+        this.itemMEStackPacket = constructor.registerItemDefinition(new ItemMEStackPacket());
     }
 
     @Override
@@ -474,8 +474,8 @@ public final class ApiItems implements IItems {
     }
 
     @Override
-    public IItemDefinition leftoverContainer() {
-        return this.leftoverContainer;
+    public IItemDefinition itemMEStackPacket() {
+        return this.itemMEStackPacket;
     }
 
     public IItemDefinition paintBall() {
