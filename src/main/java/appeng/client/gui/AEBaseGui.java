@@ -40,6 +40,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 
 import org.jetbrains.annotations.NotNull;
@@ -1171,5 +1172,18 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
         return false;
+    }
+
+    public void triggerActionPerformed(final GuiButton btn) {
+        GuiScreenEvent.ActionPerformedEvent.Pre event = new GuiScreenEvent.ActionPerformedEvent.Pre(
+                this,
+                btn,
+                this.buttonList);
+        if (MinecraftForge.EVENT_BUS.post(event)) return;
+
+        event.button.func_146113_a(this.mc.getSoundHandler());
+        this.actionPerformed(event.button);
+        if (this.equals(this.mc.currentScreen)) MinecraftForge.EVENT_BUS
+                .post(new GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.buttonList));
     }
 }
