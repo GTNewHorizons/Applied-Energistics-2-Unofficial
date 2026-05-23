@@ -145,8 +145,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         IMEInventoryHandler<T> inv = priorityInventory.get(i);
         int lastPriority = inv.getPriority();
         outer: while (true) {
-            // Simulate doesn't have memory, so when we try to inject in same inventory we get false positive
-            // This for resolve this issue without lose functional of pass 2
+            // Simulate doesn't have memory, so pass 2 must account for amounts already accepted by pass 1 in
+            // the same inventory.
             final Int2LongOpenHashMap simulatedPass1Inserted = new Int2LongOpenHashMap();
 
             int passTwoIndex = -1;
@@ -205,9 +205,27 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 lastPriority = inv.getPriority();
                 while (true) {
                     if (inv.canAccept(input) && !inv.isPrioritized(input)) {
-                        if (type == Actionable.SIMULATE)
-                            input.setStackSize(input.getStackSize() + simulatedPass1Inserted.getOrDefault(i, 0));
-                        input = inv.injectItems(input, type, src);
+                        if (type == Actionable.SIMULATE) {
+                            final long pass1Inserted = simulatedPass1Inserted.getOrDefault(i, 0);
+                            if (pass1Inserted > 0) {
+                                final T pass2Input = input.copy();
+                                pass2Input.setStackSize(pass2Input.getStackSize() + pass1Inserted);
+
+                                final T pass2Leftover = inv.injectItems(pass2Input, type, src);
+                                if (pass2Leftover == null) {
+                                    input = null;
+                                    break outer;
+                                }
+
+                                if (pass2Leftover.getStackSize() < input.getStackSize()) {
+                                    input.setStackSize(pass2Leftover.getStackSize());
+                                }
+                            } else {
+                                input = inv.injectItems(input, type, src);
+                            }
+                        } else {
+                            input = inv.injectItems(input, type, src);
+                        }
                         if (input == null) break outer;
                     }
 

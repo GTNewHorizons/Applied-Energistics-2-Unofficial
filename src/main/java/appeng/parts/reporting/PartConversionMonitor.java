@@ -199,8 +199,10 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                         .poweredInsert(energy, monitor, stack.setStackSize(drained.rightLong()), source);
 
                 if (modulateLeftover != null) {
+                    if (modulateLeftover.getStackSize() == drained.rightLong()) return;
+
                     ObjectLongPair<ItemStack> filled = type.fillContainer(result, modulateLeftover);
-                    result = filled.left();
+                    if (filled.left() != null) result = filled.left();
 
                     final long leftoverAmount = modulateLeftover.getStackSize() - filled.rightLong();
                     if (leftoverAmount != 0)
@@ -240,24 +242,25 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                 IAEStack<?> stored = monitor.extractItems(displayed, Actionable.SIMULATE, src);
                 if (stored == null || stored.getStackSize() <= 0) return;
 
-                long amountToFill = type.fillContainer(hand.copy(), stored).rightLong();
+                long amountToFill = type.fillContainer(Platform.copyStackWithSize(hand, 1), stored).rightLong();
 
                 IAEStack<?> extracted = Platform
                         .poweredExtraction(energy, monitor, stored.copy().setStackSize(amountToFill), src);
 
-                Platform.handleLeftover(player, extracted);
-
                 if (extracted == null) return;
 
-                ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), extracted);
+                ObjectLongPair<ItemStack> filled = type.fillContainer(Platform.copyStackWithSize(hand, 1), extracted);
+
                 ItemStack result = filled.left();
 
                 final long leftoverAmount = extracted.getStackSize() - filled.rightLong();
                 if (leftoverAmount != 0) {
                     final IAEStack<?> aes = monitor
-                            .injectItems(extracted.copy().setStackSize(leftoverAmount), Actionable.MODULATE, src);
+                            .injectItems(extracted.setStackSize(leftoverAmount), Actionable.MODULATE, src);
                     if (aes != null) Platform.handleLeftover(player, aes);
                 }
+
+                if (result == null || filled.rightLong() == 0) return;
 
                 if (hand.stackSize == 1) {
                     player.inventory.setInventorySlotContents(player.inventory.currentItem, result);
