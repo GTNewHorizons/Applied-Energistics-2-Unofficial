@@ -375,7 +375,7 @@ public class WireLessToolHelper {
                 if (w.getTileEntity(next.x, next.y, next.z) instanceof TileWirelessBase twb) tiles.add(twb);
             }
         } else if (firstPoint.y != secondPoint.y) {
-            final int size = Math.abs(firstPoint.y - secondPoint.y);
+            final int size = Math.abs(firstPoint.y - secondPoint.y) + 1;
             final boolean direction = firstPoint.y < secondPoint.y;
             for (int i = 0; i < size; i++) {
                 final DimensionalCoord next = new DimensionalCoord(firstPoint);
@@ -384,7 +384,7 @@ public class WireLessToolHelper {
                 if (w.getTileEntity(next.x, next.y, next.z) instanceof TileWirelessBase twb) tiles.add(twb);
             }
         } else if (firstPoint.z != secondPoint.z) {
-            final int size = Math.abs(firstPoint.z - secondPoint.z);
+            final int size = Math.abs(firstPoint.z - secondPoint.z) + 1;
             final boolean direction = firstPoint.z < secondPoint.z;
             for (int i = 0; i < size; i++) {
                 final DimensionalCoord next = new DimensionalCoord(firstPoint);
@@ -505,10 +505,10 @@ public class WireLessToolHelper {
         int i = 0;
         int ii = 0;
         toBind: while (twToBind.size() > i && twTarget.size() > ii) {
-            while (twTarget.get(ii).getFreeSlots() > 0) {
-                final TileWirelessBase source = twToBind.get(ii);
-                final TileWirelessBase target = twTarget.get(i);
-                switch (WireLessToolHelper.performConnection(source, target, new PlayerSource(p, null))) {
+            while (twToBind.size() > i && twTarget.size() > ii && twTarget.get(ii).getFreeSlots() > 0) {
+                final TileWirelessBase source = twToBind.get(i);
+                final TileWirelessBase target = twTarget.get(ii);
+                switch (WireLessToolHelper.performConnection(target, source, new PlayerSource(p, null))) {
                     case SUCCESS -> {
                         p.addChatMessage(
                                 WirelessMessages.rowBindSuccess.toChat(
@@ -527,14 +527,19 @@ public class WireLessToolHelper {
                     case INVALID_SOURCE -> {
                         p.addChatMessage(
                                 WirelessMessages.rowBindInvalidSource
-                                        .toChat(target.getLocation().getGuiTextShortNoDim()));
+                                        .toChat(source.getLocation().getGuiTextShortNoDim()));
                         i++;
                     }
                     case FAILED -> {
                         p.addChatMessage(
-                                WirelessMessages.rowBindFailed.toChat(target.getLocation().getGuiTextShortNoDim()));
+                                WirelessMessages.rowBindFailed.toChat(
+                                        source.getLocation().getGuiTextShortNoDim(),
+                                        target.getLocation().getGuiTextShortNoDim()));
                         i++;
                         ii++;
+                    }
+                    case ALREADY_BIND -> {
+                        i++;
                     }
                 }
             }
