@@ -33,6 +33,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.helpers.WireLessToolHelper;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.WirelessKitObject;
+import appeng.server.ServerHelper;
 import appeng.tile.networking.TileWirelessBase;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
@@ -56,13 +57,13 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
         }
 
         final IConfigManager cm = getConfigManager(is);
-        if (Platform.keyBindTab.isKeyDown(p)) {
+        if (ServerHelper.WIRELESS_MODE_SWITCH.isKeyDown(p)) {
             WireLessToolHelper.nextToolMode(p, cm);
             return is;
         }
 
         final WirelessToolMode mode = WireLessToolHelper.getMode(is);
-        if (p.isSneaking() && Platform.keyBindLCtrl.isKeyDown(p)) {
+        if (p.isSneaking() && ServerHelper.WIRELESS_EXTRA_ACTION.isKeyDown(p)) {
             WireLessToolHelper.clearNBT(is, mode, p);
             return is;
         }

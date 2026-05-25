@@ -352,8 +352,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     protected final void drawGuiContainerBackgroundLayer(final float f, final int x, final int y) {
         final int ox = this.guiLeft;
         final int oy = this.guiTop;
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        ScreenColor.setGuiColor();
         this.drawBG(ox, oy, x, y);
+        ScreenColor.resetGuiColor();
 
         final List<Slot> slots = this.getInventorySlots();
         for (final Slot slot : slots) {
@@ -708,9 +709,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     public void updateScreen() {
         super.updateScreen();
-        if (this.inventorySlots instanceof AEBaseContainer container) {
-            container.tickClientSync();
-        }
+        this.flushPendingSync();
     }
 
     protected void closeGui() {
@@ -718,9 +717,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.mc.thePlayer.closeScreen();
     }
 
-    private void flushPendingSync() {
+    protected final void flushPendingSync() {
         if (this.inventorySlots instanceof AEBaseContainer container) {
-            container.getSyncManager().flushClient();
+            container.getSyncManager().flushSync();
         }
     }
 

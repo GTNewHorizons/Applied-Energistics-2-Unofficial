@@ -80,12 +80,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.container.setTextField(this.amountTextField);
         this.validateText();
 
-        this.config = new VirtualMEPhantomSlot(
-                17,
-                42,
-                GuiLevelEmitter::acceptType,
-                this.container::getConfigStack,
-                this.container::setConfigStack);
+        this.config = new VirtualMEPhantomSlot(17, 42, this.container.configSync, 0, GuiLevelEmitter::acceptType);
         this.registerVirtualSlots(this.config);
     }
 

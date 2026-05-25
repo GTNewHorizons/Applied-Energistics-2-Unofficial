@@ -151,7 +151,7 @@ public class GuiCellRestriction extends GuiSub {
     protected void keyTyped(final char character, final int key) {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
             this.cellRestriction.cellRestrictionDataSync.set(filterCellRestriction());
-            this.cellRestriction.tickClientSync();
+            this.flushPendingSync();
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
         } else
             if (!(this.amountField.textboxKeyTyped(character, key) || this.typesField.textboxKeyTyped(character, key)))
