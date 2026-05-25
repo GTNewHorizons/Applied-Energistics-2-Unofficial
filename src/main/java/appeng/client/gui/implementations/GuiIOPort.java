@@ -66,10 +66,9 @@ public class GuiIOPort extends GuiUpgradeable {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj
-                .drawString(this.getGuiDisplayName(GuiText.IOPort.getLocal()), 8, 6, GuiColors.IOPortTitle.getColor());
-        this.fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.IOPortInventory.getColor());
+        GuiColors.IOPortTitle.drawString(this.fontRendererObj, this.getGuiDisplayName(GuiText.IOPort.getLocal()), 8, 6);
+        GuiColors.IOPortInventory
+                .drawString(this.fontRendererObj, GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3);
 
         if (this.redstoneMode != null) {
             this.redstoneMode.set(this.cvb.getRedStoneMode());

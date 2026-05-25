@@ -85,13 +85,9 @@ public class GuiSpatialIOPort extends AEBaseGui {
                 88,
                 GuiColors.SpatialIOEfficiency.getColor());
 
-        this.fontRendererObj.drawString(
-                this.getGuiDisplayName(GuiText.SpatialIOPort.getLocal()),
-                8,
-                6,
-                GuiColors.SpatialIOTitle.getColor());
-        this.fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96, GuiColors.SpatialIOInventory.getColor());
+        GuiColors.SpatialIOTitle
+                .drawString(this.fontRendererObj, this.getGuiDisplayName(GuiText.SpatialIOPort.getLocal()), 8, 6);
+        GuiColors.SpatialIOInventory.drawString(this.fontRendererObj, GuiText.inventory.getLocal(), 8, this.ySize - 96);
     }
 
     @Override

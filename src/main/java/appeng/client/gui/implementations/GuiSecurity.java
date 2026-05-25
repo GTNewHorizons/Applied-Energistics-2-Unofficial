@@ -129,11 +129,11 @@ public class GuiSecurity extends GuiMEMonitorable {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
-        this.fontRendererObj.drawString(
+        GuiColors.SecurityCardEditorTitle.drawString(
+                this.fontRendererObj,
                 GuiText.SecurityCardEditor.getLocal(),
                 8,
-                this.ySize - 96 + 1 - this.getReservedSpace(),
-                GuiColors.SecurityCardEditorTitle.getColor());
+                this.ySize - 96 + 1 - this.getReservedSpace());
     }
 
     @Override

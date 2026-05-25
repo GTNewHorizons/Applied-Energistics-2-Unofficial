@@ -52,7 +52,7 @@ public class GuiRenamer extends GuiSub implements IDropToFillTextField {
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        this.fontRendererObj.drawString(GuiText.Renamer.getLocal(), 12, 8, GuiColors.RenamerTitle.getColor());
+        GuiColors.RenamerTitle.drawString(this.fontRendererObj, GuiText.Renamer.getLocal(), 12, 8);
     }
 
     @Override

@@ -157,19 +157,18 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
 
-        this.fontRendererObj
-                .drawString(GuiText.PatternOptimizer.getLocal(), 8, 7, GuiColors.CraftConfirmCraftingPlan.getColor());
+        GuiColors.CraftConfirmCraftingPlan.drawString(this.fontRendererObj, GuiText.PatternOptimizer.getLocal(), 8, 7);
 
-        this.fontRendererObj.drawString(
+        GuiColors.CraftConfirmSimulation.drawString(
+                this.fontRendererObj,
                 GuiText.StepsPerCraft.getLocal() + ":",
                 6,
-                (ySize - 68) + (20 / 2) - (this.fontRendererObj.FONT_HEIGHT / 2),
-                GuiColors.CraftConfirmSimulation.getColor());
+                (ySize - 68) + (20 / 2) - (this.fontRendererObj.FONT_HEIGHT / 2));
 
         String dsp = GuiText.PatternsAffected.getLocal() + ": " + multiplierMap.size();
 
         final int offset = (219 - this.fontRendererObj.getStringWidth(dsp)) / 2;
-        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.CraftConfirmSimulation.getColor());
+        GuiColors.CraftConfirmSimulation.drawString(this.fontRendererObj, dsp, offset, ySize - 41);
 
         final int viewStart = this.getScrollBar().getCurrentScroll() * 3;
         final int viewEnd = viewStart + 3 * this.rows;

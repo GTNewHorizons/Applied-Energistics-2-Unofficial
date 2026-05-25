@@ -39,7 +39,7 @@ public class GuiPriorityCard extends GuiPriority {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(GuiText.PriorityCard.getLocal(), 8, 6, GuiColors.PriorityTitle.getColor());
+        GuiColors.PriorityTitle.drawString(this.fontRendererObj, GuiText.PriorityCard.getLocal(), 8, 6);
         if (this.mode != null) {
             this.mode.set(this.container.getCardMode());
         }

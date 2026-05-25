@@ -334,8 +334,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private void drawConsume() {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.NetworkStatusDetails.getColor());
+        GuiColors.NetworkStatusDetails.drawString(this.fontRendererObj, GuiText.NetworkDetails.getLocal(), 8, 6);
 
         if (ns.isPowerInfinite()) {
             this.fontRendererObj.drawString(
@@ -514,13 +513,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
         double tempDouble;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
-        this.fontRendererObj.drawString(
+        GuiColors.DefaultBlack.drawString(this.fontRendererObj, GuiText.NetworkBytesDetails.getLocal(), 8, 6);
+        GuiColors.DefaultBlack.drawString(
+                this.fontRendererObj,
                 GuiText.NetworkItemCellCount.getLocal() + " : " + ns.getItemCellCount(),
                 13,
-                16,
-                GuiColors.DefaultBlack.getColor());
+                16);
 
         this.drawAllCellCount(ns.getItemCellG(), ns.getItemCellB(), ns.getItemCellO(), ns.getItemCellR());
 
@@ -558,13 +556,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
         double tempDouble;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
-        this.fontRendererObj.drawString(
+        GuiColors.DefaultBlack.drawString(this.fontRendererObj, GuiText.NetworkBytesDetails.getLocal(), 8, 6);
+        GuiColors.DefaultBlack.drawString(
+                this.fontRendererObj,
                 GuiText.NetworkFluidCellCount.getLocal() + " : " + ns.getFluidCellCount(),
                 13,
-                16,
-                GuiColors.DefaultBlack.getColor());
+                16);
 
         this.drawAllCellCount(ns.getFluidCellG(), ns.getFluidCellB(), ns.getFluidCellO(), ns.getFluidCellR());
 
@@ -602,13 +599,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
         double tempDouble;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
-        this.fontRendererObj.drawString(
+        GuiColors.DefaultBlack.drawString(this.fontRendererObj, GuiText.NetworkBytesDetails.getLocal(), 8, 6);
+        GuiColors.DefaultBlack.drawString(
+                this.fontRendererObj,
                 GuiText.NetworkEssentiaCellCount.getLocal() + " : " + ns.getEssentiaCellCount(),
                 13,
-                16,
-                GuiColors.DefaultBlack.getColor());
+                16);
 
         this.drawAllCellCount(
                 ns.getEssentiaCellG(),
@@ -648,8 +644,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
 
     private void drawAllCellCount(final long greenCellNum, final long blueCellNum, final long orangeCellNum,
             final long redCellNum) {
-        this.fontRendererObj
-                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 27, GuiColors.DefaultBlack.getColor());
+        GuiColors.DefaultBlack.drawString(this.fontRendererObj, GuiText.NetworkCellStatus.getLocal() + ":", 13, 27);
 
         int numStartAt = this.fontRendererObj.getStringWidth(GuiText.NetworkCellStatus.getLocal() + ":") + 20;
 

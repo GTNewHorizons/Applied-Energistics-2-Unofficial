@@ -233,11 +233,11 @@ public class GuiCraftingList {
                 String str = GuiText.FromStorage.getLocal() + ": "
                         + ReadableNumberConverter.INSTANCE.toWideReadableForm(stored.getStackSize());
                 final int w = 4 + parent.getFontRenderer().getStringWidth(str);
-                parent.getFontRenderer().drawString(
+                GuiColors.CraftConfirmFromStorage.drawString(
+                        parent.getFontRenderer(),
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
-                        (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmFromStorage.getColor());
+                        (yo + 6 - negY + downY) / 2);
                 downY += 5 * 4;
             }
 
@@ -245,11 +245,11 @@ public class GuiCraftingList {
                 String str = GuiText.Missing.getLocal() + ": "
                         + ReadableNumberConverter.INSTANCE.toWideReadableForm(missingStack.getStackSize());
                 final int w = 4 + parent.getFontRenderer().getStringWidth(str);
-                parent.getFontRenderer().drawString(
+                GuiColors.CraftConfirmMissing.drawString(
+                        parent.getFontRenderer(),
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
-                        (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmMissing.getColor());
+                        (yo + 6 - negY + downY) / 2);
 
                 downY += 5 * 4;
             }
@@ -258,21 +258,21 @@ public class GuiCraftingList {
                 String str = GuiText.ToCraft.getLocal() + ": "
                         + ReadableNumberConverter.INSTANCE.toWideReadableForm(pendingStack.getStackSize());
                 int w = 4 + parent.getFontRenderer().getStringWidth(str);
-                parent.getFontRenderer().drawString(
+                GuiColors.CraftConfirmToCraft.drawString(
+                        parent.getFontRenderer(),
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
-                        (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmToCraft.getColor());
+                        (yo + 6 - negY + downY) / 2);
 
                 downY += 5 * 4;
                 str = GuiText.ToCraftRequests.getLocal() + ": "
                         + ReadableNumberConverter.INSTANCE.toWideReadableForm(pendingStack.getCountRequestableCrafts());
                 w = 4 + parent.getFontRenderer().getStringWidth(str);
-                parent.getFontRenderer().drawString(
+                GuiColors.CraftConfirmToCraft.drawString(
+                        parent.getFontRenderer(),
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
-                        (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmToCraft.getColor());
+                        (yo + 6 - negY + downY) / 2);
             }
 
             if (stored != null && stored.getStackSize() > 0 && missingStack == null && pendingStack == null) {

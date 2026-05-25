@@ -96,19 +96,12 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj
-                .drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.CraftAmountSelectAmount.getColor());
+        GuiColors.CraftAmountSelectAmount.drawString(this.fontRendererObj, GuiText.SelectAmount.getLocal(), 8, 6);
         if (this.isControlButtonPressed) {
-            this.fontRendererObj.drawString(
-                    GuiText.ControlButtonValuesDesc1.getLocal(),
-                    8,
-                    47,
-                    GuiColors.CraftAmountSelectAmount.getColor());
-            this.fontRendererObj.drawString(
-                    GuiText.ControlButtonValuesDesc2.getLocal(),
-                    8,
-                    59,
-                    GuiColors.CraftAmountSelectAmount.getColor());
+            GuiColors.CraftAmountSelectAmount
+                    .drawString(this.fontRendererObj, GuiText.ControlButtonValuesDesc1.getLocal(), 8, 47);
+            GuiColors.CraftAmountSelectAmount
+                    .drawString(this.fontRendererObj, GuiText.ControlButtonValuesDesc2.getLocal(), 8, 59);
         }
     }
 

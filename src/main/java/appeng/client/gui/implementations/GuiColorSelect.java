@@ -133,7 +133,7 @@ public class GuiColorSelect extends GuiScreen {
         final int titleX = (this.width - titleWidth) / 2;
         final int titleY = this.guiTop + TITLE_OFFSET_Y;
 
-        this.fontRendererObj.drawString(title, titleX, titleY, GuiColors.ColorSelectTitle.getColor());
+        GuiColors.ColorSelectTitle.drawString(this.fontRendererObj, title, titleX, titleY);
     }
 
     private void drawTooltips(int mouseX, int mouseY) {
@@ -298,8 +298,11 @@ public class GuiColorSelect extends GuiScreen {
             final int renderX = ((this.xPosition + 17) * 2) - stringWidth;
             final int renderY = ((this.yPosition + 17) * 2) - 8;
 
-            mc.fontRenderer
-                    .drawStringWithShadow(stackSizeStr, renderX, renderY, GuiColors.ColorSelectBtnText.getColor());
+            mc.fontRenderer.drawStringWithShadow(
+                    GuiColors.ColorSelectBtnText.format(stackSizeStr),
+                    renderX,
+                    renderY,
+                    GuiColors.ColorSelectBtnText.getColor());
 
             GL11.glPopMatrix();
         }

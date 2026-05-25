@@ -523,7 +523,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
         }
 
         final int labelW = this.fontRendererObj.getStringWidth(statusLabel);
-        this.fontRendererObj.drawString(statusLabel, 8, 18, GuiColors.ReshuffleTitle.getColor());
+        GuiColors.ReshuffleTitle.drawString(this.fontRendererObj, statusLabel, 8, 18);
         this.fontRendererObj.drawString(statusValue, 8 + labelW, 18, statusColor);
 
         if (report == null) return;
@@ -589,8 +589,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                     (GuiColors.ReshuffleProgressFillEnd.getColor() & 0xFFFFFF00) | alpha);
             drawRect(barX + fill - 1, barY, barX + fill + 1, barY + 6, GuiColors.ReshuffleProgressMarker.getColor());
         }
-        this.fontRendererObj
-                .drawString(progressPercent + "%", barX + barW + 3, barY, GuiColors.ReshuffleTitle.getColor());
+        GuiColors.ReshuffleTitle.drawString(this.fontRendererObj, progressPercent + "%", barX + barW + 3, barY);
 
         if (this.startCancelButton != null) {
             this.startCancelButton.displayString = this.container.reportRunning() ? GuiText.ReshuffleCancel.getLocal()
@@ -625,29 +624,28 @@ public class GuiStorageReshuffle extends AEBaseGui {
 
             if (this.container.scanData != null) {
                 if (total == 0) {
-                    this.fontRendererObj.drawString(
+                    GuiColors.DefaultBlack.drawString(
+                            this.fontRendererObj,
                             GuiText.ReshuffleScanEmpty.getLocal(),
                             SCAN_XO + 4,
-                            SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
-                            GuiColors.DefaultBlack.getColor());
+                            SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10);
                     return;
                 } else {
-                    this.fontRendererObj.drawString(
+                    GuiColors.ReshuffleTitle.drawString(
+                            this.fontRendererObj,
                             GuiText.ReshuffleScanDuplicatesTitle.getLocal() + " " + total,
                             SCAN_XO,
-                            SCAN_YO - 12,
-                            GuiColors.ReshuffleTitle.getColor());
+                            SCAN_YO - 12);
                 }
             }
         } else {
-            this.fontRendererObj
-                    .drawString(GuiText.ReshuffleHealthTitle.getLocal(), 8, 6, GuiColors.ReshuffleTitle.getColor());
+            GuiColors.ReshuffleTitle.drawString(this.fontRendererObj, GuiText.ReshuffleHealthTitle.getLocal(), 8, 6);
             if (this.container.scanData != null && this.scanRecords.isEmpty()) {
-                this.fontRendererObj.drawString(
+                GuiColors.DefaultBlack.drawString(
+                        this.fontRendererObj,
                         GuiText.ReshuffleReportNoMatchingCells.getLocal(),
                         SCAN_XO + 4,
-                        SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
-                        GuiColors.DefaultBlack.getColor());
+                        SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10);
                 return;
             }
         }

@@ -27,14 +27,13 @@ public class GuiCrystalGrowthChamber extends AEBaseGui {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        fontRendererObj.drawString(
+        GuiColors.ChestTitle.drawString(
+                fontRendererObj,
                 getGuiDisplayName(
                         StatCollector.translateToLocal("tile.appliedenergistics2.BlockCrystalGrowthChamber.name")),
                 8,
-                6,
-                GuiColors.ChestTitle.getColor());
-        fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, ySize - 96 + 3, GuiColors.ChestInventory.getColor());
+                6);
+        GuiColors.ChestInventory.drawString(fontRendererObj, GuiText.inventory.getLocal(), 8, ySize - 96 + 3);
     }
 
     @Override

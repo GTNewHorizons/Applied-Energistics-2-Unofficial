@@ -368,16 +368,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        fontRendererObj.drawString(
-                getGuiDisplayName(GuiText.InterfaceTerminal.getLocal()),
-                8,
-                6,
-                GuiColors.InterfaceTerminalTitle.getColor());
-        fontRendererObj.drawString(
+        GuiColors.InterfaceTerminalTitle
+                .drawString(fontRendererObj, getGuiDisplayName(GuiText.InterfaceTerminal.getLocal()), 8, 6);
+        GuiColors.InterfaceTerminalInventory.drawString(
+                fontRendererObj,
                 GuiText.inventory.getLocal(),
                 GuiInterfaceTerminal.VIEW_LEFT + 2,
-                this.ySize - 96,
-                GuiColors.InterfaceTerminalInventory.getColor());
+                this.ySize - 96);
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
         }

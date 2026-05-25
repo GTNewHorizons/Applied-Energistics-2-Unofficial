@@ -56,10 +56,8 @@ public class GuiDrive extends AEBaseGui {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj
-                .drawString(this.getGuiDisplayName(GuiText.Drive.getLocal()), 8, 6, GuiColors.DriveTitle.getColor());
-        this.fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.DriveInventory.getColor());
+        GuiColors.DriveTitle.drawString(this.fontRendererObj, this.getGuiDisplayName(GuiText.Drive.getLocal()), 8, 6);
+        GuiColors.DriveInventory.drawString(this.fontRendererObj, GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3);
     }
 
     @Override

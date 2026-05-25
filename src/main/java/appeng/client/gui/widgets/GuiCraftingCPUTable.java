@@ -179,7 +179,7 @@ public class GuiCraftingCPUTable {
                 GL11.glPushMatrix();
                 GL11.glTranslatef(x + 3, y + 3, 0);
                 GL11.glScalef(0.8f, 0.8f, 1.0f);
-                font.drawString(name, 0, 0, GuiColors.CraftingStatusCPUName.getColor());
+                GuiColors.CraftingStatusCPUName.drawString(font, name, 0, 0);
                 GL11.glPopMatrix();
 
                 GL11.glPushMatrix();
@@ -202,7 +202,7 @@ public class GuiCraftingCPUTable {
                         amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(craftingStack.getStackSize());
                     }
                     GL11.glScalef(1.5f, 1.5f, 1.0f);
-                    font.drawString(amount, 0, 0, GuiColors.CraftingStatusCPUAmount.getColor());
+                    GuiColors.CraftingStatusCPUAmount.drawString(font, amount, 0, 0);
 
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
@@ -243,12 +243,8 @@ public class GuiCraftingCPUTable {
                     GL11.glTranslatef(18.0f, 6.0f, 0.0f);
                     GL11.glScalef(1.1f, 1.1f, 1f);
 
-                    font.drawString(cpu.formatStorage(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
-                    font.drawString(
-                            cpu.formatShorterCoprocessors(),
-                            16 * 4 - 5,
-                            0,
-                            GuiColors.CraftingStatusCPUStorage.getColor());
+                    GuiColors.CraftingStatusCPUStorage.drawString(font, cpu.formatStorage(), 0, 0);
+                    GuiColors.CraftingStatusCPUStorage.drawString(font, cpu.formatShorterCoprocessors(), 16 * 4 - 5, 0);
 
                 }
                 GL11.glPopMatrix();

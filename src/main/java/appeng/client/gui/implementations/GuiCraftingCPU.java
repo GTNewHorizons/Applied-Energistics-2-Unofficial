@@ -364,8 +364,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                 TITLE_LEFT_OFFSET + REMAINING_OPERATIONS_RIGHT_OFFSET - this.remainingOperationsTooltip.getWidth(),
                 TITLE_TOP_OFFSET,
                 GuiColors.CraftingCPUTitle.getColor());
-        this.fontRendererObj
-                .drawString(title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, GuiColors.CraftingCPUTitle.getColor());
+        GuiColors.CraftingCPUTitle.drawString(this.fontRendererObj, title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET);
     }
 
     private void drawVisibleEntries() {

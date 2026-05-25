@@ -507,7 +507,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         }
 
         final int offset = (219 - this.fontRendererObj.getStringWidth(dsp)) / 2;
-        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.CraftConfirmSimulation.getColor());
+        GuiColors.CraftConfirmSimulation.drawString(this.fontRendererObj, dsp, offset, ySize - 41);
 
         final int sectionLength = 67;
 

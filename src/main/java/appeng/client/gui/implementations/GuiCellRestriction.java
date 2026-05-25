@@ -79,14 +79,11 @@ public class GuiCellRestriction extends GuiSub {
             this.cellRestriction.updated = false;
         }
 
-        this.fontRendererObj
-                .drawString(GuiText.CellRestriction.getLocal(), BASE_LINE_X, 6, GuiColors.DefaultBlack.getColor());
+        GuiColors.DefaultBlack.drawString(this.fontRendererObj, GuiText.CellRestriction.getLocal(), BASE_LINE_X, 6);
 
-        this.fontRendererObj
-                .drawString(GuiText.ResourceAmount.getLocal(), BASE_LINE_X, 22, GuiColors.DefaultBlack.getColor());
+        GuiColors.DefaultBlack.drawString(this.fontRendererObj, GuiText.ResourceAmount.getLocal(), BASE_LINE_X, 22);
 
-        this.fontRendererObj
-                .drawString(GuiText.Types.getLocal(), BASE_LINE_X + 122, 22, GuiColors.DefaultBlack.getColor());
+        GuiColors.DefaultBlack.drawString(this.fontRendererObj, GuiText.Types.getLocal(), BASE_LINE_X + 122, 22);
 
         int cellDataLine = 37;
         final int types = this.getTypes();

@@ -68,16 +68,10 @@ public class GuiAdvancedInscriber extends AEBaseGui {
         final int maxProgress = Math.max(1, this.container.getMaxProgress());
         this.progressBar.setFullMsg(this.container.getCurrentProgress() * 100 / maxProgress + "%");
 
-        this.fontRendererObj.drawString(
-                this.getGuiDisplayName(GuiText.AdvancedInscriber.getLocal()),
-                8,
-                6,
-                GuiColors.InscriberTitle.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.inventory.getLocal(),
-                8,
-                this.ySize - 96 + 3,
-                GuiColors.InscriberInventory.getColor());
+        GuiColors.InscriberTitle
+                .drawString(this.fontRendererObj, this.getGuiDisplayName(GuiText.AdvancedInscriber.getLocal()), 8, 6);
+        GuiColors.InscriberInventory
+                .drawString(this.fontRendererObj, GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3);
     }
 
     @Override

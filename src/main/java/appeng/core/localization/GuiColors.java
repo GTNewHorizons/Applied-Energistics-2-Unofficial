@@ -12,10 +12,12 @@ package appeng.core.localization;
 
 import net.minecraft.util.StatCollector;
 
+import com.gtnewhorizon.gtnhlib.util.font.GuiColorEnum;
+
 import appeng.api.util.AEColor;
 import appeng.core.AELog;
 
-public enum GuiColors implements Localization {
+public enum GuiColors implements Localization, GuiColorEnum {
 
     // ARGB Colors: Name and default value
     SearchboxFocused(0x6E000000),
