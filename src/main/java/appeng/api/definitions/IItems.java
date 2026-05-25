@@ -117,6 +117,8 @@ public interface IItems {
 
     IItemDefinition colorApplicator();
 
+    IItemDefinition colorizer();
+
     AEColoredItemDefinition coloredPaintBall();
 
     AEColoredItemDefinition coloredLumenPaintBall();
