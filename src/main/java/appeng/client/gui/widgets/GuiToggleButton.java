@@ -16,8 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.util.StatCollector;
 
-import org.lwjgl.opengl.GL11;
-
+import appeng.client.gui.ScreenColor;
 import appeng.client.texture.ExtraBlockTextures;
 
 public class GuiToggleButton extends GuiButton implements ITooltip {
@@ -53,7 +52,7 @@ public class GuiToggleButton extends GuiButton implements ITooltip {
         if (this.visible) {
             final int iconIndex = this.getIconIndex();
 
-            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            ScreenColor.setGuiColor();
             par1Minecraft.renderEngine.bindTexture(ExtraBlockTextures.GuiTexture("guis/states.png"));
             this.field_146123_n = par2 >= this.xPosition && par3 >= this.yPosition
                     && par2 < this.xPosition + this.width
@@ -63,9 +62,11 @@ public class GuiToggleButton extends GuiButton implements ITooltip {
             final int uv_x = iconIndex - uv_y * 16;
 
             this.drawTexturedModalRect(this.xPosition, this.yPosition, 256 - 16, 256 - 16, 16, 16);
+            ScreenColor.resetGuiColor();
             this.drawTexturedModalRect(this.xPosition, this.yPosition, uv_x * 16, uv_y * 16, 16, 16);
             this.mouseDragged(par1Minecraft, par2, par3);
         }
+        ScreenColor.resetGuiColor();
     }
 
     private int getIconIndex() {
