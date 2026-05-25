@@ -292,7 +292,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
             final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
             if (!rep.isProvider() || rep.getPair() == null || !node.isActive() || rep.getPair().isProvider()) continue;
             final IGridNode n = rep.getPair().getGridNode();
-            if (n == null) continue;
+            if (n == null || !n.isActive()) continue;
             final IGrid currentGrid = n.getGrid();
             if (!gridSet.contains(currentGrid)) {
                 gridSet.add(currentGrid);
