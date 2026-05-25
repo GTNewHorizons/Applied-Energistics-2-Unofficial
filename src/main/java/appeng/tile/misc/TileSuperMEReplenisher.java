@@ -338,7 +338,6 @@ public class TileSuperMEReplenisher extends AENetworkTile
                                 this.extractItems((IAEStack<?>) listItem, Actionable.MODULATE, fList),
                                 Actionable.MODULATE,
                                 this.src));
-
             });
         } catch (final GridAccessException ignored) {}
     }
@@ -546,11 +545,29 @@ public class TileSuperMEReplenisher extends AENetworkTile
     @Override
     public void getDrops(World w, int x, int y, int z, List<ItemStack> drops) {
         this.fullRefund();
+
         for (int i = 0; i < this.cells.getSizeInventory(); i++) {
             final ItemStack cell = this.cells.getStackInSlot(i);
             if (cell != null) drops.add(cell);
         }
+
+        this.zeroVoid(drops);
+
         super.getDrops(w, x, y, z, drops);
+    }
+
+    private void zeroVoid(Map<IAEStackType<?>, IItemList> fList, final List<ItemStack> drops) {
+        try {
+            final IStorageGrid storage = this.getProxy().getStorage();
+            fList.forEach((stackType, list) -> {
+                list.forEach(listItem -> drops.add(null)); // wait another pr
+            });
+        } catch (final GridAccessException ignored) {}
+    }
+
+    public void zeroVoid(final List<ItemStack> drops) {
+        this.zeroVoid(this.lists, drops);
+        this.zeroVoid(this.out, drops);
     }
 
     @Override

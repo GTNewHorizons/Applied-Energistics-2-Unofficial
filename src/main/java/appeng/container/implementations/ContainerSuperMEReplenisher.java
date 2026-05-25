@@ -18,11 +18,11 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.IGuiPacketWritable;
-import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.interfaces.IVirtualSlotSource;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.container.sync.SyncCodecs;
 import appeng.container.sync.SyncRegistrar;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.container.sync.handlers.IntSyncHandler;
 import appeng.container.sync.handlers.LongSyncHandler;
 import appeng.container.sync.handlers.ObjectSyncHandler;
@@ -33,9 +33,8 @@ import appeng.tile.misc.TileSuperMEReplenisher;
 import appeng.util.Platform;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVirtualSlotHolder, IVirtualSlotSource {
+public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVirtualSlotSource {
 
     public static class Stored implements IGuiPacketWritable {
 
@@ -75,11 +74,14 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
     }
 
     private final TileSuperMEReplenisher tile;
-    private final IAEStack<?>[] configClientSlot = new IAEStack[3 * 9];
+
     private final LongSyncHandler totalBytes;
     private final LongSyncHandler usedBytes;
+
     public final IntSyncHandler tickRate;
     public final IntSyncHandler threshold;
+
+    public final AEStackInventorySyncHandler config;
     public final ObjectSyncHandler<Stored> storedData;
 
     public boolean needUpdate = false;
@@ -97,6 +99,8 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
 
         this.threshold = sync.intSync("threshold").onClientChange((oldValue, newValue) -> this.needUpdate = true)
                 .onServerChange((oldValue, newValue) -> this.tile.setThreshold((double) newValue / 100));
+
+        this.config = sync.aeStackInventory("config", this.getConfig()).onServerChange(o -> this.extraSync());
 
         this.storedData = sync.object(
                 "storedData",
@@ -152,10 +156,7 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
     public void detectAndSendChanges() {
         this.verifyPermissions(SecurityPermissions.BUILD, false);
 
-        if (Platform.isServer()) {
-            final IAEStackInventory config = this.tile.getAEInventoryByName(StorageName.CONFIG);
-            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
-
+        if (isServer()) {
             this.totalBytes.set(this.tile.getTotalBytes());
             this.usedBytes.set(this.tile.getUsedBytes());
             this.tickRate.set(this.tile.getTickRate());
@@ -167,23 +168,9 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
     }
 
     @Override
-    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
-        final IAEStackInventory config = this.tile.getAEInventoryByName(invName);
-        for (var entry : slotStacks.int2ObjectEntrySet()) {
-            config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
-            if (config.getAEStackInSlot(entry.getIntKey()) != entry.getValue())
-                this.configClientSlot[entry.getIntKey()] = entry.getValue();
-        }
-
-        if (isServer()) this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
-    }
-
-    @Override
     public void updateVirtualSlot(StorageName invName, int slotId, IAEStack<?> aes) {
         final IAEStackInventory config = this.tile.getAEInventoryByName(invName);
         config.putAEStackInSlot(slotId, aes);
-
-        if (isServer()) this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
     }
 
     public IAEStackInventory getConfig() {
@@ -196,5 +183,10 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
 
     public long getUsedBytes() {
         return this.usedBytes.get();
+    }
+
+    // need because inventory can not always accept result, maybe I will use zero void module instead
+    public void extraSync() {
+        this.config.requestFullResync();
     }
 }

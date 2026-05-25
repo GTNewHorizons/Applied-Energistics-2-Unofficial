@@ -9,19 +9,17 @@ import org.lwjgl.input.Keyboard;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.AEBaseGui;
-import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
+import appeng.client.gui.slots.VirtualMEPhantomSlotPrecise;
 import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerSuperMEReplenisher;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TileSuperMEReplenisher;
 
 public class GuiSuperMEReplenisher extends AEBaseGui {
 
-    private VirtualMEPatternSlot[] configSlots;
     private final ContainerSuperMEReplenisher containerSuperMEReplenisher;
     private final MEGuiTextField tickRateField;
     private final MEGuiTextField thresholdField;
@@ -137,21 +135,18 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
     }
 
     private void initVirtualSlots() {
-        this.configSlots = new VirtualMEPatternSlot[3 * 9];
-        final IAEStackInventory inputInv = this.containerSuperMEReplenisher.getConfig();
         final int xo = 30;
         final int yo = -154;
 
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 9; x++) {
-                VirtualMEPatternSlot slot = new VirtualMEPatternSlot(
-                        xo + x * 18,
-                        yo + y * 18 + 9 * 18,
-                        inputInv,
-                        x + y * 9,
-                        this::acceptType);
-                this.configSlots[x + y * 9] = slot;
-                this.registerVirtualSlots(slot);
+                this.registerVirtualSlots(
+                        new VirtualMEPhantomSlotPrecise(
+                                xo + x * 18,
+                                yo + y * 18 + 9 * 18,
+                                this.containerSuperMEReplenisher.config,
+                                x + y * 9,
+                                this::acceptType));
             }
         }
     }
