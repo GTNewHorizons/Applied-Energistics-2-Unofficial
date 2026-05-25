@@ -290,7 +290,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     private void fletchRepeaters(final IGrid grid, final Set<IGrid> gridSet) {
         for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
             final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
-            if (!rep.isProvider() || rep.getPair() == null || !rep.isActive() || !rep.getPair().isActive()) continue;
+            if (!rep.isProvider() || rep.getPair() == null || !node.isActive() || rep.getPair().isProvider()) continue;
             final IGridNode n = rep.getPair().getGridNode();
             if (n == null) continue;
             final IGrid currentGrid = n.getGrid();
