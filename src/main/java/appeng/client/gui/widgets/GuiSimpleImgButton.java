@@ -3,8 +3,7 @@ package appeng.client.gui.widgets;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
-import org.lwjgl.opengl.GL11;
-
+import appeng.client.gui.ScreenColor;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.util.Platform;
 
@@ -33,9 +32,9 @@ public class GuiSimpleImgButton extends GuiButton implements ITooltip {
     public void drawButton(final Minecraft par1Minecraft, final int par2, final int par3) {
         if (this.visible) {
             if (this.enabled) {
-                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                ScreenColor.setGuiColor();
             } else {
-                GL11.glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+                ScreenColor.setDimmedGuiColor();
             }
 
             par1Minecraft.renderEngine.bindTexture(ExtraBlockTextures.GuiTexture("guis/states.png"));
@@ -47,10 +46,13 @@ public class GuiSimpleImgButton extends GuiButton implements ITooltip {
             final int uv_x = iconIndex - uv_y * 16;
 
             this.drawTexturedModalRect(this.xPosition, this.yPosition, 256 - 16, 256 - 16, 16, 16);
+            if (this.enabled) {
+                ScreenColor.resetGuiColor();
+            }
             this.drawTexturedModalRect(this.xPosition, this.yPosition, uv_x * 16, uv_y * 16, 16, 16);
             this.mouseDragged(par1Minecraft, par2, par3);
         }
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        ScreenColor.resetGuiColor();
     }
 
     @Override
