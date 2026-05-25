@@ -11,13 +11,12 @@ import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.implementations.GuiPatternItemRenamer;
 import appeng.client.gui.implementations.GuiPatternValueAmount;
 import appeng.container.ContainerSubGui;
-import appeng.container.interfaces.IVirtualSlotHolder;
+import appeng.container.interfaces.IVirtualSlotSource;
 import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketVirtualSlot;
+import appeng.core.sync.packets.PacketPatternValueSet;
 import appeng.util.Platform;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerPatternValueAmount extends ContainerSubGui implements IVirtualSlotHolder {
+public class ContainerPatternValueAmount extends ContainerSubGui implements IVirtualSlotSource {
 
     private StorageName invName;
     private IAEStack<?> aes;
@@ -28,16 +27,15 @@ public class ContainerPatternValueAmount extends ContainerSubGui implements IVir
     }
 
     @Override
-    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
-        var entry = slotStacks.int2ObjectEntrySet().iterator().next();
+    public void updateVirtualSlot(StorageName invName, int slotId, IAEStack<?> aes) {
         this.invName = invName;
-        this.aes = entry.getValue();
-        this.slotIndex = entry.getIntKey();
+        this.aes = aes;
+        this.slotIndex = slotId;
 
         if (Platform.isServer()) {
             for (ICrafting crafter : this.crafters) {
                 final EntityPlayerMP emp = (EntityPlayerMP) crafter;
-                NetworkHandler.instance.sendTo(new PacketVirtualSlot(invName, slotIndex, aes), emp);
+                NetworkHandler.instance.sendTo(new PacketPatternValueSet(aes, invName, slotId), emp);
             }
         } else {
             final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
