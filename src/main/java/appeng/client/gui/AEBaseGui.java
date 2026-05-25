@@ -40,6 +40,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 
 import org.jetbrains.annotations.NotNull;
@@ -351,8 +352,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     protected final void drawGuiContainerBackgroundLayer(final float f, final int x, final int y) {
         final int ox = this.guiLeft;
         final int oy = this.guiTop;
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        ScreenColor.setGuiColor();
         this.drawBG(ox, oy, x, y);
+        ScreenColor.resetGuiColor();
 
         final List<Slot> slots = this.getInventorySlots();
         for (final Slot slot : slots) {
@@ -418,6 +420,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         if (keyCode == this.mc.gameSettings.keyBindPickBlock.getKeyCode()) {
             final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
             if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, keyBindPickBlockAction)) return;
+        }
+
+        if (this.isCloseKey(keyCode)) {
+            this.flushPendingSync();
         }
 
         super.keyTyped(typedChar, keyCode);
@@ -694,6 +700,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     public void onGuiClosed() {
+        this.flushPendingSync();
         super.onGuiClosed();
         this.subGui = true; // in case the gui is reopened later ( i'm looking at you NEI )
         aeRenderItem.parent = null;
@@ -702,9 +709,22 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     public void updateScreen() {
         super.updateScreen();
+        this.flushPendingSync();
+    }
+
+    protected void closeGui() {
+        this.flushPendingSync();
+        this.mc.thePlayer.closeScreen();
+    }
+
+    protected final void flushPendingSync() {
         if (this.inventorySlots instanceof AEBaseContainer container) {
-            container.tickClientSync();
+            container.getSyncManager().flushSync();
         }
+    }
+
+    protected boolean isCloseKey(final int keyCode) {
+        return keyCode == Keyboard.KEY_ESCAPE || keyCode == this.mc.gameSettings.keyBindInventory.getKeyCode();
     }
 
     @Nullable
@@ -1150,5 +1170,18 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
         return false;
+    }
+
+    public void triggerActionPerformed(final GuiButton btn) {
+        GuiScreenEvent.ActionPerformedEvent.Pre event = new GuiScreenEvent.ActionPerformedEvent.Pre(
+                this,
+                btn,
+                this.buttonList);
+        if (MinecraftForge.EVENT_BUS.post(event)) return;
+
+        event.button.func_146113_a(this.mc.getSoundHandler());
+        this.actionPerformed(event.button);
+        if (this.equals(this.mc.currentScreen)) MinecraftForge.EVENT_BUS
+                .post(new GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.buttonList));
     }
 }

@@ -446,7 +446,8 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                                 childMode,
                                 allowSimulation,
                                 request.craftingMode,
-                                stack -> this.isValidSubstitute(input, stack, context.world, finalSlot));
+                                stack -> this.isValidSubstitute(input, stack, context.world, finalSlot),
+                                1);
                         complexRequestPerSlot.add(req);
                         newChildren.add(req);
                         childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
@@ -472,7 +473,8 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                                     childMode,
                                     allowSimulation,
                                     request.craftingMode,
-                                    stack -> this.isValidSubstitute(recInput, stack, context.world));
+                                    stack -> this.isValidSubstitute(recInput, stack, context.world),
+                                    pattern.isCraftable() ? 1 : recInput.getStackSize());
                             newChildren.add(req);
                             childRecursionRequests.put(recInput, req);
                         }
@@ -500,7 +502,8 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                                 childMode,
                                 allowSimulation,
                                 request.craftingMode,
-                                stack -> this.isValidSubstitute(input, stack, context.world));
+                                stack -> this.isValidSubstitute(input, stack, context.world),
+                                pattern.isCraftable() ? 1 : input.getStackSize());
                         newChildren.add(req);
                         childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
                     }

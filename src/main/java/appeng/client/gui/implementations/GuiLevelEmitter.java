@@ -80,12 +80,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.container.setTextField(this.amountTextField);
         this.validateText();
 
-        this.config = new VirtualMEPhantomSlot(
-                17,
-                42,
-                GuiLevelEmitter::acceptType,
-                this.container::getConfigStack,
-                this.container::setConfigStack);
+        this.config = new VirtualMEPhantomSlot(17, 42, this.container.configSync, 0, GuiLevelEmitter::acceptType);
         this.registerVirtualSlots(this.config);
     }
 
@@ -384,7 +379,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     protected void keyTyped(final char character, final int key) {
         if (!this.checkHotbarKeys(key)) {
             if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-                this.actionPerformed(this.setButton);
+                this.triggerActionPerformed(this.setButton);
             } else {
                 boolean typedTextbox = this.amountTextField.textboxKeyTyped(character, key);
                 if (typedTextbox) {

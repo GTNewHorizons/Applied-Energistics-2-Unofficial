@@ -52,6 +52,7 @@ public enum AEFeature {
     MatterCannon(Constants.CATEGORY_TOOLS),
     WirelessAccessTerminal(Constants.CATEGORY_TOOLS),
     ColorApplicator(Constants.CATEGORY_TOOLS),
+    Colorizer(Constants.CATEGORY_TOOLS),
     MeteoriteCompass(Constants.CATEGORY_TOOLS),
 
     PowerGen(Constants.CATEGORY_NETWORK_FEATURES),
