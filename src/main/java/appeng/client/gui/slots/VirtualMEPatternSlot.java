@@ -31,10 +31,7 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
                 }
 
                 NetworkHandler.instance.sendToServer(
-                        new PacketPatternValueSet(
-                                this.getAEStack(),
-                                this.getStorageName(),
-                                this.getSlotIndex() + 1_000_000));
+                        new PacketPatternValueSet(this.getAEStack(), this.getStorageName(), this.getSlotIndex(), true));
             }
         }
 

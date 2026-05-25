@@ -17,6 +17,8 @@ import io.netty.buffer.Unpooled;
 
 public class PacketPatternValueSet extends AppEngPacket {
 
+    private final static int UPDATE_ONLY_OFFSET = 1_000_000;
+
     private final IAEStack<?> aes;
     private final StorageName invName;
     private int slotIndex;
@@ -28,9 +30,13 @@ public class PacketPatternValueSet extends AppEngPacket {
     }
 
     public PacketPatternValueSet(IAEStack<?> aes, StorageName invName, int slotIndex) {
+        this(aes, invName, slotIndex, false);
+    }
+
+    public PacketPatternValueSet(IAEStack<?> aes, StorageName invName, int slotIndex, boolean onlyUpdate) {
         this.aes = aes;
         this.invName = invName;
-        this.slotIndex = slotIndex;
+        this.slotIndex = onlyUpdate ? slotIndex + UPDATE_ONLY_OFFSET : slotIndex;
 
         final ByteBuf data = Unpooled.buffer();
 
@@ -45,8 +51,8 @@ public class PacketPatternValueSet extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (player.openContainer instanceof AEBaseContainer bc) {
-            if (this.slotIndex >= 1_000_000) {
-                this.slotIndex -= 1_000_000;
+            if (this.slotIndex >= UPDATE_ONLY_OFFSET) {
+                this.slotIndex -= UPDATE_ONLY_OFFSET;
             } else {
                 PrimaryGui pGui = bc.getPrimaryGui();
                 assert pGui != null;

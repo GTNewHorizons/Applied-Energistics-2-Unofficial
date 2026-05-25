@@ -30,7 +30,8 @@ public class VirtualMEPhantomSlotPrecise extends VirtualMEPhantomSlot {
                             new PacketPatternValueSet(
                                     this.getAEStack(),
                                     this.getStorageName(),
-                                    this.getSlotIndex() + 1_000_000));
+                                    this.getSlotIndex(),
+                                    true));
                 }
             }
         }
