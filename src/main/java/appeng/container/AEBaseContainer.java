@@ -386,10 +386,6 @@ public abstract class AEBaseContainer extends Container {
         this.syncManager.readIncoming(remoteEndpoint, buf);
     }
 
-    public final void tickClientSync() {
-        this.syncManager.tickClient();
-    }
-
     protected void bindPlayerInventory(final InventoryPlayer inventoryPlayer, final int offsetX, final int offsetY) {
         // bind player inventory
         for (int i = 0; i < 3; i++) {
@@ -441,7 +437,7 @@ public abstract class AEBaseContainer extends Container {
                 NetworkHandler.instance.sendTo(new PacketGuiDataSync(this.dataSync::writeChanges), playerMP);
             }
 
-            this.syncManager.tickServer();
+            this.syncManager.flushSync();
         }
 
         portableSourceTick();
