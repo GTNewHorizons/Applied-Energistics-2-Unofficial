@@ -45,6 +45,12 @@ public class ServerHelper extends CommonHelper {
     public static final SyncedKeybind CONTAINER_INTERACTION_KEY = SyncedKeybind
             .createConfigurable("key.container_interaction.desc", KEY_CATEGORY, Keyboard.KEY_LCONTROL);
 
+    public static final SyncedKeybind WIRELESS_EXTRA_ACTION = SyncedKeybind
+            .createConfigurable("key.wireless_extra_action.desc", ServerHelper.KEY_CATEGORY, Keyboard.KEY_LCONTROL);
+
+    public static final SyncedKeybind WIRELESS_MODE_SWITCH = SyncedKeybind
+            .createConfigurable("key.wireless_mode_switch.desc", ServerHelper.KEY_CATEGORY, Keyboard.KEY_TAB);
+
     private EntityPlayer renderModeBased;
 
     @Override
