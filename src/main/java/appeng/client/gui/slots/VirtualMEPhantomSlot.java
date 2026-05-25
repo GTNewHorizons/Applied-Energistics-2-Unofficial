@@ -17,6 +17,8 @@ import appeng.api.storage.StorageName;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
+import appeng.container.sync.deltas.AEStackInventoryDelta;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.sync.network.NetworkHandler;
@@ -35,60 +37,40 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         boolean test(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton);
     }
 
-    @FunctionalInterface
-    public interface StackGetter {
-
-        @Nullable
-        IAEStack<?> get();
-    }
-
-    @FunctionalInterface
-    public interface StackSetter {
-
-        void set(@Nullable IAEStack<?> stack);
-    }
-
     @Nullable
     private final IAEStackInventory inventory;
     private final TypeAcceptPredicate acceptType;
     @Nullable
-    private final StackGetter stackGetter;
-    @Nullable
-    private final StackSetter stackSetter;
+    private final AEStackInventorySyncHandler syncHandler;
 
     public VirtualMEPhantomSlot(int x, int y, IAEStackInventory inventory, int slotIndex,
             TypeAcceptPredicate acceptType) {
-        this(x, y, inventory, slotIndex, acceptType, null, null);
+        this(x, y, inventory, slotIndex, acceptType, null);
     }
 
-    public VirtualMEPhantomSlot(int x, int y, TypeAcceptPredicate acceptType, StackGetter stackGetter,
-            StackSetter stackSetter) {
-        this(x, y, null, 0, acceptType, stackGetter, stackSetter);
+    public VirtualMEPhantomSlot(int x, int y, AEStackInventorySyncHandler syncHandler, int slotIndex,
+            TypeAcceptPredicate acceptType) {
+        this(x, y, syncHandler.get(), slotIndex, acceptType, syncHandler);
     }
 
     private VirtualMEPhantomSlot(int x, int y, @Nullable IAEStackInventory inventory, int slotIndex,
-            TypeAcceptPredicate acceptType, @Nullable StackGetter stackGetter, @Nullable StackSetter stackSetter) {
+            TypeAcceptPredicate acceptType, @Nullable AEStackInventorySyncHandler syncHandler) {
         super(x, y, slotIndex);
         this.inventory = inventory;
         this.showAmount = false;
         this.acceptType = acceptType;
-        this.stackGetter = stackGetter;
-        this.stackSetter = stackSetter;
+        this.syncHandler = syncHandler;
     }
 
     @Nullable
     @Override
     public IAEStack<?> getAEStack() {
-        if (this.stackGetter != null) {
-            return this.stackGetter.get();
-        }
-
         return this.getInventory().getAEStackInSlot(this.getSlotIndex());
     }
 
     protected void setAEStack(@Nullable final IAEStack<?> stack) {
-        if (this.stackSetter != null) {
-            this.stackSetter.set(stack);
+        if (this.syncHandler != null) {
+            this.syncHandler.applyAndQueueDelta(new AEStackInventoryDelta(this.getSlotIndex(), stack));
             return;
         }
 

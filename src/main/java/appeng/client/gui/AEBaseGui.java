@@ -709,9 +709,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     public void updateScreen() {
         super.updateScreen();
-        if (this.inventorySlots instanceof AEBaseContainer container) {
-            container.tickClientSync();
-        }
+        this.flushPendingSync();
     }
 
     protected void closeGui() {
@@ -719,9 +717,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.mc.thePlayer.closeScreen();
     }
 
-    private void flushPendingSync() {
+    protected final void flushPendingSync() {
         if (this.inventorySlots instanceof AEBaseContainer container) {
-            container.getSyncManager().flushClient();
+            container.getSyncManager().flushSync();
         }
     }
 

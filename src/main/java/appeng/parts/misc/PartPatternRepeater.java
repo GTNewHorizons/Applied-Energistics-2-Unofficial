@@ -14,10 +14,12 @@ import static appeng.util.Platform.readAEStackListNBT;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
@@ -74,7 +76,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartPatternRepeater extends PartBasicState
         implements ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
 
-    private final List<ICraftingPatternDetails> craftingList = new ArrayList<>();
+    private final Set<ICraftingPatternDetails> craftingList = new HashSet<>();
     private IItemList<IAEStack<?>> waitingStacks = AEApi.instance().storage().createAEStackList();
     private CraftingGridCache targetCraftingGrid = null;
     private CraftingGridCache currentCraftingGrid = null;
@@ -259,7 +261,10 @@ public class PartPatternRepeater extends PartBasicState
         }
     }
 
+    private boolean duringFletchPatterns = false;
+
     public void init() {
+        if (this.duringFletchPatterns) return;
         this.craftingList.clear();
         this.targetCraftingGrid = null;
         this.targetNetworkProxy = null;
@@ -277,27 +282,28 @@ public class PartPatternRepeater extends PartBasicState
             this.pairPatternRepeater = ppr;
             this.targetNetworkProxy = ppr.getProxy();
 
-            if (this.provider && !ppr.provider) {
+            if (this.provider) {
+                if (ppr.provider) return;
                 final IGridNode gn = tcb.getGridNode(ForgeDirection.UNKNOWN);
                 if (gn == null) return;
+
+                this.duringFletchPatterns = true;
 
                 this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
 
                 final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
                         .getCraftingMultiPatterns().entrySet();
 
-                for (Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> entry : tempPatterns) {
-                    this.craftingList.addAll(entry.getValue());
+                tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
+
+                try {
+                    this.getProxy().getGrid()
+                            .postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
+                } catch (final GridAccessException e) {
+                    // :P
                 }
 
-                if (!this.craftingList.isEmpty()) {
-                    try {
-                        this.getProxy().getGrid()
-                                .postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
-                    } catch (final GridAccessException e) {
-                        // :P
-                    }
-                }
+                this.duringFletchPatterns = false;
             } else {
                 final IGridNode gn = this.getGridNode(ForgeDirection.UNKNOWN);
                 if (gn == null) return;
@@ -405,7 +411,7 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void onPostPatternChange() {
-        if (!this.provider && pairPatternRepeater != null) pairPatternRepeater.init();
+        if (!this.provider && this.pairPatternRepeater != null) this.pairPatternRepeater.init();
     }
 
     @Override
@@ -429,5 +435,9 @@ public class PartPatternRepeater extends PartBasicState
 
     public IItemList<IAEStack<?>> getWaitingStacks() {
         return this.waitingStacks;
+    }
+
+    public PartPatternRepeater getPair() {
+        return this.pairPatternRepeater;
     }
 }
