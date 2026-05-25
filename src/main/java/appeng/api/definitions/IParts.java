@@ -98,6 +98,8 @@ public interface IParts {
 
     IItemDefinition craftingTerminal();
 
+    IItemDefinition craftingDiagnosticTerminal();
+
     IItemDefinition terminal();
 
     IItemDefinition storageMonitor();
