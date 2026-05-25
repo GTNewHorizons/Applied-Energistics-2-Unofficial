@@ -17,7 +17,6 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
@@ -27,7 +26,6 @@ import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.IGuiSub;
 import appeng.client.gui.implementations.GuiLevelEmitter;
@@ -36,14 +34,13 @@ import appeng.container.PrimaryGui;
 import appeng.container.interfaces.IContainerSubGui;
 import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.container.sync.SyncCodecs;
 import appeng.container.sync.SyncRegistrar;
 import appeng.container.sync.codecs.AEStackTypeFilterSyncCodec;
 import appeng.container.sync.deltas.TypeFilterDelta;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.container.sync.handlers.ConfigEnumSyncHandler;
 import appeng.container.sync.handlers.DeltaObjectSyncHandler;
 import appeng.container.sync.handlers.LongSyncHandler;
-import appeng.container.sync.handlers.ObjectSyncHandler;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
@@ -61,7 +58,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
     private final DeltaObjectSyncHandler<@NotNull AEStackTypeFilter, TypeFilterDelta> typeFiltersSync;
     private final ConfigEnumSyncHandler<@NotNull LevelType> levelModeSync;
     private final ConfigEnumSyncHandler<@NotNull YesNo> craftingModeSync;
-    private final ObjectSyncHandler<@Nullable IAEStack<?>> configStackSync;
+    public final AEStackInventorySyncHandler configSync;
 
     public ContainerLevelEmitter(final InventoryPlayer ip, final ILevelEmitter te) {
         super(ip, te);
@@ -100,15 +97,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
                 Settings.CRAFT_VIA_REDSTONE,
                 YesNo.class,
                 this.getUpgradeable().getConfigManager());
-        this.configStackSync = sync
-                .object(
-                        "configStack",
-                        SyncCodecs.aeStack(),
-                        this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG).getAEStackInSlot(0))
-                .onServerChange((oldValue, newValue) -> {
-                    final IAEStack<?> stack = newValue == null ? null : newValue.copy();
-                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG).putAEStackInSlot(0, stack);
-                });
+        this.configSync = sync.aeStackInventory("config", this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG));
 
         // sub gui copy paste
         this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
@@ -187,7 +176,6 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
             this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
             this.setRedStoneMode(
                     (RedstoneMode) this.getUpgradeable().getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
-            this.configStackSync.set(this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG).getAEStackInSlot(0));
         }
 
         this.standardDetectAndSendChanges();
@@ -230,18 +218,6 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
 
     public void toggleTypeFilter(@NotNull final IAEStackType<?> type) {
         this.typeFiltersSync.applyAndQueueDelta(TypeFilterDelta.toggle(type));
-    }
-
-    public ILevelEmitter getLvlEmitter() {
-        return this.lvlEmitter;
-    }
-
-    public @Nullable IAEStack<?> getConfigStack() {
-        return this.configStackSync.get();
-    }
-
-    public void setConfigStack(@Nullable final IAEStack<?> stack) {
-        this.configStackSync.set(stack);
     }
 
     // for level terminal
