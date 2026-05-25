@@ -1099,7 +1099,7 @@ item.appliedenergistics2.WirelessMessages.Connected=§aConnected to %s
 item.appliedenergistics2.WirelessMessages.TargetHubFull=§cTarget hub is full
 item.appliedenergistics2.WirelessMessages.SourceHubFull=§cHub at %s §cis full
 item.appliedenergistics2.WirelessMessages.HubToHub=§cHub-to-hub connections are not allowed
-item.appliedenergistics2.WirelessMessages.ModeToggle=Tab + R-click to toggle mode
+item.appliedenergistics2.WirelessMessages.ModeToggle="Wireless Mode Switch" + R-click to toggle mode
 item.appliedenergistics2.WirelessMessages.Security=Security violation - you are not allowed to modify this network
 item.appliedenergistics2.WirelessMessages.DimensionMismatch=Both connectors must be in the same dimension
 item.appliedenergistics2.WirelessMessages.InvalidTarget=§cInvalid target - must be Wireless Connector or Wireless Hub
@@ -1237,6 +1237,8 @@ key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=Toggle search box focus
 key.search_connected_inventories.desc=Search network inventories for an item
 key.container_interaction.desc=Container Item Interaction
+key.wireless_extra_action.desc=Wireless Extra Action
+key.wireless_mode_switch.desc=Wireless Mode Switch
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern

@@ -25,6 +25,7 @@ import appeng.api.networking.security.PlayerSource;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.localization.WirelessMessages;
+import appeng.server.ServerHelper;
 import appeng.tile.networking.TileWirelessBase;
 import appeng.util.Platform;
 
@@ -345,7 +346,7 @@ public class WireLessToolHelper {
             }
         }
 
-        if (Platform.keyBindLCtrl.isKeyDown(p) && isHub) {
+        if (ServerHelper.WIRELESS_EXTRA_ACTION.isKeyDown(p) && isHub) {
             int i = 0;
             while (i < target.getFreeSlots()) {
                 locList.add(new DimensionalCoord(target));
@@ -438,7 +439,7 @@ public class WireLessToolHelper {
         }
 
         final PlayerSource playerSource = new PlayerSource(p, null);
-        final boolean bindMultiple = Platform.keyBindLCtrl.isKeyDown(p) && target.isHub();
+        final boolean bindMultiple = ServerHelper.WIRELESS_EXTRA_ACTION.isKeyDown(p) && target.isHub();
         boolean success = false;
         int boundCount = 0;
 
