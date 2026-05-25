@@ -166,13 +166,7 @@ public class PacketValueConfig extends AppEngPacket {
                 }
             }
         } else if (this.Name.startsWith("CellWorkbench.") && c instanceof final ContainerCellWorkbench ccw) {
-            if (this.Name.equals("CellWorkbench.Action")) {
-                switch (this.Value) {
-                    case "CopyMode" -> ccw.nextWorkBenchCopyMode();
-                    case "Partition" -> ccw.partition();
-                    case "Clear" -> ccw.clear();
-                }
-            } else if (this.Name.equals("CellWorkbench.Fuzzy")) {
+            if (this.Name.equals("CellWorkbench.Fuzzy")) {
                 ccw.setFuzzy(FuzzyMode.valueOf(this.Value));
             }
         } else if (c instanceof ContainerNetworkTool) {
