@@ -55,7 +55,7 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
         for (int i = 0; i < 16; i++) {
             if (button == this.colorButtons[i]) {
                 this.containerWirelessNetworkManager.color.set(isShiftKeyDown() ? i + 100 : i);
-                this.containerWirelessNetworkManager.tickClientSync();
+                this.flushPendingSync();
             }
         }
     }
