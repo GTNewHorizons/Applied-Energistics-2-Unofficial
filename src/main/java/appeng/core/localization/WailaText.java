@@ -36,7 +36,6 @@ public enum WailaText implements Localization {
 
     Contains,
     Channels,
-    ChannelsUnbound,
     Booting,
 
     wireless_connected,
@@ -72,7 +71,7 @@ public enum WailaText implements Localization {
     }
 
     public String getUnlocalized() {
-        return "waila.appliedenergistics2." + this.formatedName;
+        return "waila.appliedenergistics2" + '.' + this.formatedName;
     }
 
     /**

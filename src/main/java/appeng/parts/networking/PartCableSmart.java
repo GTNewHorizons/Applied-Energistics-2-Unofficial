@@ -40,7 +40,7 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartCableSmart extends PartCable implements IUsedChannelProvider {
+public class PartCableSmart extends PartCable {
 
     @Reflected
     public PartCableSmart(final ItemStack is) {

@@ -40,8 +40,6 @@ public enum GridFlags {
     /**
      * This node can transmit 32 signals, this should only apply to Tier2 Cable, P2P Tunnels, and Quantum Network
      * Bridges.
-     * <p>
-     * Causes paths through these nodes to be strongly preferred.
      */
     DENSE_CAPACITY,
 
@@ -52,10 +50,8 @@ public enum GridFlags {
     MULTIBLOCK,
 
     /**
-     * Causes paths through these nodes to be preferred. This is used by Tier1 Cables and Toggle Busses to make paths go
-     * through them rather than ordinary devices if possible.
-     * <p>
-     * Does not need to be set if {@link #DENSE_CAPACITY} is already set.
+     * Indicates which path might be preferred, this only matters if two routes of equal length exist, ad only changes
+     * the order they are processed in.
      */
     PREFERRED,
 }

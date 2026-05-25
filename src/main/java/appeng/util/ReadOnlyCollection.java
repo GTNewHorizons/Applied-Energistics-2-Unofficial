@@ -10,7 +10,6 @@
 
 package appeng.util;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -20,14 +19,8 @@ public class ReadOnlyCollection<T> implements IReadOnlyCollection<T> {
 
     private final Collection<T> c;
 
-    @SuppressWarnings("unchecked")
-    public ReadOnlyCollection(final Collection<? extends T> in) {
-        this.c = (Collection<T>) in;
-    }
-
-    @SafeVarargs
-    public ReadOnlyCollection(final T... in) {
-        this.c = Arrays.asList(in);
+    public ReadOnlyCollection(final Collection<T> in) {
+        this.c = in;
     }
 
     @Override

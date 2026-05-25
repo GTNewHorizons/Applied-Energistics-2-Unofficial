@@ -12,7 +12,6 @@ package appeng.parts.misc;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.api.networking.GridFlags;
 import appeng.helpers.Reflected;
 
 public class PartInvertedToggleBus extends PartToggleBus {
@@ -22,8 +21,8 @@ public class PartInvertedToggleBus extends PartToggleBus {
         super(is);
         this.getProxy().setIdlePowerUsage(0.0);
         this.getOuterProxy().setIdlePowerUsage(0.0);
-        this.getProxy().setFlags(GridFlags.PREFERRED);
-        this.getOuterProxy().setFlags(GridFlags.PREFERRED);
+        this.getProxy().setFlags();
+        this.getOuterProxy().setFlags();
     }
 
     @Override

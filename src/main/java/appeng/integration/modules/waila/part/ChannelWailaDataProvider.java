@@ -19,7 +19,10 @@ import net.minecraft.world.World;
 
 import appeng.api.parts.IPart;
 import appeng.core.localization.WailaText;
-import appeng.parts.networking.IUsedChannelProvider;
+import appeng.parts.networking.PartCableSmart;
+import appeng.parts.networking.PartDenseCable;
+import gnu.trove.map.TObjectShortMap;
+import gnu.trove.map.hash.TObjectShortHashMap;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 
@@ -36,7 +39,16 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider {
      * Channel key used for the transferred {@link net.minecraft.nbt.NBTTagCompound}
      */
     private static final String ID_USED_CHANNELS = "usedChannels";
-    private static final String ID_MAX_CHANNELS = "maxChannels";
+
+    /**
+     * Used cache for channels if the channel was not transmitted through the server.
+     * <p/>
+     * This is useful, when a player just started to look at a tile and thus just requested the new information from the
+     * server.
+     * <p/>
+     * The cache will be updated from the server.
+     */
+    private final TObjectShortMap<IPart> cache = new TObjectShortHashMap<>();
 
     /**
      * Adds the used and max channel to the tool tip
@@ -50,15 +62,39 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider {
     @Override
     public List<String> getWailaBody(final IPart part, final List<String> currentToolTip,
             final IWailaDataAccessor accessor, final IWailaConfigHandler config) {
-        if (part instanceof IUsedChannelProvider) {
-            final int usedChannels = accessor.getNBTData().getInteger(ID_USED_CHANNELS);
-            final int maxChannels = accessor.getNBTData().getInteger(ID_MAX_CHANNELS);
-            final String formattedToolTip;
-            if (maxChannels <= 0) formattedToolTip = String.format(WailaText.ChannelsUnbound.getLocal(), usedChannels);
-            else formattedToolTip = String.format(WailaText.Channels.getLocal(), usedChannels, maxChannels);
+        if (part instanceof PartCableSmart || part instanceof PartDenseCable) {
+            final short usedChannels = this.getUsedChannels(part, accessor.getNBTData());
+            final int maxChannels = (part instanceof PartDenseCable) ? 32 : 8;
+
+            final String formattedToolTip = String.format(WailaText.Channels.getLocal(), usedChannels, maxChannels);
             currentToolTip.add(formattedToolTip);
         }
         return currentToolTip;
+    }
+
+    /**
+     * Determines the source of the channel.
+     * <p/>
+     * If the client received information of the channels on the server, they are used, else if the cache contains a
+     * previous stored value, this will be used. Default value is 0.
+     *
+     * @param part part to be looked at
+     * @param tag  tag maybe containing the channel information
+     * @return used channels on the cable
+     */
+    private short getUsedChannels(final IPart part, final NBTTagCompound tag) {
+        final short usedChannels;
+
+        if (tag.hasKey(ID_USED_CHANNELS)) {
+            usedChannels = tag.getShort(ID_USED_CHANNELS);
+            this.cache.put(part, usedChannels);
+        } else if (this.cache.containsKey(part)) {
+            usedChannels = this.cache.get(part);
+        } else {
+            usedChannels = 0;
+        }
+
+        return usedChannels;
     }
 
     /**
@@ -80,9 +116,16 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider {
     @Override
     public NBTTagCompound getNBTData(final EntityPlayerMP player, final IPart part, final TileEntity te,
             final NBTTagCompound tag, final World world, final int x, final int y, final int z) {
-        if (part instanceof IUsedChannelProvider channelProvider) {
-            tag.setInteger(ID_USED_CHANNELS, channelProvider.getUsedChannelsInfo());
-            tag.setInteger(ID_MAX_CHANNELS, channelProvider.getMaxChannelsInfo());
+        if (part instanceof PartCableSmart || part instanceof PartDenseCable) {
+            final NBTTagCompound tempTag = new NBTTagCompound();
+
+            part.writeToNBT(tempTag);
+
+            if (tempTag.hasKey(ID_USED_CHANNELS)) {
+                final short usedChannels = tempTag.getShort(ID_USED_CHANNELS);
+
+                tag.setShort(ID_USED_CHANNELS, usedChannels);
+            }
         }
         return tag;
     }
