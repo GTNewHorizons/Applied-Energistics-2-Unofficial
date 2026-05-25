@@ -19,7 +19,7 @@ public class PacketPatternValueSet extends AppEngPacket {
 
     private final IAEStack<?> aes;
     private final StorageName invName;
-    private final int slotIndex;
+    private int slotIndex;
 
     public PacketPatternValueSet(final ByteBuf stream) {
         this.aes = readStackByte(stream);
@@ -45,12 +45,23 @@ public class PacketPatternValueSet extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (player.openContainer instanceof AEBaseContainer bc) {
-            PrimaryGui pGui = bc.getPrimaryGui();
-            assert pGui != null;
-            pGui.open(player);
+            if (this.slotIndex >= 1_000_000) {
+                this.slotIndex -= 1_000_000;
+            } else {
+                PrimaryGui pGui = bc.getPrimaryGui();
+                assert pGui != null;
+                pGui.open(player);
+            }
+
             if (player.openContainer instanceof IVirtualSlotSource vss) {
                 vss.updateVirtualSlot(invName, slotIndex, aes);
             }
         }
+    }
+
+    @Override
+    public void clientPacketData(INetworkInfo network, AppEngPacket packet, EntityPlayer player) {
+        if (player.openContainer instanceof IVirtualSlotSource vss)
+            vss.updateVirtualSlot(this.invName, this.slotIndex, this.aes);
     }
 }
