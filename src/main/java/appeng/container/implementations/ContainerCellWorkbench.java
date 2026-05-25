@@ -10,8 +10,6 @@
 
 package appeng.container.implementations;
 
-import static appeng.util.Platform.isServer;
-
 import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,34 +33,44 @@ import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
-import appeng.container.guisync.GuiSync;
-import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.sync.ActionHandler;
+import appeng.container.sync.SyncDirection;
+import appeng.container.sync.SyncRegistrar;
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
+import appeng.container.sync.handlers.ConfigEnumSyncHandler;
 import appeng.helpers.ICellRestriction;
 import appeng.tile.inventory.AppEngNullInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.IUpgradeInventory;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerCellWorkbench extends ContainerUpgradeable implements IVirtualSlotHolder {
+public class ContainerCellWorkbench extends ContainerUpgradeable {
 
     private final ICellWorkbench workBench;
     private final AppEngNullInventory nullInventory = new AppEngNullInventory();
 
-    @GuiSync(2)
-    public CopyMode copyMode = CopyMode.CLEAR_ON_REMOVE;
-
     private ItemStack prevStack = null;
     private int lastUpgrades = 0;
 
-    private final IAEStack<?>[] configClientSlot = new IAEStack[63];
+    public final ConfigEnumSyncHandler<CopyMode> copyModeSync;
+    public final AEStackInventorySyncHandler configSync;
+    public final ActionHandler<Void> clearAction;
+    public final ActionHandler<Void> partitionAction;
 
     public ContainerCellWorkbench(final InventoryPlayer ip, final ICellWorkbench te) {
         super(ip, te);
         this.workBench = te;
+
+        SyncRegistrar sync = this.syncRegistrar();
+        this.copyModeSync = sync.configEnum("copyMode", Settings.COPY_MODE, CopyMode.class, te.getConfigManager());
+        this.configSync = sync.aeStackInventory("config", te.getAEInventoryByName(StorageName.CONFIG))
+                .setDiffCheckInterval(2, SyncDirection.SERVER_TO_CLIENT);
+
+        this.clearAction = sync.actionC2S("clear").onServerAction(this::clear);
+        this.partitionAction = sync.actionC2S("partition").onServerAction(this::partition);
     }
 
     public void setFuzzy(final FuzzyMode valueOf) {
@@ -70,15 +78,6 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         if (cwi != null) {
             cwi.setFuzzyMode(this.workBench.getInventoryByName("cell").getStackInSlot(0), valueOf);
         }
-    }
-
-    public void nextWorkBenchCopyMode() {
-        this.workBench.getConfigManager()
-                .putSetting(Settings.COPY_MODE, Platform.nextEnum(this.getWorkBenchCopyMode()));
-    }
-
-    private CopyMode getWorkBenchCopyMode() {
-        return (CopyMode) this.workBench.getConfigManager().getSetting(Settings.COPY_MODE);
     }
 
     @Override
@@ -149,13 +148,8 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
                 }
             }
 
-            this.setCopyMode(this.getWorkBenchCopyMode());
+            this.copyModeSync.syncFromConfig();
             this.setFuzzyMode(this.getWorkBenchFuzzyMode());
-
-            this.updateVirtualSlots(
-                    StorageName.NONE,
-                    this.workBench.getAEInventoryByName(StorageName.NONE),
-                    this.configClientSlot);
         }
 
         this.prevStack = is;
@@ -181,21 +175,13 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         return haveCell() && this.workBench.getCell() instanceof ICellRestriction;
     }
 
-    @Override
-    public void onUpdate(final String field, final Object oldValue, final Object newValue) {
-        if (field.equals("copyMode")) {
-            this.workBench.getConfigManager().putSetting(Settings.COPY_MODE, this.getCopyMode());
-        }
-
-        super.onUpdate(field, oldValue, newValue);
-    }
-
-    public void clear() {
+    private void clear() {
         final IAEStackInventory inv = this.workBench.getAEInventoryByName(StorageName.NONE);
         for (int x = 0; x < inv.getSizeInventory(); x++) {
             inv.putAEStackInSlot(x, null);
         }
-        this.detectAndSendChanges();
+        this.configSync.markDirty();
+        this.getSyncManager().flushSync();
     }
 
     private FuzzyMode getWorkBenchFuzzyMode() {
@@ -207,7 +193,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void partition() {
+    private void partition() {
         final IAEStackInventory inv = this.workBench.getAEInventoryByName(StorageName.NONE);
         final ItemStack is = this.getUpgradeable().getInventoryByName("cell").getStackInSlot(0);
 
@@ -231,27 +217,8 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
             }
         }
 
-        this.detectAndSendChanges();
-    }
-
-    public CopyMode getCopyMode() {
-        return this.copyMode;
-    }
-
-    private void setCopyMode(final CopyMode copyMode) {
-        this.copyMode = copyMode;
-    }
-
-    @Override
-    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
-        final IAEStackInventory config = this.workBench.getAEInventoryByName(StorageName.NONE);
-        for (var entry : slotStacks.int2ObjectEntrySet()) {
-            config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
-        }
-
-        if (isServer()) {
-            this.updateVirtualSlots(StorageName.NONE, config, this.configClientSlot);
-        }
+        this.configSync.markDirty();
+        this.getSyncManager().flushSync();
     }
 
     @Nullable

@@ -38,6 +38,7 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
+import appeng.util.Platform;
 
 public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPrimaryGuiIconProvider {
 
@@ -138,10 +139,14 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
         }
 
         if (inv == this.cell && !this.locked) {
-            this.locked = true;
-
             this.cacheUpgrades = null;
             this.cacheConfig = null;
+            if (Platform.isClient()) {
+                this.updateStackTypeFromCell();
+                return;
+            }
+
+            this.locked = true;
 
             ItemStack is = this.cell.getStackInSlot(0);
             if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
@@ -149,13 +154,11 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
                     icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
             }
 
-            if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
-                if (wi.getStackType() != this.type) {
-                    this.type = wi.getStackType();
-
-                    for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                        this.config.putAEStackInSlot(x, null);
-                    }
+            final IAEStackType<?> oldType = this.type;
+            this.updateStackTypeFromCell();
+            if (this.type != null && this.type != oldType) {
+                for (int x = 0; x < this.config.getSizeInventory(); x++) {
+                    this.config.putAEStackInSlot(x, null);
                 }
             }
 
@@ -214,6 +217,15 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
             this.cacheConfig = inv;
         }
         return this.cacheConfig;
+    }
+
+    private void updateStackTypeFromCell() {
+        final ItemStack is = this.cell.getStackInSlot(0);
+        if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
+            this.type = wi.getStackType();
+        } else {
+            this.type = null;
+        }
     }
 
     @Override
