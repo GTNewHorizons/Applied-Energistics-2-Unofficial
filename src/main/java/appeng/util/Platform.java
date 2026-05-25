@@ -71,7 +71,6 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.glodblock.github.common.item.ItemFluidDrop;
 import com.glodblock.github.common.item.ItemFluidPacket;
-import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
 import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 import com.mojang.authlib.GameProfile;
 
