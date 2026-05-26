@@ -61,6 +61,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.localization.PlayerMessages;
 import appeng.helpers.Reflected;
+import appeng.me.Grid;
 import appeng.me.GridAccessException;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cache.NetworkMonitor;
@@ -286,6 +287,22 @@ public class PartPatternRepeater extends PartBasicState
                 if (ppr.provider) return;
                 final IGridNode gn = tcb.getGridNode(ForgeDirection.UNKNOWN);
                 if (gn == null) return;
+
+                try {
+                    for (Grid network : ppr.getProxy().getGrid()
+                            .getAllRecursiveGridConnections(PartPatternRepeater.class)) {
+                        if (network == this.getProxy().getGrid()) {
+                            this.targetCraftingGrid = null;
+                            this.targetNetworkProxy = null;
+                            this.pairPatternRepeater = null;
+                            this.currentCraftingGrid = null;
+                            this.duringFletchPatterns = false;
+                            return;
+                        }
+                    }
+                } catch (final GridAccessException e) {
+                    // :P
+                }
 
                 this.duringFletchPatterns = true;
 
