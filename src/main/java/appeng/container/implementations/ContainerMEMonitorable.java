@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -860,6 +861,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                         IAEStack<?> modulateLeftover = monitor
                                 .injectItems(toInject, Actionable.MODULATE, this.getActionSource());
                         if (modulateLeftover != null) {
+                            if (modulateLeftover.getStackSize() == toInjectAmount) return;
+
                             ObjectLongPair<ItemStack> modulateResult = type
                                     .fillContainer(cleared.copy(), modulateLeftover);
                             ItemStack result = modulateResult.left() != null ? modulateResult.left() : cleared.copy();
@@ -1271,11 +1274,33 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return null;
     }
 
-    protected ItemStack shiftStoreItem(final ItemStack input) {
+    protected ItemStack shiftStoreItem(@Nonnull final ItemStack input) {
+        if (this.getPowerSource() == null) return input;
+
+        if (input.getItem() instanceof ItemMEStackPacket) {
+            final IAEStack<?> tempAes = ItemMEStackPacket.toAEStack(input);
+            if (tempAes == null) return null;
+            final IMEMonitor tempMonitor = getMonitorWithFilter(tempAes.getStackType());
+            if (tempMonitor == null) return input;
+
+            final IAEStack<?> res = Platform
+                    .poweredInsert(this.getPowerSource(), tempMonitor, tempAes, this.getActionSource());
+
+            if (res != null) {
+                final ItemStack stackPacket = AEApi.instance().definitions().items().itemMEStackPacket().maybeStack(1)
+                        .get();
+                Platform.writeStackNBT(res, ItemStackNBT.get(stackPacket));
+                return stackPacket;
+            } else {
+                return null;
+            }
+        }
+
         IMEMonitor<IAEItemStack> itemMonitor = this.getMonitorWithFilter(ITEM_STACK_TYPE);
-        if (this.getPowerSource() == null || itemMonitor == null) {
+        if (itemMonitor == null) {
             return input;
         }
+
         final IAEItemStack ais = Platform.poweredInsert(
                 this.getPowerSource(),
                 itemMonitor,
