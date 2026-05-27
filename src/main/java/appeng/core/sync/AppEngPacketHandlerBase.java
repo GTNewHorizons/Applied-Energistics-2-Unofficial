@@ -28,6 +28,8 @@ import appeng.core.sync.packets.PacketCraftRequest;
 import appeng.core.sync.packets.PacketCraftingCPUTableUpdate;
 import appeng.core.sync.packets.PacketCraftingCompleteNotification;
 import appeng.core.sync.packets.PacketCraftingCpuUpdate;
+import appeng.core.sync.packets.PacketCraftingDiagnosticReset;
+import appeng.core.sync.packets.PacketCraftingDiagnosticsUpdate;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketGuiDataSync;
@@ -124,6 +126,8 @@ public class AppEngPacketHandlerBase {
 
         PACKET_CRAFTING_CPUS_UPDATE(PacketCraftingCPUTableUpdate.class),
 
+        PACKET_CRAFTING_DIAGNOSTICS_UPDATE(PacketCraftingDiagnosticsUpdate.class),
+
         PACKET_CRAFTING_COMPLETE_NOTIFICATION(PacketCraftingCompleteNotification.class),
 
         PACKET_CLICK_OR_DRAG_FAKE_SLOT(PacketClickOrDragFakeSlot.class),
@@ -149,7 +153,8 @@ public class AppEngPacketHandlerBase {
         PACKET_TOGGLE_INTERFACE_VISIBILITY(PacketToggleInterfaceVisibility.class),
         PACKET_NETWORK_VISUALISER_DATA(PacketNetworkVisualiserData.class),
         PACKET_SUPER_WIRELESS_TOOL_DATA(PacketWirelessToolData.class),
-        PACKET_SUPER_WIRELESS_TOOL_COMMAND(PacketWirelessToolCommand.class);
+        PACKET_SUPER_WIRELESS_TOOL_COMMAND(PacketWirelessToolCommand.class),
+        PACKET_CRAFTING_DIAGNOSTIC_RESET(PacketCraftingDiagnosticReset.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;
