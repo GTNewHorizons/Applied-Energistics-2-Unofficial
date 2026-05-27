@@ -69,9 +69,13 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import com.glodblock.github.common.item.ItemFluidDrop;
 import com.glodblock.github.common.item.ItemFluidPacket;
 import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
@@ -2170,5 +2174,27 @@ public class Platform {
 
     public static String fmt(double v) {
         return NumberFormatUtil.formatNumber(v);
+    }
+
+    @NotNull
+    @Contract("_ -> new")
+    public static ItemStack copyStackWithSizeOne(@NotNull ItemStack itemStack) {
+        ItemStack copy = itemStack.copy();
+        copy.stackSize = 1;
+        return copy;
+    }
+
+    public static void addToPlayerInvOrDrop(final EntityPlayer p, @Nullable final ItemStack is) {
+        if (is == null) return;
+        final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(p, ForgeDirection.UNKNOWN);
+        final ItemStack leftOver = adaptor.addItems(is);
+        p.openContainer.detectAndSendChanges();
+        if (leftOver != null) p.entityDropItem(leftOver, 0);
+    }
+
+    public static void handleLeftover(final EntityPlayer p, final IAEStack<?> aes) {
+        final ItemStack container = AEApi.instance().definitions().items().itemMEStackPacket().maybeStack(1).get();
+        Platform.writeStackNBT(aes, ItemStackNBT.get(container));
+        addToPlayerInvOrDrop(p, container);
     }
 }

@@ -397,7 +397,10 @@ public enum GuiText implements Localization {
     SuperMEReplenisherTickRate,
     SuperMEReplenisherThreshold,
     SuperMEReplenisherTarget,
-    SuperMEReplenisherStored;
+    SuperMEReplenisherStored,
+
+    itemMEStackPacketDesc1,
+    itemMEStackPacketDesc2;
 
     private final String root;
 
