@@ -22,6 +22,7 @@ import appeng.items.materials.MaterialType;
 import appeng.items.misc.ItemCrystalSeed;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.items.misc.ItemEncodedUltimatePattern;
+import appeng.items.misc.ItemMEStackPacket;
 import appeng.items.misc.ItemPaintBall;
 import appeng.items.misc.ItemTunnelPattern;
 import appeng.items.parts.ItemFacade;
@@ -130,6 +131,8 @@ public final class ApiItems implements IItems {
     private final IItemDefinition toolNetworkVisualiser;
     private final IItemDefinition toolWirelessKit;
 
+    private final IItemDefinition itemMEStackPacket;
+
     public ApiItems(final DefinitionConstructor constructor) {
         this.certusQuartzAxe = constructor.registerItemDefinition(new ToolQuartzAxe(AEFeature.CertusQuartzTools));
         this.certusQuartzHoe = constructor.registerItemDefinition(new ToolQuartzHoe(AEFeature.CertusQuartzTools));
@@ -209,6 +212,8 @@ public final class ApiItems implements IItems {
         this.toolReplicatorCard = constructor.registerItemDefinition(new ToolReplicatorCard());
         this.toolNetworkVisualiser = constructor.registerItemDefinition(new ToolNetworkVisualiser());
         this.toolWirelessKit = constructor.registerItemDefinition(new ToolWirelessKit());
+
+        this.itemMEStackPacket = constructor.registerItemDefinition(new ItemMEStackPacket());
     }
 
     @Override
@@ -474,6 +479,11 @@ public final class ApiItems implements IItems {
     @Override
     public IItemDefinition toolNetworkVisualiser() {
         return this.toolNetworkVisualiser;
+    }
+
+    @Override
+    public IItemDefinition itemMEStackPacket() {
+        return this.itemMEStackPacket;
     }
 
     public IItemDefinition paintBall() {

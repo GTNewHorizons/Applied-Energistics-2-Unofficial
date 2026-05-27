@@ -78,7 +78,7 @@ public class FluidUtils {
         } else if (FluidContainerRegistry.isContainer(itemStack)) {
             return FluidContainerRegistry.getFluidForFilledItem(itemStack);
         } else {
-            return StackInfo.getFluid(Platform.copyStackWithSize(itemStack, 1));
+            return StackInfo.getFluid(Platform.copyStackWithSizeOne(itemStack));
         }
     }
 

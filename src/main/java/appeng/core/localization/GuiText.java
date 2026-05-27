@@ -389,7 +389,10 @@ public enum GuiText implements Localization {
     GuiDimensionalCoord,
     GuiDimensionalCoordShort,
     GuiDimensionalCoordNoDim,
-    GuiDimensionalCoordShortNoDim;
+    GuiDimensionalCoordShortNoDim,
+
+    itemMEStackPacketDesc1,
+    itemMEStackPacketDesc2;
 
     private final String root;
 
