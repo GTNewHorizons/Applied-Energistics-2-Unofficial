@@ -12,6 +12,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
+import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.implementations.IPowerChannelState;
@@ -552,17 +555,15 @@ public class TileSuperMEReplenisher extends AENetworkTile
         }
 
         this.zeroVoid(drops);
-
-        super.getDrops(w, x, y, z, drops);
     }
 
     private void zeroVoid(Map<IAEStackType<?>, IItemList> fList, final List<ItemStack> drops) {
-        try {
-            final IStorageGrid storage = this.getProxy().getStorage();
-            fList.forEach((stackType, list) -> {
-                list.forEach(listItem -> drops.add(null)); // wait another pr
-            });
-        } catch (final GridAccessException ignored) {}
+        final ItemStack container = AEApi.instance().definitions().items().itemMEStackPacket().maybeStack(1).get();
+        fList.forEach((stackType, list) -> list.forEach(listItem -> {
+            final ItemStack is = container.copy();
+            Platform.writeStackNBT((IAEStack<?>) listItem, ItemStackNBT.get(is));
+            drops.add(is);
+        }));
     }
 
     public void zeroVoid(final List<ItemStack> drops) {
