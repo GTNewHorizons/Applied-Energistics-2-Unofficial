@@ -155,6 +155,7 @@ public class ae2stuffConvertor implements Runnable {
             }
 
             if (color != 16) newNbt.setShort("Color", (short) color);
+            if (tag.hasKey("CustomName")) newNbt.setString("customName", tag.getString("CustomName"));
             newNbt.setTag("proxy", tag.getCompoundTag("ae_node"));
             newNbt.setInteger("x", tag.getInteger("x"));
             newNbt.setInteger("y", tag.getInteger("y"));
