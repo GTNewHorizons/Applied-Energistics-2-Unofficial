@@ -303,6 +303,10 @@ public class MEGuiTextField implements ITooltip {
         return field.getVisible();
     }
 
+    public void setVisible(boolean visible) {
+        this.field.setVisible(visible);
+    }
+
     public void setSelectionPos(int pos) {
         field.setSelectionPos(pos);
     }
