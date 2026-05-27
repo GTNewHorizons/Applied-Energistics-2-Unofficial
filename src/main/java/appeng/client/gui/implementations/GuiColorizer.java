@@ -75,9 +75,9 @@ public class GuiColorizer extends AEBaseGui implements GuiSlider.ISlider {
 
         this.setButton = new GuiAeButton(
                 SET_BUTTON_ID,
-                this.guiLeft + 112,
+                this.guiLeft + 111,
                 this.guiTop + 95,
-                57,
+                58,
                 12,
                 GuiText.Set.getLocal(),
                 "");
