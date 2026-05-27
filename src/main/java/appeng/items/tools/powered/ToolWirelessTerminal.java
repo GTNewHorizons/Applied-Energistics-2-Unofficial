@@ -38,6 +38,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
+import appeng.server.ServerHelper;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
 import baubles.api.BaubleType;
@@ -63,7 +64,7 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
 
     @Override
     public ItemStack onItemRightClick(final ItemStack item, final World w, final EntityPlayer player) {
-        if (Platform.keyBindTab.isKeyDown(player))
+        if (ServerHelper.WIRELESS_MODE_SWITCH.isKeyDown(player))
             Platform.openGUI(player, null, null, GuiBridge.GUI_WIRELESS_NETWORK_MANAGER);
         else if (ForgeEventFactory.onItemUseStart(player, item, 1) > 0)
             AEApi.instance().registries().wireless().openWirelessTerminalGui(item, w, player);
@@ -133,9 +134,14 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
         String freeKey = "";
         for (int i = 0; i < 16; i++) {
             final String key = AEColor.values()[i].name();
-            if (keys.hasKey(key) && keys.getString(key).equals(encKey)) return;
-            else if (freeKey.isEmpty()) freeKey = key;
+            if (keys.hasKey(key)) {
+                if (keys.getString(key).equals(encKey)) return;
+            } else {
+                freeKey = key;
+                break;
+            }
         }
+        if (freeKey.isEmpty()) return;
         keys.setString(freeKey, encKey);
         data.setTag("encryptionKeys", keys);
         ItemStackNBT.of(item).setString("encryptionKey", encKey).setString("name", name);
