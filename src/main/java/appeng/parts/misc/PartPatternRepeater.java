@@ -254,7 +254,7 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void provideCrafting(final ICraftingProviderHelper craftingTracker) {
-        if (this.provider && this.getProxy().isActive() && this.craftingList != null) {
+        if (this.provider && this.getProxy().isActive()) {
             for (final ICraftingPatternDetails details : this.craftingList) {
                 craftingTracker.addCraftingOption(this, details);
             }
@@ -265,11 +265,11 @@ public class PartPatternRepeater extends PartBasicState
 
     public void init() {
         if (this.duringFletchPatterns) return;
+        this.unregisterPostPatternChangeListener();
         this.craftingList.clear();
         this.targetCraftingGrid = null;
         this.targetNetworkProxy = null;
         this.pairPatternRepeater = null;
-        this.currentCraftingGrid = null;
 
         final TileEntity self = this.getHost().getTile();
         final TileEntity target = self.getWorldObj().getTileEntity(
@@ -289,6 +289,9 @@ public class PartPatternRepeater extends PartBasicState
 
                 this.duringFletchPatterns = true;
 
+                // drop patterns from this
+                this.triggerPatternUpdate();
+
                 this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
 
                 final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
@@ -296,12 +299,7 @@ public class PartPatternRepeater extends PartBasicState
 
                 tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
 
-                try {
-                    this.getProxy().getGrid()
-                            .postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
-                } catch (final GridAccessException e) {
-                    // :P
-                }
+                this.triggerPatternUpdate();
 
                 this.duringFletchPatterns = false;
             } else {
@@ -311,6 +309,14 @@ public class PartPatternRepeater extends PartBasicState
                 this.currentCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
                 this.currentCraftingGrid.addPostPatternChangeListeners(this);
             }
+        }
+    }
+
+    private void triggerPatternUpdate() {
+        try {
+            this.getProxy().getGrid().postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
+        } catch (final GridAccessException e) {
+            // :P
         }
     }
 
@@ -416,7 +422,7 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void getDrops(List<ItemStack> drops, boolean wrenched) {
-        if (this.currentCraftingGrid != null) this.currentCraftingGrid.removePostPatternChangeListeners(this);
+        this.unregisterPostPatternChangeListener();
         if (this.targetNetworkProxy != null) try {
             if (this.targetNetworkProxy.getStorage().getItemInventory() instanceof NetworkMonitor<?>nm) {
                 nm.removeStorageInterceptor(this);
@@ -427,6 +433,13 @@ public class PartPatternRepeater extends PartBasicState
         } catch (GridAccessException ignored) {}
 
         super.getDrops(drops, wrenched);
+    }
+
+    private void unregisterPostPatternChangeListener() {
+        if (this.currentCraftingGrid != null) {
+            this.currentCraftingGrid.removePostPatternChangeListeners(this);
+            this.currentCraftingGrid = null;
+        }
     }
 
     public boolean isProvider() {

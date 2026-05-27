@@ -303,7 +303,8 @@ public class CraftingGridCache
             this.storageGrid.postAlterationOfStoredItems(type, list, new BaseActionSource());
         }
 
-        for (final ICraftingPostPatternChangeListener listener : this.postPatternChangeListeners) {
+        for (final ICraftingPostPatternChangeListener listener : ImmutableList
+                .copyOf(this.postPatternChangeListeners)) {
             listener.onPostPatternChange();
         }
     }

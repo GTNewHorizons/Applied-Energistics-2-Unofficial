@@ -256,7 +256,7 @@ gui.appliedenergistics2.RequiredPower=Required Power
 gui.appliedenergistics2.StoredPower=Stored Power
 gui.appliedenergistics2.MaxPower=Max Power
 gui.appliedenergistics2.QuartzCuttingKnife=Quartz Cutting Knife
-gui.appliedenergistics2.Colorizer=Colorizer
+gui.appliedenergistics2.Colorizer=GUI Colorizer
 gui.appliedenergistics2.Inscriber=Inscriber
 gui.appliedenergistics2.AdvancedInscriber=Advanced Inscriber
 gui.appliedenergistics2.AdvancedInscriberLockOn=Locked - cannot be removed with automation
@@ -512,6 +512,9 @@ gui.appliedenergistics2.GuiDimensionalCoord=§cX: %s§r,§aY: %s§r,§9Z: %s§r,
 gui.appliedenergistics2.GuiDimensionalCoordShort=§c%s§r, §a%s§r, §9%s§r, §5%s
 gui.appliedenergistics2.GuiDimensionalCoordNoDim=§cX: %s§r,§aY: %s§r,§9Z: %s
 gui.appliedenergistics2.GuiDimensionalCoordShortNoDim=§c%s§r, §a%s§r, §9%s
+
+gui.appliedenergistics2.itemMEStackPacketDesc1=Leftover after inject in system operation
+gui.appliedenergistics2.itemMEStackPacketDesc2=Make sure you have free space and then put this item in ME Terminal
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -933,6 +936,8 @@ item.appliedenergistics2.ItemCrystalSeed.name=Seed
 item.appliedenergistics2.ItemCrystalSeed.Certus.name=Certus Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Nether.name=Nether Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Fluix.name=Fluix Seed
+
+item.appliedenergistics2.ItemMEStackPacket.name=ME Stack Packet
 
 item.appliedenergistics2.ItemPart.InvalidType.name=Disabled Item
 item.appliedenergistics2.ItemMaterial.InvalidType.name=This item is disabled.

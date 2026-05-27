@@ -43,7 +43,7 @@ public class PacketPatternValueSet extends AppEngPacket {
         data.writeInt(this.getPacketID());
         writeStackByte(aes, data);
         data.writeInt(invName.ordinal());
-        data.writeInt(slotIndex);
+        data.writeInt(this.slotIndex);
 
         this.configureWrite(data);
     }
