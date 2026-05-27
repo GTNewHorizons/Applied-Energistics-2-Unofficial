@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketPatternValueSet;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.tile.inventory.IAEStackInventory;
 
@@ -28,6 +29,9 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
                 } else {
                     NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_PATTERN_VALUE_AMOUNT));
                 }
+
+                NetworkHandler.instance.sendToServer(
+                        new PacketPatternValueSet(this.getAEStack(), this.getStorageName(), this.getSlotIndex(), true));
             }
         }
 

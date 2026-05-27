@@ -254,7 +254,7 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void provideCrafting(final ICraftingProviderHelper craftingTracker) {
-        if (this.provider && this.getProxy().isActive() && this.craftingList != null) {
+        if (this.provider && this.getProxy().isActive()) {
             for (final ICraftingPatternDetails details : this.craftingList) {
                 craftingTracker.addCraftingOption(this, details);
             }
@@ -289,6 +289,9 @@ public class PartPatternRepeater extends PartBasicState
 
                 this.duringFletchPatterns = true;
 
+                // drop patterns from this
+                this.triggerPatternUpdate();
+
                 this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
 
                 final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
@@ -296,12 +299,7 @@ public class PartPatternRepeater extends PartBasicState
 
                 tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
 
-                try {
-                    this.getProxy().getGrid()
-                            .postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
-                } catch (final GridAccessException e) {
-                    // :P
-                }
+                this.triggerPatternUpdate();
 
                 this.duringFletchPatterns = false;
             } else {
@@ -311,6 +309,14 @@ public class PartPatternRepeater extends PartBasicState
                 this.currentCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
                 this.currentCraftingGrid.addPostPatternChangeListeners(this);
             }
+        }
+    }
+
+    private void triggerPatternUpdate() {
+        try {
+            this.getProxy().getGrid().postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
+        } catch (final GridAccessException e) {
+            // :P
         }
     }
 
