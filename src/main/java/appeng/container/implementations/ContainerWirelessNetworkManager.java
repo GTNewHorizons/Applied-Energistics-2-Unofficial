@@ -1,22 +1,19 @@
 package appeng.container.implementations;
 
-import java.util.Objects;
-
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.util.AEColor;
 import appeng.container.AEBaseContainer;
-import appeng.container.guisync.IGuiPacketWritable;
-import appeng.container.sync.SyncCodecs;
+import appeng.container.sync.ActionHandler;
+import appeng.container.sync.StreamCodecs;
 import appeng.container.sync.SyncRegistrar;
-import appeng.container.sync.handlers.IntSyncHandler;
-import appeng.container.sync.handlers.ObjectSyncHandler;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.Pair;
@@ -25,10 +22,12 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 public class ContainerWirelessNetworkManager extends AEBaseContainer {
 
     private final ItemStack terminal;
-    public final IntSyncHandler color;
-    private final ObjectSyncHandler<NewName> nameSetter;
+    public final @NotNull ActionHandler<Byte> switchAction;
+    public final @NotNull ActionHandler<Byte> removeAction;
+    private final @NotNull ActionHandler<NewName> renameAction;
+    public final @NotNull ActionHandler<Void> refresh;
 
-    private final static class NewName implements IGuiPacketWritable {
+    private final static class NewName {
 
         public final AEColor color;
         public final String name;
@@ -43,14 +42,9 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
             this.name = ByteBufUtils.readUTF8String(buf);
         }
 
-        @Override
-        public void writeToPacket(ByteBuf buf) {
-            buf.writeInt(this.color.ordinal());
-            ByteBufUtils.writeUTF8String(buf, this.name);
-        }
-
-        public NewName copy() {
-            return new NewName(this.color, this.name);
+        public static void writeToPacket(ByteBuf buf, NewName value) {
+            buf.writeInt(value.color.ordinal());
+            ByteBufUtils.writeUTF8String(buf, value.name);
         }
     }
 
@@ -60,17 +54,18 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
         this.terminal = ((IGuiItemObject) anchor).getItemStack();
 
         final SyncRegistrar sync = this.syncRegistrar();
-        this.color = sync.intSync("color").onServerChange((oldValue, newValue) -> this.setCurrent(newValue));
-        this.nameSetter = sync
-                .object(
-                        "nameSetter",
-                        SyncCodecs.packetWritable(NewName.class, NewName::new, NewName::copy, Objects::equals),
-                        new NewName(AEColor.Transparent, ""))
-                .onServerChange((oldValue, newValue) -> this.setName(newValue));
+
+        this.switchAction = sync.actionC2S("switch", StreamCodecs.byteValue()).onServerAction(this::setCurrent);
+        this.removeAction = sync.actionC2S("remove", StreamCodecs.byteValue()).onServerAction(this::remove);
+        this.refresh = sync.actionS2C("refresh", StreamCodecs.empty());
+
+        this.renameAction = sync
+                .actionC2S("rename", StreamCodecs.of(NewName.class.getName(), NewName::writeToPacket, NewName::new))
+                .onServerAction(this::rename);
     }
 
     public void setNewName(final AEColor color, final String newName) {
-        this.nameSetter.set(new NewName(color, newName));
+        this.renameAction.send(new NewName(color, newName));
     }
 
     public Int2ObjectOpenHashMap<Pair<Boolean, String>> getKeys() {
@@ -87,27 +82,41 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
             }
         } else if (data.hasKey("encryptionKey")) {
             final NBTTagCompound keys = new NBTTagCompound();
-            final String name = data.getString("encryptionKey");
-            keys.setString(AEColor.values()[0].name(), name);
-            keysStatus.put(0, Pair.of(true, name));
+            final String key = data.getString("encryptionKey");
+            final String colorKey = AEColor.values()[0].name();
+            final String colorName = AEColor.values()[0].toString();
+
+            keys.setString(colorKey, key);
+            keys.setString(colorKey + "Name", colorName);
+            data.setTag("encryptionKeys", keys);
+
+            keysStatus.put(0, Pair.of(true, colorName));
         }
 
         return keysStatus;
     }
 
     @Override
-    public void detectAndSendChanges() {}
+    protected void portableSourceTick() {}
 
-    private void setCurrent(final int color) {
+    private void setCurrent(final byte color) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
-        if (color >= 100) keys.removeTag(AEColor.values()[color - 100].name());
-        else ItemStackNBT.of(this.terminal).setString("encryptionKey", keys.getString(AEColor.values()[color].name()));
+        ItemStackNBT.of(this.terminal).setString("encryptionKey", keys.getString(AEColor.values()[color].name()));
         this.checkItem(this.getTarget());
-        if (color < 100) Minecraft.getMinecraft().thePlayer.closeScreen();
+        this.getInventoryPlayer().player.closeScreen();
     }
 
-    private void setName(final NewName newName) {
+    private void remove(final byte color) {
+        final NBTTagCompound data = ItemStackNBT.get(this.terminal);
+        final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
+        keys.removeTag(AEColor.values()[color].name());
+        this.checkItem(this.getTarget());
+        this.detectAndSendChanges();
+        this.refresh.send();
+    }
+
+    private void rename(final NewName newName) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
         keys.setString(newName.color.name() + "Name", newName.name);

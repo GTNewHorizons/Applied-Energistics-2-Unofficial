@@ -131,6 +131,11 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     public void setEncryptionKey(final ItemStack item, final String encKey, final String name) {
         final NBTTagCompound data = ItemStackNBT.get(item);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
+
+        if (!keys.hasKey(AEColor.values()[0].name()) && data.hasKey("encryptionKey")) {
+            keys.setString(AEColor.values()[0].name(), data.getString("encryptionKey"));
+        }
+
         String freeKey = "";
         for (int i = 0; i < 16; i++) {
             final String key = AEColor.values()[i].name();

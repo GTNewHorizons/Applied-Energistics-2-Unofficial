@@ -29,6 +29,7 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
     public GuiWirelessNetworkManager(final InventoryPlayer inventoryPlayer, final IGuiItemObject item) {
         super(new ContainerWirelessNetworkManager(inventoryPlayer, item));
         this.containerWirelessNetworkManager = (ContainerWirelessNetworkManager) inventorySlots;
+        this.containerWirelessNetworkManager.refresh.onClientAction(this::reinitalize);
         this.xSize = 106;
         this.ySize = 232;
     }
@@ -38,7 +39,7 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
         super.initGui();
         this.addButtons();
         this.renameField.setFocused(false);
-        this.renameField.setEnabled(false);
+        this.renameField.setVisible(false);
         this.renameField.setMaxStringLength(96);
     }
 
@@ -69,12 +70,14 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
                     this.renameField.x = btn.xPosition - this.guiLeft;
                     this.renameField.y = btn.yPosition - this.guiTop;
                     this.renameField.setText(btn.displayString);
-                    this.renameField.setEnabled(true);
+                    this.renameField.setVisible(true);
                     this.renameField.setFocused(true);
                     this.renameField.setCursorPositionEnd();
                     buttonOnRename = btn;
                     btn.drawDisplayString = false;
-                } else this.containerWirelessNetworkManager.color.set(isShiftKeyDown() ? btn.id + 100 : btn.id);
+                } else if (isShiftKeyDown()) {
+                    this.containerWirelessNetworkManager.removeAction.send((byte) btn.id);
+                } else this.containerWirelessNetworkManager.switchAction.send((byte) btn.id);
                 this.flushPendingSync();
             }
         }
