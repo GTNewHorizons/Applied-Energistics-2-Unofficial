@@ -14,6 +14,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.sync.ActionHandler;
 import appeng.container.sync.StreamCodecs;
 import appeng.container.sync.SyncRegistrar;
+import appeng.util.Platform;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.Pair;
@@ -22,10 +23,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 public class ContainerWirelessNetworkManager extends AEBaseContainer {
 
     private final ItemStack terminal;
-    public final @NotNull ActionHandler<Byte> switchAction;
-    public final @NotNull ActionHandler<Byte> removeAction;
+    private final @NotNull ActionHandler<Byte> switchAction;
+    private final @NotNull ActionHandler<Byte> removeAction;
     private final @NotNull ActionHandler<NewName> renameAction;
-    public final @NotNull ActionHandler<Void> refresh;
 
     private final static class NewName {
 
@@ -57,15 +57,9 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
 
         this.switchAction = sync.actionC2S("switch", StreamCodecs.byteValue()).onServerAction(this::setCurrent);
         this.removeAction = sync.actionC2S("remove", StreamCodecs.byteValue()).onServerAction(this::remove);
-        this.refresh = sync.actionS2C("refresh", StreamCodecs.empty());
-
         this.renameAction = sync
                 .actionC2S("rename", StreamCodecs.of(NewName.class.getName(), NewName::writeToPacket, NewName::new))
                 .onServerAction(this::rename);
-    }
-
-    public void setNewName(final AEColor color, final String newName) {
-        this.renameAction.send(new NewName(color, newName));
     }
 
     public Int2ObjectOpenHashMap<Pair<Boolean, String>> getKeys() {
@@ -99,6 +93,10 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
     @Override
     protected void portableSourceTick() {}
 
+    public void switch2Action(final byte color) {
+        this.switchAction.send(color);
+    }
+
     private void setCurrent(final byte color) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
@@ -107,19 +105,28 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
         this.getInventoryPlayer().player.closeScreen();
     }
 
+    public void removeNetwork(final byte color) {
+        this.removeAction.send(color);
+        this.remove(color);
+    }
+
     private void remove(final byte color) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
         keys.removeTag(AEColor.values()[color].name());
-        this.checkItem(this.getTarget());
-        this.detectAndSendChanges();
-        this.refresh.send();
+        if (Platform.isServer()) this.checkItem(this.getTarget());
+    }
+
+    public void renameNetwork(final AEColor color, final String newName) {
+        final NewName n = new NewName(color, newName);
+        this.renameAction.send(n);
+        this.rename(n);
     }
 
     private void rename(final NewName newName) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
         keys.setString(newName.color.name() + "Name", newName.name);
-        this.checkItem(this.getTarget());
+        if (Platform.isServer()) this.checkItem(this.getTarget());
     }
 }
