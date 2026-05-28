@@ -1140,7 +1140,7 @@ public abstract class AEBaseContainer extends Container {
         this.powerMultiplier = powerMultiplier;
     }
 
-    private void portableSourceTick() {
+    protected void portableSourceTick() {
         final Object obj = this.getTarget();
         if (obj instanceof WirelessTerminalGuiObject wtgo) {
             if (!wtgo.rangeCheck()) {
