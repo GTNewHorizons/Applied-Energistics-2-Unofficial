@@ -25,11 +25,11 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
     private final ContainerWirelessNetworkManager containerWirelessNetworkManager;
     private final MEGuiTextField renameField = new MEGuiTextField(96, 12);
     private GuiColorButton buttonOnRename = null;
+    boolean needReInitialize = false;
 
     public GuiWirelessNetworkManager(final InventoryPlayer inventoryPlayer, final IGuiItemObject item) {
         super(new ContainerWirelessNetworkManager(inventoryPlayer, item));
         this.containerWirelessNetworkManager = (ContainerWirelessNetworkManager) inventorySlots;
-        this.containerWirelessNetworkManager.refresh.onClientAction(this::reinitalize);
         this.xSize = 106;
         this.ySize = 232;
     }
@@ -76,8 +76,12 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
                     buttonOnRename = btn;
                     btn.drawDisplayString = false;
                 } else if (isShiftKeyDown()) {
-                    this.containerWirelessNetworkManager.removeAction.send((byte) btn.id);
-                } else this.containerWirelessNetworkManager.switchAction.send((byte) btn.id);
+                    this.containerWirelessNetworkManager.removeNetwork((byte) btn.id);
+                    this.needReInitialize = true;
+                } else {
+                    this.containerWirelessNetworkManager.switch2Action((byte) btn.id);
+                    this.needReInitialize = true;
+                }
                 this.flushPendingSync();
             }
         }
@@ -95,26 +99,21 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) {
-        if (keyCode == Keyboard.KEY_ESCAPE && this.renameField.isFocused()) resetRenameField();
-
         if ((keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) && this.renameField.isFocused()) {
             final String newName = this.renameField.getText();
-            this.containerWirelessNetworkManager.setNewName(this.buttonOnRename.getColor(), newName);
-            this.buttonOnRename.displayString = newName;
-            this.resetRenameField();
+            this.containerWirelessNetworkManager.renameNetwork(this.buttonOnRename.getColor(), newName);
+            this.needReInitialize = true;
         } else if (this.renameField.textboxKeyTyped(typedChar, keyCode)) {} else super.keyTyped(typedChar, keyCode);
-    }
-
-    private void resetRenameField() {
-        this.renameField.setFocused(false);
-        this.renameField.setVisible(false);
-        buttonOnRename.drawDisplayString = true;
-        buttonOnRename = null;
     }
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
         this.renameField.drawTextBox();
+
+        if (this.needReInitialize) {
+            this.needReInitialize = false;
+            this.reinitalize();
+        }
     }
 
     @Override
