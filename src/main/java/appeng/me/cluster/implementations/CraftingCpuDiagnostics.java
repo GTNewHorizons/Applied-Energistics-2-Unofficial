@@ -23,20 +23,6 @@ import appeng.util.Platform;
 final class CraftingCpuDiagnostics {
 
     private final Map<IAEStack<?>, NavigableSet<CraftingTimingRecord>> outputTimingRecords = new HashMap<>();
-    private long diagnosticSessionCounter;
-
-    CraftingDiagnosticSessionId nextSessionId() {
-        this.diagnosticSessionCounter++;
-        return CraftingDiagnosticSessionId.of(this.diagnosticSessionCounter);
-    }
-
-    long getSessionCounter() {
-        return this.diagnosticSessionCounter;
-    }
-
-    void setSessionCounter(final long diagnosticSessionCounter) {
-        this.diagnosticSessionCounter = Math.max(0L, diagnosticSessionCounter);
-    }
 
     void clear() {
         this.outputTimingRecords.clear();

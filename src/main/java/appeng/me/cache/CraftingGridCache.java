@@ -145,6 +145,7 @@ public class CraftingGridCache
     private long diagnosticsRevision = 0L;
     private static final String DIAGNOSTICS_KEY = "CraftingDiagnostics";
     private static final String DIAGNOSTICS_ENABLED_KEY = "CraftingDiagnosticsEnabled";
+    private static final String DIAGNOSTICS_SESSION_COUNTER_KEY = "CraftingDiagnosticsSessionCounter";
 
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
@@ -231,6 +232,7 @@ public class CraftingGridCache
     public void onSplit(final IGridStorage destinationStorage) {
         destinationStorage.dataObject().removeTag(DIAGNOSTICS_KEY);
         destinationStorage.dataObject().removeTag(DIAGNOSTICS_ENABLED_KEY);
+        destinationStorage.dataObject().removeTag(DIAGNOSTICS_SESSION_COUNTER_KEY);
     }
 
     @Override
@@ -244,6 +246,9 @@ public class CraftingGridCache
         if (data.hasKey(DIAGNOSTICS_ENABLED_KEY)) {
             this.diagnosticsEnabled = this.diagnosticsEnabled || data.getBoolean(DIAGNOSTICS_ENABLED_KEY);
         }
+        if (data.hasKey(DIAGNOSTICS_SESSION_COUNTER_KEY, Constants.NBT.TAG_LONG)) {
+            this.diagnostics.setSessionCounter(data.getLong(DIAGNOSTICS_SESSION_COUNTER_KEY));
+        }
 
         this.readDiagnosticsFromNBT(
                 data.getTagList(DIAGNOSTICS_KEY, Constants.NBT.TAG_COMPOUND),
@@ -254,6 +259,7 @@ public class CraftingGridCache
     public void populateGridStorage(final IGridStorage destinationStorage) {
         destinationStorage.dataObject().setBoolean(DIAGNOSTICS_ENABLED_KEY, this.diagnosticsEnabled);
         destinationStorage.dataObject().setTag(DIAGNOSTICS_KEY, this.writeDiagnosticsToNBT());
+        destinationStorage.dataObject().setLong(DIAGNOSTICS_SESSION_COUNTER_KEY, this.diagnostics.getSessionCounter());
     }
 
     public static void pauseRebuilds() {
@@ -768,6 +774,14 @@ public class CraftingGridCache
 
     public boolean isDiagnosticsEnabled() {
         return this.diagnosticsEnabled;
+    }
+
+    public CraftingDiagnosticSessionId nextDiagnosticSessionId() {
+        return this.diagnostics.nextSessionId();
+    }
+
+    public void setDiagnosticSessionCounter(final long diagnosticSessionCounter) {
+        this.diagnostics.setSessionCounter(diagnosticSessionCounter);
     }
 
     public void setDiagnosticsEnabled(final boolean enabled) {

@@ -19,6 +19,20 @@ public final class CraftingNetworkDiagnostics {
 
     private final Map<IAEStack<?>, DiagnosticStats> diagnostics = new HashMap<>();
     private long revision = 0L;
+    private long diagnosticSessionCounter;
+
+    public CraftingDiagnosticSessionId nextSessionId() {
+        this.diagnosticSessionCounter++;
+        return CraftingDiagnosticSessionId.of(this.diagnosticSessionCounter);
+    }
+
+    public long getSessionCounter() {
+        return this.diagnosticSessionCounter;
+    }
+
+    public void setSessionCounter(final long diagnosticSessionCounter) {
+        this.diagnosticSessionCounter = Math.max(this.diagnosticSessionCounter, diagnosticSessionCounter);
+    }
 
     public void recordSample(final IAEStack<?> output, final CraftingDiagnosticSessionId sessionId,
             final long producedAmount, final long observedStartMillis, final long observedEndMillis) {
