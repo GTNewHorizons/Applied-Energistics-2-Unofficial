@@ -70,6 +70,10 @@ public enum CableBusTextures {
     PartCraftingTerm_Colored("PartCraftingTerm_Colored"),
     PartCraftingTerm_Dark("PartCraftingTerm_Dark"), //
 
+    PartCraftingDiagnosticTerm_Bright("PartCraftingDiagnosticTerm_Bright"),
+    PartCraftingDiagnosticTerm_Colored("PartCraftingDiagnosticTerm_Colored"),
+    PartCraftingDiagnosticTerm_Dark("PartCraftingDiagnosticTerm_Dark"),
+
     PartStorageMonitor_Bright("PartStorageMonitor_Bright"),
     PartStorageMonitor_Colored("PartStorageMonitor_Colored"),
     PartStorageMonitor_Dark("PartStorageMonitor_Dark"),
