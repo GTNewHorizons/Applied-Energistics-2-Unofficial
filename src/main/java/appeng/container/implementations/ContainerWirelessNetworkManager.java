@@ -60,6 +60,20 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
         this.renameAction = sync
                 .actionC2S("rename", StreamCodecs.of(NewName.class.getName(), NewName::writeToPacket, NewName::new))
                 .onServerAction(this::rename);
+
+        if (Platform.isServer()) {
+            final NBTTagCompound data = ItemStackNBT.get(this.terminal);
+            if (data.hasKey("encryptionKey")) {
+                final NBTTagCompound keys = new NBTTagCompound();
+                final String key = data.getString("encryptionKey");
+                final String colorKey = AEColor.values()[0].name();
+                final String colorName = AEColor.values()[0].toString();
+
+                keys.setString(colorKey, key);
+                keys.setString(colorKey + "Name", colorName);
+                data.setTag("encryptionKeys", keys);
+            }
+        }
     }
 
     public Int2ObjectOpenHashMap<Pair<Boolean, String>> getKeys() {
@@ -74,17 +88,6 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
                         : AEColor.values()[i].toString();
                 keysStatus.put(i, Pair.of(keys.hasKey(key), name));
             }
-        } else if (data.hasKey("encryptionKey")) {
-            final NBTTagCompound keys = new NBTTagCompound();
-            final String key = data.getString("encryptionKey");
-            final String colorKey = AEColor.values()[0].name();
-            final String colorName = AEColor.values()[0].toString();
-
-            keys.setString(colorKey, key);
-            keys.setString(colorKey + "Name", colorName);
-            data.setTag("encryptionKeys", keys);
-
-            keysStatus.put(0, Pair.of(true, colorName));
         }
 
         return keysStatus;
@@ -114,6 +117,7 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
         keys.removeTag(AEColor.values()[color].name());
+        keys.removeTag(AEColor.values()[color].name() + "Name");
         if (Platform.isServer()) this.checkItem(this.getTarget());
     }
 
