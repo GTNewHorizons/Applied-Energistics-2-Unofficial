@@ -32,8 +32,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
-import net.minecraftforge.common.MinecraftForge;
 
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
@@ -343,13 +341,10 @@ public class GuiMEMonitorable extends AEBaseGui
         }
     }
 
-    private void reinitalize() {
+    @Override
+    protected void reinitalize() {
         memoryText = this.searchField.getText();
-        if (!MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Pre(this, this.buttonList))) {
-            this.buttonList.clear();
-            this.initGui();
-        }
-        MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Post(this, this.buttonList));
+        super.reinitalize();
     }
 
     private boolean checkTypeFilter(IAEStackType<?> type) {

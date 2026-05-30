@@ -406,7 +406,9 @@ public enum GuiText implements Localization {
     GuiDimensionalCoordShortNoDim,
 
     itemMEStackPacketDesc1,
-    itemMEStackPacketDesc2;
+    itemMEStackPacketDesc2,
+
+    WirelessManagerToolTips;
 
     private final String root;
 
