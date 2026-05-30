@@ -6,14 +6,14 @@ public final class DiagnosticRowView {
 
     public final IAEStack<?> stack;
     public final long totalProduced;
-    public final long elapsedTimeMillis;
+    public final long elapsedTimeTicks;
     public final long sampleCount;
 
-    public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long elapsedTimeMillis,
+    public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long elapsedTimeTicks,
             final long sampleCount) {
         this.stack = stack;
         this.totalProduced = totalProduced;
-        this.elapsedTimeMillis = elapsedTimeMillis;
+        this.elapsedTimeTicks = elapsedTimeTicks;
         this.sampleCount = sampleCount;
     }
 }

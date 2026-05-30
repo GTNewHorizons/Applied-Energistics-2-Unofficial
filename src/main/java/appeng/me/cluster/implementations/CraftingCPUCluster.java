@@ -954,14 +954,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                         final CraftingDiagnosticSessionId diagnosticSessionId = craftingEntry.getValue()
                                 .consumeCraftSession();
-                        final long outputObservedAtMillis = diagnosticSessionId == null
-                                || !this.isCraftingDiagnosticsEnabled() ? 0L : System.currentTimeMillis();
+                        final long outputObservedAtTick = diagnosticSessionId == null
+                                || !this.isCraftingDiagnosticsEnabled() ? 0L : getServerTick();
                         // Process output items.
                         for (final IAEStack<?> outputItemStack : details.getCondensedAEOutputs()) {
-                            if (outputObservedAtMillis > 0L) {
+                            if (outputObservedAtTick > 0L) {
                                 this.diagnostics.recordExpectedOutput(
                                         outputItemStack,
-                                        outputObservedAtMillis,
+                                        outputObservedAtTick,
                                         diagnosticSessionId);
                             }
                             this.postChange(outputItemStack, this.machineSrc);
@@ -1770,7 +1770,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void pushDiagnosticSample(final CraftingCpuDiagnostics.CompletedDiagnosticRecord record) {
-        if (record.getElapsedTimeMillis() <= 0L || this.getGrid() == null) {
+        if (record.getElapsedTicks() <= 0L || this.getGrid() == null) {
             return;
         }
 
@@ -1780,9 +1780,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     record.getOutput(),
                     record.getDiagnosticSessionId(),
                     record.getProducedAmount(),
-                    record.getStartTimeMillis(),
-                    record.getEndTimeMillis());
+                    record.getStartTick(),
+                    record.getEndTick());
         }
+    }
+
+    private static long getServerTick() {
+        final MinecraftServer server = MinecraftServer.getServer();
+        return server == null ? 0L : server.getTickCounter();
     }
 
     private void completeDiagnosticSessionIfFinished(final CraftingDiagnosticSessionId diagnosticSessionId) {

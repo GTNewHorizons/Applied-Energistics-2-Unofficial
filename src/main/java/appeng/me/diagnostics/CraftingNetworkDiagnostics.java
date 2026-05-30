@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.util.Constants;
 
 import appeng.api.config.DiagnosticSortMode;
@@ -35,11 +35,11 @@ public final class CraftingNetworkDiagnostics {
     }
 
     public void recordSample(final IAEStack<?> output, final CraftingDiagnosticSessionId sessionId,
-            final long producedAmount, final long observedStartMillis, final long observedEndMillis) {
+            final long producedAmount, final long observedStartTick, final long observedEndTick) {
         if (output == null || producedAmount <= 0
                 || sessionId == null
-                || observedStartMillis <= 0
-                || observedEndMillis <= observedStartMillis) {
+                || observedStartTick <= 0
+                || observedEndTick < observedStartTick) {
             return;
         }
 
@@ -49,7 +49,7 @@ public final class CraftingNetworkDiagnostics {
         }
 
         final DiagnosticStats stats = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
-        stats.recordSample(sessionId, producedAmount, observedStartMillis, observedEndMillis);
+        stats.recordSample(sessionId, producedAmount, observedStartTick, observedEndTick);
         this.revision++;
     }
 
@@ -128,7 +128,7 @@ public final class CraftingNetworkDiagnostics {
                     new DiagnosticRowView(
                             row.getKey().copy(),
                             row.getValue().getTotalProduced(),
-                            row.getValue().getElapsedObservedTimeMillis(),
+                            row.getValue().getElapsedObservedTicks(),
                             row.getValue().getSampleCount()));
         }
         return result;
@@ -163,6 +163,9 @@ public final class CraftingNetworkDiagnostics {
             }
 
             final DiagnosticStats loaded = DiagnosticStats.fromNBT(tag);
+            if (loaded == null) {
+                continue;
+            }
             final DiagnosticStats existing = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
             existing.mergeFrom(loaded);
         }
@@ -178,9 +181,8 @@ public final class CraftingNetworkDiagnostics {
                     .compare(left.getValue().getItemsPerSecond(), right.getValue().getItemsPerSecond());
             case SAMPLES -> Long.compare(left.getValue().getSampleCount(), right.getValue().getSampleCount());
             case NAME -> left.getKey().getDisplayName().compareToIgnoreCase(right.getKey().getDisplayName());
-            case CUMULATIVE_TIME -> Long.compare(
-                    left.getValue().getElapsedObservedTimeMillis(),
-                    right.getValue().getElapsedObservedTimeMillis());
+            case CUMULATIVE_TIME -> Long
+                    .compare(left.getValue().getElapsedObservedTicks(), right.getValue().getElapsedObservedTicks());
         };
     }
 
@@ -198,16 +200,16 @@ public final class CraftingNetworkDiagnostics {
     private static final class DiagnosticStats {
 
         private long completedTotalProduced;
-        private long completedElapsedTimeMillis;
+        private long completedElapsedTimeTicks;
         private long completedSampleCount;
         private final Map<CraftingDiagnosticSessionId, DiagnosticSessionStats> sessions = new HashMap<>();
-        private long lastObservedMillis;
+        private long lastObservedTick;
 
         private void recordSample(final CraftingDiagnosticSessionId sessionId, final long producedAmount,
-                final long observedStartMillis, final long observedEndMillis) {
+                final long observedStartTick, final long observedEndTick) {
             this.sessions.computeIfAbsent(sessionId, ignored -> new DiagnosticSessionStats())
-                    .recordSample(producedAmount, observedStartMillis, observedEndMillis);
-            this.lastObservedMillis = System.currentTimeMillis();
+                    .recordSample(producedAmount, observedStartTick, observedEndTick);
+            this.lastObservedTick = getServerTick();
         }
 
         private long getTotalProduced() {
@@ -218,12 +220,12 @@ public final class CraftingNetworkDiagnostics {
             return totalProduced;
         }
 
-        private long getElapsedObservedTimeMillis() {
-            long elapsedObservedTimeMillis = this.completedElapsedTimeMillis;
+        private long getElapsedObservedTicks() {
+            long elapsedObservedTicks = this.completedElapsedTimeTicks;
             for (final DiagnosticSessionStats session : this.sessions.values()) {
-                elapsedObservedTimeMillis += session.getElapsedObservedTimeMillis();
+                elapsedObservedTicks += session.getElapsedObservedTicks();
             }
-            return elapsedObservedTimeMillis;
+            return elapsedObservedTicks;
         }
 
         private long getSampleCount() {
@@ -241,35 +243,35 @@ public final class CraftingNetworkDiagnostics {
             }
 
             this.completedTotalProduced += session.totalProduced;
-            this.completedElapsedTimeMillis += session.getElapsedObservedTimeMillis();
+            this.completedElapsedTimeTicks += session.getElapsedObservedTicks();
             this.completedSampleCount += session.sampleCount;
             return true;
         }
 
         private void mergeFrom(final DiagnosticStats loaded) {
             this.completedTotalProduced += loaded.completedTotalProduced;
-            this.completedElapsedTimeMillis += loaded.completedElapsedTimeMillis;
+            this.completedElapsedTimeTicks += loaded.completedElapsedTimeTicks;
             this.completedSampleCount += loaded.completedSampleCount;
             for (final Entry<CraftingDiagnosticSessionId, DiagnosticSessionStats> entry : loaded.sessions.entrySet()) {
                 this.sessions.computeIfAbsent(entry.getKey(), ignored -> new DiagnosticSessionStats())
                         .mergeFrom(entry.getValue());
             }
-            this.lastObservedMillis = Math.max(this.lastObservedMillis, loaded.lastObservedMillis);
+            this.lastObservedTick = Math.max(this.lastObservedTick, loaded.lastObservedTick);
         }
 
         private double getItemsPerSecond() {
-            final long elapsedObservedTimeMillis = this.getElapsedObservedTimeMillis();
-            if (elapsedObservedTimeMillis <= 0L) {
+            final long elapsedObservedTicks = this.getElapsedObservedTicks();
+            if (elapsedObservedTicks <= 0L) {
                 return 0.0D;
             }
 
-            return this.getTotalProduced() * (double) TimeUnit.SECONDS.toMillis(1) / (double) elapsedObservedTimeMillis;
+            return this.getTotalProduced() * 20.0D / (double) elapsedObservedTicks;
         }
 
         private void writeToNBT(final NBTTagCompound tag) {
             tag.setLong("TotalProduced", this.getTotalProduced());
             tag.setLong("CompletedTotalProduced", this.completedTotalProduced);
-            tag.setLong("CompletedElapsedTimeMillis", this.completedElapsedTimeMillis);
+            tag.setLong("CompletedElapsedTimeTicks", this.completedElapsedTimeTicks);
             tag.setLong("CompletedSampleCount", this.completedSampleCount);
             final NBTTagList sessionsTag = new NBTTagList();
             for (final Entry<CraftingDiagnosticSessionId, DiagnosticSessionStats> entry : this.sessions.entrySet()) {
@@ -280,15 +282,17 @@ public final class CraftingNetworkDiagnostics {
             }
             tag.setTag("Sessions", sessionsTag);
             tag.setLong("SampleCount", this.getSampleCount());
-            tag.setLong("LastObservedMillis", this.lastObservedMillis);
+            tag.setLong("LastObservedTick", this.lastObservedTick);
         }
 
         private static DiagnosticStats fromNBT(final NBTTagCompound tag) {
+            if (!tag.hasKey("CompletedElapsedTimeTicks", Constants.NBT.TAG_LONG)) {
+                return null;
+            }
+
             final DiagnosticStats stats = new DiagnosticStats();
             stats.completedTotalProduced = tag.getLong("CompletedTotalProduced");
-            stats.completedElapsedTimeMillis = tag.hasKey("CompletedElapsedTimeMillis", Constants.NBT.TAG_LONG)
-                    ? tag.getLong("CompletedElapsedTimeMillis")
-                    : TimeUnit.MILLISECONDS.convert(tag.getLong("CompletedElapsedTimeNanos"), TimeUnit.NANOSECONDS);
+            stats.completedElapsedTimeTicks = tag.getLong("CompletedElapsedTimeTicks");
             stats.completedSampleCount = tag.getLong("CompletedSampleCount");
             if (tag.hasKey("Sessions", Constants.NBT.TAG_LIST)) {
                 final NBTTagList sessionsTag = tag.getTagList("Sessions", Constants.NBT.TAG_COMPOUND);
@@ -299,19 +303,13 @@ public final class CraftingNetworkDiagnostics {
                     if (sessionId == null) {
                         continue;
                     }
-                    stats.sessions.put(sessionId, DiagnosticSessionStats.fromNBT(sessionTag));
-                }
-            } else {
-                final long legacyObservedTimeMillis = tag.hasKey("ObservedTimeMillis", Constants.NBT.TAG_LONG)
-                        ? tag.getLong("ObservedTimeMillis")
-                        : TimeUnit.MILLISECONDS.convert(tag.getLong("ObservedTimeNanos"), TimeUnit.NANOSECONDS);
-                if (legacyObservedTimeMillis > 0L || tag.getLong("TotalProduced") > 0L) {
-                    stats.completedTotalProduced = tag.getLong("TotalProduced");
-                    stats.completedElapsedTimeMillis = legacyObservedTimeMillis;
-                    stats.completedSampleCount = tag.getLong("SampleCount");
+                    final DiagnosticSessionStats sessionStats = DiagnosticSessionStats.fromNBT(sessionTag);
+                    if (sessionStats != null) {
+                        stats.sessions.put(sessionId, sessionStats);
+                    }
                 }
             }
-            stats.lastObservedMillis = tag.getLong("LastObservedMillis");
+            stats.lastObservedTick = tag.getLong("LastObservedTick");
             return stats;
         }
     }
@@ -319,57 +317,62 @@ public final class CraftingNetworkDiagnostics {
     private static final class DiagnosticSessionStats {
 
         private long totalProduced;
-        private long firstObservedMillis;
-        private long lastObservedMillis;
+        private long firstObservedTick;
+        private long lastObservedTick;
         private long sampleCount;
 
-        private void recordSample(final long producedAmount, final long observedStartMillis,
-                final long observedEndMillis) {
+        private void recordSample(final long producedAmount, final long observedStartTick, final long observedEndTick) {
             this.totalProduced += producedAmount;
             this.sampleCount++;
-            if (this.firstObservedMillis == 0L || observedStartMillis < this.firstObservedMillis) {
-                this.firstObservedMillis = observedStartMillis;
+            if (this.firstObservedTick == 0L || observedStartTick < this.firstObservedTick) {
+                this.firstObservedTick = observedStartTick;
             }
-            if (observedEndMillis > this.lastObservedMillis) {
-                this.lastObservedMillis = observedEndMillis;
+            if (observedEndTick > this.lastObservedTick) {
+                this.lastObservedTick = observedEndTick;
             }
         }
 
-        private long getElapsedObservedTimeMillis() {
-            if (this.firstObservedMillis <= 0L || this.lastObservedMillis <= this.firstObservedMillis) {
+        private long getElapsedObservedTicks() {
+            if (this.firstObservedTick <= 0L || this.sampleCount <= 0L) {
                 return 0L;
             }
-            return this.lastObservedMillis - this.firstObservedMillis;
+            return Math.max(1L, this.lastObservedTick - this.firstObservedTick);
         }
 
         private void mergeFrom(final DiagnosticSessionStats loaded) {
             this.totalProduced += loaded.totalProduced;
             this.sampleCount += loaded.sampleCount;
-            if (this.firstObservedMillis == 0L
-                    || (loaded.firstObservedMillis > 0L && loaded.firstObservedMillis < this.firstObservedMillis)) {
-                this.firstObservedMillis = loaded.firstObservedMillis;
+            if (this.firstObservedTick == 0L
+                    || (loaded.firstObservedTick > 0L && loaded.firstObservedTick < this.firstObservedTick)) {
+                this.firstObservedTick = loaded.firstObservedTick;
             }
-            this.lastObservedMillis = Math.max(this.lastObservedMillis, loaded.lastObservedMillis);
+            this.lastObservedTick = Math.max(this.lastObservedTick, loaded.lastObservedTick);
         }
 
         private void writeToNBT(final NBTTagCompound tag) {
             tag.setLong("TotalProduced", this.totalProduced);
-            tag.setLong("FirstObservedMillis", this.firstObservedMillis);
-            tag.setLong("LastObservedMillis", this.lastObservedMillis);
+            tag.setLong("FirstObservedTick", this.firstObservedTick);
+            tag.setLong("LastObservedTick", this.lastObservedTick);
             tag.setLong("SampleCount", this.sampleCount);
         }
 
         private static DiagnosticSessionStats fromNBT(final NBTTagCompound tag) {
+            if (!tag.hasKey("FirstObservedTick", Constants.NBT.TAG_LONG)
+                    || !tag.hasKey("LastObservedTick", Constants.NBT.TAG_LONG)) {
+                return null;
+            }
+
             final DiagnosticSessionStats stats = new DiagnosticSessionStats();
             stats.totalProduced = tag.getLong("TotalProduced");
-            stats.firstObservedMillis = tag.hasKey("FirstObservedMillis", Constants.NBT.TAG_LONG)
-                    ? tag.getLong("FirstObservedMillis")
-                    : TimeUnit.MILLISECONDS.convert(tag.getLong("FirstObservedNanos"), TimeUnit.NANOSECONDS);
-            stats.lastObservedMillis = tag.hasKey("LastObservedMillis", Constants.NBT.TAG_LONG)
-                    ? tag.getLong("LastObservedMillis")
-                    : TimeUnit.MILLISECONDS.convert(tag.getLong("LastObservedNanos"), TimeUnit.NANOSECONDS);
+            stats.firstObservedTick = tag.getLong("FirstObservedTick");
+            stats.lastObservedTick = tag.getLong("LastObservedTick");
             stats.sampleCount = tag.getLong("SampleCount");
             return stats;
         }
+    }
+
+    private static long getServerTick() {
+        final MinecraftServer server = MinecraftServer.getServer();
+        return server == null ? 0L : server.getTickCounter();
     }
 }

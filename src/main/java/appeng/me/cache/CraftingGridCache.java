@@ -752,8 +752,8 @@ public class CraftingGridCache
     }
 
     public void recordDiagnosticSample(final IAEStack<?> output, final CraftingDiagnosticSessionId sessionId,
-            final long producedAmount, final long observedStartMillis, final long observedEndMillis) {
-        this.diagnostics.recordSample(output, sessionId, producedAmount, observedStartMillis, observedEndMillis);
+            final long producedAmount, final long observedStartTick, final long observedEndTick) {
+        this.diagnostics.recordSample(output, sessionId, producedAmount, observedStartTick, observedEndTick);
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 

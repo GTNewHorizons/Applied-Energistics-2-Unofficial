@@ -5,7 +5,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.Tessellator;
@@ -50,6 +49,8 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     private static final int FIXED_BOTTOM_HEIGHT = GUI_HEIGHT - STRETCH_BOTTOM;
     private static final int EXTRA_BOTTOM_MARGIN = 32;
     private static final long RESET_DOUBLE_CLICK_MILLIS = 500L;
+    private static final int TICKS_PER_SECOND = 20;
+    private static final long MILLIS_PER_TICK = 50L;
     private static final Layout LAYOUT = new Layout();
 
     private final ContainerCraftingDiagnosticTerminal container;
@@ -410,7 +411,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
             case CRAFTED -> Comparator.comparingLong(row -> row.totalProduced);
             case SAMPLES -> Comparator.comparingLong(row -> row.sampleCount);
             case AVG_PER_SECOND -> Comparator.comparingDouble(Row::getItemsPerSecond);
-            case CUMULATIVE_TIME -> Comparator.comparingLong(row -> row.elapsedTimeMillis);
+            case CUMULATIVE_TIME -> Comparator.comparingLong(row -> row.elapsedTimeTicks);
         };
 
         if (!this.container.ascending) {
@@ -514,14 +515,14 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         private IAEStack<?> stack;
         private String debugDisplayName;
         private long totalProduced;
-        private long elapsedTimeMillis;
+        private long elapsedTimeTicks;
         private long sampleCount;
 
         private static Row fromPacket(final DiagnosticRowView packetRow) {
             final Row row = new Row();
             row.stack = packetRow.stack;
             row.totalProduced = packetRow.totalProduced;
-            row.elapsedTimeMillis = packetRow.elapsedTimeMillis;
+            row.elapsedTimeTicks = packetRow.elapsedTimeTicks;
             row.sampleCount = packetRow.sampleCount;
             return row;
         }
@@ -539,7 +540,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         private String getFormattedTime() {
-            return DurationFormatUtils.formatDuration(this.elapsedTimeMillis, GuiText.ETAFormat.getLocal());
+            return DurationFormatUtils.formatDuration(this.getElapsedTimeMillis(), GuiText.ETAFormat.getLocal());
         }
 
         private String getCompactProduced() {
@@ -547,8 +548,9 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         private String getCompactFormattedTime() {
-            final double[] values = { this.elapsedTimeMillis / 1000.0D, this.elapsedTimeMillis / 60000.0D,
-                    this.elapsedTimeMillis / 3_600_000.0D, this.elapsedTimeMillis / 86_400_000.0D };
+            final long elapsedTimeMillis = this.getElapsedTimeMillis();
+            final double[] values = { elapsedTimeMillis / 1000.0D, elapsedTimeMillis / 60000.0D,
+                    elapsedTimeMillis / 3_600_000.0D, elapsedTimeMillis / 86_400_000.0D };
             final char[] units = { 's', 'm', 'h', 'd' };
 
             for (int i = 0; i < values.length; i++) {
@@ -561,25 +563,23 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         private String getFormattedItemsPerSecond(final DecimalFormat format) {
-            if (this.elapsedTimeMillis <= 0) {
+            if (this.elapsedTimeTicks <= 0) {
                 return "-";
             }
 
-            final double itemsPerSecond = this.totalProduced * (double) TimeUnit.SECONDS.toMillis(1)
-                    / (double) this.elapsedTimeMillis;
-            return format.format(itemsPerSecond);
+            return format.format(this.getItemsPerSecond());
         }
 
         private double getItemsPerSecond() {
-            if (this.elapsedTimeMillis <= 0) {
+            if (this.elapsedTimeTicks <= 0) {
                 return 0.0D;
             }
 
-            return this.totalProduced * (double) TimeUnit.SECONDS.toMillis(1) / (double) this.elapsedTimeMillis;
+            return this.totalProduced * (double) TICKS_PER_SECOND / (double) this.elapsedTimeTicks;
         }
 
         private String getCompactFormattedItemsPerSecond(final DecimalFormat format) {
-            if (this.elapsedTimeMillis <= 0) {
+            if (this.elapsedTimeTicks <= 0) {
                 return "-";
             }
 
@@ -589,6 +589,10 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
             }
 
             return formatCompactDecimal(itemsPerSecond);
+        }
+
+        private long getElapsedTimeMillis() {
+            return this.elapsedTimeTicks * MILLIS_PER_TICK;
         }
 
         private boolean canReset() {
