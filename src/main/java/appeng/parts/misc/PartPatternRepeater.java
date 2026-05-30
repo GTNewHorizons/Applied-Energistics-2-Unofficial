@@ -14,6 +14,7 @@ import static appeng.util.Platform.readAEStackListNBT;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -21,6 +22,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import appeng.me.Grid;
+import mods.immibis.microblocks.api.Part;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryCrafting;
@@ -77,7 +80,7 @@ public class PartPatternRepeater extends PartBasicState
         implements ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
 
     private final Set<ICraftingPatternDetails> craftingList = new HashSet<>();
-    private IItemList<IAEStack<?>> waitingStacks = AEApi.instance().storage().createAEStackList();
+    private Map<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> waitingStacks = new HashMap<>();
     private CraftingGridCache targetCraftingGrid = null;
     private CraftingGridCache currentCraftingGrid = null;
     private AENetworkProxy targetNetworkProxy = null;
@@ -218,23 +221,40 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void writeToNBT(NBTTagCompound data) {
-        data.setTag("waitingStacks", writeAEStackListNBT(this.waitingStacks));
         data.setBoolean("provider", this.provider);
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
-        this.waitingStacks = readAEStackListNBT((NBTTagList) data.getTag("waitingStacks"));
         this.provider = data.getBoolean("provider");
     }
 
     @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
-        if (this.targetCraftingGrid != null) {
-            for (ICraftingMedium medium : this.targetCraftingGrid.getMediums(patternDetails)) {
+        return pushPatternToRepeater(patternDetails, table, new ArrayList<>(), this.monitors);
+    }
+
+    public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final InventoryCrafting table, List<CraftingGridCache> visitedRepeaters, final Map<IAEStackType<?>, MEMonitorPassThrough> requestMonitors) {
+        if (this.targetCraftingGrid == null) return false;
+
+        visitedRepeaters.add(this.targetCraftingGrid);
+        List<ICraftingMedium> craftingMediumList = this.targetCraftingGrid.getMediums(patternDetails);
+        for (ICraftingMedium medium : craftingMediumList) {
+            if (medium instanceof PartPatternRepeater pushRepeater) {
+                if (pushRepeater.targetCraftingGrid != null && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid) && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters, requestMonitors)) {
+//                    for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
+//                        this.waitingStacks.add(requestoutputStack.copy());
+//                    }
+//
+//                    this.addInterception();
+
+                    return true;
+                }
+            } else {
                 if (medium.pushPattern(patternDetails, table)) {
                     for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-                        this.waitingStacks.add(outputStack.copy());
+//                        this.waitingStacks.putIfAbsent(requestMonitors, outputStack.copy());
+                        this.addWaitingStack(requestMonitors, outputStack.copy());
                     }
 
                     this.addInterception();
@@ -243,8 +263,14 @@ public class PartPatternRepeater extends PartBasicState
                 }
             }
         }
-
         return false;
+    }
+
+    private void addWaitingStack(final Map<IAEStackType<?>, MEMonitorPassThrough> monitors, IAEStack<?> stack) {
+        if (!waitingStacks.containsKey(monitors)) {
+            waitingStacks.put(monitors, AEApi.instance().storage().createAEStackList());
+        }
+        waitingStacks.get(monitors).add(stack);
     }
 
     @Override
@@ -325,7 +351,7 @@ public class PartPatternRepeater extends PartBasicState
         if (Platform.isClient()) return true;
 
         if (player.isSneaking()) {
-            this.waitingStacks.resetStatus();
+            this.waitingStacks.clear();
             return true;
         }
 
@@ -353,65 +379,97 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public boolean canAccept(IAEStack<?> stack) {
-        return this.waitingStacks.findPrecise(stack) != null;
+//        return this.waitingStacks.findPrecise(stack) != null;
+        return !injecting && this.getWaitingStacks().findPrecise(stack) != null;
     }
 
+
+    private boolean injecting = false;
     @Override
     @SuppressWarnings({ "unchecked" })
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
         if (input == null) return null;
+        for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
+            final IAEStack<?> waitingStack = potentialReturnMonitor.getValue().findPrecise(input);
 
-        final IAEStack<?> waitingStack = this.waitingStacks.findPrecise(input);
+            final long inputSize = input.getStackSize();
+            final long waitingSize = waitingStack.getStackSize();
 
-        final long inputSize = input.getStackSize();
-        final long waitingSize = waitingStack.getStackSize();
+            final IAEStack<?> tempStack = input.copy();
+            long leftOver = 0;
 
-        final IAEStack<?> tempStack = input.copy();
-        long leftOver = 0;
+            if (inputSize > waitingSize) {
+                leftOver = inputSize - waitingSize;
+                tempStack.setStackSize(waitingSize);
+            }
 
-        if (inputSize > waitingSize) {
-            leftOver = inputSize - waitingSize;
-            tempStack.setStackSize(waitingSize);
+            final long tempStackSize = tempStack.getStackSize();
+
+            this.injecting = true;
+            final IAEStack<?> result = potentialReturnMonitor.getKey().get(tempStack.getStackType())
+                    .injectItems(tempStack, type, this.actionSource);
+            this.injecting = false;
+
+            final long reducedSize;
+            if (result == null) reducedSize = 0;
+            else reducedSize = result.getStackSize();
+
+            final long returnSize = reducedSize + leftOver;
+
+            if (type == Actionable.MODULATE) waitingStack.setStackSize(waitingSize - tempStackSize + reducedSize);
+
+            return returnSize > 0 ? input.copy().setStackSize(returnSize) : null;
         }
-
-        final long tempStackSize = tempStack.getStackSize();
-
-        final IAEStack<?> result = this.monitors.get(tempStack.getStackType())
-                .injectItems(tempStack, type, this.actionSource);
-
-        final long reducedSize;
-        if (result == null) reducedSize = 0;
-        else reducedSize = result.getStackSize();
-
-        final long returnSize = reducedSize + leftOver;
-
-        if (type == Actionable.MODULATE) waitingStack.setStackSize(waitingSize - tempStackSize + reducedSize);
-
-        return returnSize > 0 ? input.copy().setStackSize(returnSize) : null;
+        return null;
     }
 
     @Override
     public boolean shouldRemoveInterceptor(IAEStack<?> stack) {
-        return this.waitingStacks.isEmpty();
+        for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
+            if (!potentialReturnMonitor.getValue().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
+//    private void addInterception() {
+//        if (waitingStacks.isEmpty() || this.targetNetworkProxy == null) return;
+//
+//        List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
+//
+//        for (IAEStack<?> aes : this.waitingStacks) {
+//            IAEStackType<?> type = aes.getStackType();
+//            if (types.contains(type)) {
+//                types.remove(type);
+//                try {
+//                    if (this.targetNetworkProxy.getStorage().getMEMonitor(type) instanceof NetworkMonitor<?>nm) {
+//                        nm.addStorageInterceptor(this);
+//                    }
+//                } catch (GridAccessException ignored) {}
+//            }
+//
+//            if (types.isEmpty()) break;
+//        }
+//    }
+
     private void addInterception() {
-        if (waitingStacks.isEmpty() || this.targetNetworkProxy == null) return;
+        if (waitingStacks == null || this.targetNetworkProxy == null) return;
 
         List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
 
-        for (IAEStack<?> aes : this.waitingStacks) {
-            IAEStackType<?> type = aes.getStackType();
-            if (types.contains(type)) {
-                types.remove(type);
-                try {
-                    if (this.targetNetworkProxy.getStorage().getMEMonitor(type) instanceof NetworkMonitor<?>nm) {
-                        nm.addStorageInterceptor(this);
-                    }
-                } catch (GridAccessException ignored) {}
+        for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
+            for (IAEStack<?> aes : potentialReturnMonitor.getValue()) {
+                IAEStackType<?> type = aes.getStackType();
+                if (types.contains(type)) {
+                    types.remove(type);
+                    try {
+                        if (this.targetNetworkProxy.getStorage().getMEMonitor(type) instanceof NetworkMonitor<?> nm) {
+                            nm.addStorageInterceptor(this);
+                        }
+                    } catch (GridAccessException ignored) {}
+                }
             }
-
-            if (types.isEmpty()) break;
         }
     }
 
@@ -447,7 +505,11 @@ public class PartPatternRepeater extends PartBasicState
     }
 
     public IItemList<IAEStack<?>> getWaitingStacks() {
-        return this.waitingStacks;
+        IItemList<IAEStack<?>> joinedWaitingStacks = AEApi.instance().storage().createAEStackList();
+        for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
+            potentialReturnMonitor.getValue().forEach((a) -> joinedWaitingStacks.add(a));
+        }
+        return joinedWaitingStacks;
     }
 
     public PartPatternRepeater getPair() {
