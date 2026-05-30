@@ -242,18 +242,12 @@ public class PartPatternRepeater extends PartBasicState
         for (ICraftingMedium medium : craftingMediumList) {
             if (medium instanceof PartPatternRepeater pushRepeater) {
                 if (pushRepeater.targetCraftingGrid != null && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid) && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters, requestMonitors)) {
-//                    for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-//                        this.waitingStacks.add(requestoutputStack.copy());
-//                    }
-//
-//                    this.addInterception();
 
                     return true;
                 }
             } else {
                 if (medium.pushPattern(patternDetails, table)) {
                     for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-//                        this.waitingStacks.putIfAbsent(requestMonitors, outputStack.copy());
                         this.addWaitingStack(requestMonitors, outputStack.copy());
                     }
 
@@ -377,14 +371,13 @@ public class PartPatternRepeater extends PartBasicState
         return false;
     }
 
+    private boolean injecting = false;
+
     @Override
     public boolean canAccept(IAEStack<?> stack) {
-//        return this.waitingStacks.findPrecise(stack) != null;
         return !injecting && this.getWaitingStacks().findPrecise(stack) != null;
     }
 
-
-    private boolean injecting = false;
     @Override
     @SuppressWarnings({ "unchecked" })
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
@@ -432,26 +425,6 @@ public class PartPatternRepeater extends PartBasicState
         }
         return true;
     }
-
-//    private void addInterception() {
-//        if (waitingStacks.isEmpty() || this.targetNetworkProxy == null) return;
-//
-//        List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
-//
-//        for (IAEStack<?> aes : this.waitingStacks) {
-//            IAEStackType<?> type = aes.getStackType();
-//            if (types.contains(type)) {
-//                types.remove(type);
-//                try {
-//                    if (this.targetNetworkProxy.getStorage().getMEMonitor(type) instanceof NetworkMonitor<?>nm) {
-//                        nm.addStorageInterceptor(this);
-//                    }
-//                } catch (GridAccessException ignored) {}
-//            }
-//
-//            if (types.isEmpty()) break;
-//        }
-//    }
 
     private void addInterception() {
         if (waitingStacks == null || this.targetNetworkProxy == null) return;
