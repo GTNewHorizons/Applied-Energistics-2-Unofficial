@@ -41,6 +41,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.common.MinecraftForge;
 
 import org.jetbrains.annotations.NotNull;
@@ -1183,5 +1184,13 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.actionPerformed(event.button);
         if (this.equals(this.mc.currentScreen)) MinecraftForge.EVENT_BUS
                 .post(new GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.buttonList));
+    }
+
+    protected void reinitalize() {
+        if (!MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Pre(this, this.buttonList))) {
+            this.buttonList.clear();
+            this.initGui();
+        }
+        MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Post(this, this.buttonList));
     }
 }
