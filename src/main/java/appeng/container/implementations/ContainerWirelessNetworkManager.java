@@ -63,7 +63,7 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
 
         if (Platform.isServer()) {
             final NBTTagCompound data = ItemStackNBT.get(this.terminal);
-            if (data.hasKey("encryptionKey")) {
+            if (!data.hasKey("encryptionKeys") && data.hasKey("encryptionKey")) {
                 final NBTTagCompound keys = new NBTTagCompound();
                 final String key = data.getString("encryptionKey");
                 final String colorKey = AEColor.values()[0].name();
