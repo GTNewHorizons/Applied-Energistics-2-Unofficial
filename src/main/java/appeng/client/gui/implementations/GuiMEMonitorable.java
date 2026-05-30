@@ -341,6 +341,12 @@ public class GuiMEMonitorable extends AEBaseGui
         }
     }
 
+    @Override
+    protected void reinitalize() {
+        memoryText = this.searchField.getText();
+        super.reinitalize();
+    }
+
     private boolean checkTypeFilter(IAEStackType<?> type) {
         return this.typeFilters == null || this.typeFilters.getBoolean(type);
     }
