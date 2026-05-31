@@ -22,6 +22,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.collect.ImmutableList;
 
 import appeng.api.AEApi;
+import appeng.api.config.PowerMultiplier;
 import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridConnection;
@@ -187,7 +188,7 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     }
 
     public double getPowerUsage() {
-        return getProxy().getIdlePowerUsage();
+        return PowerMultiplier.CONFIG.multiply(this.getProxy().getIdlePowerUsage());
     }
 
     @Override
