@@ -59,16 +59,22 @@ public class GuiColorButton extends GuiAeButton {
                     GuiColors.ColorButtonOutline.getColor());
 
             if (this.drawDisplayString && !Objects.equals(this.displayString, "")) {
-                this.drawCenteredString(
-                        mc.fontRenderer,
+                mc.fontRenderer.drawString(
                         this.displayString,
-                        this.xPosition + this.width / 2,
+                        this.xPosition + this.width / 2 - mc.fontRenderer.getStringWidth(this.displayString) / 2,
                         this.yPosition + (this.height - 8) / 2,
-                        Integer.MAX_VALUE);
+                        this.getTextColor());
             }
 
             this.mouseDragged(mc, mouseX, mouseY);
         }
+    }
+
+    private int getTextColor() {
+        final int color = this.color.mediumVariant;
+        return ((0.2126 * ((color >> 16) & 0xFF) + 0.7152 * ((color >> 8) & 0xFF) + 0.0722 * (color & 0xFF)) > 128)
+                ? 0xFF000000
+                : 0xFFFFFFFF;
     }
 
     public AEColor getColor() {
