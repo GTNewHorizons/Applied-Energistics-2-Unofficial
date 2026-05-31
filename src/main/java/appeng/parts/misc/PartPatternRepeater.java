@@ -237,12 +237,15 @@ public class PartPatternRepeater extends PartBasicState
     public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final InventoryCrafting table, List<CraftingGridCache> visitedRepeaters, final Map<IAEStackType<?>, MEMonitorPassThrough> requestMonitors) {
         if (this.targetCraftingGrid == null) return false;
 
+        // Keeps track of the nets of pattern repeaters that are called recursively to ensure no loops occur
         visitedRepeaters.add(this.targetCraftingGrid);
         List<ICraftingMedium> craftingMediumList = this.targetCraftingGrid.getMediums(patternDetails);
         for (ICraftingMedium medium : craftingMediumList) {
+            // recursively call this method on the repeater if it is one,
+            // if not, add an interception to the original caller's monitors for whatever is expected,
+            // so items are passed all the way up
             if (medium instanceof PartPatternRepeater pushRepeater) {
                 if (pushRepeater.targetCraftingGrid != null && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid) && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters, requestMonitors)) {
-
                     return true;
                 }
             } else {
@@ -382,8 +385,11 @@ public class PartPatternRepeater extends PartBasicState
     @SuppressWarnings({ "unchecked" })
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
         if (input == null) return null;
+        // we now have to loop through all possible return monitors
         for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
             final IAEStack<?> waitingStack = potentialReturnMonitor.getValue().findPrecise(input);
+            // skip items if there's no waiting stack on this repeater
+            if (waitingStack == null) continue;
 
             final long inputSize = input.getStackSize();
             final long waitingSize = waitingStack.getStackSize();
@@ -398,6 +404,8 @@ public class PartPatternRepeater extends PartBasicState
 
             final long tempStackSize = tempStack.getStackSize();
 
+            // prevent circular item injections
+            // in case another repeater is waiting for items where the items are returned to
             this.injecting = true;
             final IAEStack<?> result = potentialReturnMonitor.getKey().get(tempStack.getStackType())
                     .injectItems(tempStack, type, this.actionSource);
@@ -413,12 +421,13 @@ public class PartPatternRepeater extends PartBasicState
 
             return returnSize > 0 ? input.copy().setStackSize(returnSize) : null;
         }
-        return null;
+        return input;
     }
 
     @Override
     public boolean shouldRemoveInterceptor(IAEStack<?> stack) {
         for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
+            // we should only remove interceptors if no monitors are waiting for items from it
             if (!potentialReturnMonitor.getValue().isEmpty()) {
                 return false;
             }
@@ -431,6 +440,7 @@ public class PartPatternRepeater extends PartBasicState
 
         List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
 
+        // we must add interceptors for all item types that are being waited for
         for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
             for (IAEStack<?> aes : potentialReturnMonitor.getValue()) {
                 IAEStackType<?> type = aes.getStackType();
@@ -477,6 +487,7 @@ public class PartPatternRepeater extends PartBasicState
         return this.provider;
     }
 
+    // collapsed waiting items from waitingStacks for viewing
     public IItemList<IAEStack<?>> getWaitingStacks() {
         IItemList<IAEStack<?>> joinedWaitingStacks = AEApi.instance().storage().createAEStackList();
         for (Entry<Map<IAEStackType<?>, MEMonitorPassThrough>,IItemList<IAEStack<?>>> potentialReturnMonitor : waitingStacks.entrySet()) {
