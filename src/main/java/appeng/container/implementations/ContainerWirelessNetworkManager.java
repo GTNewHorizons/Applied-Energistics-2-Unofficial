@@ -116,8 +116,26 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
     private void remove(final byte color) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
-        keys.removeTag(AEColor.values()[color].name());
-        keys.removeTag(AEColor.values()[color].name() + "Name");
+
+        final String key = AEColor.values()[color].name();
+        final String encryptionKey = keys.getString(key);
+        final String currentEncryptionKey = data.getString("encryptionKey");
+
+        if (encryptionKey.equals(currentEncryptionKey)) {
+            data.removeTag("encryptionKey");
+
+            for (int i = 0; i < 16; i++) {
+                final String tempKey = AEColor.values()[i].name();
+                if (tempKey.equals(key)) continue;
+                if (keys.hasKey(tempKey)) {
+                    data.setString("encryptionKey", keys.getString(tempKey));
+                    break;
+                }
+            }
+        }
+
+        keys.removeTag(key);
+        keys.removeTag(key + "Name");
         if (Platform.isServer()) this.checkItem(this.getTarget());
     }
 

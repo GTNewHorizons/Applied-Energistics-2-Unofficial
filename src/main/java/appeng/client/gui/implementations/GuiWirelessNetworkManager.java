@@ -40,7 +40,7 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
         this.addButtons();
         this.renameField.setFocused(false);
         this.renameField.setVisible(false);
-        this.renameField.setMaxStringLength(96);
+        this.renameField.setMaxStringLength(15);
     }
 
     private void addButtons() {
