@@ -232,7 +232,8 @@ public class PartPatternRepeater extends PartBasicState
         return pushPatternToRepeater(patternDetails, table, new ArrayList<>());
     }
 
-    public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final InventoryCrafting table, List<CraftingGridCache> visitedRepeaters) {
+    public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final InventoryCrafting table,
+            List<CraftingGridCache> visitedRepeaters) {
         if (this.targetCraftingGrid == null) return false;
 
         // Keeps track of the nets of pattern repeaters that are called recursively to ensure no loops occur
@@ -243,7 +244,9 @@ public class PartPatternRepeater extends PartBasicState
             // if not, add an interception to the original caller's monitors for whatever is expected,
             // so items are passed all the way up
             if (medium instanceof PartPatternRepeater pushRepeater) {
-                if (pushRepeater.targetCraftingGrid != null && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid) && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters)) {
+                if (pushRepeater.targetCraftingGrid != null
+                        && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid)
+                        && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters)) {
                     for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
                         waitingStacks.add(outputStack.copy());
                     }
@@ -370,6 +373,7 @@ public class PartPatternRepeater extends PartBasicState
     }
 
     private boolean injecting = false;
+
     @Override
     public boolean canAccept(IAEStack<?> stack) {
         return this.waitingStacks.findPrecise(stack) != null;
