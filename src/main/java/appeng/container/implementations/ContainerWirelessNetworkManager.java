@@ -127,8 +127,10 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
             for (int i = 0; i < 16; i++) {
                 final String tempKey = AEColor.values()[i].name();
                 if (tempKey.equals(key)) continue;
-                if (keys.hasKey(tempKey))
-                    data.setString("encryptionKey", keys.getString(AEColor.values()[color].name()));
+                if (keys.hasKey(tempKey)) {
+                    data.setString("encryptionKey", keys.getString(tempKey));
+                    break;
+                }
             }
         }
 
