@@ -1140,7 +1140,7 @@ public abstract class AEBaseContainer extends Container {
         this.powerMultiplier = powerMultiplier;
     }
 
-    private void portableSourceTick() {
+    protected void portableSourceTick() {
         final Object obj = this.getTarget();
         if (obj instanceof WirelessTerminalGuiObject wtgo) {
             if (!wtgo.rangeCheck()) {
@@ -1154,6 +1154,19 @@ public abstract class AEBaseContainer extends Container {
             }
         }
 
+        this.checkItem(obj);
+
+        if (obj instanceof IEnergySource ies) {
+            // drain 1 ae t
+            this.ticks++;
+            if (this.ticks > 10) {
+                ies.extractAEPower(this.getPowerMultiplier() * this.ticks, Actionable.MODULATE, PowerMultiplier.CONFIG);
+                this.ticks = 0;
+            }
+        }
+    }
+
+    protected void checkItem(final Object obj) {
         if (obj instanceof IPortableCell ipc) {
             final int slotIndex = ipc.getInventorySlot();
             final ItemStack currentItem = getItemFromPlayerInventoryBySlotIndex(
@@ -1170,15 +1183,6 @@ public abstract class AEBaseContainer extends Container {
                 } else {
                     this.setValidContainer(false);
                 }
-            }
-        }
-
-        if (obj instanceof IEnergySource ies) {
-            // drain 1 ae t
-            this.ticks++;
-            if (this.ticks > 10) {
-                ies.extractAEPower(this.getPowerMultiplier() * this.ticks, Actionable.MODULATE, PowerMultiplier.CONFIG);
-                this.ticks = 0;
             }
         }
     }
