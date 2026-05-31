@@ -376,7 +376,7 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public boolean canAccept(IAEStack<?> stack) {
-        return this.waitingStacks.findPrecise(stack) != null;
+        return !injecting && this.waitingStacks.findPrecise(stack) != null;
     }
 
     @Override
