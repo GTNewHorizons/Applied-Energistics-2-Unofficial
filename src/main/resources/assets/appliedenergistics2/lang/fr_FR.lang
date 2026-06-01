@@ -389,19 +389,6 @@ gui.appliedenergistics2.BytesPerType=Bytes per type:
 gui.appliedenergistics2.SelectColor=Select a Color
 gui.appliedenergistics2.Selected=Selected
 
-# GUI Colors - ARGB
-gui.color.appliedenergistics2.SearchboxFocused=6E000000
-gui.color.appliedenergistics2.SearchboxUnfocused=00000000
-gui.color.appliedenergistics2.ItemSlotOverlayUnpowered=66111111
-gui.color.appliedenergistics2.ItemSlotOverlayInvalid=66ff6666
-gui.color.appliedenergistics2.CraftConfirmMissingItem=1AFF0000
-gui.color.appliedenergistics2.CraftingCPUActive=5A45A021
-gui.color.appliedenergistics2.CraftingCPUScheduled=FF787878
-gui.color.appliedenergistics2.InterfaceTerminalMatch=2A00FF00
-gui.color.appliedenergistics2.ProcessBarStartColor=FFE60A00
-gui.color.appliedenergistics2.ProcessBarMiddleColor=FFE6E600
-gui.color.appliedenergistics2.ProcessBarEndColor=FF0AE600
-
 # GUI Tooltips
 gui.tooltips.appliedenergistics2.Stash=Stocke des objets
 gui.tooltips.appliedenergistics2.StashDesc=Renvoie les objets de la grille de fabrication dans le réseau.
