@@ -1,4 +1,4 @@
-﻿package appeng.client.gui.widgets;
+package appeng.client.gui.widgets;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

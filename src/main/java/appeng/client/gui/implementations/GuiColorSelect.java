@@ -1,4 +1,4 @@
-﻿package appeng.client.gui.implementations;
+package appeng.client.gui.implementations;
 
 import java.util.ArrayList;
 import java.util.Collections;

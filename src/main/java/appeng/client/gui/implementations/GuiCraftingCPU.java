@@ -1,4 +1,4 @@
-﻿package appeng.client.gui.implementations;
+package appeng.client.gui.implementations;
 
 import java.io.IOException;
 import java.text.NumberFormat;

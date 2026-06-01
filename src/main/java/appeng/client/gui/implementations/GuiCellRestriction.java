@@ -1,4 +1,4 @@
-﻿package appeng.client.gui.implementations;
+package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;

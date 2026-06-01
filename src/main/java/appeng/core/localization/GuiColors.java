@@ -135,12 +135,7 @@ public enum GuiColors implements Localization {
     NetworkVisualiserLinkCompressed(0xffff00ff),
     NetworkVisualiserLinkDense(0xffffff00),
     NetworkVisualiserLinkProxy(0xffffa500),
-    NetworkVisualiserLinkDefault(0xff0000ff),
-
-    GuiAeButtonUnderline(0xFF000000),
-    GuiAeButtonLineBeforeUnderlineDefault(0xFF565656),
-    GuiAeButtonLineBeforeUnderlineHover(0xFF5C669D),
-    GuiAeButtonLineBeforeUnderlineDisabled(0xFF2C2C2C);
+    NetworkVisualiserLinkDefault(0xff0000ff);
 
     private final int color;
 

@@ -1,4 +1,4 @@
-﻿package appeng.client.gui.implementations;
+package appeng.client.gui.implementations;
 
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.StatCollector;
