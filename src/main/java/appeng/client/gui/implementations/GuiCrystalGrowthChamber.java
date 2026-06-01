@@ -1,4 +1,4 @@
-package appeng.client.gui.implementations;
+﻿package appeng.client.gui.implementations;
 
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.StatCollector;
@@ -32,9 +32,9 @@ public class GuiCrystalGrowthChamber extends AEBaseGui {
                         StatCollector.translateToLocal("tile.appliedenergistics2.BlockCrystalGrowthChamber.name")),
                 8,
                 6,
-                GuiColors.ChestTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, ySize - 96 + 3, GuiColors.ChestInventory.getColor());
+                .drawString(GuiText.inventory.getLocal(), 8, ySize - 96 + 3, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

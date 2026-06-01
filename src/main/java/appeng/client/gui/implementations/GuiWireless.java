@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
  * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -64,12 +64,12 @@ public class GuiWireless extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.Wireless.getLocal()),
                 8,
                 6,
-                GuiColors.WirelessTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.WirelessInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         final ContainerWireless cw = (ContainerWireless) this.inventorySlots;
 
@@ -82,9 +82,9 @@ public class GuiWireless extends AEBaseGui {
                     this.fontRendererObj.getStringWidth(firstMessage),
                     this.fontRendererObj.getStringWidth(secondMessage));
             final int cOffset = (this.xSize / 2) - (strWidth / 2);
-            this.fontRendererObj.drawString(firstMessage, cOffset, 20, GuiColors.WirelessRange.getColor());
+            this.fontRendererObj.drawString(firstMessage, cOffset, 20, GuiColors.GuiTextColorGray.getColor());
             this.fontRendererObj
-                    .drawString(secondMessage, cOffset, 20 + 12, GuiColors.WirelessPowerUsageRate.getColor());
+                    .drawString(secondMessage, cOffset, 20 + 12, GuiColors.GuiTextColorGray.getColor());
         }
     }
 

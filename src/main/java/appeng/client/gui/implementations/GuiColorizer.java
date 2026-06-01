@@ -1,4 +1,4 @@
-package appeng.client.gui.implementations;
+﻿package appeng.client.gui.implementations;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -100,9 +100,9 @@ public class GuiColorizer extends AEBaseGui implements GuiSlider.ISlider {
                 this.getGuiDisplayName(GuiText.Colorizer.getLocal()),
                 8,
                 6,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

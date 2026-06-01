@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
  * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -114,12 +114,12 @@ public abstract class GuiUpgradeable extends AEBaseGui {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.fontRendererObj
-                .drawString(this.getGuiDisplayName(this.getName()), 8, 6, GuiColors.UpgradableTitle.getColor());
+                .drawString(this.getGuiDisplayName(this.getName()), 8, 6, GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.UpgradableInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         if (this.redstoneMode != null) {
             this.redstoneMode.set(this.cvb.getRedStoneMode());

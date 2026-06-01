@@ -1,4 +1,4 @@
-package appeng.client.gui.implementations;
+﻿package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -80,13 +80,13 @@ public class GuiCellRestriction extends GuiSub {
         }
 
         this.fontRendererObj
-                .drawString(GuiText.CellRestriction.getLocal(), BASE_LINE_X, 6, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.CellRestriction.getLocal(), BASE_LINE_X, 6, GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj
-                .drawString(GuiText.ResourceAmount.getLocal(), BASE_LINE_X, 22, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.ResourceAmount.getLocal(), BASE_LINE_X, 22, GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj
-                .drawString(GuiText.Types.getLocal(), BASE_LINE_X + 122, 22, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.Types.getLocal(), BASE_LINE_X + 122, 22, GuiColors.GuiTextColorGray.getColor());
 
         int cellDataLine = 37;
         final int types = this.getTypes();
@@ -95,36 +95,36 @@ public class GuiCellRestriction extends GuiSub {
                 GuiText.MaximumOfResource.getLocal(fmt(this.getMaxAmount(types))),
                 BASE_LINE_X,
                 cellDataLine += 10,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.BytesTotal.getLocal(fmt(this.cellData.totalBytes)),
                 BASE_LINE_X,
                 cellDataLine += 10,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.BytesAllocated.getLocal(fmt(bytesAllocated)),
                 BASE_LINE_X,
                 cellDataLine += 10,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.BytesFree.getLocal(fmt(this.getFreeBytes(bytesAllocated))),
                 BASE_LINE_X,
                 cellDataLine += 10,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.ResourcesPerByte.getLocal(fmt(this.cellData.perByte)),
                 BASE_LINE_X,
                 cellDataLine += 10,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.BytesPerType.getLocal(fmt(this.cellData.perType)),
                 BASE_LINE_X,
                 cellDataLine += 10,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

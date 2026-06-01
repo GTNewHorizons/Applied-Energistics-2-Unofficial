@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
  * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -97,18 +97,18 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.fontRendererObj
-                .drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.CraftAmountSelectAmount.getColor());
+                .drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
         if (this.isControlButtonPressed) {
             this.fontRendererObj.drawString(
                     GuiText.ControlButtonValuesDesc1.getLocal(),
                     8,
                     47,
-                    GuiColors.CraftAmountSelectAmount.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             this.fontRendererObj.drawString(
                     GuiText.ControlButtonValuesDesc2.getLocal(),
                     8,
                     59,
-                    GuiColors.CraftAmountSelectAmount.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
         }
     }
 

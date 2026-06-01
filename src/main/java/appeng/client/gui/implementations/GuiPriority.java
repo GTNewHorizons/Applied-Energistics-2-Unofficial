@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
  * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -50,7 +50,7 @@ public class GuiPriority extends GuiAmount {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(GuiText.Priority.getLocal(), 8, 6, GuiColors.PriorityTitle.getColor());
+        this.fontRendererObj.drawString(GuiText.Priority.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

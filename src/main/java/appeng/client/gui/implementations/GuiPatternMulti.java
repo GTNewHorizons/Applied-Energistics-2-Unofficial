@@ -1,4 +1,4 @@
-package appeng.client.gui.implementations;
+﻿package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -46,7 +46,7 @@ public class GuiPatternMulti extends GuiAmount {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.fontRendererObj
-                .drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.CraftAmountSelectAmount.getColor());
+                .drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

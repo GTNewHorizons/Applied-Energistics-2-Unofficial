@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
  * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -335,42 +335,42 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
         this.fontRendererObj
-                .drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.NetworkStatusDetails.getColor());
+                .drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
 
         if (ns.isPowerInfinite()) {
             this.fontRendererObj.drawString(
                     GuiText.StoredPower.getLocal() + ": ∞",
                     13,
                     16,
-                    GuiColors.NetworkStatusStoredPower.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             this.fontRendererObj.drawString(
                     GuiText.MaxPower.getLocal() + ": ∞",
                     13,
                     26,
-                    GuiColors.NetworkStatusMaxPower.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
         } else {
             this.fontRendererObj.drawString(
                     GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong(ns.getCurrentPower(), false),
                     13,
                     16,
-                    GuiColors.NetworkStatusStoredPower.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             this.fontRendererObj.drawString(
                     GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong(ns.getMaxPower(), false),
                     13,
                     26,
-                    GuiColors.NetworkStatusMaxPower.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
         }
 
         this.fontRendererObj.drawString(
                 GuiText.PowerInputRate.getLocal() + ": " + Platform.formatPowerLong(ns.getAverageAddition(), true),
                 13,
                 143 - 10,
-                GuiColors.NetworkStatusPowerInputRate.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.PowerUsageRate.getLocal() + ": " + Platform.formatPowerLong(ns.getPowerUsage(), true),
                 13,
                 143 - 20,
-                GuiColors.NetworkStatusPowerUsageRate.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         // Item byte status
         totalBytes = Double.longBitsToDouble(ns.getItemBytesTotal());
@@ -384,7 +384,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                         + tempStr,
                 13,
                 143,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         // Fluid byte status
         totalBytes = Double.longBitsToDouble(ns.getFluidBytesTotal());
@@ -398,7 +398,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                         + tempStr,
                 13,
                 143 + 10,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         // Essential byte status
         totalBytes = Double.longBitsToDouble(ns.getEssentiaBytesTotal());
@@ -412,7 +412,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                         + tempStr,
                 13,
                 143 + 20,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.drawItemRepo();
     }
@@ -447,7 +447,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                         str,
                         (int) ((x * sectionLength + xo + sectionLength - 19 - (w * 0.5)) * 2),
                         (y * 18 + yo + 6) * 2,
-                        GuiColors.NetworkStatusItemCount.getColor());
+                        GuiColors.GuiTextColorGray.getColor());
 
                 GL11.glPopMatrix();
                 final int posX = x * sectionLength + xo + sectionLength - 18;
@@ -486,14 +486,14 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
 
     private GuiColors getCorrespondingColor(final double percentage) {
         if (Double.isNaN(percentage)) {
-            return GuiColors.DefaultBlack;
+            return GuiColors.GuiTextColorGray;
         } else {
             if (percentage > 95) {
                 return GuiColors.CellStatusRed;
             } else if (percentage > 75) {
                 return GuiColors.CellStatusOrange;
             } else {
-                return GuiColors.DefaultBlack;
+                return GuiColors.GuiTextColorGray;
             }
         }
     }
@@ -515,12 +515,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         String tempStr;
         double tempDouble;
         this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.NetworkItemCellCount.getLocal() + " : " + ns.getItemCellCount(),
                 13,
                 16,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.drawAllCellCount(ns.getItemCellG(), ns.getItemCellB(), ns.getItemCellO(), ns.getItemCellR());
 
@@ -559,12 +559,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         String tempStr;
         double tempDouble;
         this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.NetworkFluidCellCount.getLocal() + " : " + ns.getFluidCellCount(),
                 13,
                 16,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.drawAllCellCount(ns.getFluidCellG(), ns.getFluidCellB(), ns.getFluidCellO(), ns.getFluidCellR());
 
@@ -603,12 +603,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         String tempStr;
         double tempDouble;
         this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.NetworkEssentiaCellCount.getLocal() + " : " + ns.getEssentiaCellCount(),
                 13,
                 16,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.drawAllCellCount(
                 ns.getEssentiaCellG(),
@@ -649,7 +649,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private void drawAllCellCount(final long greenCellNum, final long blueCellNum, final long orangeCellNum,
             final long redCellNum) {
         this.fontRendererObj
-                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 27, GuiColors.DefaultBlack.getColor());
+                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 27, GuiColors.GuiTextColorGray.getColor());
 
         int numStartAt = this.fontRendererObj.getStringWidth(GuiText.NetworkCellStatus.getLocal() + ":") + 20;
 

@@ -1,4 +1,4 @@
-package appeng.client.gui.implementations;
+﻿package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
@@ -52,7 +52,7 @@ public class GuiRenamer extends GuiSub implements IDropToFillTextField {
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        this.fontRendererObj.drawString(GuiText.Renamer.getLocal(), 12, 8, GuiColors.RenamerTitle.getColor());
+        this.fontRendererObj.drawString(GuiText.Renamer.getLocal(), 12, 8, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

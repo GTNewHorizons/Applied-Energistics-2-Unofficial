@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
  * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -467,7 +467,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 GuiText.CraftingPlan.getLocal() + " - " + bannerText,
                 8,
                 7,
-                GuiColors.CraftConfirmCraftingPlan.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         switch (displayMode) {
             case LIST -> drawListFG();
@@ -507,7 +507,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         }
 
         final int offset = (219 - this.fontRendererObj.getStringWidth(dsp)) / 2;
-        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.CraftConfirmSimulation.getColor());
+        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.GuiTextColorGray.getColor());
 
         final int sectionLength = 67;
 
@@ -561,7 +561,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.CraftConfirmFromStorage.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -581,7 +581,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.CraftConfirmMissing.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -601,7 +601,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.CraftConfirmToCraft.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
 
                     downY += 5;
                     str = GuiText.ToCraftRequests.getLocal() + ": "
@@ -612,7 +612,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.CraftConfirmToCraft.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(

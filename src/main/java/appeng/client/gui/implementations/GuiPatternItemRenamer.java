@@ -1,4 +1,4 @@
-package appeng.client.gui.implementations;
+﻿package appeng.client.gui.implementations;
 
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -47,7 +47,7 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        fontRendererObj.drawString(GuiText.Renamer.getLocal(), 12, 8, GuiColors.RenamerTitle.getColor());
+        fontRendererObj.drawString(GuiText.Renamer.getLocal(), 12, 8, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
  * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
@@ -64,12 +64,12 @@ public class GuiQuartzKnife extends AEBaseGui implements IDropToFillTextField {
                 this.getGuiDisplayName(GuiText.QuartzCuttingKnife.getLocal()),
                 8,
                 6,
-                GuiColors.QuartzCuttingKnifeTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.QuartzCuttingKnifeInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

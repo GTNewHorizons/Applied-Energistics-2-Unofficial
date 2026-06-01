@@ -1,4 +1,4 @@
-package appeng.client.gui.widgets;
+﻿package appeng.client.gui.widgets;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -237,7 +237,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmFromStorage.getColor());
+                        GuiColors.GuiTextColorGray.getColor());
                 downY += 5 * 4;
             }
 
@@ -249,7 +249,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmMissing.getColor());
+                        GuiColors.GuiTextColorGray.getColor());
 
                 downY += 5 * 4;
             }
@@ -262,7 +262,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmToCraft.getColor());
+                        GuiColors.GuiTextColorGray.getColor());
 
                 downY += 5 * 4;
                 str = GuiText.ToCraftRequests.getLocal() + ": "
@@ -272,7 +272,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.CraftConfirmToCraft.getColor());
+                        GuiColors.GuiTextColorGray.getColor());
             }
 
             if (stored != null && stored.getStackSize() > 0 && missingStack == null && pendingStack == null) {

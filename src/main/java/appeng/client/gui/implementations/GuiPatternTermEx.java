@@ -1,4 +1,4 @@
-package appeng.client.gui.implementations;
+﻿package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
@@ -96,7 +96,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                 GuiText.PatternTerminalEx.getLocal(),
                 8,
                 this.ySize - 96 + 2 - this.getReservedSpace(),
-                GuiColors.PatternTerminalEx.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.processingScrollBar.draw(this);
     }
 
