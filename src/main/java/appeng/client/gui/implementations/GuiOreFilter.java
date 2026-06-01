@@ -85,7 +85,8 @@ public class GuiOreFilter extends GuiSub implements IDropToFillTextField {
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        this.fontRendererObj.drawString(GuiText.OreFilterLabel.getLocal(), 12, 8, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj
+                .drawString(GuiText.OreFilterLabel.getLocal(), 12, 8, GuiColors.GuiTextColorGray.getColor());
 
         String counterText = String.valueOf(textField.getText().length()) + "/"
                 + String.valueOf(textField.getMaxStringLength());

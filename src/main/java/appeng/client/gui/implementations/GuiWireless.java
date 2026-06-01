@@ -83,8 +83,7 @@ public class GuiWireless extends AEBaseGui {
                     this.fontRendererObj.getStringWidth(secondMessage));
             final int cOffset = (this.xSize / 2) - (strWidth / 2);
             this.fontRendererObj.drawString(firstMessage, cOffset, 20, GuiColors.GuiTextColorGray.getColor());
-            this.fontRendererObj
-                    .drawString(secondMessage, cOffset, 20 + 12, GuiColors.GuiTextColorGray.getColor());
+            this.fontRendererObj.drawString(secondMessage, cOffset, 20 + 12, GuiColors.GuiTextColorGray.getColor());
         }
     }
 

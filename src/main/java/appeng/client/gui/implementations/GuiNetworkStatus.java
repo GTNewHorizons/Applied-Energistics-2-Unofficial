@@ -334,20 +334,13 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private void drawConsume() {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
 
         if (ns.isPowerInfinite()) {
-            this.fontRendererObj.drawString(
-                    GuiText.StoredPower.getLocal() + ": ∞",
-                    13,
-                    16,
-                    GuiColors.GuiTextColorGray.getColor());
-            this.fontRendererObj.drawString(
-                    GuiText.MaxPower.getLocal() + ": ∞",
-                    13,
-                    26,
-                    GuiColors.GuiTextColorGray.getColor());
+            this.fontRendererObj
+                    .drawString(GuiText.StoredPower.getLocal() + ": ∞", 13, 16, GuiColors.GuiTextColorGray.getColor());
+            this.fontRendererObj
+                    .drawString(GuiText.MaxPower.getLocal() + ": ∞", 13, 26, GuiColors.GuiTextColorGray.getColor());
         } else {
             this.fontRendererObj.drawString(
                     GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong(ns.getCurrentPower(), false),
