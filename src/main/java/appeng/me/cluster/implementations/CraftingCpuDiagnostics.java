@@ -5,20 +5,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.storage.data.IAEStack;
 import appeng.me.diagnostics.CraftingDiagnosticSessionId;
-import appeng.util.Platform;
 
 final class CraftingCpuDiagnostics {
 
@@ -127,50 +122,6 @@ final class CraftingCpuDiagnostics {
         return sessionIds;
     }
 
-    NBTTagList writeToNBT() {
-        final NBTTagList recordsTag = new NBTTagList();
-        for (final Entry<IAEStack<?>, NavigableSet<CraftingTimingRecord>> entry : this.outputTimingRecords.entrySet()) {
-            if (entry.getValue().isEmpty()) {
-                continue;
-            }
-
-            final NBTTagCompound stackTag = new NBTTagCompound();
-            stackTag.setTag("stack", entry.getKey().toNBTGeneric());
-            final NBTTagList timingList = new NBTTagList();
-            for (final CraftingTimingRecord record : entry.getValue()) {
-                timingList.appendTag(record.writeToNBT());
-            }
-            stackTag.setTag("records", timingList);
-            recordsTag.appendTag(stackTag);
-        }
-        return recordsTag;
-    }
-
-    void readFromNBT(final NBTTagList recordsTag) {
-        this.outputTimingRecords.clear();
-        for (int i = 0; i < recordsTag.tagCount(); i++) {
-            final NBTTagCompound stackTag = recordsTag.getCompoundTagAt(i);
-            final IAEStack<?> stack = Platform.readStackNBT(stackTag.getCompoundTag("stack"));
-            final IAEStack<?> normalizedStack = normalizeTrackingStack(stack);
-            if (normalizedStack == null) {
-                continue;
-            }
-
-            final NavigableSet<CraftingTimingRecord> records = new TreeSet<>();
-            final NBTTagList timingList = stackTag.getTagList("records", NBT.TAG_COMPOUND);
-            for (int j = 0; j < timingList.tagCount(); j++) {
-                final CraftingTimingRecord record = CraftingTimingRecord.fromNBT(timingList.getCompoundTagAt(j));
-                if (record != null) {
-                    records.add(record);
-                }
-            }
-
-            if (!records.isEmpty()) {
-                this.outputTimingRecords.put(normalizedStack, records);
-            }
-        }
-    }
-
     private static IAEStack<?> normalizeTrackingStack(final IAEStack<?> stack) {
         if (stack == null) {
             return null;
@@ -236,7 +187,6 @@ final class CraftingCpuDiagnostics {
 
         private long remainingToProduce;
         private long originalToProduce;
-        private long accumulatedElapsedTicks;
         private long startTick;
         private final CraftingDiagnosticSessionId diagnosticSessionId;
         private long endTick;
@@ -271,7 +221,7 @@ final class CraftingCpuDiagnostics {
         }
 
         private long getElapsedTicks() {
-            return this.accumulatedElapsedTicks + Math.max(1L, this.endTick - this.startTick);
+            return Math.max(1L, this.endTick - this.startTick);
         }
 
         private long getStartTick() {
@@ -284,36 +234,6 @@ final class CraftingCpuDiagnostics {
 
         private CraftingDiagnosticSessionId getDiagnosticSessionId() {
             return this.diagnosticSessionId;
-        }
-
-        private NBTTagCompound writeToNBT() {
-            final NBTTagCompound tag = new NBTTagCompound();
-            tag.setLong("remainingToProduce", this.remainingToProduce);
-            tag.setLong("originalToProduce", this.originalToProduce);
-            tag.setLong(
-                    "elapsedTimeTicks",
-                    this.accumulatedElapsedTicks + Math.max(1L, getServerTick() - this.startTick));
-            this.diagnosticSessionId.writeToNBT(tag, "diagnosticSessionId");
-            return tag;
-        }
-
-        private static CraftingTimingRecord fromNBT(final NBTTagCompound tag) {
-            final CraftingDiagnosticSessionId diagnosticSessionId = CraftingDiagnosticSessionId
-                    .fromNBT(tag, "diagnosticSessionId");
-            if (diagnosticSessionId == null) {
-                return null;
-            }
-            if (!tag.hasKey("elapsedTimeTicks", NBT.TAG_LONG)) {
-                return null;
-            }
-
-            final CraftingTimingRecord record = new CraftingTimingRecord(
-                    tag.getLong("originalToProduce"),
-                    getServerTick(),
-                    diagnosticSessionId);
-            record.accumulatedElapsedTicks = tag.getLong("elapsedTimeTicks");
-            record.remainingToProduce = tag.getLong("remainingToProduce");
-            return record;
         }
 
         @Override

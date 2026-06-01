@@ -1571,7 +1571,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         data.setTag("waitingFor", writeAEStackListNBT(this.waitingFor));
         data.setTag("waitingForMissing", writeAEStackListNBT(this.waitingForMissing));
-        data.setTag("outputTimingRecords", this.diagnostics.writeToNBT());
 
         data.setLong("elapsedTime", this.getElapsedTime());
         data.setLong("startItemCount", this.getStartItemCount());
@@ -1643,7 +1642,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.postCraftingStatusChange(is.copy());
         }
         this.waitingForMissing = readAEStackListNBT((NBTTagList) data.getTag("waitingForMissing"), true);
-        this.diagnostics.readFromNBT(data.getTagList("outputTimingRecords", NBT.TAG_COMPOUND));
 
         this.lastTime = System.nanoTime();
         this.elapsedTime = data.getLong("elapsedTime");
