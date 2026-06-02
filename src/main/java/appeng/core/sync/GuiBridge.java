@@ -266,7 +266,6 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD);
-    
 
     private final Class tileClass;
     private final Class containerClass;
