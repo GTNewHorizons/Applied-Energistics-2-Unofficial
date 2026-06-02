@@ -478,7 +478,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.StorageReshuffle.getLocal()),
                 8,
                 6,
-                GuiColors.ReshuffleTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         final String statusLabel = GuiText.ReshuffleStatusLabel.getLocal() + " ";
         final ReshuffleReport report = this.container.getReshuffleReport();
@@ -488,7 +488,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
 
         if (report == null) {
             statusValue = GuiText.ReshuffleStatusIdle.getLocal();
-            statusColor = GuiColors.ReshuffleStatusIdle.getColor();
+            statusColor = GuiColors.GuiTextColorGray.getColor();
         } else {
             switch (this.container.getReshuffleReport().phase) {
                 case BEFORE_SNAPSHOT -> {
@@ -523,7 +523,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
         }
 
         final int labelW = this.fontRendererObj.getStringWidth(statusLabel);
-        this.fontRendererObj.drawString(statusLabel, 8, 18, GuiColors.ReshuffleTitle.getColor());
+        this.fontRendererObj.drawString(statusLabel, 8, 18, GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(statusValue, 8 + labelW, 18, statusColor);
 
         if (report == null) return;
@@ -534,7 +534,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 GuiText.ReshuffleTotalTypes.getLocal(displayProcessed, displayTotal),
                 BOX_LEFT,
                 BOTTOM_Y - 2,
-                GuiColors.ReshuffleTotalItems.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         GL11.glPushMatrix();
         GL11.glScalef(0.6f, 0.6f, 1.0f);
@@ -542,7 +542,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 GuiText.ReshuffleReport.getLocal(),
                 (int) (BOX_LEFT / 0.6f),
                 (int) ((BOX_TOP - 9) / 0.6f),
-                GuiColors.ReshuffleTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         GL11.glPopMatrix();
 
         final int visLines = visibleReportLines();
@@ -565,7 +565,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                     this.reportLines.get(scroll + i),
                     (int) (BOX_LEFT * inv),
                     (int) ((BOX_TOP + 2 + i * lineH) * inv),
-                    GuiColors.ReshuffleReport.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
         }
         GL11.glPopMatrix();
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
@@ -590,7 +590,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
             drawRect(barX + fill - 1, barY, barX + fill + 1, barY + 6, GuiColors.ReshuffleProgressMarker.getColor());
         }
         this.fontRendererObj
-                .drawString(progressPercent + "%", barX + barW + 3, barY, GuiColors.ReshuffleTitle.getColor());
+                .drawString(progressPercent + "%", barX + barW + 3, barY, GuiColors.GuiTextColorGray.getColor());
 
         if (this.startCancelButton != null) {
             this.startCancelButton.displayString = this.container.reportRunning() ? GuiText.ReshuffleCancel.getLocal()
@@ -621,7 +621,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                     GuiText.ReshufflePartitionScanner.getLocal(),
                     8,
                     6,
-                    GuiColors.ReshuffleTitle.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
 
             if (this.container.scanData != null) {
                 if (total == 0) {
@@ -629,25 +629,25 @@ public class GuiStorageReshuffle extends AEBaseGui {
                             GuiText.ReshuffleScanEmpty.getLocal(),
                             SCAN_XO + 4,
                             SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
-                            GuiColors.DefaultBlack.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
                     return;
                 } else {
                     this.fontRendererObj.drawString(
                             GuiText.ReshuffleScanDuplicatesTitle.getLocal() + " " + total,
                             SCAN_XO,
                             SCAN_YO - 12,
-                            GuiColors.ReshuffleTitle.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
                 }
             }
         } else {
             this.fontRendererObj
-                    .drawString(GuiText.ReshuffleHealthTitle.getLocal(), 8, 6, GuiColors.ReshuffleTitle.getColor());
+                    .drawString(GuiText.ReshuffleHealthTitle.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
             if (this.container.scanData != null && this.scanRecords.isEmpty()) {
                 this.fontRendererObj.drawString(
                         GuiText.ReshuffleReportNoMatchingCells.getLocal(),
                         SCAN_XO + 4,
                         SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
-                        GuiColors.DefaultBlack.getColor());
+                        GuiColors.GuiTextColorGray.getColor());
                 return;
             }
         }
@@ -732,13 +732,13 @@ public class GuiStorageReshuffle extends AEBaseGui {
                     name,
                     (int) ((SCAN_XO + 20) * inv),
                     (int) ((rowY + 3) * inv),
-                    GuiColors.DefaultBlack.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
 
             this.fontRendererObj.drawString(
                     size,
                     networkStatusItemCountX,
                     networkStatusItemCountY,
-                    GuiColors.NetworkStatusItemCount.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
 
             GL11.glPopMatrix();
 

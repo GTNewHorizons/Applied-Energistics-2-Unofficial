@@ -363,9 +363,9 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                 String.valueOf(this.remainingOperations),
                 TITLE_LEFT_OFFSET + REMAINING_OPERATIONS_RIGHT_OFFSET - this.remainingOperationsTooltip.getWidth(),
                 TITLE_TOP_OFFSET,
-                GuiColors.CraftingCPUTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj
-                .drawString(title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, GuiColors.CraftingCPUTitle.getColor());
+                .drawString(title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, GuiColors.GuiTextColorGray.getColor());
     }
 
     private void drawVisibleEntries() {
@@ -423,7 +423,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y,
                     negY,
                     downY,
-                    GuiColors.CraftingCPUStored.getColor(),
+                    GuiColors.GuiTextColorGray.getColor(),
                     visibleIndex,
                     lineList);
         }
@@ -436,7 +436,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y,
                     negY,
                     downY,
-                    GuiColors.CraftingCPUAmount.getColor(),
+                    GuiColors.GuiTextColorGray.getColor(),
                     visibleIndex,
                     lineList);
         }
@@ -449,7 +449,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y,
                     negY,
                     downY,
-                    GuiColors.CraftingCPUScheduled.getColor(),
+                    GuiColors.GuiTextColorGray.getColor(),
                     visibleIndex,
                     lineList);
         }

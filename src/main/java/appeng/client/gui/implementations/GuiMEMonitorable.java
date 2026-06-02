@@ -601,12 +601,12 @@ public class GuiMEMonitorable extends AEBaseGui
                 this.getGuiDisplayName(this.myName.getLocal()),
                 8,
                 6,
-                GuiColors.MEMonitorableTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.MEMonitorableInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         VirtualMEPinSlot.drawSlotsBackground(this.pinSlots, this.mc, this.zLevel);
 

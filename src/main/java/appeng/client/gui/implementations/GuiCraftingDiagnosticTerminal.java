@@ -292,28 +292,28 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 this.fontRendererObj.trimStringToWidth(GuiText.CraftingDiagnosticTerminal.getLocal(), 104),
                 8,
                 7,
-                GuiColors.CraftingTerminalTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.Item.getLocal(),
                 LAYOUT.listLeft,
                 LAYOUT.headerY,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorBlack.getColor());
         this.fontRendererObj.drawString(
                 GuiText.Qty.getLocal(),
                 LAYOUT.qtyHeaderX,
                 LAYOUT.headerY,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorBlack.getColor());
         this.fontRendererObj.drawString(
                 GuiText.CumulativeTime.getLocal(),
                 LAYOUT.timeHeaderX,
                 LAYOUT.headerY,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorBlack.getColor());
         this.fontRendererObj.drawString(
                 GuiText.AvgPerSecond.getLocal(),
                 LAYOUT.avgHeaderX,
                 LAYOUT.headerY,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorBlack.getColor());
 
         this.hoveredRow = -1;
         final int start = this.getScrollBar().getCurrentScroll();
@@ -349,7 +349,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                     name,
                     LAYOUT.itemTextX + 1,
                     rowTop + LAYOUT.rowTextOffsetY,
-                    GuiColors.DefaultBlack.getColor());
+                    GuiColors.GuiTextColorBlack.getColor());
             this.drawRightAligned(row.getCompactProduced(), LAYOUT.qtyValueRightX, rowTop + LAYOUT.rowTextOffsetY);
             this.drawRightAligned(
                     row.getCompactFormattedTime(),
@@ -391,7 +391,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 text,
                 rightX - this.fontRendererObj.getStringWidth(text),
                 y,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorBlack.getColor());
     }
 
     private void recalculateScreenSize() {

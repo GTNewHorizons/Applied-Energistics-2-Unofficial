@@ -31,12 +31,12 @@ public class GuiGrinder extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.GrindStone.getLocal()),
                 8,
                 6,
-                GuiColors.GrindStoneTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.GrindStoneInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override
