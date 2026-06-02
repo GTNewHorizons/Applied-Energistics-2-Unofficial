@@ -29,7 +29,7 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.core.AEConfig;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftRequest;
@@ -96,18 +96,18 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(GuiText.SelectAmount.getLocal(), 8, 6, ColorUtils.guiTextColorGray.getColor());
         if (this.isControlButtonPressed) {
             this.fontRendererObj.drawString(
                     GuiText.ControlButtonValuesDesc1.getLocal(),
                     8,
                     47,
-                    GuiColors.GuiTextColorGray.getColor());
+                    ColorUtils.guiTextColorGray.getColor());
             this.fontRendererObj.drawString(
                     GuiText.ControlButtonValuesDesc2.getLocal(),
                     8,
                     59,
-                    GuiColors.GuiTextColorGray.getColor());
+                    ColorUtils.guiTextColorGray.getColor());
         }
     }
 
@@ -391,8 +391,8 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
                             this.y + 1,
                             this.x + this.w - 1,
                             this.y + this.h - 1,
-                            isFocused() ? GuiColors.SearchboxFocused.getColor()
-                                    : GuiColors.SearchboxUnfocused.getColor());
+                            isFocused() ? ColorUtils.searchboxFocused.getColor()
+                                    : ColorUtils.searchboxUnfocused.getColor());
                     field.drawTextBox();
                 }
             }

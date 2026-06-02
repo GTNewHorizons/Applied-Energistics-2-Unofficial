@@ -14,7 +14,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerSkyChest;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -33,12 +33,12 @@ public class GuiSkyChest extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.SkyChest.getLocal()),
                 8,
                 8,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 2,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

@@ -16,7 +16,7 @@ import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.core.AELog;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -96,7 +96,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                 GuiText.PatternTerminalEx.getLocal(),
                 8,
                 this.ySize - 96 + 2 - this.getReservedSpace(),
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.processingScrollBar.draw(this);
     }
 

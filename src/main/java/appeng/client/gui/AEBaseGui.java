@@ -82,7 +82,7 @@ import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClickOrDragFakeSlot;
@@ -932,7 +932,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                                 s.yDisplayPosition,
                                 16 + s.xDisplayPosition,
                                 16 + s.yDisplayPosition,
-                                GuiColors.ItemSlotOverlayInvalid.getColor());
+                                ColorUtils.itemSlotOverlayInvalid.getColor());
                         GL11.glEnable(GL11.GL_LIGHTING);
 
                         this.zLevel = 0.0F;

@@ -21,7 +21,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.Settings;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.items.tools.ToolNetworkVisualiser;
 import appeng.items.tools.ToolNetworkVisualiser.VLink;
 import appeng.items.tools.ToolNetworkVisualiser.VLinkFlags;
@@ -209,7 +209,7 @@ public class NetworkVisualiserRender {
                                 linkX,
                                 linkY,
                                 linkZ,
-                                GuiColors.NetworkVisualiserFloatingText.getColor());
+                                ColorUtils.networkVisualiserFloatingText.getColor());
                     }
                 }
             }
@@ -240,10 +240,10 @@ public class NetworkVisualiserRender {
             }
 
             final int color;
-            if (node.flags.contains(VNodeFlags.MISSING)) color = GuiColors.NetworkVisualiserNodeMissing.getColor();
-            else if (node.flags.contains(VNodeFlags.DENSE)) color = GuiColors.NetworkVisualiserNodeDense.getColor();
-            else if (node.flags.contains(VNodeFlags.PROXY)) color = GuiColors.NetworkVisualiserNodeProxy.getColor();
-            else color = GuiColors.NetworkVisualiserNodeDefault.getColor();
+            if (node.flags.contains(VNodeFlags.MISSING)) color = ColorUtils.networkVisualiserNodeMissing.getColor();
+            else if (node.flags.contains(VNodeFlags.DENSE)) color = ColorUtils.networkVisualiserNodeDense.getColor();
+            else if (node.flags.contains(VNodeFlags.PROXY)) color = ColorUtils.networkVisualiserNodeProxy.getColor();
+            else color = ColorUtils.networkVisualiserNodeDefault.getColor();
 
             final int alpha = (color >> 24) & 0xFF;
             final int red = (color >> 16) & 0xFF;
@@ -314,10 +314,10 @@ public class NetworkVisualiserRender {
 
             final int color;
             if (link.flags.contains(VLinkFlags.COMPRESSED))
-                color = GuiColors.NetworkVisualiserLinkCompressed.getColor();
-            else if (link.flags.contains(VLinkFlags.DENSE)) color = GuiColors.NetworkVisualiserLinkDense.getColor();
-            else if (link.flags.contains(VLinkFlags.PROXY)) color = GuiColors.NetworkVisualiserLinkProxy.getColor();
-            else color = GuiColors.NetworkVisualiserLinkDefault.getColor();
+                color = ColorUtils.networkVisualiserLinkCompressed.getColor();
+            else if (link.flags.contains(VLinkFlags.DENSE)) color = ColorUtils.networkVisualiserLinkDense.getColor();
+            else if (link.flags.contains(VLinkFlags.PROXY)) color = ColorUtils.networkVisualiserLinkProxy.getColor();
+            else color = ColorUtils.networkVisualiserLinkDefault.getColor();
 
             final int alpha = (color >> 24) & 0xFF;
             final int red = (color >> 16) & 0xFF;

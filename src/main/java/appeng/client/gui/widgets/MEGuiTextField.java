@@ -21,7 +21,7 @@ import net.minecraft.client.gui.GuiTextField;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import codechicken.nei.FormattedTextField.TextFormatter;
 
 /**
@@ -73,7 +73,7 @@ public class MEGuiTextField implements ITooltip {
 
         field.setEnableBackgroundDrawing(false);
         field.setMaxStringLength(1024);
-        field.setTextColor(GuiColors.SearchboxText.getColor());
+        field.setTextColor(ColorUtils.searchboxText.getColor());
         field.setCursorPositionZero();
 
         setMessage(tooltip);
@@ -220,7 +220,7 @@ public class MEGuiTextField implements ITooltip {
                     this.y + 1,
                     this.x + this.w - 1,
                     this.y + this.h - 1,
-                    isFocused() ? GuiColors.SearchboxFocused.getColor() : GuiColors.SearchboxUnfocused.getColor());
+                    isFocused() ? ColorUtils.searchboxFocused.getColor() : ColorUtils.searchboxUnfocused.getColor());
             field.drawTextBox();
         }
     }

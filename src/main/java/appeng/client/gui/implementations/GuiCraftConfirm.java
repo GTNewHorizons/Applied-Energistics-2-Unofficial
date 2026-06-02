@@ -56,7 +56,7 @@ import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -467,7 +467,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 GuiText.CraftingPlan.getLocal() + " - " + bannerText,
                 8,
                 7,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
 
         switch (displayMode) {
             case LIST -> drawListFG();
@@ -507,7 +507,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         }
 
         final int offset = (219 - this.fontRendererObj.getStringWidth(dsp)) / 2;
-        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(dsp, offset, ySize - 41, ColorUtils.guiTextColorGray.getColor());
 
         final int sectionLength = 67;
 
@@ -561,7 +561,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.GuiTextColorGray.getColor());
+                            ColorUtils.guiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -581,7 +581,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.GuiTextColorGray.getColor());
+                            ColorUtils.guiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -601,7 +601,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.GuiTextColorGray.getColor());
+                            ColorUtils.guiTextColorGray.getColor());
 
                     downY += 5;
                     str = GuiText.ToCraftRequests.getLocal() + ": "
@@ -612,7 +612,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.GuiTextColorGray.getColor());
+                            ColorUtils.guiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -672,7 +672,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             startY,
                             startX + sectionLength,
                             startY + offY - 1,
-                            GuiColors.CraftConfirmMissingItem.getColor());
+                            ColorUtils.craftConfirmMissingItem.getColor());
                 }
 
                 x++;
