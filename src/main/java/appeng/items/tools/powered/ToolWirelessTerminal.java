@@ -30,6 +30,7 @@ import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.features.IWirelessTermHandler;
+import appeng.api.util.AEColor;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;
 import appeng.core.AppEng;
@@ -37,6 +38,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
+import appeng.server.ServerHelper;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
 import baubles.api.BaubleType;
@@ -62,7 +64,9 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
 
     @Override
     public ItemStack onItemRightClick(final ItemStack item, final World w, final EntityPlayer player) {
-        if (ForgeEventFactory.onItemUseStart(player, item, 1) > 0)
+        if (ServerHelper.WIRELESS_MODE_SWITCH.isKeyDown(player))
+            Platform.openGUI(player, null, null, GuiBridge.GUI_WIRELESS_NETWORK_MANAGER);
+        else if (ForgeEventFactory.onItemUseStart(player, item, 1) > 0)
             AEApi.instance().registries().wireless().openWirelessTerminalGui(item, w, player);
         return item;
     }
@@ -125,6 +129,26 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
 
     @Override
     public void setEncryptionKey(final ItemStack item, final String encKey, final String name) {
+        final NBTTagCompound data = ItemStackNBT.get(item);
+        final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
+
+        if (!keys.hasKey(AEColor.values()[0].name()) && data.hasKey("encryptionKey")) {
+            keys.setString(AEColor.values()[0].name(), data.getString("encryptionKey"));
+        }
+
+        String freeKey = "";
+        for (int i = 0; i < 16; i++) {
+            final String key = AEColor.values()[i].name();
+            if (keys.hasKey(key)) {
+                if (keys.getString(key).equals(encKey)) return;
+            } else {
+                freeKey = key;
+                break;
+            }
+        }
+        if (freeKey.isEmpty()) return;
+        keys.setString(freeKey, encKey);
+        data.setTag("encryptionKeys", keys);
         ItemStackNBT.of(item).setString("encryptionKey", encKey).setString("name", name);
     }
 

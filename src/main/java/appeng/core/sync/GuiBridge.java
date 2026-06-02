@@ -67,6 +67,7 @@ import appeng.container.implementations.ContainerCondenser;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.container.implementations.ContainerCraftingTerm;
 import appeng.container.implementations.ContainerCrystalGrowthChamber;
@@ -105,6 +106,7 @@ import appeng.container.implementations.ContainerSuperMEReplenisher;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
 import appeng.container.implementations.ContainerWirelessKit;
+import appeng.container.implementations.ContainerWirelessNetworkManager;
 import appeng.core.stats.Achievements;
 import appeng.helpers.ICellRestriction;
 import appeng.helpers.ICustomNameObject;
@@ -150,6 +152,9 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_CRAFTING_TERMINAL(ContainerCraftingTerm.class, ICraftingTerminal.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
+
+    GUI_CRAFTING_DIAGNOSTIC_TERMINAL(ContainerCraftingDiagnosticTerminal.class, ITerminalHost.class,
+            GuiHostType.ITEM_OR_WORLD, SecurityPermissions.CRAFT),
 
     GUI_PATTERN_TERMINAL(ContainerPatternTerm.class, IPatternTerminal.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
@@ -257,8 +262,11 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_SUPER_WIRELESS_KIT(ContainerWirelessKit.class, IGuiItemObject.class, GuiHostType.ITEM, null),
 
+    GUI_WIRELESS_NETWORK_MANAGER(ContainerWirelessNetworkManager.class, IGuiItemObject.class, GuiHostType.ITEM, null),
+
     GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD);
+    
 
     private final Class tileClass;
     private final Class containerClass;
