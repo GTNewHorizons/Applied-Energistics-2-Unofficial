@@ -44,6 +44,7 @@ public enum GuiColors implements Localization {
 
     // RGB Colors: Name and default value
     GuiTextColorGray(0x404040),
+    GuiTextColorBlack(0x000000),
     SearchboxText(0xFFFFFF),
 
     CraftingStatusCPUName(0x202020),
