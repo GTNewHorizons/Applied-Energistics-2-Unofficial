@@ -108,7 +108,9 @@ public enum Settings {
 
     WIRELESS_TOOL_GROUP_BY(EnumSet.allOf(WirelessToolGroupBy.class)),
 
-    WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO));
+    WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    DIAGNOSTIC_SORT_BY(EnumSet.allOf(DiagnosticSortButton.class));
 
     private final EnumSet<? extends Enum<?>> values;
 
