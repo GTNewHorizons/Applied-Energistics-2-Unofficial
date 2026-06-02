@@ -23,6 +23,7 @@ import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.render.StackSizeRenderer;
+import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.integration.modules.NEIHelpers.NEICellViewHandler.ViewItemStack;
 import codechicken.nei.NEIClientUtils;
@@ -41,7 +42,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
     public static final int OFFSET_X = 10;
     public static final int INFO_OFFSET_Y = 8;
     public static final int SLOTS_OFFSET_Y = INFO_OFFSET_Y + Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + 5;
-    public static final int TEXT_COLOR = 0x404040;
+    public static final int TEXT_COLOR = GuiColors.GuiTextColorGray.getColor();
 
     public static final int CRAFTING_INPUTS_COLS = 3;
     public static final int CRAFTING_INPUTS_ROWS = 3;

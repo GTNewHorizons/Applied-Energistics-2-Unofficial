@@ -324,7 +324,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                 GuiText.PatternTerminal.getLocal(),
                 8,
                 this.ySize - 96 + 2 - this.getReservedSpace(),
-                GuiColors.PatternTerminalTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     private void updateButtonVisibility() {

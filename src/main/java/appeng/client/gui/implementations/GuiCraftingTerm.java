@@ -75,7 +75,7 @@ public class GuiCraftingTerm extends GuiMEMonitorable {
                 GuiText.CraftingTerminal.getLocal(),
                 8,
                 this.ySize - 96 + 1 - this.getReservedSpace(),
-                GuiColors.CraftingTerminalTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

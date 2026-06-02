@@ -56,10 +56,16 @@ public class GuiChest extends AEBaseGui {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj
-                .drawString(this.getGuiDisplayName(GuiText.Chest.getLocal()), 8, 6, GuiColors.ChestTitle.getColor());
-        this.fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.ChestInventory.getColor());
+        this.fontRendererObj.drawString(
+                this.getGuiDisplayName(GuiText.Chest.getLocal()),
+                8,
+                6,
+                GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.inventory.getLocal(),
+                8,
+                this.ySize - 96 + 3,
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

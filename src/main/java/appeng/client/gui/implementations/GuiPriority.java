@@ -50,7 +50,7 @@ public class GuiPriority extends GuiAmount {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(GuiText.Priority.getLocal(), 8, 6, GuiColors.PriorityTitle.getColor());
+        this.fontRendererObj.drawString(GuiText.Priority.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

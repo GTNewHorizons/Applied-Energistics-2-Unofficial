@@ -47,12 +47,12 @@ public class GuiVibrationChamber extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.VibrationChamber.getLocal()),
                 8,
                 6,
-                GuiColors.VibrationChamberTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.VibrationChamberInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.pb.setFullMsg(this.cvc.getAePerTick() * this.cvc.getCurrentProgress() / 100 + " AE/t");
 
