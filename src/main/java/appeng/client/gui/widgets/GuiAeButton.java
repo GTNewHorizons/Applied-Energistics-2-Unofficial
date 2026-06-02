@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
-import appeng.core.localization.GuiColors;
+import org.lwjgl.opengl.GL11;
 
 public class GuiAeButton extends GuiButton implements ITooltip {
 
@@ -35,37 +35,20 @@ public class GuiAeButton extends GuiButton implements ITooltip {
     @Override
     public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         super.drawButton(mc, mouseX, mouseY);
-        if (height < 20) {
-            int hoverState = this.getHoverState(this.field_146123_n);
-            switch (hoverState) {
-                case 0:
-                    this.drawHorizontalLine(
-                            xPosition + 2,
-                            xPosition + width - 2,
-                            yPosition + height - 2,
-                            GuiColors.GuiAeButtonLineBeforeUnderlineDisabled.getColor());
-                    break;
-                case 1:
-                    this.drawHorizontalLine(
-                            xPosition + 2,
-                            xPosition + width - 2,
-                            yPosition + height - 2,
-                            GuiColors.GuiAeButtonLineBeforeUnderlineDefault.getColor());
-                    break;
-                case 2:
-                    this.drawHorizontalLine(
-                            xPosition + 2,
-                            xPosition + width - 2,
-                            yPosition + height - 2,
-                            GuiColors.GuiAeButtonLineBeforeUnderlineHover.getColor());
-                    break;
-            }
-            this.drawHorizontalLine(
-                    xPosition,
-                    xPosition + width - 1,
-                    yPosition + height - 1,
-                    GuiColors.GuiAeButtonUnderline.getColor());
-        }
+
+        if (!this.visible || this.height >= 20) return;
+        mc.getTextureManager().bindTexture(buttonTextures);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        int texV = 46 + this.getHoverState(this.field_146123_n) * 20;
+        int half = this.width / 2;
+        this.drawTexturedModalRect(this.xPosition, this.yPosition + this.height - 2, 0, texV + 18, half, 2);
+        this.drawTexturedModalRect(
+                this.xPosition + half,
+                this.yPosition + this.height - 2,
+                200 - half,
+                texV + 18,
+                half,
+                2);
     }
 
     @Override

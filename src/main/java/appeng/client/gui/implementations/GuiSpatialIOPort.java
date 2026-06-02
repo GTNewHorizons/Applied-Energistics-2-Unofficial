@@ -67,31 +67,31 @@ public class GuiSpatialIOPort extends AEBaseGui {
                         + Platform.formatPowerLong(this.container.getCurrentPower(), false),
                 13,
                 21,
-                GuiColors.SpatialIOStoredPower.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong(this.container.getMaxPower(), false),
                 13,
                 31,
-                GuiColors.SpatialIOMaxPower.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.RequiredPower.getLocal() + ": "
                         + Platform.formatPowerLong(this.container.getRequiredPower(), false),
                 13,
                 78,
-                GuiColors.SpatialIORequiredPower.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.Efficiency.getLocal() + ": " + (((float) this.container.getEfficency()) / 100) + '%',
                 13,
                 88,
-                GuiColors.SpatialIOEfficiency.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 this.getGuiDisplayName(GuiText.SpatialIOPort.getLocal()),
                 8,
                 6,
-                GuiColors.SpatialIOTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96, GuiColors.SpatialIOInventory.getColor());
+                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96, GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

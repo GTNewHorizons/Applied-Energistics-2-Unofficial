@@ -64,12 +64,12 @@ public class GuiWireless extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.Wireless.getLocal()),
                 8,
                 6,
-                GuiColors.WirelessTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.WirelessInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         final ContainerWireless cw = (ContainerWireless) this.inventorySlots;
 
@@ -82,9 +82,8 @@ public class GuiWireless extends AEBaseGui {
                     this.fontRendererObj.getStringWidth(firstMessage),
                     this.fontRendererObj.getStringWidth(secondMessage));
             final int cOffset = (this.xSize / 2) - (strWidth / 2);
-            this.fontRendererObj.drawString(firstMessage, cOffset, 20, GuiColors.WirelessRange.getColor());
-            this.fontRendererObj
-                    .drawString(secondMessage, cOffset, 20 + 12, GuiColors.WirelessPowerUsageRate.getColor());
+            this.fontRendererObj.drawString(firstMessage, cOffset, 20, GuiColors.GuiTextColorGray.getColor());
+            this.fontRendererObj.drawString(secondMessage, cOffset, 20 + 12, GuiColors.GuiTextColorGray.getColor());
         }
     }
 

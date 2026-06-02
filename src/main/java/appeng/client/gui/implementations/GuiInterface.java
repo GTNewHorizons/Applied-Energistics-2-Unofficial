@@ -200,7 +200,7 @@ public class GuiInterface extends GuiUpgradeable {
                 this.getGuiDisplayName(GuiText.Interface.getLocal()),
                 8,
                 6,
-                GuiColors.InterfaceTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override
