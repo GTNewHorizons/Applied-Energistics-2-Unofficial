@@ -45,7 +45,7 @@ public class ColorUtils {
         itemSlotOverlayInvalid              = color.argb("itemSlotOverlayInvalid",              "0x66ff6666"),
         itemSlotOverlayFluidMismatch        = color.argb("itemSlotOverlayFluidMismatch",        "0x66FF0000"),
         craftConfirmMissingItem             = color.argb("craftConfirmMissingItem",             "0x1AFF0000"),
-        craftingCPUActive                   = color.argb("craftingCPUActive",                   "0x5A45F021"),
+        craftingCPUActive                   = color.argb("craftingCPUActive",                   "0x5A45A021"),
         craftingCPUInactive                 = color.argb("craftingCPUInactive",                 "0x5AFFF7AA"),
         craftingCPUUnsupportedStack         = color.argb("craftingCPUUnsupportedStack",         "0x5AE07070"),
         craftingCPUSameNetwork              = color.argb("craftingCPUSameNetwork",              "0x5AE07070"),
