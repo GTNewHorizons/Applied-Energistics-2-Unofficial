@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -50,6 +51,9 @@ import gregtech.common.tileentities.machines.MTEHatchCraftingInputME;
 import gregtech.common.tileentities.machines.MTEHatchCraftingInputSlave;
 
 public class ToolNetworkVisualiser extends AEBaseItem {
+
+    private static final int UPDATE_INTERVAL_TICKS = 100;
+    private static final Map<EntityPlayerMP, VisualisationUpdate> LAST_UPDATES = new WeakHashMap<>();
 
     public ToolNetworkVisualiser() {
         this.setFeature(EnumSet.of(AEFeature.Core));
@@ -137,6 +141,27 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         PROXY
     }
 
+    private static class VisualisationUpdate {
+
+        private final int x;
+        private final int y;
+        private final int z;
+        private final int dim;
+        private final long tick;
+
+        private VisualisationUpdate(DimensionalCoord pos, long tick) {
+            this.x = pos.x;
+            this.y = pos.y;
+            this.z = pos.z;
+            this.dim = pos.getDimension();
+            this.tick = tick;
+        }
+
+        private boolean matches(DimensionalCoord pos) {
+            return this.x == pos.x && this.y == pos.y && this.z == pos.z && this.dim == pos.getDimension();
+        }
+    }
+
     @Override
     public ItemStack onItemRightClick(ItemStack is, World worldIn, EntityPlayer p) {
         if (Platform.isServer()) {
@@ -201,6 +226,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
         DimensionalCoord dc = DimensionalCoord.readFromNBT(is.getTagCompound());
         if (w.provider.dimensionId != dc.getDimension()) return;
+        if (!needToUpdate(player, dc)) return;
 
         ArrayList<VLink> vLinks = new ArrayList<>();
         Map<IGridNode, VNode> vnList = new HashMap<>();
@@ -269,6 +295,17 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             vNodeList.addAll(vnList.values());
             NetworkHandler.instance.sendTo(new PacketNetworkVisualiserData(vNodeList, vLinks), player);
         } catch (IOException ignored) {}
+    }
+
+    private static boolean needToUpdate(EntityPlayerMP player, DimensionalCoord pos) {
+        long now = player.worldObj.getTotalWorldTime();
+        VisualisationUpdate last = LAST_UPDATES.get(player);
+        if (last != null && last.matches(pos) && last.tick >= now - UPDATE_INTERVAL_TICKS) {
+            return false;
+        }
+
+        LAST_UPDATES.put(player, new VisualisationUpdate(pos, now));
+        return true;
     }
 
     public static IConfigManager getConfigManager(final ItemStack target) {

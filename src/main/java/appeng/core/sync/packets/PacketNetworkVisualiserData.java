@@ -17,6 +17,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class PacketNetworkVisualiserData extends AppEngPacket {
 
@@ -80,9 +81,25 @@ public class PacketNetworkVisualiserData extends AppEngPacket {
             }
         }
 
+        // Avoid O(nodes * links) ArrayList.indexOf lookups while serializing large visualisations.
+        Object2IntOpenHashMap<VNode> nodeIndexes = new Object2IntOpenHashMap<>();
+        nodeIndexes.defaultReturnValue(-1);
+        for (int i = 0; i < vNodeSet.size(); i++) {
+            VNode node = vNodeSet.get(i);
+            if (!nodeIndexes.containsKey(node)) {
+                nodeIndexes.put(node, i);
+            }
+        }
+
         for (VLink vl : vLinkSet) {
-            data.writeInt(vNodeSet.indexOf(vl.node1));
-            data.writeInt(vNodeSet.indexOf(vl.node2));
+            int node1Index = nodeIndexes.getInt(vl.node1);
+            int node2Index = nodeIndexes.getInt(vl.node2);
+            if (node1Index < 0 || node2Index < 0) {
+                throw new IOException("Network visualiser link references a node that is not in the node list");
+            }
+
+            data.writeInt(node1Index);
+            data.writeInt(node2Index);
             data.writeInt(vl.channels);
             data.writeInt(vl.flags.size());
             for (VLinkFlags f : vl.flags) {
