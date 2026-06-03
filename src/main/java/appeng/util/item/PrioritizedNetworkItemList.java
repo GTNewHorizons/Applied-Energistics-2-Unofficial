@@ -155,6 +155,19 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
                     }
                     if (result != 0) break;
                 }
+                if (result == 0) {
+                    for (Entry<IMENetworkInventory<T>, Integer> entry : o2.networkPriority.entrySet()) {
+                        int o2Prio = entry.getValue();
+                        Integer o1Prio = o1.getNetworkPriority(entry.getKey());
+                        if (o1Prio != null) {
+                            result = Integer.compare(o1Prio, o2Prio);
+                        }
+                        if (result != 0) break;
+                    }
+                }
+                if (result == 0) {
+                    result = Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2));
+                }
                 return result;
             }
         };
