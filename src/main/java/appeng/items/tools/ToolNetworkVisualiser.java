@@ -10,9 +10,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -70,7 +73,23 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             this.x = x;
             this.y = y;
             this.z = z;
-            this.flags = flags;
+            this.flags = flags.clone();
+        }
+
+        public boolean isAtSameLocation(VNode other) {
+            return this.x == other.x && this.y == other.y && this.z == other.z;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof VNode other)) return false;
+            return this.x == other.x && this.y == other.y && this.z == other.z && this.flags.equals(other.flags);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.x, this.y, this.z, this.flags);
         }
     }
 
@@ -91,7 +110,21 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             this.node1 = node1;
             this.node2 = node2;
             this.channels = channels;
-            this.flags = flags;
+            this.flags = flags.clone();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof VLink other)) return false;
+            boolean sameDir = this.node1.equals(other.node1) && this.node2.equals(other.node2);
+            boolean oppositeDir = this.node1.equals(other.node2) && this.node2.equals(other.node1);
+            return this.channels == other.channels && this.flags.equals(other.flags) && (sameDir || oppositeDir);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.channels, this.flags) ^ this.node1.hashCode() ^ this.node2.hashCode();
         }
     }
 
@@ -179,7 +212,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             if (gn != null) {
                 IGrid g = gn.getGrid();
                 if (g != null) {
-                    ArrayList<IGridConnection> gcList = new ArrayList<>();
+                    Set<IGridConnection> gcList = new HashSet<>();
                     for (IGridNode igNode : g.getNodes()) {
                         IGridBlock igb = igNode.getGridBlock();
                         if (igb.isWorldAccessible() && igb.getLocation().isInWorld(w)) {
@@ -193,12 +226,12 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                                 flags.add(VNodeFlags.DENSE);
                             }
 
-                            vnList.put(igNode, new VNode(loc.x, loc.y, loc.z, flags));
+                            VNode node = new VNode(loc.x, loc.y, loc.z, flags);
+                            vnList.put(igNode, node);
 
                             if (Platform.isGTLoaded && igb.getMachine() instanceof MTEHatchCraftingInputME crib) {
                                 EnumSet<VNodeFlags> flagsNode = EnumSet.of(VNodeFlags.PROXY);
                                 EnumSet<VLinkFlags> flagsLink = EnumSet.of(VLinkFlags.PROXY);
-                                final VNode node = new VNode(loc.x, loc.y, loc.z, flagsNode);
                                 for (MTEHatchCraftingInputSlave s : crib.getProxyHatches()) {
                                     final IGregTechTileEntity sb = s.getBaseMetaTileEntity();
                                     final VNode sbNode = new VNode(
@@ -209,8 +242,6 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                                     vLinks.add(new VLink(node, sbNode, 0, flagsLink));
                                     vNodeList.add(sbNode);
                                 }
-
-                                vNodeList.add(node);
                             }
                         }
                     }
@@ -218,7 +249,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                     for (IGridConnection c : gcList) {
                         VNode n1 = vnList.get(c.a());
                         VNode n2 = vnList.get(c.b());
-                        if (n1 != null && n2 != null && n1 != n2) {
+                        if (n1 != null && n2 != null && !n1.isAtSameLocation(n2)) {
                             EnumSet<VLinkFlags> flags = EnumSet.noneOf(VLinkFlags.class);
                             if (c.a().hasFlag(GridFlags.DENSE_CAPACITY) && c.b().hasFlag(GridFlags.DENSE_CAPACITY)) {
                                 flags.add(VLinkFlags.DENSE);
