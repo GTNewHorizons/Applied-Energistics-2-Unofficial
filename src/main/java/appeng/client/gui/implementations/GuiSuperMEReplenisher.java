@@ -96,12 +96,12 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
                         .getLocal(unlimited ? GuiText.SuperMEReplenisherBytesUnlimited.getLocal() : fmt(totalBytes)),
                 29,
                 104,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.SuperMEReplenisherBytesUsed.getLocal(fmt(this.containerSuperMEReplenisher.getUsedBytes())),
                 29,
                 114,
-                GuiColors.DefaultBlack.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         // Settings
 

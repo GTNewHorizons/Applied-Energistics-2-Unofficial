@@ -253,7 +253,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
             }
         }
 
-        this.flash(this.out);
+        this.refund(this.out);
 
         return TickRateModulation.SAME;
     }
@@ -331,7 +331,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
         this.injectItems(notInjected, Actionable.MODULATE, target);
     }
 
-    private void flash(Map<IAEStackType<?>, IItemList> fList) {
+    private void refund(Map<IAEStackType<?>, IItemList> fList) {
         try {
             final IStorageGrid storage = this.getProxy().getStorage();
             fList.forEach((stackType, list) -> {
@@ -346,8 +346,8 @@ public class TileSuperMEReplenisher extends AENetworkTile
     }
 
     public void fullRefund() {
-        this.flash(this.lists);
-        this.flash(this.out);
+        this.refund(this.lists);
+        this.refund(this.out);
     }
 
     private long getCellBytes(final ItemStack is) {
