@@ -30,6 +30,8 @@ import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
 import appeng.test.mockme.MockAESystem;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.ItemList;
+import cpw.mods.fml.common.registry.GameRegistry;
+import ggfab.GGItemList;
 import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
 import gregtech.api.util.GTOreDictUnificator;
@@ -39,10 +41,12 @@ import gregtech.common.items.MetaGeneratedTool01;
 public class CraftingV2Tests {
 
     static World dummyWorld = null;
+    static boolean mixedMetalTestRecipeRegistered = false;
     final int SIMPLE_SIMULATION_TIMEOUT_MS = 100;
 
-    final ItemStack bronzePlate, bronzeDoublePlate, bronzeIngot, gtHammer;
+    final ItemStack bronzePlate, bronzeDoublePlate, bronzeIngot, gtHammer, singleUseGtHammer;
     final ItemStack ironDust, ironIngot, ironPlate, goldDust, goldIngot, goldBlock;
+    final ItemStack tinIngot, tinPlate, pigIronIngot, pigIronPlate;
 
     public CraftingV2Tests() {
         bronzePlate = Materials.Bronze.getPlates(1);
@@ -50,12 +54,17 @@ public class CraftingV2Tests {
         bronzeIngot = Materials.Bronze.getIngots(1);
         gtHammer = MetaGeneratedTool01.INSTANCE
                 .getToolWithStats(IDMetaTool01.HARDHAMMER.ID, 1, Materials.VanadiumSteel, null, null);
+        singleUseGtHammer = GGItemList.SingleUseHardHammer.get(1);
         ironDust = Materials.Iron.getDust(1);
         ironIngot = Materials.Iron.getIngots(1);
         ironPlate = Materials.Iron.getPlates(1);
         goldDust = Materials.Gold.getDust(1);
         goldIngot = Materials.Gold.getIngots(1);
         goldBlock = Materials.Gold.getBlocks(1);
+        tinIngot = Materials.Tin.getIngots(1);
+        tinPlate = Materials.Tin.getPlates(1);
+        pigIronIngot = Materials.PigIron.getIngots(1);
+        pigIronPlate = Materials.PigIron.getPlates(1);
 
         if (!DimensionManager.isDimensionRegistered(256)) {
             DimensionManager.registerProviderType(256, WorldProviderSurface.class, false);
@@ -381,12 +390,48 @@ public class CraftingV2Tests {
                 .addOutput(bronzePlate.copy()).buildAndAdd();
     }
 
+    private void addSingleUseHammerPlateRecipe(MockAESystem aeSystem, ItemStack ingot, ItemStack plate) {
+        aeSystem.newCraftingPattern().allowBeingASubstitute().allowUsingSubstitutes() //
+                .addInput(singleUseGtHammer.copy()).addInput(null).addInput(null) //
+                .addInput(ingot.copy()).addInput(null).addInput(null) //
+                .addInput(ingot.copy()).addInput(null).addInput(null) //
+                .addOutput(plate.copy()).buildAndAdd();
+    }
+
     private void addHammerBronzeDoublePlateRecipe(MockAESystem aeSystem) {
         aeSystem.newCraftingPattern().allowBeingASubstitute().allowUsingSubstitutes() //
                 .addInput(bronzePlate.copy()).addInput(null).addInput(null) //
                 .addInput(bronzePlate.copy()).addInput(null).addInput(null) //
                 .addInput(gtHammer.copy()).addInput(null).addInput(null) //
                 .addOutput(bronzeDoublePlate.copy()).buildAndAdd();
+    }
+
+    private ItemStack getMixedMetalIngot() {
+        return new ItemStack(GameRegistry.findItem("IC2", "itemIngot"), 1, 4);
+    }
+
+    private void addMixedMetalRecipe(MockAESystem aeSystem) {
+        final ItemStack mixedMetalIngot = getMixedMetalIngot();
+        if (!mixedMetalTestRecipeRegistered) {
+            mixedMetalTestRecipeRegistered = true;
+            GameRegistry.addRecipe(
+                    mixedMetalIngot.copy(),
+                    "P  ",
+                    "B  ",
+                    "T  ",
+                    'P',
+                    pigIronPlate.copy(),
+                    'B',
+                    bronzePlate.copy(),
+                    'T',
+                    tinPlate.copy());
+        }
+
+        aeSystem.newCraftingPattern().allowUsingSubstitutes() //
+                .addInput(pigIronPlate.copy()).addInput(null).addInput(null) //
+                .addInput(bronzePlate.copy()).addInput(null).addInput(null) //
+                .addInput(tinPlate.copy()).addInput(null).addInput(null) //
+                .addOutput(mixedMetalIngot).buildAndAdd();
     }
 
     @Test
@@ -421,6 +466,33 @@ public class CraftingV2Tests {
                 AEItemStack.create(gtHammer.copy()),
                 AEItemStack.create(withSize(bronzeIngot.copy(), 4)),
                 AEItemStack.create(withSize(bronzePlate.copy(), 0)).setCountRequestable(2));
+    }
+
+    @Test
+    void canReuseGtToolSubstitutingSingleUseHammerBetweenMixedMetalPlateCrafts() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(gtHammer.copy());
+        aeSystem.addStoredItem(withSize(bronzeIngot.copy(), 200));
+        aeSystem.addStoredItem(withSize(tinIngot.copy(), 200));
+        aeSystem.addStoredItem(withSize(pigIronIngot.copy(), 200));
+        addSingleUseHammerPlateRecipe(aeSystem, bronzeIngot, bronzePlate);
+        addSingleUseHammerPlateRecipe(aeSystem, tinIngot, tinPlate);
+        addSingleUseHammerPlateRecipe(aeSystem, pigIronIngot, pigIronPlate);
+        addMixedMetalRecipe(aeSystem);
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(withSize(getMixedMetalIngot(), 100));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertEquals(false, job.isSimulation());
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(gtHammer.copy()),
+                AEItemStack.create(withSize(bronzeIngot.copy(), 200)),
+                AEItemStack.create(withSize(tinIngot.copy(), 200)),
+                AEItemStack.create(withSize(pigIronIngot.copy(), 200)),
+                AEItemStack.create(withSize(bronzePlate.copy(), 0)).setCountRequestable(100),
+                AEItemStack.create(withSize(tinPlate.copy(), 0)).setCountRequestable(100),
+                AEItemStack.create(withSize(pigIronPlate.copy(), 0)).setCountRequestable(100),
+                AEItemStack.create(withSize(getMixedMetalIngot(), 0)).setCountRequestable(100));
     }
 
     @Test

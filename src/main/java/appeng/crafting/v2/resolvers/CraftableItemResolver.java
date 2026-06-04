@@ -158,7 +158,7 @@ public class CraftableItemResolver implements CraftingRequestResolver {
             this.craftingMachine = serializer.readItemStack();
             this.totalCraftsDone = buffer.readLong();
 
-            IAEStack<?>[] patternInputs = pattern.getCondensedAEInputs();;
+            IAEStack<?>[] patternInputs = pattern.getCondensedAEInputs();
             IAEStack<?>[] patternOutputs = pattern.getCondensedAEOutputs();
 
             if (!hasRecursiveInputs(patternInputs, patternOutputs)) {
