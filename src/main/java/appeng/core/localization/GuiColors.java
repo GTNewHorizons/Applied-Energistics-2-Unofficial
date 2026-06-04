@@ -28,7 +28,7 @@ public enum GuiColors implements Localization {
 
     CraftConfirmMissingItem(0x1AFF0000),
 
-    CraftingCPUActive(0x5A45F021),
+    CraftingCPUActive(0x5A45A021),
     CraftingCPUInactive(0x5AFFF7AA),
     CraftingCPUUnsupportedStack(0x5AE07070),
     CraftingCPUSameNetwork(0x5AE07070),
