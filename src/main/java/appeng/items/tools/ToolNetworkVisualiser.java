@@ -137,6 +137,8 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         NODES,
         CHANNELS,
         NONUM,
+        NODES_ONE_CHANNEL,
+        ONE_CHANNEL,
         P2P,
         PROXY
     }
