@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -29,6 +28,7 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.hash.Fnv1a32;
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.Settings;
@@ -93,7 +93,12 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
         @Override
         public int hashCode() {
-            return Objects.hash(this.x, this.y, this.z, this.flags);
+            int hash = Fnv1a32.initialState();
+            hash = Fnv1a32.hashStep(hash, this.x);
+            hash = Fnv1a32.hashStep(hash, this.y);
+            hash = Fnv1a32.hashStep(hash, this.z);
+            hash = Fnv1a32.hashStep(hash, this.flags.hashCode());
+            return hash;
         }
     }
 
@@ -128,7 +133,20 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
         @Override
         public int hashCode() {
-            return Objects.hash(this.channels, this.flags) ^ this.node1.hashCode() ^ this.node2.hashCode();
+            int nodeHash1 = this.node1.hashCode();
+            int nodeHash2 = this.node2.hashCode();
+            if (nodeHash1 > nodeHash2) {
+                int tmp = nodeHash1;
+                nodeHash1 = nodeHash2;
+                nodeHash2 = tmp;
+            }
+
+            int hash = Fnv1a32.initialState();
+            hash = Fnv1a32.hashStep(hash, this.channels);
+            hash = Fnv1a32.hashStep(hash, this.flags.hashCode());
+            hash = Fnv1a32.hashStep(hash, nodeHash1);
+            hash = Fnv1a32.hashStep(hash, nodeHash2);
+            return hash;
         }
     }
 
