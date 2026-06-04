@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MutableClassToInstanceMap;
 
 import appeng.api.AEApi;
+import appeng.api.config.FuzzyMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingMedium;
@@ -233,9 +234,40 @@ public final class CraftingContext {
         final IAEStack<?>[] inputs = pattern.getAEInputs();
         final IAEItemStack[] mcOutputs = simulateComplexCrafting((IAEItemStack[]) inputs, pattern);
 
-        final boolean isComplex = Arrays.stream(mcOutputs).anyMatch(Objects::nonNull);
+        final boolean isComplex = Arrays.stream(mcOutputs).anyMatch(Objects::nonNull)
+                || hasReusableSubstituteInput(pattern, inputs);
         isPatternComplexCache.put(pattern, isComplex);
         return isComplex;
+    }
+
+    private boolean hasReusableSubstituteInput(@Nonnull ICraftingPatternDetails pattern, IAEStack<?>[] inputs) {
+        if (!pattern.canSubstitute()) {
+            return false;
+        }
+
+        for (int slot = 0; slot < inputs.length; slot++) {
+            final IAEStack<?> input = inputs[slot];
+            if (!(input instanceof IAEItemStack itemInput)) {
+                continue;
+            }
+
+            for (IAEItemStack candidate : this.itemModel.findFuzzy(itemInput, FuzzyMode.IGNORE_ALL)) {
+                if (candidate == null || candidate.getStackSize() <= 0) {
+                    continue;
+                }
+                final ItemStack candidateStack = candidate.getItemStack();
+                final Item candidateItem = candidateStack.getItem();
+                if (candidateItem == null || !candidateItem.hasContainerItem(candidateStack)) {
+                    continue;
+                }
+                if (Platform.getContainerItem(candidateStack) != null
+                        && pattern.isValidItemForSlot(slot, candidate, world)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
