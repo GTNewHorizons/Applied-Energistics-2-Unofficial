@@ -3,7 +3,6 @@ package appeng.integration.modules;
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.AEApi;
-import appeng.api.exceptions.ModNotInstalled;
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
@@ -11,7 +10,6 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IGT;
 import appeng.spatial.NBTSpatialHandler;
-import cpw.mods.fml.common.Loader;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 public class GT implements IIntegrationModule, IGT {
@@ -22,8 +20,6 @@ public class GT implements IIntegrationModule, IGT {
     @Reflected
     public GT() throws Throwable {
         IntegrationHelper.testClassExistence(this, gregtech.api.interfaces.tileentity.IEnergyConnected.class);
-        String ver = Loader.instance().getIndexedModList().get("gregtech").getVersion();
-        if (!ver.equals("MC1710")) throw new ModNotInstalled("gregtech");
     }
 
     @Override
