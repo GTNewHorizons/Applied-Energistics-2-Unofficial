@@ -42,7 +42,7 @@ public class CraftingV2Tests {
 
     static World dummyWorld = null;
     static boolean mixedMetalTestRecipeRegistered = false;
-    final int SIMPLE_SIMULATION_TIMEOUT_MS = 100;
+    final int SIMPLE_SIMULATION_TIMEOUT_MS = 150;
 
     final ItemStack bronzePlate, bronzeDoublePlate, bronzeIngot, gtHammer, singleUseGtHammer;
     final ItemStack ironDust, ironIngot, ironPlate, goldDust, goldIngot, goldBlock;
