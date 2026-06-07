@@ -254,7 +254,8 @@ public class NetworkVisualiserRender {
             final int color;
             if (node.flags.contains(VNodeFlags.PROXY) || nodePartOfProxyLink)
                 color = ColorUtils.networkVisualiserNodeProxy.getColor();
-            else if (node.flags.contains(VNodeFlags.MISSING)) color = ColorUtils.networkVisualiserNodeMissing.getColor();
+            else if (node.flags.contains(VNodeFlags.MISSING))
+                color = ColorUtils.networkVisualiserNodeMissing.getColor();
             else if (node.flags.contains(VNodeFlags.DENSE)) color = ColorUtils.networkVisualiserNodeDense.getColor();
             else color = ColorUtils.networkVisualiserNodeDefault.getColor();
 
