@@ -61,7 +61,7 @@ public class IOPortTests {
 
         helper.startSequence().thenExecuteAtStart(() -> {
             helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(0), cell));
-            helper.assertTrue(ioport.getStackInSlot(6) != null);
+            helper.assertTrue(ioport.getStackInSlot(6) == null);
         }).thenExecute(() -> {
             helper.assertTrue(ioport.getStackInSlot(0) == null);
             cell.setTagCompound(new NBTTagCompound());
