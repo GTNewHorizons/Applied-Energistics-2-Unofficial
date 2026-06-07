@@ -36,7 +36,7 @@ dependencies {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
     compileOnly('curse.maven:rotarycraft-235596:4721191')
-    compileOnly('com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH:dev')
+    compileOnly('com.github.GTNewHorizons:Baubles-Expanded:2.2.21-GTNH:dev')
     compileOnly("org.jetbrains:annotations:26.0.2")
     compileOnly("com.github.GTNewHorizons:Postea:1.2.5:dev")
 
@@ -90,7 +90,7 @@ project.getConfigurations()
         final DependencySubstitutions ds = c.getResolutionStrategy()
             .getDependencySubstitution();
         ds.substitute(ds.module("com.github.GTNewHorizons:Baubles"))
-            .using(ds.module("com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH"))
+            .using(ds.module("com.github.GTNewHorizons:Baubles-Expanded:2.2.21-GTNH"))
             .withClassifier("dev")
             .because("Baubles-Expanded replaces Baubles");
     });
