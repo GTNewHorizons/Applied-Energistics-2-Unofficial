@@ -57,16 +57,17 @@ public class IOPortTests {
         getDrive(helper);
         ItemStack cell = cell1k();
 
-        ioport.setInventorySlotContents(0, cell.copy());
-
-        helper.startSequence().thenExecuteAtStart(() -> {
-            helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(0), cell));
-            helper.assertTrue(ioport.getStackInSlot(6) == null);
-        }).thenExecute(() -> {
-            helper.assertTrue(ioport.getStackInSlot(0) == null);
-            cell.setTagCompound(new NBTTagCompound());
-            helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), cell));
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    ioport.setInventorySlotContents(0, cell.copy());
+                    helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(0), cell));
+                    helper.assertTrue(ioport.getStackInSlot(6) == null);
+                }).thenExecute(() -> {
+                    helper.assertTrue(ioport.getStackInSlot(0) == null);
+                    ItemStack expectedCell = cell.copy();
+                    expectedCell.setTagCompound(new NBTTagCompound());
+                    helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), expectedCell));
+                }).thenSucceed();
     }
 
     // Exports items from a filled cell into ME network storage in EMPTY mode.
@@ -77,15 +78,17 @@ public class IOPortTests {
         ItemStack sourceCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 100);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil(10, () -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Exported cell should leave the input slot");
-            helper.assertNotNull(ioport.getStackInSlot(6), "Exported cell should move to the output slot");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenWaitUntil(10, () -> {
+                    helper.assertNull(ioport.getStackInSlot(0), "Exported cell should leave the input slot");
+                    helper.assertNotNull(ioport.getStackInSlot(6), "Exported cell should move to the output slot");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                }).thenSucceed();
     }
 
     // Imports items from ME network storage into an empty cell in FILL mode.
@@ -97,15 +100,17 @@ public class IOPortTests {
         ItemStack targetCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 100);
-        ioport.setInventorySlotContents(0, targetCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil(10, () -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Imported cell should leave the input slot");
-            helper.assertNotNull(ioport.getStackInSlot(6), "Imported cell should move to the output slot");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 100);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, targetCell);
+                }).thenWaitUntil(10, () -> {
+                    helper.assertNull(ioport.getStackInSlot(0), "Imported cell should leave the input slot");
+                    helper.assertNotNull(ioport.getStackInSlot(6), "Imported cell should move to the output slot");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 100);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
+                }).thenSucceed();
     }
 
     // Covers PR1197: FILL plus MoveWhenEmpty moves the cell when the remaining network amount exactly matches the
@@ -118,17 +123,21 @@ public class IOPortTests {
         ItemStack targetCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 256);
-        ioport.setInventorySlotContents(0, targetCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenExecute(() -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Cell should leave input when the network is exactly drained");
-            helper.assertNotNull(
-                    ioport.getStackInSlot(6),
-                    "Cell should move to output when the network is exactly drained");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 256);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, targetCell);
+                }).thenExecute(() -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "Cell should leave input when the network is exactly drained");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "Cell should move to output when the network is exactly drained");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 256);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
+                }).thenSucceed();
     }
 
     // Covers PR1259: FILL plus MoveWhenEmpty does not move the cell when the network starts empty.
@@ -139,15 +148,19 @@ public class IOPortTests {
         configure(ioport, OperationMode.FILL, FullnessMode.EMPTY);
         ItemStack targetCell = cell1k();
         ItemStack driveCell = cell1k();
-        ioport.setInventorySlotContents(0, targetCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertNotNull(ioport.getStackInSlot(0), "Cell should stay in input when the network starts empty");
-            helper.assertNull(ioport.getStackInSlot(6), "Cell should not move to output when no work was done");
-            assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, targetCell);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Cell should stay in input when the network starts empty");
+                    helper.assertNull(ioport.getStackInSlot(6), "Cell should not move to output when no work was done");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
+                }).thenSucceed();
     }
 
     // Covers PR1259: FILL plus MoveWhenEmpty moves the cell when the target cell becomes full.
@@ -159,17 +172,21 @@ public class IOPortTests {
         ItemStack targetCell = cell1k();
         ItemStack driveCell = cell64k();
         insertItems(helper, driveCell, Blocks.cobblestone, 9000);
-        ioport.setInventorySlotContents(0, targetCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenIdle(40).thenExecute(() -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Full target cell should leave input in move-when-empty mode");
-            helper.assertNotNull(
-                    ioport.getStackInSlot(6),
-                    "Full target cell should move to output even when the network still has items");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 8128);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 872);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, targetCell);
+                }).thenIdle(40).thenExecute(() -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "Full target cell should leave input in move-when-empty mode");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "Full target cell should move to output even when the network still has items");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 8128);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 872);
+                }).thenSucceed();
     }
 
     // Keeps a cell in input under FullnessMode.EMPTY until the source cell is empty.
@@ -180,21 +197,23 @@ public class IOPortTests {
         ItemStack sourceCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 300);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Partially transferred cell should remain in the input slot");
-            assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
-        }).thenWaitUntil(10, () -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Emptied cell should leave the input slot");
-            helper.assertNotNull(ioport.getStackInSlot(6), "Emptied cell should move to the output slot");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 300);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Partially transferred cell should remain in the input slot");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
+                }).thenWaitUntil(10, () -> {
+                    helper.assertNull(ioport.getStackInSlot(0), "Emptied cell should leave the input slot");
+                    helper.assertNotNull(ioport.getStackInSlot(6), "Emptied cell should move to the output slot");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 300);
+                }).thenSucceed();
     }
 
     // Moves a partially transferred cell under FullnessMode.HALF.
@@ -207,19 +226,21 @@ public class IOPortTests {
         ItemStack nearlyFullDriveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 300);
         insertItems(helper, nearlyFullDriveCell, Blocks.cobblestone, 8028);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, nearlyFullDriveCell);
 
-        helper.startSequence().thenWaitUntil(20, () -> {
-            helper.assertNull(
-                    ioport.getStackInSlot(0),
-                    "HALF mode should remove the partially transferred cell from input");
-            helper.assertNotNull(
-                    ioport.getStackInSlot(6),
-                    "HALF mode should move the partially transferred cell to output");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 200);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 8128);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, nearlyFullDriveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenWaitUntil(20, () -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "HALF mode should remove the partially transferred cell from input");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "HALF mode should move the partially transferred cell to output");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 200);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 8128);
+                }).thenSucceed();
     }
 
     // Moves a FILL-mode target cell only after it becomes full under FullnessMode.FULL.
@@ -231,15 +252,17 @@ public class IOPortTests {
         ItemStack targetCell = cell1k();
         ItemStack driveCell = cell64k();
         insertItems(helper, driveCell, Blocks.cobblestone, 9000);
-        ioport.setInventorySlotContents(0, targetCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil(40, () -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Full target cell should leave the input slot");
-            helper.assertNotNull(ioport.getStackInSlot(6), "Full target cell should move to the output slot");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 8128);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 872);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, targetCell);
+                }).thenWaitUntil(40, () -> {
+                    helper.assertNull(ioport.getStackInSlot(0), "Full target cell should leave the input slot");
+                    helper.assertNotNull(ioport.getStackInSlot(6), "Full target cell should move to the output slot");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 8128);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 872);
+                }).thenSucceed();
     }
 
     // Moves cells from multiple input slots to output slots without loss or overwrite.
@@ -247,19 +270,21 @@ public class IOPortTests {
     public static void multipleInputSlotsMoveToOutputSlots(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
-        for (int slot = 0; slot < 6; slot++) {
-            ioport.setInventorySlotContents(slot, cell1k());
-        }
 
-        helper.startSequence().thenIdle(4).thenExecute(() -> {
-            helper.assertEquals(1, countFilledSlots(ioport, 0, 6), "Input slots should contain 1 cell");
-            helper.assertEquals(5, countFilledSlots(ioport, 6, 12), "Output slots should contain 5 cells");
-        }).thenIdle(1).thenExecute(() -> {
-            for (int slot = 0; slot < 6; slot++) {
-                helper.assertNull(ioport.getStackInSlot(slot), "All input slots should become empty");
-            }
-            helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output slots should contain 6 cells");
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    for (int slot = 0; slot < 6; slot++) {
+                        ioport.setInventorySlotContents(slot, cell1k());
+                    }
+                }).thenIdle(4).thenExecute(() -> {
+                    helper.assertEquals(1, countFilledSlots(ioport, 0, 6), "Input slots should contain 1 cell");
+                    helper.assertEquals(5, countFilledSlots(ioport, 6, 12), "Output slots should contain 5 cells");
+                }).thenIdle(1).thenExecute(() -> {
+                    for (int slot = 0; slot < 6; slot++) {
+                        helper.assertNull(ioport.getStackInSlot(slot), "All input slots should become empty");
+                    }
+                    helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output slots should contain 6 cells");
+                }).thenSucceed();
     }
 
     // Keeps a cell queued while output is full, then moves it when an output slot opens.
@@ -267,22 +292,26 @@ public class IOPortTests {
     public static void outputFullKeepsCellQueuedUntilSlotOpens(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
-        for (int slot = 6; slot < 12; slot++) {
-            ioport.setInventorySlotContents(slot, cell1k());
-        }
         ItemStack queuedCell = cell4k();
-        ioport.setInventorySlotContents(0, queuedCell);
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertNotNull(ioport.getStackInSlot(0), "Input cell should be retained while output is full");
-            helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cell count should stay full");
-            ioport.setInventorySlotContents(6, null);
-        }).thenIdle(1).thenExecute(() -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Input cell should leave once an output slot opens");
-            helper.assertTrue(
-                    ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), queuedCell),
-                    "Queued cell should move into the opened output slot");
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    for (int slot = 6; slot < 12; slot++) {
+                        ioport.setInventorySlotContents(slot, cell1k());
+                    }
+                    ioport.setInventorySlotContents(0, queuedCell);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Input cell should be retained while output is full");
+                    helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cell count should stay full");
+                    ioport.setInventorySlotContents(6, null);
+                }).thenIdle(1).thenExecute(() -> {
+                    helper.assertNull(ioport.getStackInSlot(0), "Input cell should leave once an output slot opens");
+                    helper.assertTrue(
+                            ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), queuedCell),
+                            "Queued cell should move into the opened output slot");
+                }).thenSucceed();
     }
 
     // Queues an emptied source cell while output is full, then moves it with its contents preserved.
@@ -290,28 +319,34 @@ public class IOPortTests {
     public static void outputFullQueuesTransferredCellUntilSlotOpens(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         TileDrive drive = getDrive(helper);
-        for (int slot = 6; slot < 12; slot++) {
-            ioport.setInventorySlotContents(slot, cell1k());
-        }
         ItemStack sourceCell = cell4k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 100);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Transferred cell should stay in input while output is full");
-            assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
-            ioport.setInventorySlotContents(6, null);
-        }).thenIdle(1).thenExecute(() -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Transferred cell should leave input once output opens");
-            helper.assertNotNull(ioport.getStackInSlot(6), "Transferred cell should move into the opened output slot");
-            assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    for (int slot = 6; slot < 12; slot++) {
+                        ioport.setInventorySlotContents(slot, cell1k());
+                    }
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Transferred cell should stay in input while output is full");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                    ioport.setInventorySlotContents(6, null);
+                }).thenIdle(1).thenExecute(() -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "Transferred cell should leave input once output opens");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "Transferred cell should move into the opened output slot");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                }).thenSucceed();
     }
 
     // Keeps source cell contents unchanged when EMPTY mode cannot export into full network storage.
@@ -323,19 +358,21 @@ public class IOPortTests {
         ItemStack fullDriveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 100);
         insertItems(helper, fullDriveCell, Blocks.cobblestone, 8128);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, fullDriveCell);
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Source cell should remain in input when destination is full");
-            helper.assertNull(
-                    ioport.getStackInSlot(6),
-                    "Source cell should not move to output when no export was possible");
-            assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 100);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 8128);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, fullDriveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Source cell should remain in input when destination is full");
+                    helper.assertNull(
+                            ioport.getStackInSlot(6),
+                            "Source cell should not move to output when no export was possible");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 100);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 8128);
+                }).thenSucceed();
     }
 
     // Transfers 256 item units per tick without upgrades.
@@ -346,16 +383,18 @@ public class IOPortTests {
         ItemStack sourceCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 300);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Cell should remain in input after exhausting transfer budget");
-            assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Cell should remain in input after exhausting transfer budget");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
+                }).thenSucceed();
     }
 
     // Transfers 512 item units per tick with one Speed upgrade.
@@ -367,16 +406,18 @@ public class IOPortTests {
         ItemStack sourceCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 600);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Cell with remaining contents should stay in input after speed transfer");
-            assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 88);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 512);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Cell with remaining contents should stay in input after speed transfer");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 88);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 512);
+                }).thenSucceed();
     }
 
     // Transfers 256,000 mB per tick for fluid cells without upgrades.
@@ -389,16 +430,18 @@ public class IOPortTests {
         ItemStack sourceCell = fluidCell1k(helper);
         ItemStack driveCell = fluidCell1k(helper);
         insertFluids(helper, sourceCell, water, 300_000);
-        ioport.setInventorySlotContents(0, sourceCell);
-        drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Fluid cell should remain in input after exhausting transfer budget");
-            assertStoredFluidAmount(helper, ioport.getStackInSlot(0), water, 44_000);
-            assertStoredFluidAmount(helper, drive.getStackInSlot(0), water, 256_000);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Fluid cell should remain in input after exhausting transfer budget");
+                    assertStoredFluidAmount(helper, ioport.getStackInSlot(0), water, 44_000);
+                    assertStoredFluidAmount(helper, drive.getStackInSlot(0), water, 256_000);
+                }).thenSucceed();
     }
 
     // Runs in HIGH_SIGNAL mode only after redstone power is applied.
@@ -406,19 +449,25 @@ public class IOPortTests {
     public static void redstoneHighSignalRequiresPower(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
-        installRedstoneUpgrade(ioport);
-        configureRedstone(ioport, RedstoneMode.HIGH_SIGNAL);
-        ioport.setInventorySlotContents(0, cell1k());
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertNotNull(ioport.getStackInSlot(0), "HIGH_SIGNAL mode should keep the input cell without power");
-            helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
-        }).thenIdle(1).thenExecute(() -> {
-            helper.assertNull(ioport.getStackInSlot(0), "HIGH_SIGNAL mode should remove the input cell when powered");
-            helper.assertNotNull(
-                    ioport.getStackInSlot(6),
-                    "HIGH_SIGNAL mode should move the cell to output when powered");
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    installRedstoneUpgrade(ioport);
+                    configureRedstone(ioport, RedstoneMode.HIGH_SIGNAL);
+                    ioport.setInventorySlotContents(0, cell1k());
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "HIGH_SIGNAL mode should keep the input cell without power");
+                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
+                }).thenIdle(1).thenExecute(() -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "HIGH_SIGNAL mode should remove the input cell when powered");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "HIGH_SIGNAL mode should move the cell to output when powered");
+                }).thenSucceed();
     }
 
     // Runs in LOW_SIGNAL mode only after redstone power is removed.
@@ -426,20 +475,26 @@ public class IOPortTests {
     public static void redstoneLowSignalRunsOnlyWithoutPower(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
-        installRedstoneUpgrade(ioport);
-        configureRedstone(ioport, RedstoneMode.LOW_SIGNAL);
-        helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
-        ioport.setInventorySlotContents(0, cell1k());
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertNotNull(ioport.getStackInSlot(0), "LOW_SIGNAL mode should keep the input cell while powered");
-            helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 0);
-        }).thenIdle(1).thenExecute(() -> {
-            helper.assertNull(ioport.getStackInSlot(0), "LOW_SIGNAL mode should remove the input cell without power");
-            helper.assertNotNull(
-                    ioport.getStackInSlot(6),
-                    "LOW_SIGNAL mode should move the cell to output without power");
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
+                    installRedstoneUpgrade(ioport);
+                    configureRedstone(ioport, RedstoneMode.LOW_SIGNAL);
+                    ioport.setInventorySlotContents(0, cell1k());
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "LOW_SIGNAL mode should keep the input cell while powered");
+                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 0);
+                }).thenIdle(1).thenExecute(() -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "LOW_SIGNAL mode should remove the input cell without power");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "LOW_SIGNAL mode should move the cell to output without power");
+                }).thenSucceed();
     }
 
     // Processes exactly one cell for a single redstone pulse in SIGNAL_PULSE mode.
@@ -447,27 +502,29 @@ public class IOPortTests {
     public static void redstonePulseModeRunsAfterPulse(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
-        installRedstoneUpgrade(ioport);
-        configureRedstone(ioport, RedstoneMode.SIGNAL_PULSE);
-        ioport.setInventorySlotContents(0, cell1k());
-        ioport.setInventorySlotContents(1, cell1k());
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertEquals(
-                    2,
-                    countFilledSlots(ioport, 0, 6),
-                    "SIGNAL_PULSE mode should keep both cells before a pulse");
-            helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
-        }).thenIdle(5).thenExecute(() -> {
-            helper.assertEquals(
-                    1,
-                    countFilledSlots(ioport, 0, 6),
-                    "SIGNAL_PULSE mode should leave one input cell after one pulse");
-            helper.assertEquals(
-                    1,
-                    countFilledSlots(ioport, 6, 12),
-                    "SIGNAL_PULSE mode should move exactly one cell after one pulse");
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    installRedstoneUpgrade(ioport);
+                    configureRedstone(ioport, RedstoneMode.SIGNAL_PULSE);
+                    ioport.setInventorySlotContents(0, cell1k());
+                    ioport.setInventorySlotContents(1, cell1k());
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertEquals(
+                            2,
+                            countFilledSlots(ioport, 0, 6),
+                            "SIGNAL_PULSE mode should keep both cells before a pulse");
+                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertEquals(
+                            1,
+                            countFilledSlots(ioport, 0, 6),
+                            "SIGNAL_PULSE mode should leave one input cell after one pulse");
+                    helper.assertEquals(
+                            1,
+                            countFilledSlots(ioport, 6, 12),
+                            "SIGNAL_PULSE mode should move exactly one cell after one pulse");
+                }).thenSucceed();
     }
 
     // Allows cell insertion only into input slots and extraction only from output slots.
@@ -499,17 +556,18 @@ public class IOPortTests {
         getDrive(helper);
         ItemStack sourceCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 1);
-        ioport.setInventorySlotContents(0, sourceCell);
 
-        helper.startSequence().thenIdle(10).thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Input cell should remain when no destination storage exists");
-            helper.assertNull(
-                    ioport.getStackInSlot(6),
-                    "Cell should not move to output when no destination storage exists");
-            assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 1);
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> ioport.setInventorySlotContents(0, sourceCell)).thenIdle(10)
+                .thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Input cell should remain when no destination storage exists");
+                    helper.assertNull(
+                            ioport.getStackInSlot(6),
+                            "Cell should not move to output when no destination storage exists");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 1);
+                }).thenSucceed();
     }
 
     // Preserves queued cells without duplication or loss when settings change while output is full.
@@ -517,25 +575,29 @@ public class IOPortTests {
     public static void settingChangeWhileQueuedDoesNotDuplicateOrLoseCell(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
-        for (int slot = 6; slot < 12; slot++) {
-            ioport.setInventorySlotContents(slot, cell1k());
-        }
         ItemStack queuedCell = cell4k();
-        ioport.setInventorySlotContents(0, queuedCell);
 
-        helper.startSequence().thenIdle(5).thenExecute(() -> {
-            helper.assertNotNull(
-                    ioport.getStackInSlot(0),
-                    "Queued cell should remain in input before changing settings");
-            configure(ioport, OperationMode.EMPTY, FullnessMode.HALF);
-            ioport.setInventorySlotContents(6, null);
-        }).thenWaitUntil(30, () -> {
-            helper.assertNull(ioport.getStackInSlot(0), "Queued cell should leave input after changing settings");
-            helper.assertTrue(
-                    ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), queuedCell),
-                    "Queued cell should move exactly once to output after changing settings");
-            helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cell count should remain six");
-        }).thenSucceed();
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    for (int slot = 6; slot < 12; slot++) {
+                        ioport.setInventorySlotContents(slot, cell1k());
+                    }
+                    ioport.setInventorySlotContents(0, queuedCell);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Queued cell should remain in input before changing settings");
+                    configure(ioport, OperationMode.EMPTY, FullnessMode.HALF);
+                    ioport.setInventorySlotContents(6, null);
+                }).thenWaitUntil(30, () -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "Queued cell should leave input after changing settings");
+                    helper.assertTrue(
+                            ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), queuedCell),
+                            "Queued cell should move exactly once to output after changing settings");
+                    helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cell count should remain six");
+                }).thenSucceed();
     }
 
     private static TileIOPort getIOPort(GameTestHelper helper) {
@@ -544,6 +606,10 @@ public class IOPortTests {
 
     private static TileDrive getDrive(GameTestHelper helper) {
         return helper.assertTileEntityPresent(TileDrive.class, DRIVE_X, DRIVE_Y, DRIVE_Z);
+    }
+
+    private static void assertIOPortActive(GameTestHelper helper, TileIOPort ioport) {
+        helper.assertTrue(ioport.getProxy().isActive(), "IO port network should become active");
     }
 
     private static ItemStack cell1k() {
