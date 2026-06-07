@@ -57,12 +57,6 @@ if (withFunctionalTests || isCi) {
     tasks.named("runServer", JavaExec).configure(addFunctionalTestsToRun)
 }
 
-if (isCi) {
-    tasks.named("runServer", JavaExec).configure { JavaExec task ->
-        task.jvmArgs("-Dgtnh.horizonqa=true")
-    }
-}
-
 if (withFunctionalTests) {
     tasks.named("runClient", JavaExec).configure(addFunctionalTestsToRun)
 }

@@ -14,4 +14,4 @@ jobs:
     secrets: inherit
     with:
      timeout: 150
-     disable-server-auto-stop: true
+     horizonqa: true
