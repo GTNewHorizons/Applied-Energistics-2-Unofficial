@@ -232,6 +232,9 @@ public class NetworkVisualiserRender {
         tess.startDrawing(GL11.GL_QUADS);
 
         for (VNode node : vNodeSet) {
+            // Show the normal CRIB node as a proxy node without adding a duplicate server-side node.
+            boolean nodePartOfProxyLink = mode == VisualisationModes.PROXY && isNodePartOfProxyLink(node);
+
             switch (mode) {
                 case NODES, NONUM, NODES_ONE_CHANNEL -> {
                     if (node.flags.contains(VNodeFlags.PROXY)) continue;
@@ -242,16 +245,17 @@ public class NetworkVisualiserRender {
                 }
 
                 case PROXY -> {
-                    if (!node.flags.contains(VNodeFlags.PROXY)) continue;
+                    if (!node.flags.contains(VNodeFlags.PROXY) && !nodePartOfProxyLink) continue;
                 }
 
                 default -> {}
             }
 
             final int color;
-            if (node.flags.contains(VNodeFlags.MISSING)) color = GuiColors.NetworkVisualiserNodeMissing.getColor();
+            if (node.flags.contains(VNodeFlags.PROXY) || nodePartOfProxyLink)
+                color = GuiColors.NetworkVisualiserNodeProxy.getColor();
+            else if (node.flags.contains(VNodeFlags.MISSING)) color = GuiColors.NetworkVisualiserNodeMissing.getColor();
             else if (node.flags.contains(VNodeFlags.DENSE)) color = GuiColors.NetworkVisualiserNodeDense.getColor();
-            else if (node.flags.contains(VNodeFlags.PROXY)) color = GuiColors.NetworkVisualiserNodeProxy.getColor();
             else color = GuiColors.NetworkVisualiserNodeDefault.getColor();
 
             final int alpha = (color >> 24) & 0xFF;
@@ -293,6 +297,16 @@ public class NetworkVisualiserRender {
         }
 
         tess.draw();
+    }
+
+    private static boolean isNodePartOfProxyLink(VNode node) {
+        for (VLink link : vLinkSet) {
+            if (link.flags.contains(VLinkFlags.PROXY) && (link.node1 == node || link.node2 == node)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void renderLinks(Set<VLink> links, float width) {
