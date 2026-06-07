@@ -34,8 +34,25 @@ import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemList<T> {
+
+    // Compare every stack on the same root-to-leaf priority axes to keep the comparator transitive.
+    private static final Comparator<IntList> PRIORITY_PATH_ORDER = (o1, o2) -> {
+        final int sharedPathLength = Math.min(o1.size(), o2.size());
+        for (int i = 0; i < sharedPathLength; i++) {
+            final int result = Integer.compare(o1.getInt(i), o2.getInt(i));
+            if (result != 0) return result;
+        }
+
+        return Integer.compare(o1.size(), o2.size());
+    };
+    private static final Comparator<PrioritizedNetworkItemStack<?>> PRIORITIZED_STACK_ORDER = (o1,
+            o2) -> PRIORITY_PATH_ORDER.compare(o1.priorityPath, o2.priorityPath);
+    private static final Comparator<PrioritizedNetworkItemStack<?>> REVERSED_PRIORITIZED_STACK_ORDER = PRIORITIZED_STACK_ORDER
+            .reversed();
 
     private final Map<IMENetworkInventory<T>, Map<Integer, IItemList<T>>> prioritizedNetworkItemLists;
 
@@ -113,7 +130,7 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
                                             Collections.unmodifiableSet(localVisitedNetworks),
                                             ascendingPriority)
                                     .filter(e -> predicate.test(e.getItemStack()))
-                                    .peek(e -> e.setNetworkPriority(this.getNetwork(), priorty));
+                                    .peek(e -> e.prependPriority(priorty));
                             priorityStreams.add(stream);
                         } else {
                             List<PrioritizedNetworkItemStack<T>> buffer = new ArrayList<>();
@@ -142,26 +159,16 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
     public Stream<T> getItems(boolean ascendingPriority) {
         Set<IMENetworkInventory<T>> visitedNetworks = new HashSet<>();
         visitedNetworks.add(this.getNetwork());
-        Comparator<PrioritizedNetworkItemStack<T>> comparator = new Comparator<>() {
-
-            @Override
-            public int compare(PrioritizedNetworkItemStack<T> o1, PrioritizedNetworkItemStack<T> o2) {
-                int result = 0;
-                for (Entry<IMENetworkInventory<T>, Integer> entry : o1.networkPriority.entrySet()) {
-                    int o1Prio = entry.getValue();
-                    Integer o2Prio = o2.getNetworkPriority(entry.getKey());
-                    if (o2Prio != null) {
-                        result = Integer.compare(o1Prio, o2Prio);
-                    }
-                    if (result != 0) break;
-                }
-                return result;
-            }
-        };
         return getFilteredPrioritizedNetworkItemStackStream(
                 Collections.unmodifiableSet(visitedNetworks),
-                ascendingPriority).distinct().sorted(ascendingPriority ? comparator : comparator.reversed())
+                ascendingPriority).distinct().sorted(getPriorityPathOrder(ascendingPriority))
                         .map(NetworkItemStack::getItemStack);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static <T extends IAEStack> Comparator<PrioritizedNetworkItemStack<T>> getPriorityPathOrder(
+            boolean ascendingPriority) {
+        return (Comparator) (ascendingPriority ? PRIORITIZED_STACK_ORDER : REVERSED_PRIORITIZED_STACK_ORDER);
     }
 
     @Override
@@ -203,22 +210,17 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
 
     private static class PrioritizedNetworkItemStack<U extends IAEStack> extends NetworkItemStack<U> {
 
-        private final Map<IMENetworkInventory<U>, Integer> networkPriority;
+        private final IntList priorityPath;
 
         public PrioritizedNetworkItemStack(@Nonnull final IMENetworkInventory<U> networkInventory,
                 @Nonnull final U itemStack, final int priority) {
             super(networkInventory, itemStack);
-            this.networkPriority = new HashMap<>();
-            setNetworkPriority(networkInventory, priority);
+            this.priorityPath = new IntArrayList();
+            this.priorityPath.add(priority);
         }
 
-        public Integer getNetworkPriority(@Nonnull final IMENetworkInventory<U> networkInventory) {
-            return this.networkPriority.get(networkInventory);
-        }
-
-        public void setNetworkPriority(@Nonnull final IMENetworkInventory<U> networkInventory, int priority) {
-            if (this.networkPriority.containsKey(networkInventory)) return;
-            this.networkPriority.put(networkInventory, priority);
+        public void prependPriority(int priority) {
+            this.priorityPath.add(0, priority);
         }
     }
 }
