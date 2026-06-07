@@ -1100,6 +1100,8 @@ item.appliedenergistics2.ToolNetworkVisualiser.mode.full=§eShow Everything
 item.appliedenergistics2.ToolNetworkVisualiser.mode.nodes=§eShow Nodes
 item.appliedenergistics2.ToolNetworkVisualiser.mode.channels=§eShow Channels
 item.appliedenergistics2.ToolNetworkVisualiser.mode.nonum=§eShow Channels and Nodes
+item.appliedenergistics2.ToolNetworkVisualiser.mode.nodes_one_channel=§eShow Nodes and one Channel
+item.appliedenergistics2.ToolNetworkVisualiser.mode.one_channel=§eShow one Channel
 item.appliedenergistics2.ToolNetworkVisualiser.mode.p2p=§eShow P2P Links
 item.appliedenergistics2.ToolNetworkVisualiser.mode.proxy=§eShow Crafting Input Proxy Links
 

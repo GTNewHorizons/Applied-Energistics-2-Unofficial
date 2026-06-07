@@ -388,8 +388,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         Property screenColorProperty = this.get("Client", "screenColor", this.screenColor);
         this.screenColor = this.clampScreenColor(screenColorProperty.getInt(this.screenColor));
         screenColorProperty.set(this.screenColor);
-        this.visualiserWidthDense = (float) this.get("Client", "visualiserWidthDense", 16f).getDouble(16f);
-        this.visualiserWidthNormal = (float) this.get("Client", "visualiserWidthNormal", 4f).getDouble(4f);
+        this.visualiserWidthDense = (float) this.get("Client", "visualiserWidthDense", 1.0f).getDouble(1.0f);
+        this.visualiserWidthNormal = (float) this.get("Client", "visualiserWidthNormal", 1.0f).getDouble(1.0f);
 
         // Pin options (under Client category)
         Property pMaxCraft = this.get("Client", "maxCraftingPinRows", this.maxCraftingPinRows);

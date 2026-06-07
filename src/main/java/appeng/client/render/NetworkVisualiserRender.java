@@ -46,17 +46,21 @@ public class NetworkVisualiserRender {
     private static boolean renderWireless = false;
     private static final List<DimensionalCoord> wirelessConnections = new ArrayList<>();
     private static DimensionalCoord prevPos;
+    private static DimensionalCoord visualiserPos;
 
     final List<VisualisationModes> renderNodesModes = Arrays.asList(
             VisualisationModes.NODES,
             VisualisationModes.FULL,
             VisualisationModes.NONUM,
+            VisualisationModes.NODES_ONE_CHANNEL,
             VisualisationModes.PROXY);
 
     final List<VisualisationModes> renderLinksModes = Arrays.asList(
             VisualisationModes.CHANNELS,
             VisualisationModes.FULL,
             VisualisationModes.NONUM,
+            VisualisationModes.NODES_ONE_CHANNEL,
+            VisualisationModes.ONE_CHANNEL,
             VisualisationModes.P2P,
             VisualisationModes.PROXY);
 
@@ -105,7 +109,12 @@ public class NetworkVisualiserRender {
             mode = newMode;
             needListRefresh = true;
         }
-        int networkDim = is.getTagCompound().getInteger("dim");
+        DimensionalCoord networkPos = DimensionalCoord.readFromNBT(is.getTagCompound());
+        if (visualiserPos == null || !networkPos.isEqual(visualiserPos)) {
+            visualiserPos = networkPos;
+            needListRefresh = true;
+        }
+        int networkDim = networkPos.getDimension();
         if (networkDim != mc.theWorld.provider.dimensionId) {
             return;
         }
@@ -223,26 +232,30 @@ public class NetworkVisualiserRender {
         tess.startDrawing(GL11.GL_QUADS);
 
         for (VNode node : vNodeSet) {
+            // Show the normal CRIB node as a proxy node without adding a duplicate server-side node.
+            boolean nodePartOfProxyLink = mode == VisualisationModes.PROXY && isNodePartOfProxyLink(node);
+
             switch (mode) {
-                case NODES, NONUM -> {
+                case NODES, NONUM, NODES_ONE_CHANNEL -> {
                     if (node.flags.contains(VNodeFlags.PROXY)) continue;
                 }
 
-                case CHANNELS, P2P -> {
+                case CHANNELS, ONE_CHANNEL, P2P -> {
                     continue;
                 }
 
                 case PROXY -> {
-                    if (!node.flags.contains(VNodeFlags.PROXY)) continue;
+                    if (!node.flags.contains(VNodeFlags.PROXY) && !nodePartOfProxyLink) continue;
                 }
 
                 default -> {}
             }
 
             final int color;
-            if (node.flags.contains(VNodeFlags.MISSING)) color = GuiColors.NetworkVisualiserNodeMissing.getColor();
+            if (node.flags.contains(VNodeFlags.PROXY) || nodePartOfProxyLink)
+                color = GuiColors.NetworkVisualiserNodeProxy.getColor();
+            else if (node.flags.contains(VNodeFlags.MISSING)) color = GuiColors.NetworkVisualiserNodeMissing.getColor();
             else if (node.flags.contains(VNodeFlags.DENSE)) color = GuiColors.NetworkVisualiserNodeDense.getColor();
-            else if (node.flags.contains(VNodeFlags.PROXY)) color = GuiColors.NetworkVisualiserNodeProxy.getColor();
             else color = GuiColors.NetworkVisualiserNodeDefault.getColor();
 
             final int alpha = (color >> 24) & 0xFF;
@@ -286,6 +299,16 @@ public class NetworkVisualiserRender {
         tess.draw();
     }
 
+    private static boolean isNodePartOfProxyLink(VNode node) {
+        for (VLink link : vLinkSet) {
+            if (link.flags.contains(VLinkFlags.PROXY) && (link.node1 == node || link.node2 == node)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void renderLinks(Set<VLink> links, float width) {
         GL11.glLineWidth(width);
         Tessellator tess = Tessellator.instance;
@@ -299,6 +322,10 @@ public class NetworkVisualiserRender {
 
                 case CHANNELS, NONUM -> {
                     if (link.flags.contains(VLinkFlags.PROXY)) continue;
+                }
+
+                case NODES_ONE_CHANNEL, ONE_CHANNEL -> {
+                    if (!isNetworkPosPartOfLink(link) || isLinkBetweenAdjacentBlocks(link)) continue;
                 }
 
                 case P2P -> {
@@ -331,6 +358,24 @@ public class NetworkVisualiserRender {
 
         }
         tess.draw();
+    }
+
+    private static boolean isNetworkPosPartOfLink(VLink link) {
+        return isNodeAtNetworkPos(link.node1) || isNodeAtNetworkPos(link.node2);
+    }
+
+    private static boolean isNodeAtNetworkPos(VNode node) {
+        return visualiserPos != null && node.x == visualiserPos.x
+                && node.y == visualiserPos.y
+                && node.z == visualiserPos.z;
+    }
+
+    private static boolean isLinkBetweenAdjacentBlocks(VLink link) {
+        int dx = Math.abs(link.node1.x - link.node2.x);
+        int dy = Math.abs(link.node1.y - link.node2.y);
+        int dz = Math.abs(link.node1.z - link.node2.z);
+
+        return dx + dy + dz == 1;
     }
 
     public void renderFloatingText(String text, Double x, Double y, Double z, int color) {
