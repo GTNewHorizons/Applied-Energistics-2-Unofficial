@@ -780,6 +780,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     protected void uploadSettings(@NotNull SettingsFrom from, @NotNull NBTTagCompound compound) {
         super.uploadSettings(from, compound);
         this.reportingValue = compound.getLong("reportingValue");
+        this.typeFilters.readFromNBT(compound);
         this.configureWatchers();
     }
 
@@ -787,6 +788,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     protected NBTTagCompound downloadSettings(SettingsFrom from) {
         NBTTagCompound nbt = super.downloadSettings(from);
         nbt.setLong("reportingValue", this.reportingValue);
+        this.typeFilters.writeToNBT(nbt);
         return nbt;
     }
 

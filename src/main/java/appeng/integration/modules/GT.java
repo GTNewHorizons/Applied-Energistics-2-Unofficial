@@ -23,7 +23,7 @@ public class GT implements IIntegrationModule, IGT {
     public GT() throws Throwable {
         IntegrationHelper.testClassExistence(this, gregtech.api.interfaces.tileentity.IEnergyConnected.class);
         String ver = Loader.instance().getIndexedModList().get("gregtech").getVersion();
-        if (!ver.equals("MC1710")) throw new ModNotInstalled("gregtech");
+        if (ver.contains("GT6-MC1710")) throw new ModNotInstalled("gregtech");
     }
 
     @Override
