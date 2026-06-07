@@ -10,9 +10,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -25,6 +28,7 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.hash.Fnv1a32;
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.Settings;
@@ -48,6 +52,9 @@ import gregtech.common.tileentities.machines.MTEHatchCraftingInputSlave;
 
 public class ToolNetworkVisualiser extends AEBaseItem {
 
+    private static final int UPDATE_INTERVAL_TICKS = 100;
+    private static final Map<EntityPlayerMP, VisualisationUpdate> LAST_UPDATES = new WeakHashMap<>();
+
     public ToolNetworkVisualiser() {
         this.setFeature(EnumSet.of(AEFeature.Core));
         this.setMaxStackSize(1);
@@ -70,7 +77,28 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             this.x = x;
             this.y = y;
             this.z = z;
-            this.flags = flags;
+            this.flags = flags.clone();
+        }
+
+        public boolean isAtSameLocation(VNode other) {
+            return this.x == other.x && this.y == other.y && this.z == other.z;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof VNode other)) return false;
+            return this.x == other.x && this.y == other.y && this.z == other.z && this.flags.equals(other.flags);
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = Fnv1a32.initialState();
+            hash = Fnv1a32.hashStep(hash, this.x);
+            hash = Fnv1a32.hashStep(hash, this.y);
+            hash = Fnv1a32.hashStep(hash, this.z);
+            hash = Fnv1a32.hashStep(hash, this.flags.hashCode());
+            return hash;
         }
     }
 
@@ -91,7 +119,34 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             this.node1 = node1;
             this.node2 = node2;
             this.channels = channels;
-            this.flags = flags;
+            this.flags = flags.clone();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof VLink other)) return false;
+            boolean sameDir = this.node1.equals(other.node1) && this.node2.equals(other.node2);
+            boolean oppositeDir = this.node1.equals(other.node2) && this.node2.equals(other.node1);
+            return this.channels == other.channels && this.flags.equals(other.flags) && (sameDir || oppositeDir);
+        }
+
+        @Override
+        public int hashCode() {
+            int nodeHash1 = this.node1.hashCode();
+            int nodeHash2 = this.node2.hashCode();
+            if (nodeHash1 > nodeHash2) {
+                int tmp = nodeHash1;
+                nodeHash1 = nodeHash2;
+                nodeHash2 = tmp;
+            }
+
+            int hash = Fnv1a32.initialState();
+            hash = Fnv1a32.hashStep(hash, this.channels);
+            hash = Fnv1a32.hashStep(hash, this.flags.hashCode());
+            hash = Fnv1a32.hashStep(hash, nodeHash1);
+            hash = Fnv1a32.hashStep(hash, nodeHash2);
+            return hash;
         }
     }
 
@@ -100,8 +155,31 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         NODES,
         CHANNELS,
         NONUM,
+        NODES_ONE_CHANNEL,
+        ONE_CHANNEL,
         P2P,
         PROXY
+    }
+
+    private static class VisualisationUpdate {
+
+        private final int x;
+        private final int y;
+        private final int z;
+        private final int dim;
+        private final long tick;
+
+        private VisualisationUpdate(DimensionalCoord pos, long tick) {
+            this.x = pos.x;
+            this.y = pos.y;
+            this.z = pos.z;
+            this.dim = pos.getDimension();
+            this.tick = tick;
+        }
+
+        private boolean matches(DimensionalCoord pos) {
+            return this.x == pos.x && this.y == pos.y && this.z == pos.z && this.dim == pos.getDimension();
+        }
     }
 
     @Override
@@ -168,6 +246,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
         DimensionalCoord dc = DimensionalCoord.readFromNBT(is.getTagCompound());
         if (w.provider.dimensionId != dc.getDimension()) return;
+        if (!needToUpdate(player, dc)) return;
 
         ArrayList<VLink> vLinks = new ArrayList<>();
         Map<IGridNode, VNode> vnList = new HashMap<>();
@@ -179,7 +258,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             if (gn != null) {
                 IGrid g = gn.getGrid();
                 if (g != null) {
-                    ArrayList<IGridConnection> gcList = new ArrayList<>();
+                    Set<IGridConnection> gcList = new HashSet<>();
                     for (IGridNode igNode : g.getNodes()) {
                         IGridBlock igb = igNode.getGridBlock();
                         if (igb.isWorldAccessible() && igb.getLocation().isInWorld(w)) {
@@ -193,12 +272,12 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                                 flags.add(VNodeFlags.DENSE);
                             }
 
-                            vnList.put(igNode, new VNode(loc.x, loc.y, loc.z, flags));
+                            VNode node = new VNode(loc.x, loc.y, loc.z, flags);
+                            vnList.put(igNode, node);
 
                             if (Platform.isGTLoaded && igb.getMachine() instanceof MTEHatchCraftingInputME crib) {
                                 EnumSet<VNodeFlags> flagsNode = EnumSet.of(VNodeFlags.PROXY);
                                 EnumSet<VLinkFlags> flagsLink = EnumSet.of(VLinkFlags.PROXY);
-                                final VNode node = new VNode(loc.x, loc.y, loc.z, flagsNode);
                                 for (MTEHatchCraftingInputSlave s : crib.getProxyHatches()) {
                                     final IGregTechTileEntity sb = s.getBaseMetaTileEntity();
                                     final VNode sbNode = new VNode(
@@ -209,8 +288,6 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                                     vLinks.add(new VLink(node, sbNode, 0, flagsLink));
                                     vNodeList.add(sbNode);
                                 }
-
-                                vNodeList.add(node);
                             }
                         }
                     }
@@ -218,7 +295,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                     for (IGridConnection c : gcList) {
                         VNode n1 = vnList.get(c.a());
                         VNode n2 = vnList.get(c.b());
-                        if (n1 != null && n2 != null && n1 != n2) {
+                        if (n1 != null && n2 != null && !n1.isAtSameLocation(n2)) {
                             EnumSet<VLinkFlags> flags = EnumSet.noneOf(VLinkFlags.class);
                             if (c.a().hasFlag(GridFlags.DENSE_CAPACITY) && c.b().hasFlag(GridFlags.DENSE_CAPACITY)) {
                                 flags.add(VLinkFlags.DENSE);
@@ -238,6 +315,17 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             vNodeList.addAll(vnList.values());
             NetworkHandler.instance.sendTo(new PacketNetworkVisualiserData(vNodeList, vLinks), player);
         } catch (IOException ignored) {}
+    }
+
+    private static boolean needToUpdate(EntityPlayerMP player, DimensionalCoord pos) {
+        long now = player.worldObj.getTotalWorldTime();
+        VisualisationUpdate last = LAST_UPDATES.get(player);
+        if (last != null && last.matches(pos) && last.tick >= now - UPDATE_INTERVAL_TICKS) {
+            return false;
+        }
+
+        LAST_UPDATES.put(player, new VisualisationUpdate(pos, now));
+        return true;
     }
 
     public static IConfigManager getConfigManager(final ItemStack target) {

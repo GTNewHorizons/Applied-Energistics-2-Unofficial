@@ -1,14 +1,12 @@
 package appeng.client.render.previewBlocks;
 
-import static appeng.util.Platform.getEyeOffset;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
@@ -20,8 +18,6 @@ import appeng.api.parts.IPartItem;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.parts.networking.PartCable;
-import appeng.util.LookDirection;
-import appeng.util.Platform;
 
 public class ViewHelper {
 
@@ -201,29 +197,8 @@ public class ViewHelper {
                         .findFirst().map(preview -> (AbstractRendererPreview) preview));
     }
 
-    public static void updatePreview(EntityPlayer player) {
-        MovingObjectPosition mopBlock = getTargetedBlock(player);
-
-        if (mopBlock == null || mopBlock.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
-            isActive = false;
-            return;
-        }
-
-        final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
-        Block block = getWorld().getBlock(mopBlock.blockX, mopBlock.blockY, mopBlock.blockZ);
-
-        if (block == null) {
-            isActive = false;
-            return;
-        }
-
-        final MovingObjectPosition mop = block.collisionRayTrace(
-                player.worldObj,
-                mopBlock.blockX,
-                mopBlock.blockY,
-                mopBlock.blockZ,
-                dir.getA(),
-                dir.getB());
+    public static void updatePreview() {
+        MovingObjectPosition mop = Minecraft.getMinecraft().objectMouseOver;
 
         if (mop == null || mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
             isActive = false;
@@ -247,8 +222,5 @@ public class ViewHelper {
         isActive = true;
     }
 
-    private static MovingObjectPosition getTargetedBlock(EntityPlayer player) {
-        return Platform.rayTrace(player, true, false);
-    }
     // endregion
 }
