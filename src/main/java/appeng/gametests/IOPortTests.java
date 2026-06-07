@@ -252,7 +252,7 @@ public class IOPortTests {
         }
 
         helper.startSequence().thenIdle(4).thenExecute(() -> {
-            helper.assertEquals(0, countFilledSlots(ioport, 0, 5), "Input slots should contain 1 cell");
+            helper.assertEquals(1, countFilledSlots(ioport, 0, 6), "Input slots should contain 1 cell");
             helper.assertEquals(5, countFilledSlots(ioport, 6, 12), "Output slots should contain 5 cells");
         }).thenIdle(1).thenExecute(() -> {
             for (int slot = 0; slot < 6; slot++) {
