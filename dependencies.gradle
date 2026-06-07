@@ -52,9 +52,10 @@ dependencies {
         exclude module: "waila"
     }
 
+    devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.4.1:dev")
+
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.28:dev') {transitive = false}
-
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:DuraDisplay:1.4.2:dev")
 	runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH:dev')
 	runtimeOnlyNonPublishable('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev') {
