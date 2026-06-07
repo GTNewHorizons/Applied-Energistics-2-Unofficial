@@ -133,7 +133,7 @@ public class GuiSecurity extends GuiMEMonitorable {
                 GuiText.SecurityCardEditor.getLocal(),
                 8,
                 this.ySize - 96 + 1 - this.getReservedSpace(),
-                GuiColors.SecurityCardEditorTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

@@ -33,12 +33,12 @@ public class GuiSkyChest extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.SkyChest.getLocal()),
                 8,
                 8,
-                GuiColors.SkyChestTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 2,
-                GuiColors.SkyChestInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
     }
 
     @Override

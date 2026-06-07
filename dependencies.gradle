@@ -5,7 +5,7 @@ dependencies {
     implementation("com.github.GTNewHorizons:GTNHLib:0.10.2:dev")
     implementation('curse.maven:cofh-core-69162:2388751')
 
-	  compileOnlyApi('com.github.GTNewHorizons:Angelica:2.1.25:dev')
+    compileOnlyApi('com.github.GTNewHorizons:Angelica:2.1.25:dev')
     compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.14:dev') {transitive = false}
     compileOnly("com.github.GTNewHorizons:Postea:1.2.5:dev")
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.22:dev') {transitive = false}
@@ -36,31 +36,9 @@ dependencies {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
     compileOnly('curse.maven:rotarycraft-235596:4721191')
-
     compileOnly('com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH:dev')
-
     compileOnly("org.jetbrains:annotations:26.0.2")
-
     compileOnly("com.github.GTNewHorizons:Postea:1.2.5:dev")
-
-    //Uncomment to add thermal expansion + foundation for testing
-    //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
-    //runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
-
-    //Uncomment to test with GT5 machines
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.532:dev') {transitive = false} 
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:StructureLib:1.4.34:dev') {transitive = false}
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ModularUI:1.3.4:dev') {transitive = false}
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ModularUI2:2.3.65-1.7.10:dev') {transitive = false}
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:NotEnoughIds:2.1.11:dev') {transitive = false}
-    //runtimeOnlyNonPublishable("com.github.GTNewHorizons:TinkersConstruct:1.14.73-GTNH:dev")
-    //runtimeOnlyNonPublishable('net.industrial-craft:industrialcraft-2:2.2.828-experimental:dev') {transitive = false}
-
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.28:dev') {transitive = false}
-
-    //Uncomment if you need to test chunkloading and warps/homes
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.32:dev')
 
     testImplementation('junit:junit:4.12')
     functionalTestImplementation(platform('org.junit:junit-bom:5.9.2'))
@@ -77,6 +55,7 @@ dependencies {
     devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.3.1:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.28:dev') {transitive = false}
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:DuraDisplay:1.4.2:dev")
 	runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.19-GTNH:dev')
 	runtimeOnlyNonPublishable('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev') {
@@ -88,7 +67,21 @@ dependencies {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "waila"
     }
+
+    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.532:dev') {
+    //    exclude module: "Applied-Energistics-2-Unofficial"
+    //    exclude module: "Hodgepodge"
+    //    exclude module: "waila"
+    //}
+
     //runtimeOnlyNonPublishable("com.github.GTNewHorizons:BloodMagic:1.9.3")  { transitive = false }
+
+    //Uncomment to add thermal expansion + foundation for testing
+    //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
+    //runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
+
+    //Uncomment if you need to test chunkloading and warps/homes
+    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.32:dev')
 }
 
 // deps may transitively add Baubles, so we replace it

@@ -82,12 +82,12 @@ public class GuiCondenser extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.Condenser.getLocal()),
                 8,
                 6,
-                GuiColors.CondenserTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.CondenserInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         this.mode.set(this.cvc.getOutput());
         this.mode.setFillVar(String.valueOf(this.cvc.getOutput().requiredPower));

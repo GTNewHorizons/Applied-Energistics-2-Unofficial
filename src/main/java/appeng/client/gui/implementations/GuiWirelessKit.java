@@ -595,17 +595,17 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     GuiText.GuiWirelessKitColor.getLocal(this.customColorName),
                     descPosX,
                     posY * 3 + 28,
-                    GuiColors.CraftingCPUStored.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             fontRendererObj.drawString(
                     GuiText.GuiWirelessKitSelfPos.getLocal(data.cord.getGuiTextShort()),
                     descPosX,
                     posY * 3 + 38,
-                    GuiColors.CraftingCPUStored.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             if (data.isConnected) fontRendererObj.drawString(
                     GuiText.GuiWirelessKitTargetPos.getLocal(data.targets.get(0).getGuiTextShort()),
                     descPosX,
                     posY * 3 + 48,
-                    GuiColors.CraftingCPUStored.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             GL11.glPopMatrix();
 
             int indicatorColor = GuiColors.WirelessKitGood.getColor();
@@ -807,13 +807,13 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                         GuiText.GuiWirelessKitColor.getLocal(this.customColorName),
                         descPosX,
                         posY * 3 + 28,
-                        GuiColors.CraftingCPUStored.getColor());
+                        GuiColors.GuiTextColorGray.getColor());
             }
             fontRendererObj.drawString(
                     GuiText.GuiWirelessKitChannelsUsage.getLocal(channels),
                     descPosX,
                     posY * 3 + 38,
-                    GuiColors.CraftingCPUStored.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             GL11.glPopMatrix();
 
             int indicatorColor = GuiColors.WirelessKitGood.getColor();
@@ -945,7 +945,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     GuiText.GuiWirelessKitNetwork.getLocal(this.customNetworkName),
                     descPosX,
                     posY * 3 + 18,
-                    GuiColors.CraftingCPUStored.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             GL11.glPopMatrix();
         }
 
@@ -958,7 +958,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     str,
                     (xo + 7) * 4 - (fontRendererObj.getStringWidth(str) / 2),
                     posY * 4 + 66,
-                    GuiColors.WirelessKitIndicatorText.getColor());
+                    GuiColors.GuiTextColorGray.getColor());
             GL11.glPopMatrix();
 
             final int localMouseX = mouseX - guiLeft;

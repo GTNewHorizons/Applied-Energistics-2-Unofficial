@@ -228,22 +228,43 @@ public class PartPatternRepeater extends PartBasicState
         this.provider = data.getBoolean("provider");
     }
 
-    @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
-        if (this.targetCraftingGrid != null) {
-            for (ICraftingMedium medium : this.targetCraftingGrid.getMediums(patternDetails)) {
+        return pushPatternToRepeater(patternDetails, table, new ArrayList<>());
+    }
+
+    public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final InventoryCrafting table,
+            List<CraftingGridCache> visitedRepeaters) {
+        if (this.targetCraftingGrid == null) return false;
+
+        // Keeps track of the nets of pattern repeaters that are called recursively to ensure no loops occur
+        visitedRepeaters.add(this.targetCraftingGrid);
+        List<ICraftingMedium> craftingMediumList = this.targetCraftingGrid.getMediums(patternDetails);
+        for (ICraftingMedium medium : craftingMediumList) {
+            // recursively call this method on the repeater if it is one,
+            // if not, add an interception to the original caller's monitors for whatever is expected,
+            // so items are passed all the way up
+            if (medium instanceof PartPatternRepeater pushRepeater) {
+                if (pushRepeater.targetCraftingGrid != null
+                        && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid)
+                        && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters)) {
+                    for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
+                        waitingStacks.add(outputStack.copy());
+                    }
+                    this.addInterception();
+
+                    return true;
+                }
+            } else {
                 if (medium.pushPattern(patternDetails, table)) {
                     for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-                        this.waitingStacks.add(outputStack.copy());
+                        waitingStacks.add(outputStack.copy());
                     }
-
                     this.addInterception();
 
                     return true;
                 }
             }
         }
-
         return false;
     }
 
@@ -351,15 +372,19 @@ public class PartPatternRepeater extends PartBasicState
         return false;
     }
 
+    private boolean injecting = false;
+
     @Override
     public boolean canAccept(IAEStack<?> stack) {
-        return this.waitingStacks.findPrecise(stack) != null;
+        return !injecting && this.waitingStacks.findPrecise(stack) != null;
     }
 
     @Override
     @SuppressWarnings({ "unchecked" })
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
         if (input == null) return null;
+        if (injecting) return input;
+        injecting = true;
 
         final IAEStack<?> waitingStack = this.waitingStacks.findPrecise(input);
 
@@ -387,6 +412,7 @@ public class PartPatternRepeater extends PartBasicState
 
         if (type == Actionable.MODULATE) waitingStack.setStackSize(waitingSize - tempStackSize + reducedSize);
 
+        injecting = false;
         return returnSize > 0 ? input.copy().setStackSize(returnSize) : null;
     }
 

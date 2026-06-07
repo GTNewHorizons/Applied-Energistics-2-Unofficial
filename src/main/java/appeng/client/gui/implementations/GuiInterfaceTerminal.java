@@ -372,12 +372,12 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 getGuiDisplayName(GuiText.InterfaceTerminal.getLocal()),
                 8,
                 6,
-                GuiColors.InterfaceTerminalTitle.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 GuiInterfaceTerminal.VIEW_LEFT + 2,
                 this.ySize - 96,
-                GuiColors.InterfaceTerminalInventory.getColor());
+                GuiColors.GuiTextColorGray.getColor());
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
         }
@@ -718,7 +718,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
      */
     private int drawSection(InterfaceSection section, int viewY, int relMouseX, int relMouseY) {
         int renderY = 0;
-        final int fontColor = GuiColors.InterfaceTerminalInventory.getColor();
+        final int fontColor = GuiColors.GuiTextColorGray.getColor();
 
         ItemStack sectionIcon = null;
         for (InterfaceTerminalEntry e : section.entries) {

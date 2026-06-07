@@ -46,7 +46,7 @@ public class BlockRendererPreviewEvent {
 
             ViewHelper.setPlayer(player);
             ViewHelper.setCachedItemStack(currentItem);
-            ViewHelper.updatePreview(player);
+            ViewHelper.updatePreview();
         }
     }
 

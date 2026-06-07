@@ -133,7 +133,7 @@ public class GuiColorSelect extends GuiScreen {
         final int titleX = (this.width - titleWidth) / 2;
         final int titleY = this.guiTop + TITLE_OFFSET_Y;
 
-        this.fontRendererObj.drawString(title, titleX, titleY, GuiColors.ColorSelectTitle.getColor());
+        this.fontRendererObj.drawString(title, titleX, titleY, GuiColors.GuiTextColorGray.getColor());
     }
 
     private void drawTooltips(int mouseX, int mouseY) {

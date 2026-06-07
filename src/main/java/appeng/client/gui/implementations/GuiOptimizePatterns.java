@@ -158,18 +158,18 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
 
         this.fontRendererObj
-                .drawString(GuiText.PatternOptimizer.getLocal(), 8, 7, GuiColors.CraftConfirmCraftingPlan.getColor());
+                .drawString(GuiText.PatternOptimizer.getLocal(), 8, 7, GuiColors.GuiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.StepsPerCraft.getLocal() + ":",
                 6,
                 (ySize - 68) + (20 / 2) - (this.fontRendererObj.FONT_HEIGHT / 2),
-                GuiColors.CraftConfirmSimulation.getColor());
+                GuiColors.GuiTextColorGray.getColor());
 
         String dsp = GuiText.PatternsAffected.getLocal() + ": " + multiplierMap.size();
 
         final int offset = (219 - this.fontRendererObj.getStringWidth(dsp)) / 2;
-        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.CraftConfirmSimulation.getColor());
+        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.GuiTextColorGray.getColor());
 
         final int viewStart = this.getScrollBar().getCurrentScroll() * 3;
         final int viewEnd = viewStart + 3 * this.rows;
@@ -212,7 +212,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.CraftConfirmMissing.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -231,7 +231,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.CraftConfirmMissing.getColor());
+                            GuiColors.GuiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
