@@ -141,6 +141,11 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         }
     }
 
+    public static void clearCache() {
+        ADAPTOR_CACHE.clear();
+        ADAPTOR_CACHE_REFS.clear();
+    }
+
     /**
      * Returns {@code true} iff the cache contains an entry for the given arguments and the stored reference matches the
      * supplied {@code te}.
