@@ -283,7 +283,8 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                                 ToolMemoryCard.insertUpgrades(data, player, up);
                             }
 
-                            // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore filters.
+                            // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore
+                            // filters.
                             t.uploadSettings(SettingsFrom.MEMORY_CARD, data);
 
                             memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
