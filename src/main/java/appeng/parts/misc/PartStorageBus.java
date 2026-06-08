@@ -636,7 +636,10 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                         this.handler.setSticky(true);
                     }
 
-                    if (this.oreFilterString.isEmpty()) {
+                    final boolean useOreFilter = this.getInstalledUpgrades(Upgrades.ORE_FILTER) > 0
+                            && !this.oreFilterString.isEmpty();
+
+                    if (!useOreFilter) {
                         final IItemList priorityList = getItemList();
 
                         final int slotsToUse = 18 + this.getInstalledUpgrades(Upgrades.CAPACITY) * 9;
