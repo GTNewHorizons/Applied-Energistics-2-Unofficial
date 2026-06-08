@@ -277,12 +277,14 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                         final NBTTagCompound data = memoryCard.getData(is);
                         if (this.getUnlocalizedName().equals(name)) {
                             final AEBaseTile t = this.getTileEntity(w, x, y, z);
-                            t.uploadSettings(SettingsFrom.MEMORY_CARD, data);
 
                             if (t instanceof IUpgradeableHost iuh && data.hasKey("upgradesList")) {
                                 UpgradeInventory up = (UpgradeInventory) iuh.getInventoryByName("upgrades");
                                 ToolMemoryCard.insertUpgrades(data, player, up);
                             }
+
+                            // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore filters.
+                            t.uploadSettings(SettingsFrom.MEMORY_CARD, data);
 
                             memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
                         } else {

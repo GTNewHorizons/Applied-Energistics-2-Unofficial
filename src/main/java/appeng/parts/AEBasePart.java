@@ -442,12 +442,13 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 final String storedName = memoryCard.getSettingsName(memCardIS);
                 final NBTTagCompound data = memoryCard.getData(memCardIS);
                 if (name.equals(storedName)) {
-                    this.uploadSettings(SettingsFrom.MEMORY_CARD, data);
-
                     if (data.hasKey("upgradesList")) {
                         UpgradeInventory up = (UpgradeInventory) getInventoryByName("upgrades");
                         ToolMemoryCard.insertUpgrades(data, player, up);
                     }
+
+                    // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore filters.
+                    this.uploadSettings(SettingsFrom.MEMORY_CARD, data);
 
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
                 } else {
