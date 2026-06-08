@@ -40,6 +40,7 @@ import appeng.services.export.ExportConfig;
 import appeng.services.export.ExportProcess;
 import appeng.services.export.ForgeExportConfig;
 import appeng.util.InvTweakSortingModule;
+import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.ThEConvertor;
 import appeng.util.ae2fcConvertor;
@@ -254,6 +255,7 @@ public final class AppEng {
         TickHandler.INSTANCE.shutdown();
         CraftingNotificationManager.clear();
         MinecraftForge.EVENT_BUS.post(new LocatableEventAnnounce(null, LocatableEvent.RemoveAll));
+        InventoryAdaptor.clearCache();
     }
 
     @EventHandler
