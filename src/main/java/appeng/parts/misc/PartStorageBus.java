@@ -783,7 +783,9 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     }
 
     @Override
-    public void saveAEStackInv() {}
+    public void saveAEStackInv() {
+        this.saveChanges();
+    }
 
     @Override
     public IAEStackInventory getAEInventoryByName(StorageName name) {
