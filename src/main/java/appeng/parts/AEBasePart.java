@@ -29,6 +29,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -59,6 +60,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomNameObject;
+import appeng.helpers.IOreFilterable;
 import appeng.helpers.IPriorityHost;
 import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolPriorityCard;
@@ -321,7 +323,14 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
      * @param from     source of settings
      * @param compound compound of source
      */
-    protected void uploadSettings(@NotNull final SettingsFrom from, @NotNull final NBTTagCompound compound) {
+    public void uploadSettings(@NotNull final SettingsFrom from, @NotNull final NBTTagCompound compound) {
+        if (compound.hasKey("display", NBT.TAG_COMPOUND)) {
+            NBTTagCompound display = compound.getCompoundTag("display");
+            if (display.hasKey("Name", NBT.TAG_STRING)) {
+                this.setCustomName(display.getString("Name"));
+            }
+        }
+
         final IConfigManager cm = this.getConfigManager();
         if (cm != null) {
             cm.readFromNBT(compound);
@@ -333,7 +342,9 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
         if (this instanceof IIAEStackInventory iiaeStackInventory) {
             IAEStackInventory inv = iiaeStackInventory.getAEInventoryByName(StorageName.CONFIG);
-            inv.readFromNBT(compound, "config");
+            if (inv != null) {
+                inv.readFromNBT(compound, "config");
+            }
         } else {
             final IInventory inv = this.getInventoryByName("config");
             if (inv instanceof AppEngInternalAEInventory target) {
@@ -344,6 +355,10 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 }
             }
         }
+
+        if (this instanceof IOreFilterable oreFilterable && compound.hasKey("filter", NBT.TAG_STRING)) {
+            oreFilterable.setFilter(compound.getString("filter"));
+        }
     }
 
     /**
@@ -352,8 +367,15 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
      * @param from source of settings
      * @return compound of source
      */
-    protected NBTTagCompound downloadSettings(final SettingsFrom from) {
+    @NotNull
+    public NBTTagCompound downloadSettings(@NotNull final SettingsFrom from) {
         final NBTTagCompound output = new NBTTagCompound();
+
+        if (this.hasCustomName()) {
+            final NBTTagCompound dsp = new NBTTagCompound();
+            dsp.setString("Name", this.getCustomName());
+            output.setTag("display", dsp);
+        }
 
         final IConfigManager cm = this.getConfigManager();
         if (cm != null) {
@@ -366,12 +388,19 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
         if (this instanceof IIAEStackInventory iiaeStackInventory) {
             IAEStackInventory inv = iiaeStackInventory.getAEInventoryByName(StorageName.CONFIG);
-            inv.writeToNBT(output, "config");
+            if (inv != null) {
+                inv.writeToNBT(output, "config");
+            }
         } else {
             final IInventory inv = this.getInventoryByName("config");
             if (inv instanceof AppEngInternalAEInventory) {
                 ((AppEngInternalAEInventory) inv).writeToNBT(output, "config");
             }
+        }
+
+        if (this instanceof IOreFilterable oreFilterable) {
+            String filter = oreFilterable.getFilter();
+            output.setString("filter", filter == null ? "" : filter);
         }
 
         return output;
