@@ -2068,7 +2068,16 @@ public class Platform {
     }
 
     public static IItemList<IAEStack<?>> readAEStackListNBT(final NBTTagList tag, boolean convert) {
-        final IItemList<IAEStack<?>> out = AEApi.instance().storage().createAEStackList();
+        return readAEStackListNBT(null, tag, convert);
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(final IItemList<IAEStack<?>> out, final NBTTagList tag) {
+        return readAEStackListNBT(out, tag, false);
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(IItemList<IAEStack<?>> out, final NBTTagList tag,
+            boolean convert) {
+        if (out == null) out = AEApi.instance().storage().createAEStackList();
 
         if (tag != null) {
             for (int x = 0; x < tag.tagCount(); x++) {

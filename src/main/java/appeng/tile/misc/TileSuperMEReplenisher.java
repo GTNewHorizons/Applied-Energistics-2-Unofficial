@@ -1,13 +1,9 @@
 package appeng.tile.misc;
 
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -46,14 +42,16 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
 import appeng.util.Platform;
+import appeng.util.item.IAEStackList;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class TileSuperMEReplenisher extends AENetworkTile
         implements IMEInventory<IAEStack<?>>, IIAEStackInventory, IPowerChannelState, IGridTickable {
 
-    private final Map<IAEStackType<?>, IItemList> lists = new IdentityHashMap<>();
-    private final Map<IAEStackType<?>, IItemList> out = new IdentityHashMap<>();
+    private final IAEStackList storage = new IAEStackList(true);
+    private final IAEStackList out = new IAEStackList(true);
     private final IAEStackInventory config = new IAEStackInventory(this, 3 * 9, StorageName.CONFIG) {
 
         @Override
@@ -103,11 +101,6 @@ public class TileSuperMEReplenisher extends AENetworkTile
     public TileSuperMEReplenisher() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
         this.getProxy().setIdlePowerUsage(4.0);
-
-        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            this.lists.put(type, type.createPrimitiveList());
-            this.out.put(type, type.createPrimitiveList());
-        }
     }
 
     @Override
@@ -158,32 +151,9 @@ public class TileSuperMEReplenisher extends AENetworkTile
         this.cells.readFromNBT(data, "cells");
 
         if (data.hasKey("threshold")) this.threshold = data.getDouble("threshold");
-
         if (data.hasKey("tickRate")) this.setTickRate(data.getInteger("tickRate"));
-
-        final NBTTagCompound listTag = data.getCompoundTag("lists");
-        this.lists.forEach((type, list) -> {
-            final IItemList l = type.createPrimitiveList();
-            if (listTag.hasKey(type.getId())) {
-                final NBTTagList tagList = listTag.getTagList(type.getId(), Constants.NBT.TAG_COMPOUND);
-                for (int i = 0; i < tagList.tagCount(); i++) {
-                    l.add(Platform.readStackNBT(tagList.getCompoundTagAt(i)));
-                }
-            }
-            this.lists.put(type, l);
-        });
-
-        final NBTTagCompound outTag = data.getCompoundTag("out");
-        this.out.forEach((type, list) -> {
-            final IItemList l = type.createPrimitiveList();
-            if (outTag.hasKey(type.getId())) {
-                final NBTTagList tagList = outTag.getTagList(type.getId(), Constants.NBT.TAG_COMPOUND);
-                for (int i = 0; i < tagList.tagCount(); i++) {
-                    l.add(Platform.readStackNBT(tagList.getCompoundTagAt(i)));
-                }
-            }
-            this.out.put(type, l);
-        });
+        Platform.readAEStackListNBT(this.storage, data.getTagList("storage", Constants.NBT.TAG_COMPOUND));
+        Platform.readAEStackListNBT(this.out, data.getTagList("out", Constants.NBT.TAG_COMPOUND));
 
         this.countBytes();
         this.countUsedBytes();
@@ -196,28 +166,8 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
         data.setDouble("threshold", this.threshold);
         data.setInteger("tickRate", this.tickRate);
-
-        final NBTTagCompound listsTag = new NBTTagCompound();
-        this.lists.forEach((type, list) -> {
-            final NBTTagList tagList = new NBTTagList();
-            list.forEach(o -> {
-                final NBTTagCompound tag = new NBTTagCompound();
-                tagList.appendTag(Platform.writeStackNBT((IAEStack<?>) o, tag));
-            });
-            listsTag.setTag(type.getId(), tagList);
-        });
-        data.setTag("lists", listsTag);
-
-        final NBTTagCompound outTag = new NBTTagCompound();
-        this.out.forEach((type, list) -> {
-            final NBTTagList tagList = new NBTTagList();
-            list.forEach(o -> {
-                final NBTTagCompound tag = new NBTTagCompound();
-                tagList.appendTag(Platform.writeStackNBT((IAEStack<?>) o, tag));
-            });
-            outTag.setTag(type.getId(), tagList);
-        });
-        data.setTag("out", outTag);
+        data.setTag("storage", Platform.writeAEStackListNBT(this.storage));
+        data.setTag("out", Platform.writeAEStackListNBT(this.out));
 
         return data;
     }
@@ -237,7 +187,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
             final IAEStack<?> config = this.config.getAEStackInSlot(i);
             if (config == null) continue;
             final IAEStackType<?> type = config.getStackType();
-            final IAEStack<?> stored = this.lists.get(type).findPrecise(config);
+            final IAEStack<?> stored = this.storage.findPrecise(config);
 
             final long configSize = config.getStackSize();
             final long storedSize = stored == null ? 0 : stored.getStackSize();
@@ -245,11 +195,11 @@ public class TileSuperMEReplenisher extends AENetworkTile
             if (((double) storedSize / configSize) < this.threshold) {
                 final IAEStack<?> toRequest = config.copy();
                 toRequest.setStackSize(configSize - storedSize);
-                toRequest(toRequest, type, storage);
+                toRequest(toRequest, storage);
             } else if (storedSize > configSize) {
                 final IAEStack<?> toReturn = config.copy();
                 toReturn.setStackSize(storedSize - configSize);
-                toReturn(toReturn, type, storage, this.lists);
+                toReturn(toReturn, storage, this.storage);
             }
         }
 
@@ -286,7 +236,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
                         final long newSize = storedSize - newConfigSize;
                         final IAEStack<?> tempStack = stored.copy();
                         tempStack.setStackSize(newSize);
-                        this.toReturn(tempStack, tempStack.getStackType(), storage, this.lists);
+                        this.toReturn(tempStack, storage, this.storage);
                         return stored.getStackSize() > newConfigSize;
                     }
                 } else {
@@ -294,7 +244,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
                     return false;
                 }
             } else {
-                this.toReturn(currentConfig, currentConfig.getStackType(), storage, this.lists);
+                this.toReturn(currentConfig, storage, this.storage);
                 final IAEStack<?> stored = this.get(currentConfig);
                 return !(stored == null || stored.getStackSize() == 0);
             }
@@ -303,13 +253,13 @@ public class TileSuperMEReplenisher extends AENetworkTile
     }
 
     private IAEStack<?> get(final IAEStack<?> aes) {
-        return this.lists.get(aes.getStackType()).findPrecise(aes);
+        return this.storage.findPrecise(aes);
     }
 
-    private void toRequest(final IAEStack<?> aes, final IAEStackType<?> type, final IStorageGrid storage) {
-        final IMEMonitor monitor = storage.getMEMonitor(type);
+    private void toRequest(final IAEStack<?> aes, final IStorageGrid storage) {
+        final IMEMonitor monitor = storage.getMEMonitor(aes.getStackType());
         if (monitor == null) return;
-        final IAEStack<?> notAllowed = this.injectItems(aes, Actionable.SIMULATE, this.lists);
+        final IAEStack<?> notAllowed = this.injectItems(aes, Actionable.SIMULATE, this.storage);
 
         if (notAllowed != null) {
             final long requestSize = aes.getStackSize();
@@ -318,35 +268,33 @@ public class TileSuperMEReplenisher extends AENetworkTile
         }
 
         final IAEStack<?> extracted = monitor.extractItems(aes, Actionable.MODULATE, this.src);
-        this.injectItems(extracted, Actionable.MODULATE, this.lists);
+        this.injectItems(extracted, Actionable.MODULATE, this.storage);
     }
 
-    private void toReturn(final IAEStack<?> ais, final IAEStackType<?> type, final IStorageGrid storage,
-            final Map<IAEStackType<?>, IItemList> target) {
-        final IMEMonitor monitor = storage.getMEMonitor(type);
+    private void toReturn(final IAEStack<?> aes, final IStorageGrid storage, final IAEStackList target) {
+        final IMEMonitor monitor = storage.getMEMonitor(aes.getStackType());
         if (monitor == null) return;
-        final IAEStack<?> allowed = this.extractItems(ais, Actionable.MODULATE, target);
+        final IAEStack<?> allowed = this.extractItems(aes, Actionable.MODULATE, target);
         if (allowed == null) return;
         final IAEStack<?> notInjected = monitor.injectItems(allowed, Actionable.MODULATE, this.src);
         this.injectItems(notInjected, Actionable.MODULATE, target);
     }
 
-    private void refund(Map<IAEStackType<?>, IItemList> fList) {
+    private void refund(final IAEStackList fList) {
         try {
             final IStorageGrid storage = this.getProxy().getStorage();
-            fList.forEach((stackType, list) -> {
-                final IMEMonitor monitor = storage.getMEMonitor(stackType);
-                if (monitor != null) list.forEach(
-                        listItem -> monitor.injectItems(
-                                this.extractItems((IAEStack<?>) listItem, Actionable.MODULATE, fList),
-                                Actionable.MODULATE,
-                                this.src));
+            fList.forEach(listItem -> {
+                final IMEMonitor monitor = storage.getMEMonitor(listItem.getStackType());
+                if (monitor != null) monitor.injectItems(
+                        this.extractItems(listItem, Actionable.MODULATE, fList),
+                        Actionable.MODULATE,
+                        this.src);
             });
         } catch (final GridAccessException ignored) {}
     }
 
     public void fullRefund() {
-        this.refund(this.lists);
+        this.refund(this.storage);
         this.refund(this.out);
     }
 
@@ -394,8 +342,8 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
     @Override
     public IItemList<IAEStack<?>> getAvailableItems(IItemList<IAEStack<?>> out, int iteration) {
-        final IItemList<?> list = this.lists.get(out.getStackType());
-        list.forEach(out::add);
+        final IAEStackType<?> outStackType = out.getStackType();
+        this.storage.forEach(aes -> { if (aes.getStackType().equals(outStackType)) out.add(aes); });
         return out;
     }
 
@@ -404,7 +352,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
         return this.injectItems(input, type, this.out);
     }
 
-    private IAEStack<?> injectItems(IAEStack<?> input, Actionable type, Map<IAEStackType<?>, IItemList> target) {
+    private IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final IAEStackList target) {
         if (input == null) return null;
 
         final long freeBytes = this.totalBytes - this.usedBytes;
@@ -444,7 +392,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
                     this.usedBytes += needBytes;
                 }
 
-                target.get(stackType).add(input);
+                target.add(input);
                 return null;
             } else {
                 final IAEStack<?> notAllowed = input.copy();
@@ -457,7 +405,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
                     this.unusedCount.put(stackType, 0);
                 }
 
-                target.get(stackType).add(notAllowed);
+                target.add(notAllowed);
                 return notAllowed;
             }
         }
@@ -465,14 +413,14 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
     @Override
     public IAEStack<?> extractItems(IAEStack<?> request, Actionable mode, BaseActionSource src) {
-        return this.extractItems(request, mode, this.lists);
+        return this.extractItems(request, mode, this.storage);
     }
 
-    private IAEStack<?> extractItems(IAEStack<?> request, Actionable mode, Map<IAEStackType<?>, IItemList> target) {
+    private IAEStack<?> extractItems(final IAEStack<?> request, final Actionable mode, final IAEStackList target) {
         if (request == null) return null;
 
         final IAEStackType<?> stackType = request.getStackType();
-        final IAEStack<?> stack = target.get(stackType).findPrecise(request);
+        final IAEStack<?> stack = target.findPrecise(request);
         if (stack == null) return null;
 
         final long stackSize = stack.getStackSize();
@@ -517,18 +465,24 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
     private void countUsedBytes() {
         this.usedBytes = 0;
-        this.lists.forEach((stackType, list) -> {
-            final int typeWeight = stackType.getAmountPerByte();
-            AtomicLong unusedCount = new AtomicLong();
-            list.forEach(listItem -> {
-                final long stackSize = ((IAEStack<?>) listItem).getStackSize();
-                this.usedBytes += stackSize / typeWeight;
-                unusedCount.addAndGet(stackSize % typeWeight);
-            });
 
-            this.unusedCount.put(stackType, (int) unusedCount.get() % typeWeight);
-            this.usedBytes += (long) Math.ceil((double) unusedCount.get() / typeWeight);
+        final Object2DoubleOpenHashMap<IAEStackType<?>> unusedCount = new Object2DoubleOpenHashMap<>();
+        this.storage.forEach(aes -> {
+            final IAEStackType<?> stackType = aes.getStackType();
+            unusedCount.put(stackType, unusedCount.getOrDefault(stackType, 0) + aes.getStackSize());
         });
+
+        this.out.forEach(aes -> {
+            final IAEStackType<?> stackType = aes.getStackType();
+            unusedCount.put(stackType, unusedCount.getOrDefault(stackType, 0) + aes.getStackSize());
+        });
+
+        for (IAEStackType<?> stackType : AEStackTypeRegistry.getAllTypes()) {
+            final int typeWeight = stackType.getAmountPerByte();
+            final double count = unusedCount.getOrDefault(stackType, 0);
+            this.unusedCount.put(stackType, (int) count % typeWeight);
+            this.usedBytes += (long) Math.ceil(count / typeWeight);
+        }
     }
 
     private void countBytes() {
@@ -557,17 +511,17 @@ public class TileSuperMEReplenisher extends AENetworkTile
         this.zeroVoid(drops);
     }
 
-    private void zeroVoid(Map<IAEStackType<?>, IItemList> fList, final List<ItemStack> drops) {
+    private void zeroVoid(final IAEStackList fList, final List<ItemStack> drops) {
         final ItemStack container = AEApi.instance().definitions().items().itemMEStackPacket().maybeStack(1).get();
-        fList.forEach((stackType, list) -> list.forEach(listItem -> {
+        fList.forEach(listItem -> {
             final ItemStack is = container.copy();
-            Platform.writeStackNBT((IAEStack<?>) listItem, ItemStackNBT.get(is));
+            Platform.writeStackNBT(listItem, ItemStackNBT.get(is));
             drops.add(is);
-        }));
+        });
     }
 
     public void zeroVoid(final List<ItemStack> drops) {
-        this.zeroVoid(this.lists, drops);
+        this.zeroVoid(this.storage, drops);
         this.zeroVoid(this.out, drops);
     }
 
@@ -588,7 +542,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
     }
 
     public ContainerSuperMEReplenisher.Stored getStorage() {
-        return new ContainerSuperMEReplenisher.Stored(this.lists);
+        return new ContainerSuperMEReplenisher.Stored(this.storage);
     }
 
     public AppEngInternalInventory getCellInventory() {

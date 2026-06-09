@@ -62,8 +62,7 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
             final IAEStack<?> config = slot.getAEStack();
             if (config != null) {
                 final IAEStackType<?> type = config.getStackType();
-                final IAEStack<?> stored = this.containerSuperMEReplenisher.storedData.get().lits.get(type)
-                        .findPrecise(config);
+                final IAEStack<?> stored = this.containerSuperMEReplenisher.storedData.get().list.findPrecise(config);
                 final long storedSize = stored == null ? 0 : stored.getStackSize();
 
                 this.fontRendererObj.drawString(

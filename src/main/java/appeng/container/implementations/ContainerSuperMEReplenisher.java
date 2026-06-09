@@ -2,8 +2,6 @@ package appeng.container.implementations;
 
 import static appeng.util.Platform.isServer;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,10 +10,7 @@ import net.minecraft.item.ItemStack;
 
 import appeng.api.config.SecurityPermissions;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
-import appeng.api.storage.data.IAEStackType;
-import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.IGuiPacketWritable;
 import appeng.container.interfaces.IVirtualSlotSource;
@@ -31,45 +26,33 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TileSuperMEReplenisher;
 import appeng.util.Platform;
-import cpw.mods.fml.common.network.ByteBufUtils;
+import appeng.util.item.IAEStackList;
 import io.netty.buffer.ByteBuf;
 
 public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVirtualSlotSource {
 
     public static class Stored implements IGuiPacketWritable {
 
-        public final Map<IAEStackType<?>, IItemList> lits;
+        public final IAEStackList list;
 
-        public Stored(final Map<IAEStackType<?>, IItemList> list) {
-            this.lits = list;
+        public Stored(final IAEStackList list) {
+            this.list = list;
         }
 
         public Stored(ByteBuf buf) {
-            this.lits = new IdentityHashMap<>();
-            final int listSize = buf.readInt();
-            for (int i = 0; i < listSize; i++) {
-                final IAEStackType<?> type = AEStackTypeRegistry.getType(ByteBufUtils.readUTF8String(buf));
-                final IItemList itemList = type.createPrimitiveList();
-                final int itemListSize = buf.readInt();
-
-                for (int j = 0; j < itemListSize; j++) itemList.add(Platform.readStackByte(buf));
-
-                this.lits.put(type, itemList);
-            }
+            this.list = new IAEStackList(true);
+            final int itemListSize = buf.readInt();
+            for (int i = 0; i < itemListSize; i++) this.list.add(Platform.readStackByte(buf));
         }
 
         public static Stored copy(final Stored s) {
-            return new Stored(s.lits);
+            return new Stored(s.list);
         }
 
         @Override
         public void writeToPacket(ByteBuf buf) {
-            buf.writeInt(this.lits.size());
-            this.lits.forEach((k, v) -> {
-                ByteBufUtils.writeUTF8String(buf, k.getId());
-                buf.writeInt(v.size());
-                v.forEach(o -> Platform.writeStackByte((IAEStack<?>) o, buf));
-            });
+            buf.writeInt(this.list.size());
+            this.list.forEach(o -> Platform.writeStackByte(o, buf));
         }
     }
 

@@ -45,7 +45,7 @@ public class AEExternalHandler implements IExternalStorageHandler {
 
         if (te instanceof ITileStorageMonitorable iface) {
             return iface.getMonitorable(d, src).getMEMonitor(type);
-        } else if (te instanceof TileSuperMEReplenisher tSMR) return new MEPassThrough(tSMR, null);
+        } else if (te instanceof TileSuperMEReplenisher tSMR) return new MEInventoryWrapper(tSMR, type);
 
         return null;
     }
