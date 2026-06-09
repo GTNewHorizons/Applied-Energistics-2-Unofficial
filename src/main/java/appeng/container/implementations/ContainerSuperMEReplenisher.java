@@ -91,8 +91,8 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
         this.tile = te;
 
         final SyncRegistrar sync = this.syncRegistrar();
-        this.totalBytes = sync.longSync("totalBytes");
-        this.usedBytes = sync.longSync("usedBytes");
+        this.totalBytes = sync.longS2C("totalBytes");
+        this.usedBytes = sync.longS2C("usedBytes");
 
         this.tickRate = sync.intSync("tickRate").onClientChange((oldValue, newValue) -> this.needUpdate = true)
                 .onServerChange((oldValue, newValue) -> this.tile.setTickRate(newValue));
