@@ -433,9 +433,9 @@ public class TileSuperMEReplenisher extends AENetworkTile
         if (type == Actionable.SIMULATE) {
             if (freeBytes > needBytes) return null;
             else {
-                final IAEStack<?> allowed = input.copy();
-                allowed.setStackSize((freeBytes * typeWeight) + unusedCount);
-                return allowed;
+                final IAEStack<?> notAllowed = input.copy();
+                notAllowed.setStackSize(input.getStackSize() - ((freeBytes * typeWeight)) + unusedCount);
+                return notAllowed;
             }
         } else {
             if (freeBytes > needBytes) {
@@ -447,18 +447,18 @@ public class TileSuperMEReplenisher extends AENetworkTile
                 target.get(stackType).add(input);
                 return null;
             } else {
-                final IAEStack<?> allowed = input.copy();
+                final IAEStack<?> notAllowed = input.copy();
 
                 if (!this.unlimited) {
                     final long newNeedBytes = freeBytes * typeWeight;
-                    allowed.setStackSize(newNeedBytes + unusedCount);
+                    notAllowed.setStackSize(input.getStackSize() - (newNeedBytes + unusedCount));
 
                     this.usedBytes += newNeedBytes;
                     this.unusedCount.put(stackType, 0);
                 }
 
-                target.get(stackType).add(allowed);
-                return allowed;
+                target.get(stackType).add(notAllowed);
+                return notAllowed;
             }
         }
     }
