@@ -11,19 +11,22 @@
 package appeng.items.tools;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
@@ -36,8 +39,8 @@ import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.NetworkToolViewer;
-import appeng.items.materials.ItemMultiMaterial;
 import appeng.parts.automation.UpgradeInventory;
+import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 
 public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
@@ -164,61 +167,133 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
         }
     }
 
-    public static void insertUpgrades(final NBTTagCompound data, EntityPlayer player, UpgradeInventory up) {
-        NBTTagList tagList = data.getTagList("upgradesList", NBT.TAG_COMPOUND);
-        List<ItemStack> memoryList = new ArrayList<>(Collections.nCopies(tagList.tagCount(), null)); // Preserve order
+    public static void insertUpgrades(final NBTTagCompound data, final EntityPlayer player, final UpgradeInventory up) {
+        if (up == null) {
+            return;
+        }
 
-        for (int i = 0; i < tagList.tagCount(); i++) {
-            if (up.getStackInSlot(i) == null) {
-                ItemStack item = ItemStack.loadItemStackFromNBT(tagList.getCompoundTagAt(i));
-                memoryList.set(i, item);
+        final List<ItemStack> existingUpgrades = takeExistingUpgrades(up);
+
+        try {
+            final NBTTagList tagList = data.getTagList("upgradesList", NBT.TAG_COMPOUND);
+            final int slots = Math.min(tagList.tagCount(), up.getSizeInventory());
+
+            for (int i = 0; i < slots; i++) {
+                final ItemStack requested = ItemStack.loadItemStackFromNBT(tagList.getCompoundTagAt(i));
+                if (requested == null) {
+                    continue;
+                }
+
+                ItemStack resolved = extractUpgrade(existingUpgrades, requested);
+                if (resolved == null) {
+                    resolved = extractUpgradeFromPlayer(player, requested);
+                }
+
+                if (resolved != null) {
+                    up.setInventorySlotContents(i, resolved);
+                }
+            }
+        } finally {
+            for (final ItemStack upgrade : existingUpgrades) {
+                final ItemStack leftOver = insertIntoNetworkTools(player, upgrade);
+                Platform.addToPlayerInvOrDrop(player, leftOver);
+            }
+        }
+    }
+
+    private static List<ItemStack> takeExistingUpgrades(final IInventory upgrades) {
+        final List<ItemStack> existingUpgrades = new ArrayList<>();
+
+        for (int i = 0; i < upgrades.getSizeInventory(); i++) {
+            final ItemStack existing = upgrades.getStackInSlot(i);
+            if (existing == null) {
+                continue;
+            }
+
+            upgrades.setInventorySlotContents(i, null);
+            existingUpgrades.add(existing);
+        }
+
+        return existingUpgrades;
+    }
+
+    @Nullable
+    private static ItemStack insertIntoNetworkTools(final EntityPlayer player, @Nullable ItemStack stack) {
+        for (int i = 0; stack != null && i < player.inventory.getSizeInventory(); i++) {
+            final ItemStack toolStack = player.inventory.getStackInSlot(i);
+            if (toolStack != null && toolStack.getItem() instanceof INetworkToolItem networkTool) {
+                final NetworkToolViewer networkToolInventory = new NetworkToolViewer(
+                        toolStack,
+                        null,
+                        networkTool.getInventorySize());
+                final InventoryAdaptor adaptor = InventoryAdaptor
+                        .getAdaptor(networkToolInventory, ForgeDirection.UNKNOWN);
+                if (adaptor != null) {
+                    stack = adaptor.addItems(stack);
+                }
             }
         }
 
-        if (!memoryList.stream().allMatch(Objects::isNull)) {
-            int resolved = 0;
-            for (int j = 0; j < player.inventory.getSizeInventory(); j++) {
-                ItemStack pi = player.inventory.getStackInSlot(j);
-                if (pi != null) {
-                    if (pi.getItem() instanceof ItemMultiMaterial) {
-                        for (ItemStack is : memoryList) {
-                            if (is != null && is.stackSize > 0 && is.isItemEqual(pi)) {
-                                is.stackSize = 0;
-                                player.inventory.decrStackSize(j, 1);
-                                player.onUpdate();
-                                resolved++;
-                            }
-                        }
+        return stack;
+    }
 
-                        if (resolved == memoryList.size()) break;
-                    } else if (pi.getItem() instanceof INetworkToolItem inti) {
-                        NetworkToolViewer ntv = new NetworkToolViewer(pi, null, inti.getInventorySize());
-                        for (int k = 0; k < ntv.getSizeInventory(); k++) {
-                            ItemStack isv = ntv.getStackInSlot(k);
-                            if (isv != null) {
-                                for (ItemStack is : memoryList) {
-                                    if (is != null && is.stackSize > 0 && is.isItemEqual(isv)) {
-                                        is.stackSize = 0;
-                                        resolved++;
-                                        ntv.decrStackSize(k, 1);
-                                        ntv.markDirty();
-                                    }
-                                }
-
-                                if (resolved == memoryList.size()) break;
-                            }
-                        }
-                    }
-                }
+    @Nullable
+    private static ItemStack extractUpgrade(final List<ItemStack> upgrades, @NotNull final ItemStack requested) {
+        for (int i = 0; i < upgrades.size(); i++) {
+            final ItemStack upgrade = upgrades.get(i);
+            if (isMatchingUpgrade(requested, upgrade)) {
+                upgrades.remove(i);
+                return upgrade;
             }
+        }
 
-            for (int i = 0; i < memoryList.size(); i++) {
-                ItemStack is = memoryList.get(i);
-                if (is != null && is.stackSize == 0) {
-                    is.stackSize = 1;
-                    up.setInventorySlotContents(i, is);
+        return null;
+    }
+
+    @Nullable
+    private static ItemStack extractUpgradeFromPlayer(final EntityPlayer player, @NotNull final ItemStack requested) {
+        for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+            final ItemStack stack = player.inventory.getStackInSlot(i);
+            if (isMatchingUpgrade(requested, stack)) {
+                final ItemStack extracted = player.inventory.decrStackSize(i, 1);
+                player.inventory.markDirty();
+                player.onUpdate();
+                if (extracted != null) {
+                    return extracted;
+                }
+            } else if (stack != null && stack.getItem() instanceof INetworkToolItem networkTool) {
+                final ItemStack extracted = extractUpgradeFromNetworkTool(stack, networkTool, requested);
+                if (extracted != null) {
+                    return extracted;
                 }
             }
         }
+
+        return null;
+    }
+
+    @Nullable
+    private static ItemStack extractUpgradeFromNetworkTool(@NotNull final ItemStack toolStack,
+            @NotNull final INetworkToolItem networkTool, @NotNull final ItemStack requested) {
+        final NetworkToolViewer networkToolInventory = new NetworkToolViewer(
+                toolStack,
+                null,
+                networkTool.getInventorySize());
+
+        for (int i = 0; i < networkToolInventory.getSizeInventory(); i++) {
+            if (isMatchingUpgrade(requested, networkToolInventory.getStackInSlot(i))) {
+                final ItemStack extracted = networkToolInventory.decrStackSize(i, 1);
+                networkToolInventory.markDirty();
+                if (extracted != null) {
+                    return extracted;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean isMatchingUpgrade(@NotNull final ItemStack requested, @Nullable final ItemStack candidate) {
+        return candidate != null && candidate.stackSize > 0 && requested.isItemEqual(candidate);
     }
 }
