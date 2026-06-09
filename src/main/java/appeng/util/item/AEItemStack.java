@@ -30,11 +30,11 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.event.HoverEvent;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
@@ -570,7 +570,8 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         result.appendSibling(nameComponent);
         result.appendText("]");
         result.getChatStyle().setChatHoverEvent(
-                new HoverEvent(HoverEvent.Action.SHOW_ITEM,
+                new HoverEvent(
+                        HoverEvent.Action.SHOW_ITEM,
                         new ChatComponentText(itemStack.writeToNBT(new NBTTagCompound()).toString())));
         return result;
     }
