@@ -34,7 +34,10 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -558,7 +561,18 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
 
     @Override
     public IChatComponent getChatComponent() {
-        return this.getItemStack().func_151000_E();
+        final ItemStack itemStack = this.getItemStack();
+        // Use ChatComponentTranslation so the client translates the name in their own locale.
+        // Wrap in brackets and attach hover event (shows item tooltip) like vanilla func_151000_E().
+        final String translationKey = itemStack.getItem().getUnlocalizedName(itemStack) + ".name";
+        final IChatComponent nameComponent = new ChatComponentTranslation(translationKey);
+        final ChatComponentText result = new ChatComponentText("[");
+        result.appendSibling(nameComponent);
+        result.appendText("]");
+        result.getChatStyle().setChatHoverEvent(
+                new HoverEvent(HoverEvent.Action.SHOW_ITEM,
+                        new ChatComponentText(itemStack.writeToNBT(new NBTTagCompound()).toString())));
+        return result;
     }
 
     // addon...
