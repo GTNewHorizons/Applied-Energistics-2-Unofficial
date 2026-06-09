@@ -38,7 +38,6 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 
 import com.glodblock.github.common.item.ItemFluidPacket;
 
@@ -455,12 +454,12 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         final Tessellator tessellator = Tessellator.instance;
 
         mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_CURRENT_BIT);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         tessellator.startDrawingQuads();
 
         tessellator.setColorRGBA(color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, 0xFF);

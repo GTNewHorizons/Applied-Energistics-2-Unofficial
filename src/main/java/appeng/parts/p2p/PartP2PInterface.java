@@ -55,6 +55,7 @@ import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.me.cache.CraftingGridCache;
+import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
@@ -256,6 +257,10 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     public NBTTagCompound getMemoryCardData() {
         final NBTTagCompound output = super.getMemoryCardData();
         this.duality.getConfigManager().writeToNBT(output);
+        if (this.duality.getInventoryByName("config") instanceof AppEngInternalAEInventory config) {
+            config.writeToNBT(output, "config");
+        }
+        output.setInteger("priority", this.getPriority());
         return output;
     }
 
@@ -266,6 +271,14 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         NBTTagCompound data = memoryCard.getData(is);
         if (newTunnel instanceof PartP2PInterface p2PInterface) {
             p2PInterface.duality.getConfigManager().readFromNBT(data);
+            if (p2PInterface.duality.getInventoryByName("config") instanceof AppEngInternalAEInventory config) {
+                config.readFromNBT(data, "config");
+                p2PInterface.duality.readConfig();
+                p2PInterface.duality.saveChanges();
+            }
+            if (data.hasKey("priority")) {
+                p2PInterface.setPriority(data.getInteger("priority"));
+            }
         }
         return newTunnel;
     }
