@@ -15,6 +15,8 @@ import appeng.container.AEBaseContainer;
 import appeng.container.guisync.IGuiPacketWritable;
 import appeng.container.interfaces.IVirtualSlotSource;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.sync.ActionHandler;
+import appeng.container.sync.StreamCodecs;
 import appeng.container.sync.SyncCodecs;
 import appeng.container.sync.SyncRegistrar;
 import appeng.container.sync.handlers.AEStackInventorySyncHandler;
@@ -64,6 +66,8 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
     public final IntSyncHandler tickRate;
     public final IntSyncHandler threshold;
 
+    public final ActionHandler<Integer> slotReset;
+
     public final AEStackInventorySyncHandler config;
     public final ObjectSyncHandler<Stored> storedData;
 
@@ -83,7 +87,9 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
         this.threshold = sync.intSync("threshold").onClientChange((oldValue, newValue) -> this.needUpdate = true)
                 .onServerChange((oldValue, newValue) -> this.tile.setThreshold((double) newValue / 100));
 
-        this.config = sync.aeStackInventory("config", this.getConfig()).onServerChange(o -> this.extraSync());
+        this.slotReset = sync.actionC2S("reset", StreamCodecs.intValue()).onServerAction(this::resetSlot);
+
+        this.config = sync.aeStackInventory("config", this.getConfig());
 
         this.storedData = sync.object(
                 "storedData",
@@ -111,6 +117,10 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
         }
 
         bindPlayerInventory(ip, 22, 158);
+    }
+
+    private void resetSlot(final int slot) {
+        this.tile.getAEInventoryByName(StorageName.CONFIG).putAEStackInSlot(slot, null);
     }
 
     @Override
@@ -166,10 +176,5 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
 
     public long getUsedBytes() {
         return this.usedBytes.get();
-    }
-
-    // need because inventory can not always accept result, maybe I will use zero void module instead
-    public void extraSync() {
-        this.config.requestFullResync();
     }
 }

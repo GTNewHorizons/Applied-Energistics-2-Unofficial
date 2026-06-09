@@ -4,6 +4,7 @@ import static appeng.util.Platform.fmt;
 
 import net.minecraft.entity.player.InventoryPlayer;
 
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
 import appeng.api.storage.data.IAEStack;
@@ -145,7 +146,15 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
                                 yo + y * 18 + 9 * 18,
                                 this.containerSuperMEReplenisher.config,
                                 x + y * 9,
-                                this::acceptType));
+                                this::acceptType) {
+
+                            @Override
+                            protected void setAEStack(@Nullable IAEStack<?> stack) {
+                                if (this.getAEStack() != null)
+                                    containerSuperMEReplenisher.slotReset.send(this.slotIndex);
+                                else super.setAEStack(stack);
+                            }
+                        });
             }
         }
     }
