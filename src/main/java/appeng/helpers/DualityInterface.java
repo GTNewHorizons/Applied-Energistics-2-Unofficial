@@ -115,7 +115,6 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.tile.misc.TileInterface;
-import appeng.tile.networking.TileCableBus;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
@@ -1026,8 +1025,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     private boolean shouldCheckFluid() {
-        String hostName = this.iHost.getClass().getName();
-        return hostName.contains("TileFluidInterface") || hostName.contains("PartFluidInterface");
+        return this.iHost instanceof IDualHost;
     }
 
     private boolean inventoryCountsAsEmpty(TileEntity te, InventoryAdaptor ad, ForgeDirection side) {
@@ -1046,11 +1044,17 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         }
 
-        boolean isEmpty = (name.equals("tile.interface") || name.equals("tile.blockWritingTable"))
-                && tileHasOnlyIgnoredItems(ad);
+        final boolean isInterface = ad instanceof AdaptorDualityInterface;
+
+        boolean isEmpty = (isInterface || name.equals("tile.blockWritingTable")) && tileHasOnlyIgnoredItems(ad);
+
+        if ((!isInterface && !name.equals("tile.blockWritingTable")) || !tileHasOnlyIgnoredItems(ad)) {
+            return false;
+        }
 
         if (shouldCheckFluid()) {
-            isEmpty = name.equals("tile.interface");
+            // TODO: check fluid
+            isEmpty = isInterface;
         }
 
         return isEmpty;
@@ -1078,14 +1082,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     }
                     host.getInterfaceDuality().receivePatternPushedEvent();
 
-                } else if (te instanceof TileCableBus cableBus) {
-                    IPart part = cableBus.getPart(s.getOpposite());
-                    if (part instanceof IInterfaceHost host) {
-                        if (host == pushingHost) {
-                            continue;
-                        }
-                        host.getInterfaceDuality().receivePatternPushedEvent();
+                } else if (Platform.getPartFromTE(te, s.getOpposite()) instanceof IInterfaceHost host) {
+                    if (host == pushingHost) {
+                        continue;
                     }
+                    host.getInterfaceDuality().receivePatternPushedEvent();
                 }
             } catch (final GridAccessException ignored) {}
         }
@@ -1751,17 +1752,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 } catch (GridAccessException e) {
                     // :P
                 }
-            } else if (te instanceof TileCableBus cableBus) {
-                IPart part = cableBus.getPart(s);
-                if (part instanceof IInterfaceHost oppositeHost) {
-                    try {
-                        if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
-                            oppositeHost.getInterfaceDuality().gridProxy.getGrid()
-                                    .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
-                        }
-                    } catch (GridAccessException e) {
-                        // :P
+            } else if (Platform.getPartFromTE(te, s) instanceof IInterfaceHost oppositeHost) {
+                try {
+                    if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                        oppositeHost.getInterfaceDuality().gridProxy.getGrid()
+                                .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
                     }
+                } catch (GridAccessException e) {
+                    // :P
                 }
             }
         }
