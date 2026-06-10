@@ -36,7 +36,6 @@ import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerPatternTerm;
-import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.container.implementations.ContainerPriority;
 import appeng.container.implementations.ContainerQuartzKnife;
 import appeng.container.implementations.ContainerRenamer;
@@ -155,11 +154,6 @@ public class PacketValueConfig extends AppEngPacket {
                 case "PatternTerminal.BeSubstitute" -> cpt.getPatternTerminal()
                         .setCanBeSubstitution(this.Value.equals("1"));
                 case "PatternTerminal.Double" -> cpt.doubleStacks(Integer.parseInt(this.Value));
-            }
-        } else if (this.Name.startsWith("PatternTerminalEx.") && c instanceof final ContainerPatternTermEx cpt) {
-            switch (this.Name) {
-                case "PatternTerminalEx.Invert" -> cpt.getExPatternTerminal().setInverted(Value.equals("1"));
-                case "PatternTerminalEx.ActivePage" -> cpt.getExPatternTerminal().setActivePage(Integer.parseInt(Value));
             }
         } else if (this.Name.startsWith("StorageBus.") && c instanceof final ContainerStorageBus ccw) {
             if (this.Name.equals("StorageBus.Action")) {
