@@ -49,9 +49,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.glodblock.github.common.parts.PartFluidInterface;
-import com.glodblock.github.common.parts.PartFluidP2PInterface;
-import com.glodblock.github.common.tile.TileFluidInterface;
+import com.glodblock.github.inventory.IDualHost;
 import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
@@ -170,7 +168,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private UnlockCraftingEvent unlockEvent;
     private List<IAEStack<?>> unlockStacks;
     private int lastInputHash = 0;
-    private final boolean isFluidInterface;
+    private boolean isFluidInterface;
     private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
     private long busyCache = Long.MIN_VALUE;
     public boolean somethingStuck = false;
@@ -204,8 +202,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         this.interfaceRequestSource = new InterfaceRequestSource(this.iHost);
 
-        isFluidInterface = isAE2FCLoaded && (ih instanceof TileFluidInterface || ih instanceof PartFluidP2PInterface
-                || ih instanceof PartFluidInterface);
+        isFluidInterface = isAE2FCLoaded && (ih instanceof IDualHost);
     }
 
     @Override
