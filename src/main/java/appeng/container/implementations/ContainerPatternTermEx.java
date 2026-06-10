@@ -24,8 +24,6 @@ public class ContainerPatternTermEx extends ContainerPatternTerm {
 
     @Override
     public void detectAndSendChanges() {
-        super.detectAndSendChanges();
-
         if (Platform.isServer()) {
             final IPatternTerminalEx temp = getExPatternTerminal();
             substitute = temp.isSubstitution();
@@ -33,6 +31,8 @@ public class ContainerPatternTermEx extends ContainerPatternTerm {
             inverted = temp.isInverted();
             activePage = temp.getActivePage();
         }
+
+        super.detectAndSendChanges();
     }
 
     public IPatternTerminalEx getExPatternTerminal() {

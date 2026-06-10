@@ -54,7 +54,6 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.tile.inventory.IAEStackInventory;
 
 public class GuiPatternTerm extends GuiMEMonitorable {
 
@@ -251,14 +250,13 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         final int inputSlotPerRow = container.getPatternInputsWidth();
         final int inputPage = container.getPatternInputPages();
         this.craftingSlots = new VirtualMEPatternSlot[inputSlotPerRow * inputSlotRow * inputPage];
-        final IAEStackInventory inputInv = container.getPatternTerminal()
-                .getAEInventoryByName(StorageName.CRAFTING_INPUT);
+
         for (int y = 0; y < inputSlotRow * inputPage; y++) {
             for (int x = 0; x < inputSlotPerRow; x++) {
                 VirtualMEPatternSlot slot = new VirtualMEPatternSlot(
                         getInputSlotOffsetX() + 18 * x,
                         this.rows * 18 + getInputSlotOffsetY() + 18 * (y % (inputSlotRow)),
-                        inputInv,
+                        container.inputsSync,
                         x + y * inputSlotPerRow,
                         this::acceptType);
                 this.craftingSlots[x + y * inputSlotPerRow] = slot;
@@ -270,14 +268,13 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         final int outputSlotPerRow = container.getPatternOutputsWidth();
         final int outputPage = container.getPatternOutputPages();
         this.outputSlots = new VirtualMEPatternSlot[outputSlotPerRow * outputSlotRow * outputPage];
-        final IAEStackInventory outputInv = container.getPatternTerminal()
-                .getAEInventoryByName(StorageName.CRAFTING_OUTPUT);
+
         for (int y = 0; y < outputSlotRow * outputPage; y++) {
             for (int x = 0; x < outputSlotPerRow; x++) {
                 VirtualMEPatternSlot slot = new VirtualMEPatternSlot(
                         getOutputSlotOffsetX() + 18 * x,
                         this.rows * 18 + getOutputSlotOffsetY() + 18 * (y % outputSlotRow),
-                        outputInv,
+                        container.outputsSync,
                         x + y * outputSlotPerRow,
                         this::acceptType);
                 this.outputSlots[x + y * outputSlotPerRow] = slot;
