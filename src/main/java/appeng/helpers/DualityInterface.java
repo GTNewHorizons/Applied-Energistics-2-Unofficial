@@ -1024,10 +1024,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return true;
     }
 
-    private boolean shouldCheckFluid() {
-        return this.iHost instanceof IDualHost;
-    }
-
     private boolean inventoryCountsAsEmpty(TileEntity te, InventoryAdaptor ad, ForgeDirection side) {
         String name = te.getBlockType().getUnlocalizedName();
 
@@ -1044,20 +1040,19 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         }
 
-        final boolean isInterface = ad instanceof AdaptorDualityInterface;
+        if (name.equals("tile.blockWritingTable") && tileHasOnlyIgnoredItems(ad)) return true;
 
-        boolean isEmpty = (isInterface || name.equals("tile.blockWritingTable")) && tileHasOnlyIgnoredItems(ad);
+        if (ad instanceof AdaptorDualityInterface adaptorDualityInterface) {
+            boolean isEmpty = tileHasOnlyIgnoredItems(ad);
 
-        if ((!isInterface && !name.equals("tile.blockWritingTable")) || !tileHasOnlyIgnoredItems(ad)) {
-            return false;
+            if (this.isFluidInterface && isEmpty) {
+                return adaptorDualityInterface.isEmpty(FLUID_STACK_TYPE);
+            }
+
+            return isEmpty;
         }
 
-        if (shouldCheckFluid()) {
-            // TODO: check fluid
-            isEmpty = isInterface;
-        }
-
-        return isEmpty;
+        return false;
     }
 
     public void notifyPushedPattern(IInterfaceHost pushingHost) {
