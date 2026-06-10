@@ -35,7 +35,6 @@ import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
-import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.implementations.ContainerPriority;
 import appeng.container.implementations.ContainerQuartzKnife;
 import appeng.container.implementations.ContainerRenamer;
@@ -141,20 +140,6 @@ public class PacketValueConfig extends AppEngPacket {
             pc.setPriority(Integer.parseInt(this.Value), player);
         } else if (this.Name.equals("OreFilter") && c instanceof ContainerOreFilter fc) {
             fc.setFilter(this.Value);
-        } else if (this.Name.startsWith("PatternTerminal.") && c instanceof final ContainerPatternTerm cpt) {
-            switch (this.Name) {
-                case "PatternTerminal.CraftMode" -> cpt.getPatternTerminal().setCraftingRecipe(this.Value.equals("1"));
-                case "PatternTerminal.Encode" -> {
-                    if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
-                    else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
-                    else cpt.encode();
-                }
-                case "PatternTerminal.Clear" -> cpt.clear();
-                case "PatternTerminal.Substitute" -> cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
-                case "PatternTerminal.BeSubstitute" -> cpt.getPatternTerminal()
-                        .setCanBeSubstitution(this.Value.equals("1"));
-                case "PatternTerminal.Double" -> cpt.doubleStacks(Integer.parseInt(this.Value));
-            }
         } else if (this.Name.startsWith("StorageBus.") && c instanceof final ContainerStorageBus ccw) {
             if (this.Name.equals("StorageBus.Action")) {
                 switch (this.Value) {

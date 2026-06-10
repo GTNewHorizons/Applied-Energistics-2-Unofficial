@@ -48,9 +48,6 @@ public class ContainerPatternTermEx extends ContainerPatternTerm {
     public void detectAndSendChanges() {
         if (Platform.isServer()) {
             final IPatternTerminalEx temp = getExPatternTerminal();
-            substitute = temp.isSubstitution();
-            beSubstitute = temp.canBeSubstitution();
-
             this.invertedSync.set(temp.isInverted());
             this.activePageSync.set(temp.getActivePage());
         }

@@ -48,14 +48,16 @@ import appeng.api.storage.data.IItemList;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
 import appeng.container.PrimaryGui;
-import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.IVirtualSlotSource;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.IOptionalSlotHost;
 import appeng.container.slot.SlotPatternTerm;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.sync.ActionHandler;
+import appeng.container.sync.StreamCodecs;
 import appeng.container.sync.SyncRegistrar;
 import appeng.container.sync.handlers.AEStackInventorySyncHandler;
+import appeng.container.sync.handlers.BooleanSyncHandler;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.helpers.IContainerCraftingPacket;
@@ -90,17 +92,17 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
 
     boolean isFirstUpdate = true;
 
-    @GuiSync(97)
-    public boolean craftingMode = true;
-
-    @GuiSync(96)
-    public boolean substitute = false;
-
-    @GuiSync(95)
-    public boolean beSubstitute = true;
-
     public final AEStackInventorySyncHandler inputsSync;
     public final AEStackInventorySyncHandler outputsSync;
+
+    public final BooleanSyncHandler craftingModeSync;
+    public final BooleanSyncHandler substituteSync;
+    public final BooleanSyncHandler beSubstituteSync;
+
+    public final ActionHandler<Void> encodeAction;
+    public final ActionHandler<Boolean> encodeAndMoveToInventoryAction;
+    public final ActionHandler<Void> clearAction;
+    public final ActionHandler<Integer> doubleAction;
 
     public ContainerPatternTerm(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
@@ -167,8 +169,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
 
         this.patternSlotOUT.setStackLimit(1);
 
-        this.updateOrderOfOutputSlots();
-
         // need because InventoryBogoSorter looking for specific slot number for bind buttons
         // bindPlayerInventory in MEMonitorable break it
         this.bindPlayerInventory(ip, 0, 0);
@@ -192,6 +192,28 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
             }
         });
         this.outputsSync = sync.aeStackInventory("outputs", this.outputs);
+
+        this.craftingModeSync = sync.booleanSync("craftingMode")
+                .onServerChange((oldValue, newValue) -> setCraftingMode(newValue))
+                .onClientChange((oldValue, newValue) -> this.updateOrderOfOutputSlots());
+        if (Platform.isServer()) {
+            this.craftingModeSync.set(true);
+        } else {
+            this.craftingModeSync.setLocalValue(true);
+        }
+
+        this.substituteSync = sync.booleanSync("substitute")
+                .onServerChange((oldValue, newValue) -> getPatternTerminal().setSubstitution(newValue));
+        this.beSubstituteSync = sync.booleanSync("beSubstitute")
+                .onServerChange((oldValue, newValue) -> getPatternTerminal().setCanBeSubstitution(newValue));
+
+        this.encodeAction = sync.actionC2S("encode").onServerAction(this::encode);
+        this.encodeAndMoveToInventoryAction = sync.actionC2S("encodeAndMove", StreamCodecs.booleanValue())
+                .onServerAction(this::encodeAndMoveToInventory);
+        this.clearAction = sync.actionC2S("clear").onServerAction(this::clear);
+        this.doubleAction = sync.actionC2S("double", StreamCodecs.intValue()).onServerAction(this::doubleStacks);
+
+        this.updateOrderOfOutputSlots();
     }
 
     private void updateOrderOfOutputSlots() {
@@ -257,7 +279,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
             final ItemStack removedStack, final ItemStack newStack) {}
 
-    public void encodeAndMoveToInventory(boolean encodeWholeStack) {
+    private void encodeAndMoveToInventory(boolean encodeWholeStack) {
         encode();
         ItemStack output = this.patternSlotOUT.getStack();
         if (output != null) {
@@ -273,7 +295,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         }
     }
 
-    public void encode() {
+    private void encode() {
         ItemStack output = this.patternSlotOUT.getStack();
 
         final IAEStack<?>[] in = this.getInputs();
@@ -351,8 +373,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         encodedValue.setTag("in", tagIn);
         encodedValue.setTag("out", tagOut);
         if (isCraftingMode()) encodedValue.setBoolean("crafting", this.isCraftingMode());
-        encodedValue.setBoolean("substitute", this.isSubstitute());
-        encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
+        encodedValue.setBoolean("substitute", this.substituteSync.get());
+        encodedValue.setBoolean("beSubstitute", this.beSubstituteSync.get());
         if (inputOnly) {
             final UUID uuid = inputOnlyUuid != null ? inputOnlyUuid : UUID.randomUUID();
             ItemTunnelPattern.writeTunnelUuid(encodedValue, uuid);
@@ -535,8 +557,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                 this.setCraftingMode(this.getPatternTerminal().isCraftingRecipe());
             }
 
-            this.substitute = this.patternTerminal.isSubstitution();
-            this.beSubstitute = this.patternTerminal.canBeSubstitution();
+            this.substituteSync.set(this.patternTerminal.isSubstitution());
+            this.beSubstituteSync.set(this.patternTerminal.canBeSubstitution());
 
             if (this.isFirstUpdate) {
                 if (craftingModeSupport && isCraftingMode()) {
@@ -550,16 +572,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     }
 
     @Override
-    public void onUpdate(final String field, final Object oldValue, final Object newValue) {
-        super.onUpdate(field, oldValue, newValue);
-
-        if (field.equals("craftingMode")) {
-            this.getAndUpdateOutput();
-            this.updateOrderOfOutputSlots();
-        }
-    }
-
-    @Override
     public void onSlotChange(final Slot s) {
         if (!isServer()) return;
         if (s == this.patternSlotOUT) {
@@ -568,6 +580,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         }
     }
 
+    // Used from NEE
     public void clear() {
         for (int i = 0; i < this.inputs.getSizeInventory(); ++i) {
             this.inputs.putAEStackInSlot(i, null);
@@ -691,19 +704,13 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return false;
     }
 
-    public void toggleSubstitute() {
-        this.substitute = !this.substitute;
-
-        this.detectAndSendChanges();
-        this.getAndUpdateOutput();
-    }
-
     public boolean isCraftingMode() {
-        return this.craftingModeSupport && this.craftingMode;
+        return this.craftingModeSupport && this.craftingModeSync.get();
     }
 
+    // Used from NEE
     public void setCraftingMode(final boolean craftingMode) {
-        this.craftingMode = craftingMode;
+        this.craftingModeSync.set(craftingMode);
         this.patternTerminal.setCraftingRecipe(craftingMode);
         if (craftingMode && craftingModeSupport) copyToMatrix();
         this.updateOrderOfOutputSlots();
@@ -713,23 +720,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return this.patternTerminal;
     }
 
-    private boolean isSubstitute() {
-        return this.substitute;
-    }
-
-    private boolean canBeSubstitute() {
-        return this.beSubstitute;
-    }
-
-    public void setSubstitute(final boolean substitute) {
-        this.substitute = substitute;
-    }
-
-    public void setCanBeSubstitute(final boolean beSubstitute) {
-        this.beSubstitute = beSubstitute;
-    }
-
-    public void doubleStacks(int val) {
+    private void doubleStacks(int val) {
         multiplyOrDivideStacks(
                 ((val & 1) != 0 ? MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT : MULTIPLE_OF_BUTTON_CLICK)
                         * ((val & 2) != 0 ? -1 : 1));

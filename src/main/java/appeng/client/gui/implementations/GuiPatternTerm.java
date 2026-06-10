@@ -12,7 +12,6 @@ package appeng.client.gui.implementations;
 
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
-import java.io.IOException;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
@@ -46,14 +45,12 @@ import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.core.sync.packets.PacketValueConfig;
 
 public class GuiPatternTerm extends GuiMEMonitorable {
 
@@ -113,39 +110,26 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
 
-        try {
-            if (this.tabCraftButton == btn || this.tabProcessButton == btn) {
-                this.craftingMode = this.tabProcessButton == btn;
-                updateSlotVisibility();
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "PatternTerminal.CraftMode",
-                                this.tabProcessButton == btn ? CRAFTMODE_CRFTING : CRAFTMODE_PROCESSING));
-            } else if (this.encodeBtn == btn) {
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "PatternTerminal.Encode",
-                                isCtrlKeyDown() ? (isShiftKeyDown() ? "6" : "1") : (isShiftKeyDown() ? "2" : "1")));
-            } else if (this.clearBtn == btn) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("PatternTerminal.Clear", "1"));
-            } else if (this.substitutionsEnabledBtn == btn || this.substitutionsDisabledBtn == btn) {
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "PatternTerminal.Substitute",
-                                this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
-            } else if (this.beSubstitutionsEnabledBtn == btn || this.beSubstitutionsDisabledBtn == btn) {
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "PatternTerminal.BeSubstitute",
-                                this.beSubstitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
-            } else if (doubleBtn == btn) {
-                int val = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 1 : 0;
-                if (Mouse.isButtonDown(1)) val |= 0b10;
-                NetworkHandler.instance
-                        .sendToServer(new PacketValueConfig("PatternTerminal.Double", String.valueOf(val)));
+        if (this.tabCraftButton == btn || this.tabProcessButton == btn) {
+            this.craftingMode = this.tabProcessButton == btn;
+            updateSlotVisibility();
+            container.craftingModeSync.set(this.tabProcessButton == btn);
+        } else if (this.encodeBtn == btn) {
+            if (isShiftKeyDown()) {
+                this.container.encodeAndMoveToInventoryAction.send(isCtrlKeyDown());
+            } else {
+                this.container.encodeAction.send();
             }
-        } catch (final IOException e) {
-            AELog.error(e);
+        } else if (this.clearBtn == btn) {
+            this.container.clearAction.send();
+        } else if (this.substitutionsEnabledBtn == btn || this.substitutionsDisabledBtn == btn) {
+            this.container.substituteSync.set(this.substitutionsDisabledBtn == btn);
+        } else if (this.beSubstitutionsEnabledBtn == btn || this.beSubstitutionsDisabledBtn == btn) {
+            this.container.beSubstituteSync.set(this.beSubstitutionsDisabledBtn == btn);
+        } else if (doubleBtn == btn) {
+            int val = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 1 : 0;
+            if (Mouse.isButtonDown(1)) val |= 0b10;
+            this.container.doubleAction.send(val);
         }
     }
 
@@ -337,7 +321,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
             }
         }
 
-        if (this.container.substitute) {
+        if (this.container.substituteSync.get()) {
             this.substitutionsEnabledBtn.visible = true;
             this.substitutionsDisabledBtn.visible = false;
         } else {
@@ -345,8 +329,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
             this.substitutionsDisabledBtn.visible = true;
         }
 
-        this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
-        this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
+        this.beSubstitutionsEnabledBtn.visible = this.container.beSubstituteSync.get();
+        this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstituteSync.get();
     }
 
     @Override
