@@ -303,8 +303,19 @@ public class PartPlacement {
                 final Block blkID = world.getBlock(te_x, te_y, te_z);
                 tile = world.getTileEntity(te_x, te_y, te_z);
 
-                if (tile != null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.FMP)) {
+                host = null;
+                if (tile instanceof IPartHost) {
+                    host = (IPartHost) tile;
+                }
+
+                if (host == null && tile != null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.FMP)) {
                     host = ((IFMP) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.FMP)).getOrCreateHost(tile);
+                }
+
+                if (host == null && tile != null
+                        && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.ImmibisMicroblocks)) {
+                    host = ((IImmibisMicroblocks) IntegrationRegistry.INSTANCE
+                            .getInstance(IntegrationType.ImmibisMicroblocks)).getOrCreateHost(player, face, tile);
                 }
 
                 if ((blkID == null || blkID.isReplaceable(world, te_x, te_y, te_z) || host != null)
