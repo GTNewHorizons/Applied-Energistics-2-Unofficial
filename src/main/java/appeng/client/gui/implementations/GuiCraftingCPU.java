@@ -731,9 +731,5 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
             final CraftingCpuEntry entry = this.entries.get(stack);
             return entry == null ? ScheduledReason.UNDEFINED : entry.getScheduledReason();
         }
-
-        public CraftingCpuEntry getEntry(final IAEStack<?> stack) {
-            return this.entries.get(stack);
-        }
     }
 }
