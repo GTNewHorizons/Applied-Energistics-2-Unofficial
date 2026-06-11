@@ -105,6 +105,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
     private int remainingOperations;
     private int hoveredVisibleIndex = -1;
     private IAEStack<?> hoveredStack;
+    private long hoveredStackActiveSize;
     private List<NamedDimensionalCoord> hoveredInterfaceLocations;
 
     public GuiCraftingCPU(final InventoryPlayer inventoryPlayer, final Object target) {
@@ -209,7 +210,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
             final PacketInventoryAction packet = new PacketInventoryAction(
                     InventoryAction.AUTO_CRAFT,
                     this.inventorySlots.inventorySlots.size(),
-                    this.visualState.getEntry(this.hoveredStack).getActiveAmount());
+                    this.hoveredStackActiveSize);
             NetworkHandler.instance.sendToServer(packet);
         }
 
@@ -473,6 +474,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y * SECTION_HEIGHT + ITEMSTACK_TOP_OFFSET + 10,
                     tooltipMessage);
             this.hoveredStack = hoveredVisualStack;
+            this.hoveredStackActiveSize = entry.getActiveAmount();
         }
 
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
