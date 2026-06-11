@@ -196,11 +196,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         this.craftingModeSync = sync.booleanSync("craftingMode")
                 .onServerChange((oldValue, newValue) -> setCraftingMode(newValue))
                 .onClientChange((oldValue, newValue) -> this.updateOrderOfOutputSlots());
-        if (Platform.isServer()) {
-            this.craftingModeSync.set(true);
-        } else {
-            this.craftingModeSync.setLocalValue(true);
-        }
+        this.craftingModeSync.setLocalValue(this.patternTerminal.isCraftingRecipe());
 
         this.substituteSync = sync.booleanSync("substitute")
                 .onServerChange((oldValue, newValue) -> getPatternTerminal().setSubstitution(newValue));
