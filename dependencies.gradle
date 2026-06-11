@@ -82,6 +82,9 @@ dependencies {
 
     //Uncomment if you need to test chunkloading and warps/homes
     //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.32:dev')
+
+    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:Backhand:1.8.10:dev')
+    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ForgeMultipart:1.7.10:dev') {transitive = false}
 }
 
 // deps may transitively add Baubles, so we replace it
