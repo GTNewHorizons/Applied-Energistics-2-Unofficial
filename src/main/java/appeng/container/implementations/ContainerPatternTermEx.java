@@ -2,37 +2,57 @@ package appeng.container.implementations;
 
 import static appeng.parts.reporting.PartPatternTerminalEx.*;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import appeng.api.parts.IPatternTerminalEx;
 import appeng.api.storage.ITerminalHost;
-import appeng.container.guisync.GuiSync;
+import appeng.client.gui.implementations.GuiPatternTermEx;
+import appeng.container.sync.SyncRegistrar;
+import appeng.container.sync.handlers.BooleanSyncHandler;
+import appeng.container.sync.handlers.IntSyncHandler;
 import appeng.util.Platform;
 
 public class ContainerPatternTermEx extends ContainerPatternTerm {
 
-    @GuiSync(96 + (17 - 9) + 16)
-    public boolean inverted;
-
-    @GuiSync(96 + (17 - 9) + 17)
-    public int activePage = 0;
+    public BooleanSyncHandler invertedSync;
+    public IntSyncHandler activePageSync;
 
     public ContainerPatternTermEx(final InventoryPlayer ip, final ITerminalHost monitorable) {
         super(ip, monitorable, false);
-        inverted = getExPatternTerminal().isInverted();
+
+        SyncRegistrar sync = this.syncRegistrar();
+        this.invertedSync = sync.booleanSync("inverted")
+                .onServerChange((oldValue, newValue) -> this.getExPatternTerminal().setInverted(newValue))
+                .onClientChange((oldValue, newValue) -> {
+                    if (oldValue != newValue
+                            && Minecraft.getMinecraft().currentScreen instanceof GuiPatternTermEx gui) {
+                        gui.onUpdateInvertedOrActivePage();
+                    }
+                });
+        this.activePageSync = sync.intSync("activePage")
+                .onServerChange((oldValue, newValue) -> this.getExPatternTerminal().setActivePage(newValue))
+                .onClientChange((oldValue, newValue) -> {
+                    if (oldValue != newValue
+                            && Minecraft.getMinecraft().currentScreen instanceof GuiPatternTermEx gui) {
+                        gui.onUpdateInvertedOrActivePage();
+                    }
+                });
+
+        if (Platform.isServer()) {
+            this.invertedSync.set(getExPatternTerminal().isInverted());
+        }
     }
 
     @Override
     public void detectAndSendChanges() {
-        super.detectAndSendChanges();
-
         if (Platform.isServer()) {
             final IPatternTerminalEx temp = getExPatternTerminal();
-            substitute = temp.isSubstitution();
-            beSubstitute = temp.canBeSubstitution();
-            inverted = temp.isInverted();
-            activePage = temp.getActivePage();
+            this.invertedSync.set(temp.isInverted());
+            this.activePageSync.set(temp.getActivePage());
         }
+
+        super.detectAndSendChanges();
     }
 
     public IPatternTerminalEx getExPatternTerminal() {
