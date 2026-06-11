@@ -1,7 +1,5 @@
 package appeng.client.gui.implementations;
 
-import java.io.IOException;
-
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -14,12 +12,9 @@ import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerPatternTermEx;
-import appeng.core.AELog;
 import appeng.core.AppEng;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketValueConfig;
 
 public class GuiPatternTermEx extends GuiPatternTerm {
 
@@ -27,34 +22,34 @@ public class GuiPatternTermEx extends GuiPatternTerm {
     private GuiImgButton invertBtn;
     private final GuiScrollbar processingScrollBar = new GuiScrollbar();
 
-    private boolean isInverted;
-    private int activePage;
-
     public GuiPatternTermEx(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(inventoryPlayer, te, new ContainerPatternTermEx(inventoryPlayer, te));
         this.container = (ContainerPatternTermEx) this.inventorySlots;
+
+        this.container.invertedSync.onClientChange((oldValue, newValue) -> {
+            if (oldValue != newValue) {
+                this.updateSlotVisibility();
+            }
+        });
+        this.container.activePageSync.onClientChange((oldValue, newValue) -> {
+            if (oldValue != newValue) {
+                this.updateSlotVisibility();
+            }
+        });
+
         this.setReservedSpace(81);
 
         processingScrollBar.setHeight(70).setWidth(7).setLeft(6).setRange(0, 1, 1);
         processingScrollBar.setTexture(AppEng.MOD_ID, "guis/pattern3.png", 242, 0);
-
-        this.isInverted = this.container.inverted;
-        this.activePage = this.container.activePage;
     }
 
     @Override
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
 
-        try {
-            if (this.invertBtn == btn) {
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig("PatternTerminalEx.Invert", container.inverted ? "0" : "1"));
-                container.getExPatternTerminal().setInverted(container.inverted);
-                this.updateSlotVisibility();
-            }
-        } catch (final IOException e) {
-            AELog.error(e);
+        if (this.invertBtn == btn) {
+            container.invertedSync.set(!container.invertedSync.get());
+            this.updateSlotVisibility();
         }
     }
 
@@ -66,7 +61,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                 this.guiLeft + 87,
                 this.guiTop + this.ySize - 145,
                 Settings.ACTIONS,
-                container.inverted ? PatternSlotConfig.C_4_16 : PatternSlotConfig.C_16_4);
+                container.invertedSync.get() ? PatternSlotConfig.C_4_16 : PatternSlotConfig.C_16_4);
         invertBtn.setHalfSize(true);
         this.buttonList.add(this.invertBtn);
 
@@ -102,12 +97,12 @@ public class GuiPatternTermEx extends GuiPatternTerm {
 
     @Override
     protected String getBackground() {
-        return container.inverted ? "guis/pattern4.png" : "guis/pattern3.png";
+        return container.invertedSync.get() ? "guis/pattern4.png" : "guis/pattern3.png";
     }
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
-        final int offset = container.inverted ? 18 * -3 : 0;
+        final int offset = container.invertedSync.get() ? 18 * -3 : 0;
 
         doubleBtn.xPosition = this.guiLeft + 88 + offset;
         clearBtn.xPosition = doubleBtn.xPosition;
@@ -128,13 +123,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
 
         invertBtn.yPosition = this.guiTop + this.ySize - 145;
 
-        processingScrollBar.setCurrentScroll(container.activePage);
-
-        if (this.isInverted != this.container.inverted || this.activePage != this.container.activePage) {
-            this.isInverted = this.container.inverted;
-            this.activePage = this.container.activePage;
-            this.updateSlotVisibility();
-        }
+        processingScrollBar.setCurrentScroll(container.activePageSync.get());
 
         super.drawScreen(mouseX, mouseY, btn);
     }
@@ -184,16 +173,12 @@ public class GuiPatternTermEx extends GuiPatternTerm {
     }
 
     private void changeActivePage() {
-        try {
-            NetworkHandler.instance.sendToServer(
-                    new PacketValueConfig(
-                            "PatternTerminalEx.ActivePage",
-                            String.valueOf(this.processingScrollBar.getCurrentScroll())));
-            container.activePage = this.processingScrollBar.getCurrentScroll();
-            this.updateSlotVisibility();
-        } catch (final IOException e) {
-            AELog.error(e);
-        }
+        container.activePageSync.set(this.processingScrollBar.getCurrentScroll());
+        this.updateSlotVisibility();
+    }
+
+    public void onUpdateInvertedOrActivePage() {
+        updateSlotVisibility();
     }
 
     @Override
@@ -208,10 +193,12 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                     final int slotIndex = x + y * inputSlotsPerRow + page * (inputSlotsPerRow * inputSlotRows);
                     VirtualMEPhantomSlot slot = this.craftingSlots[slotIndex];
 
-                    slot.setHidden(this.isInverted ? y != this.activePage || page > 0 : page != this.activePage);
+                    slot.setHidden(
+                            container.invertedSync.get() ? y != container.activePageSync.get() || page > 0
+                                    : page != container.activePageSync.get());
 
-                    slot.setX(getInputSlotOffsetX() + 18 * (this.isInverted ? 0 : x));
-                    slot.setY(this.rows * 18 + getInputSlotOffsetY() + 18 * (this.isInverted ? x : y));
+                    slot.setX(getInputSlotOffsetX() + 18 * (container.invertedSync.get() ? 0 : x));
+                    slot.setY(this.rows * 18 + getInputSlotOffsetY() + 18 * (container.invertedSync.get() ? x : y));
                 }
             }
         }
@@ -226,10 +213,14 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                     final int slotIndex = x + y * outputSlotsPerRow + page * (outputSlotsPerRow * outputSlotRows);
                     VirtualMEPhantomSlot slot = this.outputSlots[slotIndex];
 
-                    slot.setHidden(!this.isInverted ? y != this.activePage || page != 0 : page != this.activePage);
+                    slot.setHidden(
+                            !container.invertedSync.get() ? y != container.activePageSync.get() || page != 0
+                                    : page != container.activePageSync.get());
 
-                    slot.setX((this.isInverted ? getOutputSlotOffsetX() : 112) + 18 * (!this.isInverted ? 0 : x));
-                    slot.setY(this.rows * 18 + getOutputSlotOffsetY() + 18 * (!this.isInverted ? x : y));
+                    slot.setX(
+                            (container.invertedSync.get() ? getOutputSlotOffsetX() : 112)
+                                    + 18 * (!container.invertedSync.get() ? 0 : x));
+                    slot.setY(this.rows * 18 + getOutputSlotOffsetY() + 18 * (!container.invertedSync.get() ? x : y));
                 }
             }
         }
