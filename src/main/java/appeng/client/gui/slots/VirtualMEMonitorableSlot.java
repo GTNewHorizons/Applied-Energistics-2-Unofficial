@@ -10,8 +10,6 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
-import org.lwjgl.input.Keyboard;
-
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
@@ -67,13 +65,11 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                 ObjectLongPair<ItemStack> result = type.fillContainer(hand.copy(), stackInSlot);
                 if (result.rightLong() > 0) {
                     lines.add(
-                            ButtonToolTips.ExtractFromNetworkToContainer
-                                    .getLocal(
-                                            this.typeFilterChecker.check(ITEM_STACK_TYPE)
-                                                    ? Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode())
-                                                            + " + "
-                                                    : "",
-                                            stackInSlot.getDisplayName()));
+                            ButtonToolTips.ExtractFromNetworkToContainer.getLocal(
+                                    this.typeFilterChecker.check(ITEM_STACK_TYPE)
+                                            ? CONTAINER_INTERACTION_KEY.getKeybindDisplayName() + " + "
+                                            : "",
+                                    stackInSlot.getDisplayName()));
                     added = true;
                 }
             }
@@ -84,13 +80,11 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                 IAEStack<?> stack = type.getStackFromContainerItem(hand);
                 if (stack != null && stack.getStackSize() > 0) {
                     lines.add(
-                            ButtonToolTips.InsertFromContainerToNetwork
-                                    .getLocal(
-                                            this.typeFilterChecker.check(ITEM_STACK_TYPE)
-                                                    ? Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode())
-                                                            + " + "
-                                                    : "",
-                                            stack.getDisplayName()));
+                            ButtonToolTips.InsertFromContainerToNetwork.getLocal(
+                                    this.typeFilterChecker.check(ITEM_STACK_TYPE)
+                                            ? CONTAINER_INTERACTION_KEY.getKeybindDisplayName() + " + "
+                                            : "",
+                                    stack.getDisplayName()));
                     added = true;
                 }
 
