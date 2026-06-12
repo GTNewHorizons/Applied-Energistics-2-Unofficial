@@ -122,7 +122,7 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
         final IConfigManager cm = getConfigManager(is);
         final WirelessToolMode currentMode = (WirelessToolMode) cm.getSetting(Settings.WIRELESS_TOOL_MODE);
         lines.add(WirelessMessages.Mode.getLocal(currentMode.getLocal()));
-        lines.add(WirelessMessages.ModeToggle.getLocal());
+        lines.add(WirelessMessages.ModeToggle.getLocal(ServerHelper.WIRELESS_MODE_SWITCH.getKeybindDisplayName()));
         lines.add(WirelessMessages.SuperClear.getLocal());
 
         final NBTTagCompound tag = ItemStackNBT.get(is);

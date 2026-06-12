@@ -11,8 +11,6 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
-import org.lwjgl.input.Keyboard;
-
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
@@ -206,7 +204,7 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
                 if (stack != null && stack.getStackSize() > 0) {
                     lines.add(
                             ButtonToolTips.RegisterContainerContent.getLocal(
-                                    Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode()),
+                                    CONTAINER_INTERACTION_KEY.getKeybindDisplayName(),
                                     stack.getDisplayName()));
                     return;
                 }

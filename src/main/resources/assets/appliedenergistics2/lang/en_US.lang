@@ -516,7 +516,7 @@ gui.appliedenergistics2.GuiDimensionalCoordShortNoDim=§c%s§r, §a%s§r, §9%s
 gui.appliedenergistics2.itemMEStackPacketDesc1=Leftover after inject in system operation
 gui.appliedenergistics2.itemMEStackPacketDesc2=Make sure you have free space and then put this item in ME Terminal
 
-gui.appliedenergistics2.WirelessManagerToolTips=Network\n§6LClick§7 - Select\n §6+ WirelessExtraAction§7 - Rename\n §6+ Sneak§7 - Remove
+gui.appliedenergistics2.WirelessManagerToolTips=Network\n§6LClick§7 - Select\n §6+ %s§7 - Rename\n §6+ Sneak§7 - Remove
 
 # GUI Tooltips
 gui.tooltips.appliedenergistics2.Stash=Store Items
@@ -1112,7 +1112,7 @@ item.appliedenergistics2.WirelessMessages.Connected=§aConnected to %s
 item.appliedenergistics2.WirelessMessages.TargetHubFull=§cTarget hub is full
 item.appliedenergistics2.WirelessMessages.SourceHubFull=§cHub at %s §cis full
 item.appliedenergistics2.WirelessMessages.HubToHub=§cHub-to-hub connections are not allowed
-item.appliedenergistics2.WirelessMessages.ModeToggle="Wireless Mode Switch" + R-click to toggle mode
+item.appliedenergistics2.WirelessMessages.ModeToggle=§6%s§r + R-click to toggle mode
 item.appliedenergistics2.WirelessMessages.Security=Security violation - you are not allowed to modify this network
 item.appliedenergistics2.WirelessMessages.DimensionMismatch=Both connectors must be in the same dimension
 item.appliedenergistics2.WirelessMessages.InvalidTarget=§cInvalid target - must be Wireless Connector or Wireless Hub

@@ -55,7 +55,8 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
                     12,
                     AEColor.values()[y],
                     keyStatus.value(),
-                    GuiText.WirelessManagerToolTips.getLocal());
+                    GuiText.WirelessManagerToolTips
+                            .getLocal(ServerHelper.WIRELESS_EXTRA_ACTION.getKeybindDisplayName()));
             btn.visible = keyStatus.key();
             this.colorButtons.add(btn);
             this.buttonList.add(btn);
