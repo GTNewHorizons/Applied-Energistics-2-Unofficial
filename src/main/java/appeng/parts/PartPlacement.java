@@ -31,6 +31,8 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 import net.minecraftforge.event.world.BlockEvent;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
@@ -78,11 +80,7 @@ public class PartPlacement {
 
             final Block block = world.getBlock(x, y, z);
             final TileEntity tile = world.getTileEntity(x, y, z);
-            IPartHost host = null;
-
-            if (tile instanceof IPartHost) {
-                host = (IPartHost) tile;
-            }
+            final IPartHost host = getExistingHost(tile);
 
             if (host != null) {
                 if (!world.isRemote) {
@@ -139,11 +137,7 @@ public class PartPlacement {
         }
 
         TileEntity tile = world.getTileEntity(x, y, z);
-        IPartHost host = null;
-
-        if (tile instanceof IPartHost) {
-            host = (IPartHost) tile;
-        }
+        IPartHost host = getExistingHost(tile);
 
         if (held != null) {
             final IFacadePart fp = isFacade(held, side);
@@ -178,14 +172,8 @@ public class PartPlacement {
             }
         }
 
-        if (host == null && tile != null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.FMP)) {
-            host = ((IFMP) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.FMP)).getOrCreateHost(tile);
-        }
-
-        if (host == null && tile != null
-                && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.ImmibisMicroblocks)) {
-            host = ((IImmibisMicroblocks) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.ImmibisMicroblocks))
-                    .getOrCreateHost(player, face, tile);
+        if (host == null) {
+            host = getOrCreateHost(tile, player, face);
         }
 
         // if ( held == null )
@@ -235,19 +223,7 @@ public class PartPlacement {
             te_z = z + offset.offsetZ;
 
             tile = world.getTileEntity(te_x, te_y, te_z);
-            if (tile instanceof IPartHost) {
-                host = (IPartHost) tile;
-            }
-
-            if (host == null && tile != null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.FMP)) {
-                host = ((IFMP) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.FMP)).getOrCreateHost(tile);
-            }
-
-            if (host == null && tile != null
-                    && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.ImmibisMicroblocks)) {
-                host = ((IImmibisMicroblocks) IntegrationRegistry.INSTANCE
-                        .getInstance(IntegrationType.ImmibisMicroblocks)).getOrCreateHost(player, face, tile);
-            }
+            host = getOrCreateHost(tile, player, face);
 
             final Optional<ItemStack> maybeMultiPartStack = multiPart.maybeStack(1);
             final Optional<Block> maybeMultiPartBlock = multiPart.maybeBlock();
@@ -274,10 +250,7 @@ public class PartPlacement {
                             0)) {
                 if (!world.isRemote) {
                     tile = world.getTileEntity(te_x, te_y, te_z);
-
-                    if (tile instanceof IPartHost) {
-                        host = (IPartHost) tile;
-                    }
+                    host = getExistingHost(tile);
 
                     pass = PlaceType.INTERACT_SECOND_PASS;
                 } else {
@@ -302,21 +275,7 @@ public class PartPlacement {
 
                 final Block blkID = world.getBlock(te_x, te_y, te_z);
                 tile = world.getTileEntity(te_x, te_y, te_z);
-
-                host = null;
-                if (tile instanceof IPartHost) {
-                    host = (IPartHost) tile;
-                }
-
-                if (host == null && tile != null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.FMP)) {
-                    host = ((IFMP) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.FMP)).getOrCreateHost(tile);
-                }
-
-                if (host == null && tile != null
-                        && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.ImmibisMicroblocks)) {
-                    host = ((IImmibisMicroblocks) IntegrationRegistry.INSTANCE
-                            .getInstance(IntegrationType.ImmibisMicroblocks)).getOrCreateHost(player, face, tile);
-                }
+                host = getOrCreateHost(tile, player, face);
 
                 if ((blkID == null || blkID.isReplaceable(world, te_x, te_y, te_z) || host != null)
                         && side != ForgeDirection.UNKNOWN) {
@@ -454,7 +413,7 @@ public class PartPlacement {
             if (mop != null && mop.hitVec.distanceTo(vec3) < d0) {
                 final World w = event.entity.worldObj;
                 final TileEntity te = w.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
-                if (te instanceof IPartHost && this.wasCanceled) {
+                if (getExistingHost(te) != null && this.wasCanceled) {
                     event.setCanceled(true);
                 }
             } else {
@@ -493,6 +452,47 @@ public class PartPlacement {
 
             this.placing.set(null);
         }
+    }
+
+    @Nullable
+    private static IPartHost getExistingHost(@Nullable final TileEntity tile) {
+        if (tile == null) {
+            return null;
+        }
+
+        if (tile instanceof IPartHost host) {
+            return host;
+        }
+
+        final IFMP fmp = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.FMP);
+        if (fmp != null && fmp.getCableContainer(tile) != null) {
+            return fmp.getOrCreateHost(tile);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static IPartHost getOrCreateHost(@Nullable final TileEntity tile, final EntityPlayer player,
+            final int face) {
+        IPartHost host = getExistingHost(tile);
+
+        if (host == null && tile != null) {
+            final IFMP fmp = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.FMP);
+            if (fmp != null) {
+                host = fmp.getOrCreateHost(tile);
+            }
+        }
+
+        if (host == null && tile != null) {
+            final IImmibisMicroblocks immibis = IntegrationRegistry.INSTANCE
+                    .getInstanceIfEnabled(IntegrationType.ImmibisMicroblocks);
+            if (immibis != null) {
+                host = immibis.getOrCreateHost(player, face, tile);
+            }
+        }
+
+        return host;
     }
 
     public enum PlaceType {
