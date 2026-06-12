@@ -17,6 +17,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import appeng.api.networking.events.MENetworkCraftingPushedPattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -102,6 +103,11 @@ public class TileInterface extends AENetworkInvTile
     public void stateChange(final MENetworkPowerStatusChange c) {
         this.duality.notifyNeighbors();
         markForUpdate();
+    }
+
+    @MENetworkEventSubscribe
+    public void pushedPattern(final MENetworkCraftingPushedPattern c) {
+        this.duality.notifyPushedPattern(c.host);
     }
 
     public void setSide(final ForgeDirection axis) {
