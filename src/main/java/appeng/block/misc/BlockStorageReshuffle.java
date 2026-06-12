@@ -28,7 +28,7 @@ public class BlockStorageReshuffle extends AEBaseTileBlock {
         super(Material.iron);
 
         this.setTileEntity(TileStorageReshuffle.class);
-        this.setFeature(EnumSet.of(AEFeature.Channels));
+        this.setFeature(EnumSet.of(AEFeature.Core));
         this.setHardness(2.2f);
     }
 
