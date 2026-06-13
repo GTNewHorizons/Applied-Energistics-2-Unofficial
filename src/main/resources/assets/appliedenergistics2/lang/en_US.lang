@@ -72,6 +72,7 @@ tile.appliedenergistics2.BlockSingularityCraftingStorage.name=Singularity Crafti
 tile.appliedenergistics2.BlockPaint.name=Paint
 tile.appliedenergistics2.BlockSpatialLinkChamber.name=Spatial Link Chamber
 tile.appliedenergistics2.BlockSpatialNetworkRelay.name=Spatial Network Relay
+tile.appliedenergistics2.BlockSuperMEReplenisher.name=Super ME Replenisher
 tile.appliedenergistics2.BlockWirelessConnector.name=Wireless Connector
 tile.appliedenergistics2.BlockWirelessHub.name=Wireless Hub
 tile.appliedenergistics2.BlockCrystalGrowthChamber.name=Crystal Growth Chamber
@@ -250,6 +251,14 @@ gui.appliedenergistics2.ReshuffleReportTextColorPositive=§2
 gui.appliedenergistics2.ReshuffleReportTextColorNegative=§4
 gui.appliedenergistics2.ReshuffleReportTextColorNeutral=§8
 gui.appliedenergistics2.ReshuffleReportTextColorWarning=§6
+
+gui.appliedenergistics2.SuperMEReplenisherBytesTotal=Bytes total: §6%s
+gui.appliedenergistics2.SuperMEReplenisherBytesUnlimited=Unlimited
+gui.appliedenergistics2.SuperMEReplenisherBytesUsed=Bytes used: §c%s
+gui.appliedenergistics2.SuperMEReplenisherTickRate=Tick Rate
+gui.appliedenergistics2.SuperMEReplenisherThreshold=Threshold
+gui.appliedenergistics2.SuperMEReplenisherTarget=Target: §5%s
+gui.appliedenergistics2.SuperMEReplenisherStored=Stored: §5%s
 
 gui.appliedenergistics2.Efficiency=Efficiency
 gui.appliedenergistics2.RequiredPower=Required Power
@@ -828,6 +837,7 @@ gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell=§dInfinite Energy
 gui.tooltips.appliedenergistics2.PartCreativeEnergy=§dInfinite Energy
 gui.tooltips.appliedenergistics2.BlockCreativeEnergyController=§dInfinite Energy
 gui.tooltips.appliedenergistics2.PreconfiguredPriority=Preconfigured storage priority: §f%s
+gui.tooltips.appliedenergistics2.BlockSuperMEReplenisher=Only for network usage!\nEverything injected will be cached\nThen flashed in local network on Tick Rate!
 
 # Units
 gui.appliedenergistics2.units.appliedenergistics=AE

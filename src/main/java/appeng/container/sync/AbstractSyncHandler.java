@@ -71,7 +71,7 @@ public abstract class AbstractSyncHandler {
         this.dirty = true;
     }
 
-    protected final void requestFullResync() {
+    public final void requestFullResync() {
         this.fullResyncRequested = true;
         this.dirty = true;
     }

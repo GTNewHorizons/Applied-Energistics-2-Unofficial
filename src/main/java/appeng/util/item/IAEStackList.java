@@ -21,8 +21,18 @@ public final class IAEStackList implements IItemList<IAEStack<?>> {
     private final Map<IAEStackType<?>, IItemList> lists = new IdentityHashMap<>();
 
     public IAEStackList() {
-        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            this.lists.put(type, type.createList());
+        this(false);
+    }
+
+    public IAEStackList(final boolean primitive) {
+        if (primitive) {
+            for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                this.lists.put(type, type.createPrimitiveList());
+            }
+        } else {
+            for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                this.lists.put(type, type.createList());
+            }
         }
     }
 

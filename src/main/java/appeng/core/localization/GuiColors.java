@@ -138,7 +138,10 @@ public enum GuiColors implements Localization {
     NetworkVisualiserLinkCompressed(0xffff00ff),
     NetworkVisualiserLinkDense(0xffffff00),
     NetworkVisualiserLinkProxy(0xffffa500),
-    NetworkVisualiserLinkDefault(0xff0000ff);
+    NetworkVisualiserLinkDefault(0xff0000ff),
+
+    SuperMEReplenisherInventory(0x404040),
+    SuperMEReplenisherStatus(0x404040);
 
     private final int color;
 
