@@ -47,7 +47,6 @@ import appeng.api.implementations.items.IStorageComponent;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.implementations.tiles.IChestOrDrive;
 import appeng.api.implementations.tiles.ISegmentedInventory;
-import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
 import appeng.client.texture.MissingIcon;
 import appeng.core.AEConfig;
@@ -289,8 +288,8 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
             }
             IInventory upgrades = null;
 
-            if (te instanceof IPartHost) {
-                final SelectedPart sp = ((IPartHost) te).selectPart(Vec3.createVectorHelper(hitX, hitY, hitZ));
+            final SelectedPart sp = Platform.selectPartFromTE(te, Vec3.createVectorHelper(hitX, hitY, hitZ));
+            if (sp != null) {
                 if (sp.part instanceof IUpgradeableHost) {
                     upgrades = ((ISegmentedInventory) sp.part).getInventoryByName("upgrades");
                 }

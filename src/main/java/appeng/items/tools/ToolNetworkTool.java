@@ -32,7 +32,6 @@ import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.items.IAEWrench;
 import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.networking.IGridHost;
-import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.INetworkToolAgent;
@@ -119,8 +118,8 @@ public class ToolNetworkTool extends AEBaseItem
                 Vec3.createVectorHelper(hitX, hitY, hitZ));
         final TileEntity te = world.getTileEntity(x, y, z);
 
-        if (te instanceof IPartHost host) {
-            final SelectedPart part = host.selectPart(mop.hitVec);
+        final SelectedPart part = Platform.selectPartFromTE(te, mop.hitVec);
+        if (part != null) {
             if (part.part instanceof INetworkToolAgent nta && !nta.showNetworkInfo(mop)) {
                 return false;
 

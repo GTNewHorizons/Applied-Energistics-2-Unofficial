@@ -68,7 +68,6 @@ import appeng.me.helpers.AENetworkProxy;
 import appeng.me.storage.MEMonitorPassThrough;
 import appeng.me.storage.NullInventory;
 import appeng.parts.PartBasicState;
-import appeng.tile.networking.TileCableBus;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -298,14 +297,13 @@ public class PartPatternRepeater extends PartBasicState
                 self.yCoord + this.getSide().offsetY,
                 self.zCoord + this.getSide().offsetZ);
 
-        if (target instanceof TileCableBus tcb
-                && tcb.getPart(this.getSide().getOpposite()) instanceof PartPatternRepeater ppr) {
+        if (Platform.getPartFromTE(target, this.getSide().getOpposite()) instanceof PartPatternRepeater ppr) {
             this.pairPatternRepeater = ppr;
             this.targetNetworkProxy = ppr.getProxy();
 
             if (this.provider) {
                 if (ppr.provider) return;
-                final IGridNode gn = tcb.getGridNode(ForgeDirection.UNKNOWN);
+                final IGridNode gn = ppr.getGridNode(ForgeDirection.UNKNOWN);
                 if (gn == null) return;
 
                 this.duringFletchPatterns = true;

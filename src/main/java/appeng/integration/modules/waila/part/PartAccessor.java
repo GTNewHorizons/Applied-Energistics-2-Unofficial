@@ -17,8 +17,8 @@ import net.minecraft.util.Vec3;
 import com.google.common.base.Optional;
 
 import appeng.api.parts.IPart;
-import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
+import appeng.util.Platform;
 
 /**
  * Accessor to access specific parts for WAILA
@@ -30,7 +30,7 @@ import appeng.api.parts.SelectedPart;
 public final class PartAccessor {
 
     /**
-     * Hits a {@link appeng.api.parts.IPartHost} with {@link net.minecraft.util.MovingObjectPosition}.
+     * Hits an AE2 cable bus with {@link net.minecraft.util.MovingObjectPosition}.
      * <p/>
      * You can derive the looked at {@link appeng.api.parts.IPart} by doing that. If a facade is being looked at, it is
      * defined as being absent.
@@ -40,13 +40,11 @@ public final class PartAccessor {
      * @return maybe the looked at {@link appeng.api.parts.IPart}
      */
     public Optional<IPart> getMaybePart(final TileEntity te, final MovingObjectPosition mop) {
-        if (te instanceof IPartHost host) {
-            final Vec3 position = mop.hitVec.addVector(-mop.blockX, -mop.blockY, -mop.blockZ);
-            final SelectedPart sp = host.selectPart(position);
+        final Vec3 position = mop.hitVec.addVector(-mop.blockX, -mop.blockY, -mop.blockZ);
+        final SelectedPart sp = Platform.selectPartFromTE(te, position);
 
-            if (sp.part != null) {
-                return Optional.of(sp.part);
-            }
+        if (sp != null && sp.part != null) {
+            return Optional.of(sp.part);
         }
 
         return Optional.absent();

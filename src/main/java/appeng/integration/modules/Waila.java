@@ -13,6 +13,8 @@ package appeng.integration.modules;
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
 import appeng.integration.modules.waila.PartWailaDataProvider;
 import appeng.integration.modules.waila.TileWailaDataProvider;
 import appeng.tile.AEBaseTile;
@@ -37,14 +39,25 @@ public class Waila implements IIntegrationModule {
     public static void register(final IWailaRegistrar registrar) {
         final IWailaDataProvider partHost = new PartWailaDataProvider();
 
-        registrar.registerStackProvider(partHost, AEBaseTile.class);
-        registrar.registerBodyProvider(partHost, AEBaseTile.class);
-        registrar.registerNBTProvider(partHost, AEBaseTile.class);
+        registerPartProvider(registrar, partHost, AEBaseTile.class);
+
+        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.FMP)) {
+            try {
+                registerPartProvider(registrar, partHost, Class.forName("codechicken.multipart.TileMultipart"));
+            } catch (final ClassNotFoundException ignored) {}
+        }
 
         final IWailaDataProvider tile = new TileWailaDataProvider();
 
         registrar.registerBodyProvider(tile, AEBaseTile.class);
         registrar.registerNBTProvider(tile, AEBaseTile.class);
+    }
+
+    private static void registerPartProvider(final IWailaRegistrar registrar, final IWailaDataProvider provider,
+            final Class<?> tileClass) {
+        registrar.registerStackProvider(provider, tileClass);
+        registrar.registerBodyProvider(provider, tileClass);
+        registrar.registerNBTProvider(provider, tileClass);
     }
 
     @Override

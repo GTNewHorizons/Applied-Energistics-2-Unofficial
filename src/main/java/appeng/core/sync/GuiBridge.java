@@ -46,7 +46,6 @@ import appeng.api.parts.ICraftingTerminal;
 import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.parts.ILevelEmitter;
 import appeng.api.parts.IPart;
-import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPatternTerminal;
 import appeng.api.parts.IPatternTerminalEx;
 import appeng.api.parts.IStorageBus;
@@ -340,17 +339,12 @@ public enum GuiBridge implements IGuiHandler {
             }
         }
         if (ID.type.isTile()) {
-            final TileEntity TE = w.getTileEntity(x, y, z);
-            if (TE instanceof IPartHost) {
-                ((IPartHost) TE).getPart(side);
-                final IPart part = ((IPartHost) TE).getPart(side);
-                if (ID.CorrectTileOrPart(part)) {
-                    return this.updateGui(ID.ConstructContainer(player.inventory, side, part), w, x, y, z, side, part);
-                }
-            } else {
-                if (ID.CorrectTileOrPart(TE)) {
-                    return this.updateGui(ID.ConstructContainer(player.inventory, side, TE), w, x, y, z, side, TE);
-                }
+            final TileEntity te = w.getTileEntity(x, y, z);
+            IPart part = Platform.getPartFromTE(te, side);
+            if (ID.CorrectTileOrPart(part)) {
+                return this.updateGui(ID.ConstructContainer(player.inventory, side, part), w, x, y, z, side, part);
+            } else if (ID.CorrectTileOrPart(te)) {
+                return this.updateGui(ID.ConstructContainer(player.inventory, side, te), w, x, y, z, side, te);
             }
         }
         return new ContainerNull();
@@ -488,17 +482,12 @@ public enum GuiBridge implements IGuiHandler {
             }
         }
         if (ID.type.isTile() && !pastXLimit) {
-            final TileEntity TE = w.getTileEntity(x, y, z);
-            if (TE instanceof IPartHost) {
-                ((IPartHost) TE).getPart(side);
-                final IPart part = ((IPartHost) TE).getPart(side);
-                if (ID.CorrectTileOrPart(part)) {
-                    return ID.ConstructGui(player.inventory, side, part);
-                }
-            } else {
-                if (ID.CorrectTileOrPart(TE)) {
-                    return ID.ConstructGui(player.inventory, side, TE);
-                }
+            final TileEntity te = w.getTileEntity(x, y, z);
+            IPart part = Platform.getPartFromTE(te, side);
+            if (ID.CorrectTileOrPart(part)) {
+                return ID.ConstructGui(player.inventory, side, part);
+            } else if (ID.CorrectTileOrPart(te)) {
+                return ID.ConstructGui(player.inventory, side, te);
             }
         }
         return new GuiNull(new ContainerNull());
@@ -538,16 +527,11 @@ public enum GuiBridge implements IGuiHandler {
                 te != null ? new DimensionalCoord(te) : new DimensionalCoord(player.worldObj, x, y, z),
                 player)) {
             if (te != null && this.type.isTile()) {
-                if (te instanceof IPartHost host) {
-                    host.getPart(side);
-                    final IPart part = host.getPart(side);
-                    if (this.CorrectTileOrPart(part)) {
-                        return this.securityCheck(part, player);
-                    }
-                } else {
-                    if (this.CorrectTileOrPart(te)) {
-                        return this.securityCheck(te, player);
-                    }
+                IPart part = Platform.getPartFromTE(te, side);
+                if (this.CorrectTileOrPart(part)) {
+                    return this.securityCheck(part, player);
+                } else if (this.CorrectTileOrPart(te)) {
+                    return this.securityCheck(te, player);
                 }
             } else if (this.type.isItem() && slotIndex != Integer.MIN_VALUE) {
                 final ItemStack it = getItemFromPlayerInventoryBySlotIndex(player, slotIndex);

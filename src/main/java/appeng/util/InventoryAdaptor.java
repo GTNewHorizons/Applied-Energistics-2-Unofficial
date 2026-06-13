@@ -19,6 +19,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
@@ -43,7 +44,6 @@ import appeng.integration.abstraction.IThaumicTinkerer;
 import appeng.parts.p2p.PartP2PItems;
 import appeng.parts.p2p.PartP2PLiquids;
 import appeng.tile.misc.TileInterface;
-import appeng.tile.networking.TileCableBus;
 import appeng.tile.storage.TileChest;
 import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorDualityInterface;
@@ -232,11 +232,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                 return new AdaptorDualityInterface(new WrapperMCISidedInventory(sided, d), (IInterfaceHost) te);
             }
 
-            if (te instanceof TileCableBus cableBus) {
-                IPart part = cableBus.getPart(d);
-                if (part == null) {
-                    return null;
-                }
+            if (te instanceof TileEntity tile) {
+                IPart part = Platform.getPartFromTE(tile, d);
 
                 if (invs && part instanceof IInterfaceHost host) {
                     return new AdaptorDualityInterface(new WrapperMCISidedInventory(sided, d), host);

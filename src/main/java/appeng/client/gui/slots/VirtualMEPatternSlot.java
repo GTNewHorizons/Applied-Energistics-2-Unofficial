@@ -6,17 +6,17 @@ import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
+import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPatternValueSet;
 import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.tile.inventory.IAEStackInventory;
 
 public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
 
-    public VirtualMEPatternSlot(int x, int y, IAEStackInventory inventory, int slotIndex,
+    public VirtualMEPatternSlot(int x, int y, AEStackInventorySyncHandler syncHandler, int slotIndex,
             TypeAcceptPredicate acceptType) {
-        super(x, y, inventory, slotIndex, acceptType);
+        super(x, y, syncHandler, slotIndex, acceptType);
         this.showAmount = true;
     }
 

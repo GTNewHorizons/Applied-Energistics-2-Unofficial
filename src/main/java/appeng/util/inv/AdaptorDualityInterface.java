@@ -89,4 +89,10 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
         }
         return super.containsItems();
     }
+
+    public boolean isEmpty(IAEStackType<?> type) {
+        IMEMonitor<?> monitor = interfaceHost.getInterfaceDuality().getMEMonitor(type);
+        if (monitor == null) return true;
+        return monitor.getStorageList().isEmpty();
+    }
 }
