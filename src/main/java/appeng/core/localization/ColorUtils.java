@@ -38,7 +38,8 @@ public class ColorUtils {
         wirelessKitGood                     = color.rgb("wirelessKitGood",                      "0x7CFF4A"),
         wirelessKitNeutral                  = color.rgb("wirelessKitNeutral",                   "0xF99739"),
         wirelessKitBad                      = color.rgb("wirelessKitBad",                       "0xA50029"),
-
+        contextMenuText                     = color.rgb("contextMenuText",                      "0x404040"),
+        
         searchboxFocused                    = color.argb("searchboxFocused",                    "0x6E000000"),
         searchboxUnfocused                  = color.argb("searchboxUnfocused",                  "0x00000000"),
         itemSlotOverlayUnpowered            = color.argb("itemSlotOverlayUnpowered",            "0x66111111"),
@@ -88,6 +89,9 @@ public class ColorUtils {
         networkVisualiserLinkCompressed     = color.argb("networkVisualiserLinkCompressed",     "0xffff00ff"),
         networkVisualiserLinkDense          = color.argb("networkVisualiserLinkDense",          "0xffffff00"),
         networkVisualiserLinkProxy          = color.argb("networkVisualiserLinkProxy",          "0xffffa500"),
-        networkVisualiserLinkDefault        = color.argb("networkVisualiserLinkDefault",        "0xff0000ff");
+        networkVisualiserLinkDefault        = color.argb("networkVisualiserLinkDefault",        "0xff0000ff"),
+        contextMenuBackground               = color.argb("contextMenuBackground",               "0xFFCDCDCD"),
+        contextMenuBackgroundHover          = color.argb("contextMenuBackgroundHover",          "0xFFA0A0A0"),
+        contextMenuBorder                   = color.argb("contextMenuBorder",                   "0xFF404040");
     // spotless:on
 }
