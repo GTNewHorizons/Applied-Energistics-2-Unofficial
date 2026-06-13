@@ -6,7 +6,7 @@ import net.minecraft.util.StatCollector;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCrystalGrowthChamber;
 import appeng.container.implementations.ContainerUpgradeable;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.tile.misc.TileCrystalGrowthChamber;
 
@@ -32,9 +32,9 @@ public class GuiCrystalGrowthChamber extends AEBaseGui {
                         StatCollector.translateToLocal("tile.appliedenergistics2.BlockCrystalGrowthChamber.name")),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, ySize - 96 + 3, GuiColors.GuiTextColorGray.getColor());
+                .drawString(GuiText.inventory.getLocal(), 8, ySize - 96 + 3, ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

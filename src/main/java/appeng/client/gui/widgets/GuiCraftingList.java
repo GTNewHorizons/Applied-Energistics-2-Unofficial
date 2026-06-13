@@ -30,7 +30,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
 import appeng.core.AELog;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.util.ColorPickHelper;
 import appeng.util.ReadableNumberConverter;
@@ -237,7 +237,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
                 downY += 5 * 4;
             }
 
@@ -249,7 +249,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
 
                 downY += 5 * 4;
             }
@@ -262,7 +262,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
 
                 downY += 5 * 4;
                 str = GuiText.ToCraftRequests.getLocal() + ": "
@@ -272,7 +272,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
             }
 
             if (stored != null && stored.getStackSize() > 0 && missingStack == null && pendingStack == null) {
