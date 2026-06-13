@@ -7,13 +7,12 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
-import appeng.api.parts.IPart;
 import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerInterfaceTerminal;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.IInterfaceHost;
-import appeng.tile.networking.TileCableBus;
+import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -58,10 +57,9 @@ public class PacketToggleInterfaceVisibility extends AppEngPacket {
 
         final TileEntity te = world.getTileEntity(this.x, this.y, this.z);
         final IInterfaceHost host;
-        if (te instanceof TileCableBus cableBus) {
-            final IPart part = cableBus.getPart(ForgeDirection.getOrientation(this.side));
-            if (!(part instanceof IInterfaceHost)) return;
-            host = (IInterfaceHost) part;
+        if (Platform
+                .getPartFromTE(te, ForgeDirection.getOrientation(this.side)) instanceof IInterfaceHost interfaceHost) {
+            host = interfaceHost;
         } else if (te instanceof IInterfaceHost) {
             host = (IInterfaceHost) te;
         } else {

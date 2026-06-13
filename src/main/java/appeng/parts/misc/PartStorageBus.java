@@ -712,11 +712,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
             achievement = (IInterfaceHost) target;
         }
 
-        if (target instanceof IPartHost) {
-            final Object part = ((IPartHost) target).getPart(side);
-            if (part instanceof IInterfaceHost) {
-                achievement = (IInterfaceHost) part;
-            }
+        if (Platform.getPartFromTE(target, side) instanceof IInterfaceHost host) {
+            achievement = host;
         }
 
         if (achievement != null && achievement.getActionableNode() != null) {

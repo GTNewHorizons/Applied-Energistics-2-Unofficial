@@ -44,6 +44,7 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.events.MENetworkChannelsChanged;
+import appeng.api.networking.events.MENetworkCraftingPushedPattern;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
@@ -102,6 +103,11 @@ public class TileInterface extends AENetworkInvTile
     public void stateChange(final MENetworkPowerStatusChange c) {
         this.duality.notifyNeighbors();
         markForUpdate();
+    }
+
+    @MENetworkEventSubscribe
+    public void pushedPattern(final MENetworkCraftingPushedPattern c) {
+        this.duality.notifyPushedPattern(c.host);
     }
 
     public void setSide(final ForgeDirection axis) {

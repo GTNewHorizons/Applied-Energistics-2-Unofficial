@@ -102,6 +102,9 @@ import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.parts.IPart;
+import appeng.api.parts.IPartHost;
+import appeng.api.parts.SelectedPart;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -126,10 +129,12 @@ import appeng.core.sync.GuiHostType;
 import appeng.hooks.TickHandler;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
+import appeng.integration.abstraction.IFMP;
 import appeng.integration.abstraction.IGT;
 import appeng.me.GridAccessException;
 import appeng.me.GridNode;
 import appeng.me.helpers.AENetworkProxy;
+import appeng.parts.CableBusContainer;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.AESharedNBT;
@@ -178,7 +183,6 @@ public class Platform {
     private static final DecimalFormat df = new DecimalFormat("#.##");
     public static final boolean isAE2FCLoaded = Loader.isModLoaded("ae2fc");
     public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
-    public static final boolean isMultiPartLoaded = Loader.isModLoaded("ForgeMultipart");
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
     public static final boolean isPosteaLoaded = Loader.isModLoaded("postea");
@@ -2191,5 +2195,38 @@ public class Platform {
         final ItemStack container = AEApi.instance().definitions().items().itemMEStackPacket().maybeStack(1).get();
         Platform.writeStackNBT(aes, ItemStackNBT.get(container));
         addToPlayerInvOrDrop(p, container);
+    }
+
+    /**
+     * Finds the AE2 part on the requested side of a cable bus tile.
+     * <p>
+     * Normal cable buses expose {@link IPartHost} directly, while ForgeMultipart stores the AE2 cable bus inside a
+     * {@link CableBusContainer} owned by a multipart tile entity.
+     */
+    @Nullable
+    public static IPart getPartFromTE(@Nullable final TileEntity te, @NotNull final ForgeDirection side) {
+        if (te == null) return null;
+        if (te instanceof IPartHost host) return host.getPart(side);
+
+        IFMP fmp = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.FMP);
+        CableBusContainer cb = fmp != null ? fmp.getCableContainer(te) : null;
+        return cb != null ? cb.getPart(side) : null;
+    }
+
+    /**
+     * Selects the AE2 part hit inside a cable bus tile.
+     * <p>
+     * The position must be block-local, matching {@link IPartHost#selectPart(Vec3)} and
+     * {@link CableBusContainer#selectPart(Vec3)}. This preserves normal facade handling for both standard cable buses
+     * and ForgeMultipart cable bus parts.
+     */
+    @Nullable
+    public static SelectedPart selectPartFromTE(@Nullable final TileEntity te, @NotNull final Vec3 pos) {
+        if (te == null) return null;
+        if (te instanceof IPartHost host) return host.selectPart(pos);
+
+        IFMP fmp = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.FMP);
+        CableBusContainer cb = fmp != null ? fmp.getCableContainer(te) : null;
+        return cb != null ? cb.selectPart(pos) : null;
     }
 }
