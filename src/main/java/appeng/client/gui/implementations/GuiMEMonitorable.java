@@ -15,6 +15,7 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -46,6 +47,7 @@ import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.TerminalFontSize;
 import appeng.api.config.TerminalStyle;
+import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.tiles.IViewCellStorage;
 import appeng.api.storage.ITerminalHost;
@@ -99,6 +101,8 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.storage.ItemViewCell;
+import appeng.me.cache.ItemFlowGridCache.FlowRate;
+import appeng.util.FlowRateFormatter;
 import appeng.util.IConfigManagerHost;
 import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
@@ -150,6 +154,7 @@ public class GuiMEMonitorable extends AEBaseGui
     private PinsRows playerPinsRows;
     public final boolean hasPinHost;
     private boolean enableShiftPause = true;
+    private boolean needsViewUpdate = false;
 
     protected VirtualMEPinSlot[] pinSlots = null;
     protected VirtualMEMonitorableSlot[] monitorableSlots = null;
@@ -210,8 +215,12 @@ public class GuiMEMonitorable extends AEBaseGui
             this.repo.postUpdate(is);
         }
 
-        this.repo.updateView();
-        this.setScrollBar();
+        this.needsViewUpdate = true;
+    }
+
+    public void updateFlowRates(final Map<IAEStack<?>, FlowRate> rates) {
+        this.repo.updateFlowRates(rates);
+        this.needsViewUpdate = true;
     }
 
     private void setScrollBar() {
@@ -279,7 +288,14 @@ public class GuiMEMonitorable extends AEBaseGui
 
         final Enum cv = iBtn.getCurrentValue();
         final boolean backwards = Mouse.isButtonDown(1);
-        final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
+
+        EnumSet<?> validOptions = iBtn.getSetting().getPossibleValues();
+        if (btn == this.ViewBox && !this.monitorableContainer.flowTrackingActive) {
+            validOptions = EnumSet.copyOf(validOptions);
+            validOptions.remove(ViewItems.FLOWING);
+        }
+
+        final Enum next = Platform.rotateEnum(cv, backwards, validOptions);
 
         if (btn == this.terminalStyleBox) {
             AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
@@ -632,11 +648,20 @@ public class GuiMEMonitorable extends AEBaseGui
         if (isMonitorableSlot || hoveredSlot instanceof VirtualMEPatternSlot) {
             IAEStack<?> aes = hoveredSlot.getAEStack();
             final int threshold = AEConfig.instance.getTerminalFontSize() == TerminalFontSize.SMALL ? 9999 : 999;
-            if (aes != null && aes.getStackSize() > threshold) {
-                final String local = isMonitorableSlot ? ButtonToolTips.ItemsStored.getLocal()
-                        : ButtonToolTips.ItemCount.getLocal();
-                final String formattedAmount = NumberFormat.getNumberInstance(Locale.US).format(aes.getStackSize());
-                currentToolTip.add(EnumChatFormatting.GRAY + String.format(local, formattedAmount));
+
+            if (aes != null) {
+
+                if (aes.getStackSize() > threshold) {
+                    final String local = isMonitorableSlot ? ButtonToolTips.ItemsStored.getLocal()
+                            : ButtonToolTips.ItemCount.getLocal();
+                    final String formattedAmount = NumberFormat.getNumberInstance(Locale.US).format(aes.getStackSize());
+                    currentToolTip.add(EnumChatFormatting.GRAY + String.format(local, formattedAmount));
+                }
+
+                final FlowRate rate = this.repo.getFlowRate(aes);
+                if (rate != null && (rate.in() != 0 || rate.out() != 0)) {
+                    currentToolTip.add(EnumChatFormatting.GRAY + FlowRateFormatter.formatTooltipLine(rate));
+                }
             }
         }
 
@@ -875,36 +900,59 @@ public class GuiMEMonitorable extends AEBaseGui
         }
 
         if (NEI.searchField.existsSearchField()) {
-            if ((NEI.searchField.focused() || searchField.isFocused())
-                    && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
-                final boolean focused = searchField.isFocused();
-                searchField.setFocused(!focused);
-                NEI.searchField.setFocus(focused);
-                isAutoFocused = false;
-                return;
-            }
+            if (NEI.searchField.focused() || searchField.isFocused()) {
 
-            if (CommonHelper.proxy.isActionKey(ActionKey.SEARCH_CONNECTED_INVENTORIES, key)
-                    && !(NEI.searchField.focused() || searchField.isFocused())) {
-                VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
-                if (slot instanceof VirtualMEMonitorableSlot monitorableSlot) {
-                    IAEStack<?> stack = monitorableSlot.getAEStack();
-                    this.monitorableContainer.setTargetStack(stack);
-                    if (stack != null) {
-                        final PacketInventoryAction p = new PacketInventoryAction(
-                                InventoryAction.FIND_ITEMS,
-                                this.getInventorySlots().size(),
-                                0);
-                        NetworkHandler.instance.sendToServer(p);
-                        this.closeGui();
-                        return;
+                if (CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
+                    final boolean focused = searchField.isFocused();
+                    searchField.setFocused(!focused);
+                    NEI.searchField.setFocus(focused);
+                    isAutoFocused = false;
+                    return;
+                }
+
+                if (NEI.searchField.focused()) {
+                    return;
+                }
+
+            } else {
+
+                if (CommonHelper.proxy.isActionKey(ActionKey.SEARCH_CONNECTED_INVENTORIES, key)) {
+                    final VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+                    if (slot instanceof VirtualMEMonitorableSlot monitorableSlot) {
+                        IAEStack<?> stack = monitorableSlot.getAEStack();
+                        this.monitorableContainer.setTargetStack(stack);
+                        if (stack != null) {
+                            final PacketInventoryAction p = new PacketInventoryAction(
+                                    InventoryAction.FIND_ITEMS,
+                                    this.getInventorySlots().size(),
+                                    0);
+                            NetworkHandler.instance.sendToServer(p);
+                            this.closeGui();
+                            return;
+                        }
                     }
                 }
+
+                if (CommonHelper.proxy.isActionKey(ActionKey.LOCATE_ITEM_FLOW, key)) {
+                    final VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+                    if (slot instanceof VirtualMEMonitorableSlot monitorableSlot) {
+                        IAEStack<?> stack = monitorableSlot.getAEStack();
+                        this.monitorableContainer.setTargetStack(stack);
+
+                        if (stack != null) {
+                            final PacketInventoryAction p = new PacketInventoryAction(
+                                    InventoryAction.LOCATE_ITEM_FLOW,
+                                    this.getInventorySlots().size(),
+                                    0);
+                            NetworkHandler.instance.sendToServer(p);
+                            this.closeGui();
+                            return;
+                        }
+                    }
+                }
+
             }
 
-            if (NEI.searchField.focused()) {
-                return;
-            }
         }
 
         if (searchField.isFocused() && (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER)) {
@@ -1030,6 +1078,12 @@ public class GuiMEMonitorable extends AEBaseGui
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        if (this.needsViewUpdate) {
+            this.needsViewUpdate = false;
+            this.repo.updateView();
+            this.setScrollBar();
+        }
+
         handleTooltip(mouseX, mouseY, searchField);
 
         super.drawScreen(mouseX, mouseY, btn);

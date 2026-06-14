@@ -80,8 +80,10 @@ import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.container.sync.ActionHandler;
 import appeng.container.sync.StreamCodecs;
 import appeng.container.sync.SyncRegistrar;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketFlowRates;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketMonitorableTypeFilter;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -91,6 +93,8 @@ import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.PinsHandler;
 import appeng.items.misc.ItemMEStackPacket;
 import appeng.items.storage.ItemViewCell;
+import appeng.me.cache.ItemFlowGridCache;
+import appeng.me.cache.ItemFlowGridCache.FlowRate;
 import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
@@ -122,11 +126,17 @@ public class ContainerMEMonitorable extends AEBaseContainer
     @GuiSync(98)
     public boolean hasPower = false;
 
+    @GuiSync(100)
+    public boolean flowTrackingActive = false;
+
     private IConfigManagerHost gui;
     private IConfigManager serverCM;
     private IGridNode networkNode;
 
     private boolean needListUpdate = false;
+
+    private int flowRateSyncCounter = 0;
+    private boolean lastFlowRatesEmpty = true;
 
     public final ActionHandler<Integer> toggleViewCellAction;
 
@@ -220,6 +230,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
 
+            this.updateFlowTrackingState();
+
             for (final Settings set : this.serverCM.getSettings()) {
                 final Enum<?> sideLocal = this.serverCM.getSetting(set);
                 final Enum<?> sideRemote = this.clientCM.getSetting(set);
@@ -284,6 +296,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
 
             this.updatePowerStatus();
+            this.updateFlowRates();
 
             final boolean oldAccessible = this.canAccessViewCells;
             this.canAccessViewCells = this.host instanceof WirelessTerminalGuiObject
@@ -312,6 +325,59 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
         } catch (final Throwable t) {
             // :P
+        }
+    }
+
+    private void updateFlowTrackingState() {
+        boolean active = false;
+
+        if (AEConfig.instance.enableItemFlowTracking && this.networkNode != null) {
+            final IGrid grid = this.networkNode.getGrid();
+            if (grid != null) {
+                final ItemFlowGridCache flowCache = grid.getCache(ItemFlowGridCache.class);
+                active = flowCache.isTrackingEnabled();
+            }
+        }
+
+        this.flowTrackingActive = active;
+
+        if (!active && this.serverCM.getSetting(Settings.VIEW_MODE) == ViewItems.FLOWING) {
+            this.serverCM.putSetting(Settings.VIEW_MODE, ViewItems.ALL);
+        }
+    }
+
+    private void updateFlowRates() {
+        if (!AEConfig.instance.enableItemFlowTracking || this.networkNode == null) {
+            return;
+        }
+
+        if (++this.flowRateSyncCounter < 10) {
+            return;
+        }
+
+        this.flowRateSyncCounter = 0;
+
+        final IGrid grid = this.networkNode.getGrid();
+        if (grid == null) {
+            return;
+        }
+
+        final ItemFlowGridCache flowCache = grid.getCache(ItemFlowGridCache.class);
+        final Map<IAEStack<?>, FlowRate> rates = flowCache.getAllRecentFlow();
+        if (rates.isEmpty() && this.lastFlowRatesEmpty) {
+            return;
+        }
+        this.lastFlowRatesEmpty = rates.isEmpty();
+
+        try {
+            final PacketFlowRates packet = new PacketFlowRates(rates);
+            for (final Object c : this.crafters) {
+                if (c instanceof EntityPlayerMP player) {
+                    NetworkHandler.instance.sendTo(packet, player);
+                }
+            }
+        } catch (final IOException e) {
+            AELog.debug(e);
         }
     }
 

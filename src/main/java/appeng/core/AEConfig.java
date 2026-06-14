@@ -144,6 +144,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
     public int maxRecursiveDepth = 100;
     public int maxMachineChecks = 10000;
+    public boolean enableItemFlowTracking = true;
+    public int itemFlowTrackingWindowMinutes = 2;
 
     public AEConfig(final File configFile) {
         super(configFile);
@@ -301,6 +303,13 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getInt(this.maxRecursiveDepth);
         this.maxMachineChecks = this.get("networksearch", "maxMachineChecks", this.maxMachineChecks)
                 .getInt(this.maxMachineChecks);
+
+        this.enableItemFlowTracking = this
+                .get("Features.ItemFlowTracking", "enableItemFlowTracking", this.enableItemFlowTracking)
+                .getBoolean(this.enableItemFlowTracking);
+        this.itemFlowTrackingWindowMinutes = this
+                .get("Features.ItemFlowTracking", "itemFlowTrackingWindowMinutes", this.itemFlowTrackingWindowMinutes)
+                .getInt(this.itemFlowTrackingWindowMinutes);
 
         this.clientSync();
 
