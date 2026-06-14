@@ -66,6 +66,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
     private final PinsHolder pinsInv = new PinsHolder(this);
+    private String saveSearch = "";
 
     @NotNull
     private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
@@ -101,6 +102,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.viewCell.readFromNBT(data, "viewCell");
         pinsInv.readFromNBT(data, "pins");
         this.typeFilters.readFromNBT(data);
+        this.saveSearch = data.getString("searchString");
     }
 
     @Override
@@ -110,6 +112,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.viewCell.writeToNBT(data, "viewCell");
         pinsInv.writeToNBT(data, "pins");
         this.typeFilters.writeToNBT(data);
+        data.setString("searchString", this.saveSearch);
     }
 
     @Override
@@ -197,5 +200,15 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     @Override
     public void saveTypeFilter() {
         this.saveChanges();
+    }
+
+    @Override
+    public void saveSearchString(String searchString) {
+        this.saveSearch = searchString;
+    }
+
+    @Override
+    public @Nullable String getSearchString() {
+        return this.saveSearch;
     }
 }

@@ -317,4 +317,14 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     public void saveTypeFilter() {
         this.typeFilters.writeToNBT(this.effectiveItem);
     }
+
+    @Override
+    public void saveSearchString(String searchString) {
+        this.effectiveItem.getTagCompound().setString("searchString", searchString);
+    }
+
+    @Override
+    public @Nullable String getSearchString() {
+        return this.effectiveItem.getTagCompound().getString("searchString");
+    }
 }

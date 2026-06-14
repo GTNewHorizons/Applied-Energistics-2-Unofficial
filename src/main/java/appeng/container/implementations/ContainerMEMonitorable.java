@@ -72,6 +72,7 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
+import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.AppEngSlot;
@@ -80,6 +81,7 @@ import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.container.sync.ActionHandler;
 import appeng.container.sync.StreamCodecs;
 import appeng.container.sync.SyncRegistrar;
+import appeng.container.sync.handlers.StringSyncHandler;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
@@ -129,6 +131,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
     private boolean needListUpdate = false;
 
     public final ActionHandler<Integer> toggleViewCellAction;
+
+    private final StringSyncHandler savedSearchSync;
 
     public ContainerMEMonitorable(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
@@ -203,6 +207,12 @@ public class ContainerMEMonitorable extends AEBaseContainer
         final SyncRegistrar sync = this.syncRegistrar();
         this.toggleViewCellAction = sync.actionC2S("toggleViewCell", StreamCodecs.intValue())
                 .onServerAction(this::toggleViewCell);
+        this.savedSearchSync = sync.stringSync("savedSearch")
+                .onServerChange((oldValue, newValue) -> this.host.saveSearchString(newValue)).onClientChange(
+                        (oldValue, newValue) -> {
+                            if (this.gui instanceof GuiMEMonitorable gm) gm.memoryTextUpdated();
+                        });
+        if (Platform.isServer()) this.savedSearchSync.set(this.host.getSearchString());
     }
 
     public IGridNode getNetworkNode() {
@@ -1310,5 +1320,13 @@ public class ContainerMEMonitorable extends AEBaseContainer
             return null;
         }
         return ais.getItemStack();
+    }
+
+    public void saveSearchString(final String searchString) {
+        this.savedSearchSync.set(searchString);
+    }
+
+    public String getSavedSearchString() {
+        return this.savedSearchSync.get();
     }
 }

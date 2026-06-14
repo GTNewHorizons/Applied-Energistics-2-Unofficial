@@ -13,6 +13,8 @@
 
 package appeng.api.storage;
 
+import javax.annotation.Nullable;
+
 import appeng.api.util.IConfigurableObject;
 import appeng.core.localization.GuiText;
 
@@ -22,4 +24,10 @@ public interface ITerminalHost extends IStorageMonitorable, IConfigurableObject 
         return GuiText.Terminal;
     }
 
+    default void saveSearchString(final String searchString) {}
+
+    @Nullable
+    default String getSearchString() {
+        return null;
+    }
 }

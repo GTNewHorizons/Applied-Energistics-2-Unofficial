@@ -523,8 +523,10 @@ public class GuiMEMonitorable extends AEBaseGui
         if (this.isSubGui()) {
             this.searchField.setText(memoryText);
         } else if (AEConfig.instance.preserveSearchBar) {
-            this.searchField.setText(memoryText, true);
-            repo.setSearchString(memoryText);
+            final String localMemoryText = this.monitorableContainer.getSavedSearchString();
+            final String mem = localMemoryText == null ? memoryText : localMemoryText;
+            this.searchField.setText(mem, true);
+            repo.setSearchString(mem);
         }
         this.searchField.setCursorPositionEnd();
 
@@ -804,7 +806,12 @@ public class GuiMEMonitorable extends AEBaseGui
     public void onGuiClosed() {
         super.onGuiClosed();
         Keyboard.enableRepeatEvents(false);
-        memoryText = this.searchField.getText();
+    }
+
+    @Override
+    protected void flushPendingSync() {
+        this.saveMemoryText(this.searchField.getText());
+        super.flushPendingSync();
     }
 
     @Override
@@ -1165,5 +1172,14 @@ public class GuiMEMonitorable extends AEBaseGui
             this.sendAction(MonitorableAction.SET_PIN, AEItemStack.create(itemStack), pinSlot.getSlotIndex());
             return true;
         }
+    }
+
+    private void saveMemoryText(final String text) {
+        memoryText = text;
+        if (AEConfig.instance.preserveSearchBar) this.monitorableContainer.saveSearchString(text);
+    }
+
+    public void memoryTextUpdated() {
+        this.reinitalize();
     }
 }

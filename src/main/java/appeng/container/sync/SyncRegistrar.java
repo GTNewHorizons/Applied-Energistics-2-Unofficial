@@ -12,6 +12,7 @@ import appeng.container.sync.handlers.DoubleSyncHandler;
 import appeng.container.sync.handlers.IntSyncHandler;
 import appeng.container.sync.handlers.LongSyncHandler;
 import appeng.container.sync.handlers.ObjectSyncHandler;
+import appeng.container.sync.handlers.StringSyncHandler;
 import appeng.tile.inventory.IAEStackInventory;
 
 public interface SyncRegistrar {
@@ -58,6 +59,15 @@ public interface SyncRegistrar {
 
     @NotNull
     DoubleSyncHandler doubleSync(@NotNull String key);
+
+    @NotNull
+    StringSyncHandler stringS2C(@NotNull String key);
+
+    @NotNull
+    StringSyncHandler stringC2S(@NotNull String key);
+
+    @NotNull
+    StringSyncHandler stringSync(@NotNull String key);
 
     @NotNull
     <T, D> DeltaObjectSyncHandler<T, D> objectS2C(@NotNull String key, @NotNull DeltaSyncCodec<T, D> codec,
