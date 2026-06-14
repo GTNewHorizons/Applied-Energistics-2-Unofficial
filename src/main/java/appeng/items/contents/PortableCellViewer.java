@@ -109,4 +109,14 @@ public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitor
         out.readFromNBT((NBTTagCompound) ItemStackNBT.get(this.target).copy());
         return out;
     }
+
+    @Override
+    public void saveSearchString(String searchString) {
+        this.target.getTagCompound().setString("searchString", searchString);
+    }
+
+    @Override
+    public @Nullable String getSearchString() {
+        return this.target.getTagCompound().getString("searchString");
+    }
 }
