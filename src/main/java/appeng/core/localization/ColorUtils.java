@@ -35,9 +35,9 @@ public class ColorUtils {
         reshuffleStatusComplete             = color.rgb("reshuffleStatusComplete",              "0x0055FF"),
         reshuffleStatusFailed               = color.rgb("reshuffleStatusFailed",                "0xCC0000"),
         reshuffleStatusCancelled            = color.rgb("reshuffleStatusCancelled",             "0xFF6600"),
-        wirelessKitGood                     = color.rgb("wirelessKitGood",                      "0x7CFF4A"),
-        wirelessKitNeutral                  = color.rgb("wirelessKitNeutral",                   "0xF99739"),
-        wirelessKitBad                      = color.rgb("wirelessKitBad",                       "0xA50029"),
+        wirelessKitGood                     = color.rgb("wirelessKitGood",                      "0xBBFF51"),
+        wirelessKitNeutral                  = color.rgb("wirelessKitNeutral",                   "0xFAAE44"),
+        wirelessKitBad                      = color.rgb("wirelessKitBad",                       "0xFF003C"),
         contextMenuText                     = color.rgb("contextMenuText",                      "0x404040"),
         
         searchboxFocused                    = color.argb("searchboxFocused",                    "0x6E000000"),
