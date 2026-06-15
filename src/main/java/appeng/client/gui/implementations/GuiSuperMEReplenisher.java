@@ -15,7 +15,7 @@ import appeng.client.gui.slots.VirtualMEPhantomSlotPrecise;
 import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerSuperMEReplenisher;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.tile.misc.TileSuperMEReplenisher;
 
@@ -59,6 +59,7 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
         }
 
         final VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+        final int color = ColorUtils.guiTextColorGray.getColor();
         if (slot != null) {
             final IAEStack<?> config = slot.getAEStack();
             if (config != null) {
@@ -70,20 +71,17 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
                         GuiText.SuperMEReplenisherTarget.getLocal(fmt(config.getStackSize())),
                         29,
                         65,
-                        GuiColors.SuperMEReplenisherStatus.getColor());
+                        color);
 
-                this.fontRendererObj.drawString(
-                        GuiText.SuperMEReplenisherStored.getLocal(fmt(storedSize)),
-                        29,
-                        75,
-                        GuiColors.SuperMEReplenisherStatus.getColor());
+                this.fontRendererObj
+                        .drawString(GuiText.SuperMEReplenisherStored.getLocal(fmt(storedSize)), 29, 75, color);
 
                 this.fontRendererObj.drawString(
                         GuiText.SuperMEReplenisherBytesUsed
                                 .getLocal(fmt((long) Math.ceil((double) storedSize / type.getAmountPerByte()))),
                         29,
                         85,
-                        GuiColors.SuperMEReplenisherStatus.getColor());
+                        color);
             }
         }
 
@@ -96,34 +94,22 @@ public class GuiSuperMEReplenisher extends AEBaseGui {
                         .getLocal(unlimited ? GuiText.SuperMEReplenisherBytesUnlimited.getLocal() : fmt(totalBytes)),
                 29,
                 104,
-                GuiColors.GuiTextColorGray.getColor());
+                color);
         this.fontRendererObj.drawString(
                 GuiText.SuperMEReplenisherBytesUsed.getLocal(fmt(this.containerSuperMEReplenisher.getUsedBytes())),
                 29,
                 114,
-                GuiColors.GuiTextColorGray.getColor());
+                color);
 
         // Settings
 
-        this.fontRendererObj.drawString(
-                GuiText.SuperMEReplenisherTickRate.getLocal(),
-                29,
-                124,
-                GuiColors.SuperMEReplenisherStatus.getColor());
+        this.fontRendererObj.drawString(GuiText.SuperMEReplenisherTickRate.getLocal(), 29, 124, color);
 
-        this.fontRendererObj.drawString(
-                GuiText.SuperMEReplenisherThreshold.getLocal(),
-                100,
-                124,
-                GuiColors.SuperMEReplenisherStatus.getColor());
+        this.fontRendererObj.drawString(GuiText.SuperMEReplenisherThreshold.getLocal(), 100, 124, color);
 
-        this.fontRendererObj.drawString("%", 100 + 31, 136, GuiColors.SuperMEReplenisherStatus.getColor());
+        this.fontRendererObj.drawString("%", 100 + 31, 136, color);
 
-        this.fontRendererObj.drawString(
-                GuiText.inventory.getLocal(),
-                29,
-                this.ySize - 99,
-                GuiColors.SuperMEReplenisherInventory.getColor());
+        this.fontRendererObj.drawString(GuiText.inventory.getLocal(), 29, this.ySize - 99, color);
     }
 
     @Override
