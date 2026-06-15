@@ -45,6 +45,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraftforge.fluids.IFluidHandler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -1043,10 +1045,12 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (name.equals("tile.blockWritingTable") && tileHasOnlyIgnoredItems(ad)) return true;
 
         if (ad instanceof AdaptorDualityInterface adaptorDualityInterface) {
-            boolean isEmpty = tileHasOnlyIgnoredItems(ad);
-
-            if (this.isFluidInterface && isEmpty) {
-                return adaptorDualityInterface.isEmpty(FLUID_STACK_TYPE);
+            boolean isEmpty = adaptorDualityInterface.interfaceHost.getInterfaceDuality().hasConfig
+                    && tileHasOnlyIgnoredItems(ad);
+            if (isEmpty && adaptorDualityInterface.interfaceHost instanceof IFluidHandler fluidHandler) {
+                for (FluidTankInfo info : fluidHandler.getTankInfo(side)) {
+                    if (info.fluid != null && info.capacity > 0) return false;
+                }
             }
 
             return isEmpty;
@@ -1335,10 +1339,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return true;
-        } else if (foundTarget && scheduledReason != ScheduledReason.UNSUPPORTED_STACK) {
-            foundReason = true;
-            scheduledReason = ScheduledReason.SOMETHING_STUCK;
-        }
+        } else if (foundTarget && scheduledReason != ScheduledReason.UNSUPPORTED_STACK
+                && scheduledReason != ScheduledReason.BLOCKING_MODE) {
+                    foundReason = true;
+                    scheduledReason = ScheduledReason.SOMETHING_STUCK;
+                }
 
         if (!foundReason) scheduledReason = ScheduledReason.NO_TARGET;
 
