@@ -10,7 +10,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
 import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -62,12 +62,12 @@ public class GuiAdvancedNetworkTool extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.AdvancedNetworkTool.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

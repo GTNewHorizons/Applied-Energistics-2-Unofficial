@@ -12,7 +12,7 @@ import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerRenamer;
 import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -52,7 +52,7 @@ public class GuiRenamer extends GuiSub implements IDropToFillTextField {
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        this.fontRendererObj.drawString(GuiText.Renamer.getLocal(), 12, 8, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(GuiText.Renamer.getLocal(), 12, 8, ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

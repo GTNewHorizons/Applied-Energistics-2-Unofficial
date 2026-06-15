@@ -29,7 +29,7 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.slot.AppEngSlot;
 import appeng.core.AEConfig;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
@@ -259,7 +259,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     private void drawTableBackground(final int offsetX, final int offsetY) {
         final int left = offsetX + LAYOUT.listLeft;
         final int right = offsetX + LAYOUT.listRight;
-        final int lineColor = GuiColors.CraftingDiagnosticTerminalLine.getColor();
+        final int lineColor = ColorUtils.craftingDiagnosticTerminalLine.getColor();
         drawRect(left, offsetY + LAYOUT.listTop - 1, right, offsetY + LAYOUT.listTop, lineColor);
         drawRect(
                 offsetX + LAYOUT.itemColumnRight,
@@ -292,28 +292,28 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 this.fontRendererObj.trimStringToWidth(GuiText.CraftingDiagnosticTerminal.getLocal(), 104),
                 8,
                 7,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.Item.getLocal(),
                 LAYOUT.listLeft,
                 LAYOUT.headerY,
-                GuiColors.GuiTextColorBlack.getColor());
+                ColorUtils.guiTextColorBlack.getColor());
         this.fontRendererObj.drawString(
                 GuiText.Qty.getLocal(),
                 LAYOUT.qtyHeaderX,
                 LAYOUT.headerY,
-                GuiColors.GuiTextColorBlack.getColor());
+                ColorUtils.guiTextColorBlack.getColor());
         this.fontRendererObj.drawString(
                 GuiText.CumulativeTime.getLocal(),
                 LAYOUT.timeHeaderX,
                 LAYOUT.headerY,
-                GuiColors.GuiTextColorBlack.getColor());
+                ColorUtils.guiTextColorBlack.getColor());
         this.fontRendererObj.drawString(
                 GuiText.AvgPerSecond.getLocal(),
                 LAYOUT.avgHeaderX,
                 LAYOUT.headerY,
-                GuiColors.GuiTextColorBlack.getColor());
+                ColorUtils.guiTextColorBlack.getColor());
 
         this.hoveredRow = -1;
         final int start = this.getScrollBar().getCurrentScroll();
@@ -336,7 +336,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                         rowTop,
                         LAYOUT.listRight,
                         rowTop + LAYOUT.rowHeight - 1,
-                        GuiColors.CraftingDiagnosticTerminalRowHover.getColor());
+                        ColorUtils.craftingDiagnosticTerminalRowHover.getColor());
             }
 
             final ItemStack displayStack = row.getDisplayStack();
@@ -349,7 +349,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                     name,
                     LAYOUT.itemTextX + 1,
                     rowTop + LAYOUT.rowTextOffsetY,
-                    GuiColors.GuiTextColorBlack.getColor());
+                    ColorUtils.guiTextColorBlack.getColor());
             this.drawRightAligned(row.getCompactProduced(), LAYOUT.qtyValueRightX, rowTop + LAYOUT.rowTextOffsetY);
             this.drawRightAligned(
                     row.getCompactFormattedTime(),
@@ -391,7 +391,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 text,
                 rightX - this.fontRendererObj.getStringWidth(text),
                 y,
-                GuiColors.GuiTextColorBlack.getColor());
+                ColorUtils.guiTextColorBlack.getColor());
     }
 
     private void recalculateScreenSize() {
