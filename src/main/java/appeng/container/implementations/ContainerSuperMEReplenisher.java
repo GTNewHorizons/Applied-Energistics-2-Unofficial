@@ -52,6 +52,16 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
         }
 
         @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Stored subject)) return false;
+            if (this == obj) return true;
+            if (subject.list.size() != this.list.size()) return false;
+            for (final IAEStack<?> aes : this.list)
+                if (!Platform.isStacksIdentical(aes, subject.list.findPrecise(aes))) return false;
+            return true;
+        }
+
+        @Override
         public void writeToPacket(ByteBuf buf) {
             buf.writeInt(this.list.size());
             this.list.forEach(o -> Platform.writeStackByte(o, buf));
