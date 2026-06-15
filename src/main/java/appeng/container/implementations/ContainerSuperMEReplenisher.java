@@ -48,7 +48,9 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
         }
 
         public static Stored copy(final Stored s) {
-            return new Stored(s.list);
+            final IAEStackList newList = new IAEStackList(true);
+            s.list.forEach(aes -> newList.add(aes.copy()));
+            return new Stored(newList);
         }
 
         @Override

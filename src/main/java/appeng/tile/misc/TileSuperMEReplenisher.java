@@ -285,10 +285,13 @@ public class TileSuperMEReplenisher extends AENetworkTile
             final IStorageGrid storage = this.getProxy().getStorage();
             fList.forEach(listItem -> {
                 final IMEMonitor monitor = storage.getMEMonitor(listItem.getStackType());
-                if (monitor != null) monitor.injectItems(
-                        this.extractItems(listItem, Actionable.MODULATE, fList),
-                        Actionable.MODULATE,
-                        this.src);
+                if (monitor != null) {
+                    final IAEStack<?> leftOver = monitor.injectItems(
+                            this.extractItems(listItem, Actionable.MODULATE, fList),
+                            Actionable.MODULATE,
+                            this.src);
+                    if (leftOver != null) this.injectItems(leftOver, Actionable.MODULATE, fList);
+                }
             });
         } catch (final GridAccessException ignored) {}
     }
@@ -358,9 +361,6 @@ public class TileSuperMEReplenisher extends AENetworkTile
         final long freeBytes = this.totalBytes - this.usedBytes;
         if (freeBytes == 0) return input;
 
-        this.status = 1;
-        this.markForUpdate();
-
         final IAEStackType<?> stackType = input.getStackType();
         final int typeWeight = stackType.getAmountPerByte();
         final long stackSize = input.getStackSize();
@@ -386,6 +386,9 @@ public class TileSuperMEReplenisher extends AENetworkTile
                 return notAllowed;
             }
         } else {
+            this.status = 1;
+            this.markForUpdate();
+
             if (freeBytes >= needBytes) {
                 if (!this.unlimited) {
                     this.unusedCount.put(stackType, newUnusedCount);
@@ -428,9 +431,6 @@ public class TileSuperMEReplenisher extends AENetworkTile
         final long stackSize = stack.getStackSize();
         if (stackSize <= 0) return null;
 
-        this.status = -1;
-        this.markForUpdate();
-
         long requestSize = request.getStackSize();
         final IAEStack<?> ret = request.copy();
 
@@ -440,6 +440,9 @@ public class TileSuperMEReplenisher extends AENetworkTile
         }
 
         if (mode == Actionable.MODULATE) {
+            this.status = -1;
+            this.markForUpdate();
+
             stack.decStackSize(requestSize);
             if (!this.unlimited) {
                 final int typeWeight = stackType.getAmountPerByte();
