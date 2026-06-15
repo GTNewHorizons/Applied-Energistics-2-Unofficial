@@ -9,7 +9,7 @@ import appeng.api.config.PriorityCardMode;
 import appeng.api.config.Settings;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerPriorityCard;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
@@ -39,7 +39,7 @@ public class GuiPriorityCard extends GuiPriority {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(GuiText.PriorityCard.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(GuiText.PriorityCard.getLocal(), 8, 6, ColorUtils.guiTextColorGray.getColor());
         if (this.mode != null) {
             this.mode.set(this.container.getCardMode());
         }

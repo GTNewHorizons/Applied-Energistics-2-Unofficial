@@ -31,7 +31,7 @@ import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerOptimizePatterns;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketOptimizePatterns;
@@ -115,7 +115,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                 20);
         this.amountToCraft.setEnableBackgroundDrawing(true);
         this.amountToCraft.setMaxStringLength(16);
-        this.amountToCraft.setTextColor(GuiColors.CraftAmountToCraft.getColor());
+        this.amountToCraft.setTextColor(ColorUtils.craftAmountToCraft.getColor());
         this.amountToCraft.setVisible(true);
         this.amountToCraft.setFocused(true);
         this.amountToCraft.setText("1");
@@ -158,18 +158,18 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
 
         this.fontRendererObj
-                .drawString(GuiText.PatternOptimizer.getLocal(), 8, 7, GuiColors.GuiTextColorGray.getColor());
+                .drawString(GuiText.PatternOptimizer.getLocal(), 8, 7, ColorUtils.guiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 GuiText.StepsPerCraft.getLocal() + ":",
                 6,
                 (ySize - 68) + (20 / 2) - (this.fontRendererObj.FONT_HEIGHT / 2),
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
 
         String dsp = GuiText.PatternsAffected.getLocal() + ": " + multiplierMap.size();
 
         final int offset = (219 - this.fontRendererObj.getStringWidth(dsp)) / 2;
-        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(dsp, offset, ySize - 41, ColorUtils.guiTextColorGray.getColor());
 
         final int viewStart = this.getScrollBar().getCurrentScroll() * 3;
         final int viewEnd = viewStart + 3 * this.rows;
@@ -212,7 +212,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.GuiTextColorGray.getColor());
+                            ColorUtils.guiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -231,7 +231,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                             str,
                             (int) ((x * (1 + sectionLength) + xo + sectionLength - 19 - (w * 0.5)) * 2),
                             (y * offY + yo + 6 - negY + downY) * 2,
-                            GuiColors.GuiTextColorGray.getColor());
+                            ColorUtils.guiTextColorGray.getColor());
 
                     if (this.tooltip == z - viewStart) {
                         lineList.add(
@@ -280,7 +280,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                             startY,
                             startX + sectionLength,
                             startY + offY,
-                            GuiColors.CraftConfirmMissingItem.getColor());
+                            ColorUtils.craftConfirmMissingItem.getColor());
                 }
 
                 x++;

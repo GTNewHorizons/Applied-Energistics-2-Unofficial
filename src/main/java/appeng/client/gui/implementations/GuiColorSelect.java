@@ -20,7 +20,7 @@ import org.lwjgl.opengl.GL12;
 
 import appeng.api.AEApi;
 import appeng.api.util.AEColor;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketColorSelect;
 import appeng.items.tools.powered.ToolColorApplicator;
@@ -110,13 +110,13 @@ public class GuiColorSelect extends GuiScreen {
                 this.guiTop,
                 this.guiLeft + GUI_WIDTH,
                 this.guiTop + GUI_HEIGHT,
-                GuiColors.ColorSelectBackground.getColor());
+                ColorUtils.colorSelectBackground.getColor());
         drawRect(
                 this.guiLeft + 1,
                 this.guiTop + 1,
                 this.guiLeft + GUI_WIDTH - 1,
                 this.guiTop + GUI_HEIGHT - 1,
-                GuiColors.ColorSelectBorder.getColor());
+                ColorUtils.colorSelectBorder.getColor());
 
         GL11.glPopAttrib();
 
@@ -133,7 +133,7 @@ public class GuiColorSelect extends GuiScreen {
         final int titleX = (this.width - titleWidth) / 2;
         final int titleY = this.guiTop + TITLE_OFFSET_Y;
 
-        this.fontRendererObj.drawString(title, titleX, titleY, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(title, titleX, titleY, ColorUtils.guiTextColorGray.getColor());
     }
 
     private void drawTooltips(int mouseX, int mouseY) {
@@ -239,12 +239,12 @@ public class GuiColorSelect extends GuiScreen {
             final int borderColor;
 
             if (this.isSelected) {
-                borderColor = GuiColors.ColorSelectBtnBorderSelected.getColor();
+                borderColor = ColorUtils.colorSelectBtnBorderSelected.getColor();
             } else if (!this.enabled) {
-                borderColor = GuiColors.ColorSelectBtnBorderDisabled.getColor();
+                borderColor = ColorUtils.colorSelectBtnBorderDisabled.getColor();
             } else {
-                borderColor = this.field_146123_n ? GuiColors.ColorSelectBtnBorderHover.getColor()
-                        : GuiColors.ColorSelectBtnBorder.getColor();
+                borderColor = this.field_146123_n ? ColorUtils.colorSelectBtnBorderHover.getColor()
+                        : ColorUtils.colorSelectBtnBorder.getColor();
             }
 
             drawRect(
@@ -258,7 +258,7 @@ public class GuiColorSelect extends GuiScreen {
                     this.yPosition + 1,
                     this.xPosition + this.width - 1,
                     this.yPosition + this.height - 1,
-                    GuiColors.ColorSelectBtnBg.getColor());
+                    ColorUtils.colorSelectBtnBg.getColor());
         }
 
         private void drawIcon(Minecraft mc) {
@@ -299,7 +299,7 @@ public class GuiColorSelect extends GuiScreen {
             final int renderY = ((this.yPosition + 17) * 2) - 8;
 
             mc.fontRenderer
-                    .drawStringWithShadow(stackSizeStr, renderX, renderY, GuiColors.ColorSelectBtnText.getColor());
+                    .drawStringWithShadow(stackSizeStr, renderX, renderY, ColorUtils.colorSelectBtnText.getColor());
 
             GL11.glPopMatrix();
         }
@@ -315,14 +315,14 @@ public class GuiColorSelect extends GuiScreen {
                         this.yPosition + 1,
                         this.xPosition + this.width - 1,
                         this.yPosition + this.height - 1,
-                        GuiColors.ColorSelectBtnOverlayDisabled.getColor());
+                        ColorUtils.colorSelectBtnOverlayDisabled.getColor());
             } else if (this.field_146123_n && !this.isSelected) {
                 drawRect(
                         this.xPosition + 1,
                         this.yPosition + 1,
                         this.xPosition + this.width - 1,
                         this.yPosition + this.height - 1,
-                        GuiColors.ColorSelectBtnOverlayHover.getColor());
+                        ColorUtils.colorSelectBtnOverlayHover.getColor());
             }
 
             GL11.glEnable(GL11.GL_TEXTURE_2D);

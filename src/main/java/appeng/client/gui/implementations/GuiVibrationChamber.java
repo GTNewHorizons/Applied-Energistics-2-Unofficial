@@ -18,7 +18,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiProgressBar;
 import appeng.client.gui.widgets.GuiProgressBar.Direction;
 import appeng.container.implementations.ContainerVibrationChamber;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.tile.misc.TileVibrationChamber;
 
@@ -47,12 +47,12 @@ public class GuiVibrationChamber extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.VibrationChamber.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
 
         this.pb.setFullMsg(this.cvc.getAePerTick() * this.cvc.getCurrentProgress() / 100 + " AE/t");
 
