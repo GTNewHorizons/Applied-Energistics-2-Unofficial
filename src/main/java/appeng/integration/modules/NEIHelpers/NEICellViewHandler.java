@@ -22,7 +22,7 @@ import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.render.StackSizeRenderer;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.util.Platform;
@@ -137,7 +137,7 @@ public class NEICellViewHandler implements IUsageHandler {
                 usedBytes + " " + GuiText.Of.getLocal() + ' ' + totalBytes + ' ' + GuiText.BytesUsed.getLocal(),
                 OFFSET_X,
                 INFO_OFFSET_Y,
-                GuiColors.NEICellView.getColor());
+                ColorUtils.neiCellView.getColor());
         fontRenderer.drawString(
                 NumberFormat.getInstance().format(cellHandler.getUsedTypes()) + " "
                         + GuiText.Of.getLocal()
@@ -147,7 +147,7 @@ public class NEICellViewHandler implements IUsageHandler {
                         + GuiText.Types.getLocal(),
                 OFFSET_X,
                 INFO_OFFSET_Y + fontRenderer.FONT_HEIGHT + 2,
-                GuiColors.NEICellView.getColor());
+                ColorUtils.neiCellView.getColor());
 
         for (ViewItemStack viewStack : this.stacks) {
             if (viewStack.stackSize == 0) continue;

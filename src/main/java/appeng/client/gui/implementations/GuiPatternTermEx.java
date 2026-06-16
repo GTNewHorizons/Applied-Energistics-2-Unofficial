@@ -13,7 +13,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 
 public class GuiPatternTermEx extends GuiPatternTerm {
@@ -91,7 +91,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                 GuiText.PatternTerminalEx.getLocal(),
                 8,
                 this.ySize - 96 + 2 - this.getReservedSpace(),
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.processingScrollBar.draw(this);
     }
 

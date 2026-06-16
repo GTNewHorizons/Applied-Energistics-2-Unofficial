@@ -1,19 +1,21 @@
 package appeng.util;
 
-import appeng.core.localization.GuiColors;
+import com.gtnewhorizon.gtnhlib.color.ColorResource;
+
+import appeng.core.localization.ColorUtils;
 
 public class ColorPickHelper {
 
-    public static GuiColors selectColorFromThreshold(float threshold) {
-        GuiColors color = null;
+    public static ColorResource selectColorFromThreshold(float threshold) {
+        ColorResource color = null;
         if (threshold <= 25) {
-            color = GuiColors.CraftConfirmPercent25;
+            color = ColorUtils.craftConfirmPercent25;
         } else if (threshold <= 50) {
-            color = GuiColors.CraftConfirmPercent50;
+            color = ColorUtils.craftConfirmPercent50;
         } else if (threshold <= 75) {
-            color = GuiColors.CraftConfirmPercent75;
+            color = ColorUtils.craftConfirmPercent75;
         } else {
-            color = GuiColors.CraftConfirmPercent100;
+            color = ColorUtils.craftConfirmPercent100;
         }
         return color;
     }
