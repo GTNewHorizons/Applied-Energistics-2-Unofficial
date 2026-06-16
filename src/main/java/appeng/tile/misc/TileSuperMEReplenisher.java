@@ -311,15 +311,15 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
     private void removeCell(final ItemStack is) {
         final long newBytes = this.getCellBytes(is);
-        if (newBytes == Long.MAX_VALUE / 16) this.unlimited = false;
         this.totalBytes -= newBytes;
+        if (this.totalBytes < Long.MAX_VALUE / 16) this.unlimited = false;
         this.updatePowerDraw();
     }
 
     private void addCell(final ItemStack is) {
         final long newBytes = this.getCellBytes(is);
-        if (newBytes == Long.MAX_VALUE / 16) this.unlimited = true;
         this.totalBytes += newBytes;
+        if (this.totalBytes >= Long.MAX_VALUE / 16) this.unlimited = true;
         this.updatePowerDraw();
     }
 
