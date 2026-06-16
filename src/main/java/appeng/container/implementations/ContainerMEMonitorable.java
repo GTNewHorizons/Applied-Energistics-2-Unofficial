@@ -985,9 +985,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 if (hand.stackSize == 1) {
                     fillSingleFluidContainer(player, hand, stackInSlot, type, monitor);
                 } else {
-                    long capacity = type.getContainerItemCapacity(hand, stackInSlot);
-                    if (capacity <= 0) return;
-
                     ObjectLongPair<ItemStack> fullFilledPair = type.fillContainer(
                             Platform.copyStackWithSizeOne(hand),
                             stackInSlot.copy().setStackSize(Long.MAX_VALUE));
