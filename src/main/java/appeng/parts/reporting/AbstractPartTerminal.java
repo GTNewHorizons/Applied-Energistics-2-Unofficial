@@ -10,13 +10,18 @@
 
 package appeng.parts.reporting;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.common.util.Constants;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -66,7 +71,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
     private final PinsHolder pinsInv = new PinsHolder(this);
-    private String saveSearch = "";
+    private final Map<UUID, String> savedSearch = new HashMap<>();
 
     @NotNull
     private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
@@ -102,7 +107,24 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.viewCell.readFromNBT(data, "viewCell");
         pinsInv.readFromNBT(data, "pins");
         this.typeFilters.readFromNBT(data);
-        this.saveSearch = data.getString("searchString");
+
+        final NBTTagList players = data.getTagList("savedSearch", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < players.tagCount(); i++) {
+            final NBTTagCompound playerTag = players.getCompoundTagAt(i);
+            final String uuidString = playerTag.getString("uuid");
+            if (uuidString == null || uuidString.isEmpty()) {
+                continue;
+            }
+
+            final UUID id;
+            try {
+                id = UUID.fromString(uuidString);
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
+
+            this.savedSearch.put(id, data.getString(uuidString));
+        }
     }
 
     @Override
@@ -112,7 +134,20 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.viewCell.writeToNBT(data, "viewCell");
         pinsInv.writeToNBT(data, "pins");
         this.typeFilters.writeToNBT(data);
-        data.setString("searchString", this.saveSearch);
+
+        final NBTTagList players = new NBTTagList();
+
+        for (Map.Entry<UUID, String> entry : this.savedSearch.entrySet()) {
+            final UUID id = entry.getKey();
+
+            final NBTTagCompound playerTag = new NBTTagCompound();
+            playerTag.setString("uuid", id.toString());
+
+            playerTag.setString(id.toString(), entry.getValue());
+            players.appendTag(playerTag);
+        }
+
+        data.setTag("savedSearch", players);
     }
 
     @Override
@@ -203,12 +238,12 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     }
 
     @Override
-    public void saveSearchString(String searchString) {
-        this.saveSearch = searchString;
+    public void saveSearchString(String searchString, EntityPlayer player) {
+        this.savedSearch.put(player.getUniqueID(), searchString);
     }
 
     @Override
-    public @Nullable String getSearchString() {
-        return this.saveSearch;
+    public @Nullable String getSearchString(EntityPlayer player) {
+        return this.savedSearch.get(player.getUniqueID());
     }
 }

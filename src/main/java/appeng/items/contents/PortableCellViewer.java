@@ -13,6 +13,7 @@ package appeng.items.contents;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -111,12 +112,12 @@ public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitor
     }
 
     @Override
-    public void saveSearchString(String searchString) {
+    public void saveSearchString(String searchString, EntityPlayer player) {
         this.target.getTagCompound().setString("searchString", searchString);
     }
 
     @Override
-    public @Nullable String getSearchString() {
+    public @Nullable String getSearchString(EntityPlayer player) {
         return this.target.getTagCompound().getString("searchString");
     }
 }

@@ -208,11 +208,13 @@ public class ContainerMEMonitorable extends AEBaseContainer
         this.toggleViewCellAction = sync.actionC2S("toggleViewCell", StreamCodecs.intValue())
                 .onServerAction(this::toggleViewCell);
         this.savedSearchSync = sync.stringSync("savedSearch")
-                .onServerChange((oldValue, newValue) -> this.host.saveSearchString(newValue)).onClientChange(
+                .onServerChange(
+                        (oldValue, newValue) -> this.host.saveSearchString(newValue, this.getPlayerInv().player))
+                .onClientChange(
                         (oldValue, newValue) -> {
                             if (this.gui instanceof GuiMEMonitorable gm) gm.memoryTextUpdated();
                         });
-        if (Platform.isServer()) this.savedSearchSync.set(this.host.getSearchString());
+        if (Platform.isServer()) this.savedSearchSync.set(this.host.getSearchString(ip.player));
     }
 
     public IGridNode getNetworkNode() {

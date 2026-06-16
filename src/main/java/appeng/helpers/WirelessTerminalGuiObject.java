@@ -319,12 +319,12 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     }
 
     @Override
-    public void saveSearchString(String searchString) {
+    public void saveSearchString(String searchString, EntityPlayer player) {
         this.effectiveItem.getTagCompound().setString("searchString", searchString);
     }
 
     @Override
-    public @Nullable String getSearchString() {
+    public @Nullable String getSearchString(EntityPlayer player) {
         return this.effectiveItem.getTagCompound().getString("searchString");
     }
 }
