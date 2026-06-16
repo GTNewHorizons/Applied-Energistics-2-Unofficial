@@ -375,14 +375,14 @@ public class TileSuperMEReplenisher extends AENetworkTile
             newUnusedCount = (int) toCountSize % typeWeight;
         } else {
             needBytes = 0;
-            newUnusedCount = (int) (unusedCount + stackSize);
+            newUnusedCount = (int) ((unusedCount + stackSize) % typeWeight);
         }
 
         if (type == Actionable.SIMULATE) {
             if (freeBytes >= needBytes) return null;
             else {
                 final IAEStack<?> notAllowed = input.copy();
-                notAllowed.setStackSize(input.getStackSize() - ((freeBytes * typeWeight)) + unusedCount);
+                notAllowed.setStackSize(input.getStackSize() - ((freeBytes * typeWeight)) + freeUnusedCount);
                 return notAllowed;
             }
         } else {
@@ -403,7 +403,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
                 if (!this.unlimited) {
                     final long newNeedBytes = freeBytes * typeWeight;
-                    notAllowed.setStackSize(input.getStackSize() - (newNeedBytes + unusedCount));
+                    notAllowed.setStackSize(input.getStackSize() - (newNeedBytes + freeUnusedCount));
                     allowed.setStackSize(input.getStackSize() - notAllowed.getStackSize());
 
                     this.usedBytes += freeBytes;
@@ -448,19 +448,12 @@ public class TileSuperMEReplenisher extends AENetworkTile
                 final int typeWeight = stackType.getAmountPerByte();
                 final int unusedCount = this.unusedCount.getOrDefault(stackType, 0);
 
-                final long needBytes;
-                final int newUnusedCount;
-                if (requestSize > unusedCount) {
-                    final long toCountSize = requestSize - unusedCount;
-                    final int rest = (int) (toCountSize % typeWeight);
-                    newUnusedCount = rest == 0 ? 0 : typeWeight - rest;
-                    needBytes = toCountSize / typeWeight + (unusedCount != 0 && newUnusedCount == 0 ? 1 : 0);
-                } else {
-                    newUnusedCount = (int) (unusedCount - requestSize);
-                    needBytes = newUnusedCount == 0 ? 1 : 0;
-                }
+                final int freeInPartialByte = unusedCount == 0 ? 0 : typeWeight - unusedCount;
+                final long freedBytes = (freeInPartialByte + requestSize) / typeWeight;
+                final int newFreeInPartialByte = (int) ((freeInPartialByte + requestSize) % typeWeight);
+                final int newUnusedCount = newFreeInPartialByte == 0 ? 0 : typeWeight - newFreeInPartialByte;
 
-                this.usedBytes -= needBytes;
+                this.usedBytes -= freedBytes;
                 this.unusedCount.put(stackType, newUnusedCount);
             }
         }
