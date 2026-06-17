@@ -34,6 +34,7 @@ import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -52,6 +53,7 @@ import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
+import appeng.util.ReadableNumberConverter;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -163,9 +165,10 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                 IAEStack<?> aes = contents.getFirstItem();
                 lines.add(GuiText.Contains.getLocal() + ": " + aes.getDisplayName());
             } else if (GuiScreen.isCtrlKeyDown()) {
-                final NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
                 for (IAEStack<?> aeStack : contents) {
-                    lines.add("  " + aeStack.getDisplayName() + " x" + nf.format(aeStack.getStackSize()));
+                    String amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(aeStack.getStackSize());
+                    String suffix = aeStack instanceof IAEFluidStack ? " mB" : "";
+                    lines.add("  " + aeStack.getDisplayName() + " x" + amount + suffix);
                 }
             } else {
                 lines.add(EnumChatFormatting.GRAY + GuiText.HoldCtrlForContents.getLocal());
