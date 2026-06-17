@@ -155,11 +155,21 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                         + EnumChatFormatting.GRAY
                         + GuiText.Types.getLocal());
 
-        if (cellInventory.getTotalItemTypes() == 1 && cellInventory.getStoredItemTypes() != 0) {
-            IAEStack<?> aes = handler.getAvailableItems(
+        if (cellInventory.getStoredItemTypes() != 0) {
+            IItemList<?> contents = handler.getAvailableItems(
                     cellInventory.getStackType().createPrimitiveList(),
-                    IterationCounter.fetchNewId()).getFirstItem();
-            lines.add(GuiText.Contains.getLocal() + ": " + aes.getDisplayName());
+                    IterationCounter.fetchNewId());
+            if (cellInventory.getTotalItemTypes() == 1) {
+                IAEStack<?> aes = contents.getFirstItem();
+                lines.add(GuiText.Contains.getLocal() + ": " + aes.getDisplayName());
+            } else if (GuiScreen.isCtrlKeyDown()) {
+                final NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
+                for (IAEStack<?> aeStack : contents) {
+                    lines.add("  " + aeStack.getDisplayName() + " x" + nf.format(aeStack.getStackSize()));
+                }
+            } else {
+                lines.add(EnumChatFormatting.GRAY + GuiText.HoldCtrlForContents.getLocal());
+            }
         }
 
         if (handler.isPreformatted()) {
