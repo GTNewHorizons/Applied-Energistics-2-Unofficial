@@ -586,11 +586,11 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         final int newHandlerHash = Platform.generateTileHash(target);
 
-        if (this.handlerHash == newHandlerHash && this.handlerHash != 0) {
+        // Some neighbors, such as GT tanks, expose storage only after placement initialization.
+        if (this.handlerHash == newHandlerHash && this.handlerHash != 0 && this.handler != null) {
             return this.handler;
         }
 
-        this.handlerHash = newHandlerHash;
         this.handler = null;
         this.monitor = null;
         this.readOncePass = true;
@@ -678,6 +678,12 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                     }
                 }
             }
+        }
+
+        this.handlerHash = this.handler == null ? 0 : newHandlerHash;
+        if (this.handler == null && target != null) {
+            // A neighbor TE exists but is not ready yet. Retry the lookup on the next access.
+            this.cached = false;
         }
 
         // update sleep state...
