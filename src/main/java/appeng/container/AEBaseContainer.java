@@ -61,6 +61,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.util.FlowSearchDTO;
 import appeng.api.util.ItemSearchDTO;
 import appeng.container.guisync.DataSynchronization;
 import appeng.container.implementations.ContainerCellWorkbench.WorkbenchUpgradeInventory;
@@ -85,6 +86,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketGuiDataSync;
 import appeng.core.sync.packets.PacketHighlightBlockStorage;
+import appeng.core.sync.packets.PacketHighlightItemFlow;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -97,6 +99,7 @@ import appeng.items.materials.ItemMultiMaterial;
 import appeng.me.Grid;
 import appeng.me.MachineSet;
 import appeng.me.NetworkList;
+import appeng.me.cache.ItemFlowGridCache;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.parts.automation.UpgradeInventory;
 import appeng.parts.misc.PartStorageBus;
@@ -881,6 +884,23 @@ public abstract class AEBaseContainer extends Container {
 
                 this.highlightBlocks(player, coords);
             }
+            case LOCATE_ITEM_FLOW -> {
+                if (this.clientRequestedTargetItem == null) return;
+
+                final IActionHost host = this.getActionHost();
+                if (host == null) return;
+
+                final IGridNode gn = host.getActionableNode();
+                if (gn == null) return;
+
+                final IGrid g = gn.getGrid();
+                if (g == null) return;
+
+                final ItemFlowGridCache flowCache = g.getCache(ItemFlowGridCache.class);
+                final List<FlowSearchDTO> coords = flowCache.getRecentFlow(this.clientRequestedTargetItem);
+
+                this.highlightItemFlow(player, coords, this.clientRequestedTargetItem.getItemStackForNEI());
+            }
             default -> {}
         }
     }
@@ -932,6 +952,16 @@ public abstract class AEBaseContainer extends Container {
         if (Platform.isServer()) {
             try {
                 NetworkHandler.instance.sendTo(new PacketHighlightBlockStorage(coords), p);
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+        }
+    }
+
+    protected void highlightItemFlow(final EntityPlayerMP p, List<FlowSearchDTO> coords, ItemStack itemStack) {
+        if (Platform.isServer()) {
+            try {
+                NetworkHandler.instance.sendTo(new PacketHighlightItemFlow(coords, itemStack), p);
             } catch (final IOException e) {
                 AELog.debug(e);
             }

@@ -16,6 +16,7 @@ public class HighlighterManager {
     static {
         registerHighlighter(StoragePosHighlighter.INSTANCE);
         registerHighlighter(BlockPosHighlighter.INSTANCE);
+        registerHighlighter(ItemFlowHighlighter.INSTANCE);
     }
 
     static void registerHighlighter(IHighlighter h) {

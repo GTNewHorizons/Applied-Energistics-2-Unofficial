@@ -155,6 +155,8 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.equals("NetworkStatus") && c instanceof final ContainerNetworkStatus qk) {
             if (this.Value.equals("ToggleDiagnostics")) {
                 qk.toggleDiagnosticsMode();
+            } else if (this.Value.equals("ToggleFlowTracking")) {
+                qk.toggleFlowTrackingMode();
             } else if (this.Value.equals("OpenReshuffle")) {
                 qk.openReshuffle(player);
             }

@@ -47,6 +47,7 @@ import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.helpers.ICustomNameObject;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cache.GridStorageCache;
+import appeng.me.cache.ItemFlowGridCache;
 import appeng.tile.misc.TileStorageReshuffle;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -158,6 +159,12 @@ public class ContainerNetworkStatus extends AEBaseContainer {
     @GuiSync(34)
     public boolean diagnosticsGloballyEnabled;
 
+    @GuiSync(35)
+    public boolean flowTrackingMode;
+
+    @GuiSync(36)
+    public boolean flowTrackingGloballyEnabled;
+
     private IGrid network;
     private int delay = 40;
     private boolean isConsume = true;
@@ -213,6 +220,31 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         super.detectAndSendChanges();
     }
 
+    private ItemFlowGridCache getItemFlowGridCache() {
+        if (this.network == null) {
+            return null;
+        }
+
+        return this.network.getCache(ItemFlowGridCache.class);
+    }
+
+    private void refreshFlowTrackingState() {
+        final ItemFlowGridCache cache = this.getItemFlowGridCache();
+        this.flowTrackingMode = cache != null && cache.isTrackingEnabled();
+        this.flowTrackingGloballyEnabled = AEConfig.instance.enableItemFlowTracking;
+    }
+
+    public void toggleFlowTrackingMode() {
+        final ItemFlowGridCache cache = this.getItemFlowGridCache();
+        if (cache == null || !AEConfig.instance.enableItemFlowTracking) {
+            return;
+        }
+
+        cache.setTrackingEnabled(!cache.isTrackingEnabled());
+        this.refreshFlowTrackingState();
+        super.detectAndSendChanges();
+    }
+
     @Override
     public void detectAndSendChanges() {
         this.delay++;
@@ -220,6 +252,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             this.delay = 0;
 
             this.refreshDiagnosticsState();
+            this.refreshFlowTrackingState();
 
             final IEnergyGrid eg = this.network.getCache(IEnergyGrid.class);
             if (eg != null) {
@@ -509,5 +542,13 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
     public boolean isDiagnosticsGloballyEnabled() {
         return this.diagnosticsGloballyEnabled;
+    }
+
+    public boolean isFlowTrackingMode() {
+        return this.flowTrackingMode;
+    }
+
+    public boolean isFlowTrackingGloballyEnabled() {
+        return this.flowTrackingGloballyEnabled;
     }
 }

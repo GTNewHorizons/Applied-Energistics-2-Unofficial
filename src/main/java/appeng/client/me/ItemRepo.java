@@ -41,6 +41,7 @@ import appeng.core.AEConfig;
 import appeng.integration.modules.NEI;
 import appeng.items.contents.PinList;
 import appeng.items.storage.ItemViewCell;
+import appeng.me.cache.ItemFlowGridCache.FlowRate;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
 import appeng.util.item.OreHelper;
@@ -62,6 +63,7 @@ public class ItemRepo implements IDisplayRepo {
 
     private String searchString = "";
     private Map<IAEStack<?>, Boolean> searchCache = new WeakHashMap<>();
+    private Map<IAEStack<?>, FlowRate> flowRates = new WeakHashMap<>();
     private IPartitionList myPartitionList;
     private boolean hasPower;
     private boolean paused = false;
@@ -285,6 +287,8 @@ public class ItemRepo implements IDisplayRepo {
 
             if (typeFilters != null && !typeFilters.getBoolean(is.getStackType())) continue;
 
+            if (viewMode == ViewItems.FLOWING && !this.flowRates.containsKey(is)) continue;
+
             if (is instanceof IAEItemStack ais) {
                 if (registry.isBlacklisted(ais.getItemStack().getItem())
                         || registry.isBlacklisted(ais.getItemStack().getItem().getClass())) {
@@ -423,5 +427,15 @@ public class ItemRepo implements IDisplayRepo {
                 updateView();
             }
         }
+    }
+
+    @Override
+    public FlowRate getFlowRate(IAEStack<?> stack) {
+        return this.flowRates.get(stack);
+    }
+
+    @Override
+    public void updateFlowRates(final Map<IAEStack<?>, FlowRate> rates) {
+        this.flowRates = rates;
     }
 }

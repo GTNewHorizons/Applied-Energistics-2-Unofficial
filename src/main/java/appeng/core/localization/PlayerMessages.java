@@ -55,6 +55,9 @@ public enum PlayerMessages implements Localization {
     StorageInOtherDim,
     StorageHighlighted,
     PickBlockTerminalNotFound,
+    ItemFlowHighlighted,
+    ItemFlowInOtherDim,
+    ItemFlowNotFound,
     PatternRepeaterProvider,
     PatternRepeaterAccessor,
 
