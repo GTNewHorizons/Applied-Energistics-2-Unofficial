@@ -34,7 +34,6 @@ import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -167,7 +166,8 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
             } else if (GuiScreen.isCtrlKeyDown()) {
                 for (IAEStack<?> aeStack : contents) {
                     String amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(aeStack.getStackSize());
-                    String suffix = aeStack instanceof IAEFluidStack ? " mB" : "";
+                    String unit = cellInventory.getStackType().getDisplayUnit();
+                    String suffix = unit.isEmpty() ? "" : " " + unit;
                     lines.add("  " + aeStack.getDisplayName() + " x" + amount + suffix);
                 }
             } else {
