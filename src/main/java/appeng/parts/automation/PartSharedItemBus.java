@@ -36,6 +36,7 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IOreFilterable;
+import appeng.hooks.TickHandler;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
@@ -51,6 +52,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     private int cachedAdaptorHash = 0;
     private InventoryAdaptor cachedAdaptor;
     private boolean lastRedstone = false;
+    private boolean pendingStateUpdate = false;
     protected String oreFilterString = "";
     protected Predicate<IAEItemStack> filterPredicate = null;
     protected final BaseActionSource mySrc;
@@ -95,6 +97,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     @Override
     public void onNeighborChanged() {
         this.updateState();
+        this.scheduleStateUpdate();
         if (this.lastRedstone != this.getHost().hasRedstone(this.getSide())) {
             this.lastRedstone = !this.lastRedstone;
             if (this.lastRedstone && this.getRSMode() == RedstoneMode.SIGNAL_PULSE) {
@@ -117,13 +120,14 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
         final int newAdaptorHash = Platform.generateTileHash(target);
 
-        if (this.cachedAdaptorHash == newAdaptorHash && newAdaptorHash != 0) {
+        // Some neighbors, such as GT tanks, expose inventories only after placement initialization.
+        if (this.cachedAdaptorHash == newAdaptorHash && newAdaptorHash != 0 && this.cachedAdaptor != null) {
             return this.cachedAdaptor;
         }
 
-        this.cachedAdaptorHash = newAdaptorHash;
         // noinspection MagicConstant
         this.cachedAdaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite(), getAdaptorFlags());
+        this.cachedAdaptorHash = this.cachedAdaptor == null ? 0 : newAdaptorHash;
 
         return this.cachedAdaptor;
     }
@@ -165,6 +169,23 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         } catch (final GridAccessException e) {
             // :P
         }
+    }
+
+    private void scheduleStateUpdate() {
+        if (this.pendingStateUpdate) return;
+
+        final TileEntity self = this.getHost().getTile();
+        final World world = self.getWorldObj();
+
+        if (world == null || world.isRemote) return;
+
+        // Give newly placed neighbors one tick to finish initialization before deciding to sleep.
+        this.pendingStateUpdate = true;
+        TickHandler.INSTANCE.addCallable(world, w -> {
+            this.pendingStateUpdate = false;
+            this.updateState();
+            return true;
+        });
     }
 
     protected TileEntity getTileEntity(final TileEntity self, final int x, final int y, final int z) {

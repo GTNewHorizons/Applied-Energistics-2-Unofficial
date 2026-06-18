@@ -15,15 +15,15 @@ import net.minecraft.server.MinecraftServer;
 import appeng.api.storage.data.IAEStack;
 import appeng.me.diagnostics.CraftingDiagnosticSessionId;
 
-final class CraftingCpuDiagnostics {
+public class CraftingCpuDiagnostics {
 
-    private final Map<IAEStack<?>, NavigableSet<CraftingTimingRecord>> outputTimingRecords = new HashMap<>();
+    protected final Map<IAEStack<?>, NavigableSet<CraftingTimingRecord>> outputTimingRecords = new HashMap<>();
 
-    void clear() {
+    protected void clear() {
         this.outputTimingRecords.clear();
     }
 
-    void recordExpectedOutput(final IAEStack<?> output, final long outputObservedAtTick,
+    protected void recordExpectedOutput(final IAEStack<?> output, final long outputObservedAtTick,
             final CraftingDiagnosticSessionId diagnosticSessionId) {
         if (output == null || output.getStackSize() <= 0 || diagnosticSessionId == null) {
             return;
@@ -48,7 +48,7 @@ final class CraftingCpuDiagnostics {
         }
     }
 
-    List<CompletedDiagnosticRecord> recordReturnedOutputs(final IAEStack<?> returnedStack) {
+    protected List<CompletedDiagnosticRecord> recordReturnedOutputs(final IAEStack<?> returnedStack) {
         if (returnedStack == null || returnedStack.getStackSize() <= 0) {
             return Collections.emptyList();
         }
@@ -93,7 +93,7 @@ final class CraftingCpuDiagnostics {
         return completedRecords;
     }
 
-    boolean hasPendingRecordsForSession(final CraftingDiagnosticSessionId diagnosticSessionId) {
+    protected boolean hasPendingRecordsForSession(final CraftingDiagnosticSessionId diagnosticSessionId) {
         if (diagnosticSessionId == null) {
             return false;
         }
@@ -110,7 +110,7 @@ final class CraftingCpuDiagnostics {
         return false;
     }
 
-    Set<CraftingDiagnosticSessionId> getPendingSessionIds() {
+    protected Set<CraftingDiagnosticSessionId> getPendingSessionIds() {
         final Set<CraftingDiagnosticSessionId> sessionIds = new TreeSet<>();
         for (final NavigableSet<CraftingTimingRecord> records : this.outputTimingRecords.values()) {
             for (final CraftingTimingRecord record : records) {
@@ -122,7 +122,7 @@ final class CraftingCpuDiagnostics {
         return sessionIds;
     }
 
-    private static IAEStack<?> normalizeTrackingStack(final IAEStack<?> stack) {
+    public static IAEStack<?> normalizeTrackingStack(final IAEStack<?> stack) {
         if (stack == null) {
             return null;
         }
@@ -133,12 +133,12 @@ final class CraftingCpuDiagnostics {
         return normalized;
     }
 
-    private static long getServerTick() {
+    public static long getServerTick() {
         final MinecraftServer server = MinecraftServer.getServer();
         return server == null ? 0L : server.getTickCounter();
     }
 
-    static final class CompletedDiagnosticRecord {
+    public static class CompletedDiagnosticRecord {
 
         private final IAEStack<?> output;
         private final CraftingDiagnosticSessionId diagnosticSessionId;
@@ -147,7 +147,7 @@ final class CraftingCpuDiagnostics {
         private final long endTick;
         private final long elapsedTicks;
 
-        private CompletedDiagnosticRecord(final IAEStack<?> output,
+        public CompletedDiagnosticRecord(final IAEStack<?> output,
                 final CraftingDiagnosticSessionId diagnosticSessionId, final long producedAmount, final long startTick,
                 final long endTick, final long elapsedTicks) {
             this.output = output;
@@ -158,32 +158,32 @@ final class CraftingCpuDiagnostics {
             this.elapsedTicks = elapsedTicks;
         }
 
-        IAEStack<?> getOutput() {
+        public IAEStack<?> getOutput() {
             return this.output;
         }
 
-        CraftingDiagnosticSessionId getDiagnosticSessionId() {
+        public CraftingDiagnosticSessionId getDiagnosticSessionId() {
             return this.diagnosticSessionId;
         }
 
-        long getProducedAmount() {
+        public long getProducedAmount() {
             return this.producedAmount;
         }
 
-        long getStartTick() {
+        public long getStartTick() {
             return this.startTick;
         }
 
-        long getEndTick() {
+        public long getEndTick() {
             return this.endTick;
         }
 
-        long getElapsedTicks() {
+        public long getElapsedTicks() {
             return this.elapsedTicks;
         }
     }
 
-    private static final class CraftingTimingRecord implements Comparable<CraftingTimingRecord> {
+    public static class CraftingTimingRecord implements Comparable<CraftingTimingRecord> {
 
         private long remainingToProduce;
         private long originalToProduce;
@@ -191,7 +191,7 @@ final class CraftingCpuDiagnostics {
         private final CraftingDiagnosticSessionId diagnosticSessionId;
         private long endTick;
 
-        private CraftingTimingRecord(final long toProduce, final long startTick,
+        public CraftingTimingRecord(final long toProduce, final long startTick,
                 final CraftingDiagnosticSessionId diagnosticSessionId) {
             this.remainingToProduce = toProduce;
             this.originalToProduce = toProduce;
@@ -199,40 +199,40 @@ final class CraftingCpuDiagnostics {
             this.diagnosticSessionId = diagnosticSessionId;
         }
 
-        private void addRemainingToProduce(final long delta) {
+        protected void addRemainingToProduce(final long delta) {
             this.remainingToProduce += delta;
         }
 
-        private void addProduced(final long delta) {
+        protected void addProduced(final long delta) {
             this.remainingToProduce += delta;
             this.originalToProduce += delta;
         }
 
-        private long getRemainingToProduce() {
+        public long getRemainingToProduce() {
             return this.remainingToProduce;
         }
 
-        private long getOriginalToProduce() {
+        public long getOriginalToProduce() {
             return this.originalToProduce;
         }
 
-        private void setEndTick(final long endTick) {
+        protected void setEndTick(final long endTick) {
             this.endTick = endTick;
         }
 
-        private long getElapsedTicks() {
+        public long getElapsedTicks() {
             return Math.max(1L, this.endTick - this.startTick);
         }
 
-        private long getStartTick() {
+        public long getStartTick() {
             return this.startTick;
         }
 
-        private long getEndTick() {
+        public long getEndTick() {
             return this.endTick;
         }
 
-        private CraftingDiagnosticSessionId getDiagnosticSessionId() {
+        public CraftingDiagnosticSessionId getDiagnosticSessionId() {
             return this.diagnosticSessionId;
         }
 

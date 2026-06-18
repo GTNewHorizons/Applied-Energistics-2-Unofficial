@@ -341,13 +341,26 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
         this.currentToolTip.shift(ox, oy);
         this.drawFG(ox, oy, x, y);
-        this.currentToolTip.shift(0, 0);
 
         this.hoveredVirtualSlot = null;
         this.drawVirtualSlots(this.virtualSlots, x, y);
+
+        this.drawVirtualSlotTooltips(x, y);
+        this.currentToolTip.shift(0, 0);
     }
 
     public abstract void drawFG(int offsetX, int offsetY, int mouseX, int mouseY);
+
+    protected void drawVirtualSlotTooltips(final int mouseX, final int mouseY) {
+        VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+        if (slot != null) {
+            List<String> lines = new ArrayList<>();
+            slot.addTooltip(lines);
+            if (!lines.isEmpty()) {
+                this.drawTooltip(mouseX - guiLeft, mouseY - guiTop, lines.toArray(new String[0]));
+            }
+        }
+    }
 
     @Override
     protected final void drawGuiContainerBackgroundLayer(final float f, final int x, final int y) {
