@@ -50,7 +50,7 @@ CI builds are available at [Jenkins](http://jenkins.usrv.eu:8080/job/Applied-Ene
 
 ## Installation
 
-You install this mod by putting it into the `minecraft/mods/` folder. It has no additional hard dependencies.
+You install this mod by putting it into the `minecraft/mods/` folder. Additionally, it requires [GTNHLib](https://github.com/GTNewHorizons/GTNHLib/releases) 0.11.14+.
 
 ## Issues
 
