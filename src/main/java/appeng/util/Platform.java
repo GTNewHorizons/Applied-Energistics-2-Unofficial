@@ -1299,33 +1299,30 @@ public class Platform {
     public static <StackType extends IAEStack> StackType poweredExtraction(@Nonnull final IEnergySource energy,
             @Nonnull final IMEInventory<StackType> cell, @Nonnull final StackType request,
             @Nonnull final BaseActionSource src, @Nonnull final Actionable mode) {
-        final StackType possible = cell.extractItems((StackType) request.copy(), Actionable.SIMULATE, src);
-        if (possible == null) return null;
-
-        final long retrieved = possible.getStackSize();
         final int typeMultiplier = request.getAmountPerUnit();
 
         final double availablePower = energy.extractAEPower(
-                Platform.ceilDiv(retrieved, typeMultiplier),
+                Platform.ceilDiv(request.getStackSize(), typeMultiplier),
                 Actionable.SIMULATE,
                 PowerMultiplier.CONFIG);
 
-        final long itemToExtract = Math.min((long) (availablePower * typeMultiplier + 0.9), retrieved);
+        final long itemToExtract = Math.min((long) (availablePower * typeMultiplier + 0.9), request.getStackSize());
 
         if (itemToExtract > 0) {
-            possible.setStackSize(itemToExtract);
+            final StackType toExtract = (StackType) request.copy();
+            toExtract.setStackSize(itemToExtract);
 
-            if (mode == Actionable.MODULATE) {
+            final StackType ret = cell.extractItems(toExtract, mode, src);
+
+            if (mode == Actionable.MODULATE && ret != null) {
                 energy.extractAEPower(
-                        Platform.ceilDiv(retrieved, typeMultiplier),
+                        Platform.ceilDiv(ret.getStackSize(), typeMultiplier),
                         Actionable.MODULATE,
                         PowerMultiplier.CONFIG);
-            }
 
-            final StackType ret = cell.extractItems(possible, mode, src);
-
-            if (mode == Actionable.MODULATE && ret != null && src.isPlayer()) {
-                Stats.ItemsExtracted.addToPlayer(((PlayerSource) src).player, (int) ret.getStackSize());
+                if (src.isPlayer()) {
+                    Stats.ItemsExtracted.addToPlayer(((PlayerSource) src).player, (int) ret.getStackSize());
+                }
             }
 
             return ret;
@@ -1355,55 +1352,56 @@ public class Platform {
     public static <StackType extends IAEStack> StackType poweredInsert(@Nonnull final IEnergySource energy,
             @Nonnull final IMEInventory<StackType> cell, @Nonnull final StackType input,
             @Nonnull final BaseActionSource src, @Nonnull final Actionable mode) {
-        final StackType possible = cell.injectItems((StackType) input.copy(), Actionable.SIMULATE, src);
-
-        long stored = input.getStackSize();
-        if (possible != null) {
-            stored -= possible.getStackSize();
-        }
         final int typeMultiplier = input.getAmountPerUnit();
 
-        final double availablePower = energy
-                .extractAEPower(Platform.ceilDiv(stored, typeMultiplier), Actionable.SIMULATE, PowerMultiplier.CONFIG);
+        final double availablePower = energy.extractAEPower(
+                Platform.ceilDiv(input.getStackSize(), typeMultiplier),
+                Actionable.SIMULATE,
+                PowerMultiplier.CONFIG);
 
-        final long itemToAdd = Math.min((long) (availablePower * typeMultiplier + 0.9), stored);
+        final long itemToAdd = Math.min((long) (availablePower * typeMultiplier + 0.9), input.getStackSize());
 
-        if (itemToAdd > 0) {
-            if (mode == Actionable.MODULATE) {
-                energy.extractAEPower(
-                        Platform.ceilDiv(stored, typeMultiplier),
-                        Actionable.MODULATE,
-                        PowerMultiplier.CONFIG);
-            }
-
-            if (itemToAdd < input.getStackSize()) {
-                final long original = input.getStackSize();
-                final StackType split = (StackType) input.copy();
-                final StackType toInsert = mode == Actionable.MODULATE ? input : (StackType) input.copy();
-
-                split.decStackSize(itemToAdd);
-                toInsert.setStackSize(itemToAdd);
-                split.add(cell.injectItems(toInsert, mode, src));
-
-                if (mode == Actionable.MODULATE && src.isPlayer()) {
-                    final long diff = original - split.getStackSize();
-                    Stats.ItemsInserted.addToPlayer(((PlayerSource) src).player, (int) diff);
-                }
-
-                return split;
-            }
-
-            final StackType ret = cell.injectItems(input, mode, src);
-
-            if (mode == Actionable.MODULATE && src.isPlayer()) {
-                final long diff = ret == null ? input.getStackSize() : input.getStackSize() - ret.getStackSize();
-                Stats.ItemsInserted.addToPlayer(((PlayerSource) src).player, (int) diff);
-            }
-
-            return ret;
+        if (itemToAdd <= 0) {
+            return input;
         }
 
-        return input;
+        final StackType toInsert = (StackType) input.copy();
+        toInsert.setStackSize(itemToAdd);
+
+        final StackType leftover = cell.injectItems(toInsert, mode, src);
+        long inserted = itemToAdd;
+        if (leftover != null) {
+            inserted -= leftover.getStackSize();
+        }
+
+        if (inserted <= 0) {
+            return input;
+        }
+
+        if (mode == Actionable.MODULATE) {
+            energy.extractAEPower(
+                    Platform.ceilDiv(inserted, typeMultiplier),
+                    Actionable.MODULATE,
+                    PowerMultiplier.CONFIG);
+
+            if (src.isPlayer()) {
+                Stats.ItemsInserted.addToPlayer(((PlayerSource) src).player, (int) inserted);
+            }
+        }
+
+        if (inserted >= input.getStackSize()) {
+            return null;
+        }
+
+        final long remaining = input.getStackSize() - inserted;
+        if (leftover != null) {
+            leftover.setStackSize(remaining);
+            return leftover;
+        }
+
+        final StackType ret = (StackType) input.copy();
+        ret.setStackSize(remaining);
+        return ret;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
