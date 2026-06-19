@@ -17,6 +17,8 @@ import static appeng.util.Platform.stackConvert;
 
 import javax.annotation.Nullable;
 
+import org.jetbrains.annotations.ApiStatus;
+
 import appeng.api.config.CraftingAllow;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
@@ -26,6 +28,15 @@ import appeng.api.util.CraftCancelListener;
 import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
 
+/**
+ * Represents a crafting CPU.
+ *
+ * <p>
+ * Do not implement this interface directly. Use {@link appeng.me.cluster.implementations.CraftingCPUCluster} as the
+ * base class for implementations.
+ * </p>
+ */
+@ApiStatus.NonExtendable
 public interface ICraftingCPU extends IBaseMonitor {
 
     /**
