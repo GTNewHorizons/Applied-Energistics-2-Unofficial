@@ -390,9 +390,8 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             String expectedCount = EnumChatFormatting.RED
                     + NumberFormat.getNumberInstance(Locale.getDefault()).format(expected.getStackSize())
                     + EnumChatFormatting.RESET;
-            String extractedCount = EnumChatFormatting.RED
-                    + NumberFormat.getNumberInstance(Locale.getDefault()).format(extracted.getStackSize())
-                    + EnumChatFormatting.RESET;
+            String extractedCount = EnumChatFormatting.RED + NumberFormat.getNumberInstance(Locale.getDefault())
+                    .format(extracted == null ? 0 : extracted.getStackSize()) + EnumChatFormatting.RESET;
 
             player.addChatMessage(
                     new ChatComponentTranslation(
