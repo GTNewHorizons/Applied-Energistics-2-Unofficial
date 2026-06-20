@@ -1394,12 +1394,7 @@ public class Platform {
         }
 
         final long remaining = input.getStackSize() - inserted;
-        if (leftover != null) {
-            leftover.setStackSize(remaining);
-            return leftover;
-        }
-
-        final StackType ret = (StackType) input.copy();
+        final StackType ret = leftover != null ? leftover : (StackType) input.copy();
         ret.setStackSize(remaining);
         return ret;
     }
