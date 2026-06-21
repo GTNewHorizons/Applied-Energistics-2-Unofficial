@@ -313,7 +313,12 @@ public class TileSuperMEReplenisher extends AENetworkTile
     private void removeCell(final ItemStack is) {
         final long newBytes = this.getCellBytes(is);
         this.totalBytes -= newBytes;
-        if (this.totalBytes < Long.MAX_VALUE / 16) this.unlimited = false;
+
+        if (this.totalBytes < Long.MAX_VALUE / 16) {
+            this.unlimited = false;
+            this.countUsedBytes();
+        }
+
         this.updatePowerDraw();
     }
 
@@ -360,12 +365,14 @@ public class TileSuperMEReplenisher extends AENetworkTile
         if (input == null) return null;
 
         final long freeBytes = this.totalBytes - this.usedBytes;
-        if (freeBytes == 0) return input;
 
         final IAEStackType<?> stackType = input.getStackType();
         final int typeWeight = stackType.getAmountPerByte();
         final long stackSize = input.getStackSize();
         final int unusedCount = this.unusedCount.getOrDefault(stackType, 0);
+
+        if (freeBytes == 0 && unusedCount == 0) return input;
+
         final int freeUnusedCount = unusedCount == 0 ? 0 : typeWeight - unusedCount;
 
         final long needBytes;

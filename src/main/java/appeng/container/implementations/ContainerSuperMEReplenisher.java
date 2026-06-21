@@ -9,6 +9,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.SecurityPermissions;
+import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
 import appeng.container.AEBaseContainer;
@@ -23,7 +24,6 @@ import appeng.container.sync.handlers.AEStackInventorySyncHandler;
 import appeng.container.sync.handlers.IntSyncHandler;
 import appeng.container.sync.handlers.LongSyncHandler;
 import appeng.container.sync.handlers.ObjectSyncHandler;
-import appeng.items.AEBaseCell;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TileSuperMEReplenisher;
@@ -140,11 +140,11 @@ public class ContainerSuperMEReplenisher extends AEBaseContainer implements IVir
         if (slotId >= 0 && slotId < 6) {
             final ItemStack current = this.tile.getCellInventory().getStackInSlot(slotId);
             if (current != null) {
-                if (current.getItem() instanceof AEBaseCell currentCell) {
+                if (current.getItem() instanceof IStorageCell currentCell) {
                     final long currentBytes = currentCell.getBytesLong(current);
                     if (!(this.totalBytes.get() - this.usedBytes.get() >= currentBytes)) {
                         final ItemStack hand = player.inventory.getItemStack();
-                        if (hand != null && hand.getItem() instanceof AEBaseCell handCell) {
+                        if (hand != null && hand.getItem() instanceof IStorageCell handCell) {
                             if (!((this.totalBytes.get() + handCell.getBytesLong(hand) - this.usedBytes.get()
                                     >= currentBytes))) {
                                 return null;
