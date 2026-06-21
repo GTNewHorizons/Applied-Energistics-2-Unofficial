@@ -103,6 +103,7 @@ public class GuiCraftingList {
                             GL11.glPushMatrix();
                             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
                             GL11.glScaled(4, 4, 1);
+                            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                             parent.bindTexture(FIELD_TEXTURE);
                             parent.drawTexturedModalRect(
                                     0,
@@ -118,6 +119,7 @@ public class GuiCraftingList {
                             GL11.glPushMatrix();
                             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
                             GL11.glScaled(4, 4, 1);
+                            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                             parent.bindTexture(FIELD_TEXTURE);
                             parent.drawTexturedModalRect(0, 0, 0, 0, FIELD_WIDTH, FIELD_HEIGHT);
                             GL11.glPopMatrix();
@@ -210,6 +212,7 @@ public class GuiCraftingList {
             GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             GL11.glScaled(2.0d, 2.0d, 0.5d);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
             int lines = 0;
 
