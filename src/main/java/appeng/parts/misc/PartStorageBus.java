@@ -479,8 +479,11 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         this.pendingDelayedCacheReset = true;
         TickHandler.INSTANCE.addCallable(world, w -> {
-            this.pendingDelayedCacheReset = false;
-            this.resetCache(true);
+            try {
+                this.resetCache(true);
+            } finally {
+                this.pendingDelayedCacheReset = false;
+            }
             return true;
         });
     }
@@ -620,7 +623,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         final int newHandlerHash = Platform.generateTileHash(target);
 
-        if (this.handlerHash == newHandlerHash && this.handlerHash != 0) {
+        if (this.handlerHash == newHandlerHash && this.handlerHash != 0 && this.handler != null) {
             return this.handler;
         }
 
@@ -712,6 +715,12 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                     }
                 }
             }
+        }
+
+        if (this.handler == null && target != null) {
+            // The neighbor exists but may not expose storage until its placement initialization finishes.
+            this.cached = false;
+            this.scheduleDelayedCacheReset();
         }
 
         // update sleep state...
