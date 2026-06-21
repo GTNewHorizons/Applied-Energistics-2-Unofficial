@@ -194,6 +194,8 @@ public class GuiMEMonitorable extends AEBaseGui
                 repo.setSearchString(text.trim());
                 repo.updateView();
                 setScrollBar();
+
+                if (AEConfig.instance.preserveSearchBar) monitorableContainer.saveSearchString(this.getText());
             }
         };
 
@@ -797,12 +799,6 @@ public class GuiMEMonitorable extends AEBaseGui
         super.onGuiClosed();
         memoryText = this.searchField.getText();
         Keyboard.enableRepeatEvents(false);
-    }
-
-    @Override
-    protected void flushPendingSync() {
-        if (AEConfig.instance.preserveSearchBar) this.monitorableContainer.saveSearchString(this.searchField.getText());
-        super.flushPendingSync();
     }
 
     @Override

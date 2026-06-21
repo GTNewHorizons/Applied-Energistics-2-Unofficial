@@ -22,7 +22,6 @@ import appeng.container.sync.handlers.DoubleSyncHandler;
 import appeng.container.sync.handlers.IntSyncHandler;
 import appeng.container.sync.handlers.LongSyncHandler;
 import appeng.container.sync.handlers.ObjectSyncHandler;
-import appeng.container.sync.handlers.StringSyncHandler;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketContainerSync;
@@ -367,24 +366,6 @@ public final class SyncManager {
         public @NotNull DoubleSyncHandler doubleSync(final @NotNull String key) {
             return register(
                     new DoubleSyncHandler(SyncManager.this, key, this.qualify(key), SyncDirection.BIDIRECTIONAL));
-        }
-
-        @Override
-        public @NotNull StringSyncHandler stringS2C(final @NotNull String key) {
-            return register(
-                    new StringSyncHandler(SyncManager.this, key, this.qualify(key), SyncDirection.SERVER_TO_CLIENT));
-        }
-
-        @Override
-        public @NotNull StringSyncHandler stringC2S(final @NotNull String key) {
-            return register(
-                    new StringSyncHandler(SyncManager.this, key, this.qualify(key), SyncDirection.CLIENT_TO_SERVER));
-        }
-
-        @Override
-        public @NotNull StringSyncHandler stringSync(final @NotNull String key) {
-            return register(
-                    new StringSyncHandler(SyncManager.this, key, this.qualify(key), SyncDirection.BIDIRECTIONAL));
         }
 
         @Override
