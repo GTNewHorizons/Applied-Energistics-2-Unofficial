@@ -416,7 +416,9 @@ public enum GuiText implements Localization {
     itemMEStackPacketDesc1,
     itemMEStackPacketDesc2,
 
-    WirelessManagerToolTips;
+    WirelessManagerToolTips,
+
+    HoldCtrlForContents;
 
     private final String root;
 

@@ -52,6 +52,7 @@ import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
+import appeng.util.ReadableNumberConverter;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -155,11 +156,23 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                         + EnumChatFormatting.GRAY
                         + GuiText.Types.getLocal());
 
-        if (cellInventory.getTotalItemTypes() == 1 && cellInventory.getStoredItemTypes() != 0) {
-            IAEStack<?> aes = handler.getAvailableItems(
+        if (cellInventory.getStoredItemTypes() != 0) {
+            IItemList<?> contents = handler.getAvailableItems(
                     cellInventory.getStackType().createPrimitiveList(),
-                    IterationCounter.fetchNewId()).getFirstItem();
-            lines.add(GuiText.Contains.getLocal() + ": " + aes.getDisplayName());
+                    IterationCounter.fetchNewId());
+            if (cellInventory.getTotalItemTypes() == 1) {
+                IAEStack<?> aes = contents.getFirstItem();
+                lines.add(GuiText.Contains.getLocal() + ": " + aes.getDisplayName());
+            } else if (GuiScreen.isCtrlKeyDown()) {
+                for (IAEStack<?> aeStack : contents) {
+                    String amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(aeStack.getStackSize());
+                    String unit = cellInventory.getStackType().getDisplayUnit();
+                    String suffix = unit.isEmpty() ? "" : " " + unit;
+                    lines.add("  " + aeStack.getDisplayName() + " x" + amount + suffix);
+                }
+            } else {
+                lines.add(EnumChatFormatting.GRAY + GuiText.HoldCtrlForContents.getLocal());
+            }
         }
 
         if (handler.isPreformatted()) {
