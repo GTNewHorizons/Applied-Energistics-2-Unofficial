@@ -239,6 +239,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
                         this.toReturn(tempStack, storage, this.storage);
                         return stored.getStackSize() > newConfigSize;
                     }
+                    return false;
                 } else {
                     this.doWork(storage);
                     return false;
@@ -382,7 +383,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
             if (freeBytes >= needBytes) return null;
             else {
                 final IAEStack<?> notAllowed = input.copy();
-                notAllowed.setStackSize(input.getStackSize() - ((freeBytes * typeWeight)) + freeUnusedCount);
+                notAllowed.setStackSize(input.getStackSize() - ((freeBytes * typeWeight) + freeUnusedCount));
                 return notAllowed;
             }
         } else {
