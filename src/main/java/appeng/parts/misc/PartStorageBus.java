@@ -29,6 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -77,6 +78,7 @@ import appeng.core.stats.Achievements;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.Reflected;
+import appeng.hooks.TickHandler;
 import appeng.integration.IntegrationType;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
@@ -122,6 +124,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     private int handlerHash = 0;
     private boolean wasActive = false;
     private byte resetCacheLogic = 0;
+    private boolean pendingDelayedCacheReset = false;
     private String oreFilterString = "";
     private String previousOreFilterString = "";
 
@@ -462,6 +465,26 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         this.resetCache(false);
     }
 
+    private void scheduleDelayedCacheReset() {
+        if (this.pendingDelayedCacheReset) return;
+
+        final IPartHost host = this.getHost();
+        if (host == null) return;
+
+        final TileEntity self = host.getTile();
+        if (self == null) return;
+
+        final World world = self.getWorldObj();
+        if (world == null || world.isRemote) return;
+
+        this.pendingDelayedCacheReset = true;
+        TickHandler.INSTANCE.addCallable(world, w -> {
+            this.pendingDelayedCacheReset = false;
+            this.resetCache(true);
+            return true;
+        });
+    }
+
     @Override
     public int cableConnectionRenderTo() {
         return 4;
@@ -507,6 +530,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         final boolean fullReset = this.resetCacheLogic == 2;
         this.resetCacheLogic = 0;
 
+        final MEInventoryHandler previousHandler = this.handler;
+        final int previousHandlerHash = this.handlerHash;
         final IMEInventory in = this.getInternalHandler();
 
         IItemList before = getItemList();
@@ -521,6 +546,15 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         }
 
         final IMEInventory out = this.getInternalHandler();
+        if (!fullReset && out == null && this.handlerHash != 0 && this.handlerHash != previousHandlerHash) {
+            // Some newly placed neighbors, such as GT tanks, expose storage only after placement initialization.
+            this.scheduleDelayedCacheReset();
+        }
+        if (this.handler != previousHandler || this.handlerHash != previousHandlerHash) {
+            try {
+                this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
+            } catch (final GridAccessException ignored) {}
+        }
 
         if (this.monitor != null) {
             this.monitor.onTick();
@@ -586,11 +620,11 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         final int newHandlerHash = Platform.generateTileHash(target);
 
-        // Some neighbors, such as GT tanks, expose storage only after placement initialization.
-        if (this.handlerHash == newHandlerHash && this.handlerHash != 0 && this.handler != null) {
+        if (this.handlerHash == newHandlerHash && this.handlerHash != 0) {
             return this.handler;
         }
 
+        this.handlerHash = newHandlerHash;
         this.handler = null;
         this.monitor = null;
         this.readOncePass = true;
@@ -680,12 +714,6 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
             }
         }
 
-        this.handlerHash = this.handler == null ? 0 : newHandlerHash;
-        if (this.handler == null && target != null) {
-            // A neighbor TE exists but is not ready yet. Retry the lookup on the next access.
-            this.cached = false;
-        }
-
         // update sleep state...
         if (wasSleeping != (this.monitor == null)) {
             try {
@@ -698,14 +726,6 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
             } catch (final GridAccessException e) {
                 // :(
             }
-        }
-
-        try {
-            // force grid to update handlers...
-            if (!(new Throwable().getStackTrace()[3].getMethodName().equals("cellUpdate")))
-                this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
-        } catch (final GridAccessException e) {
-            // :3
         }
 
         return this.handler;
