@@ -14,7 +14,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.parts.IPart;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
@@ -283,12 +282,8 @@ public abstract class PartBaseFormationPlane extends PartUpgradeable
         this.blocked = !w.getBlock(x, y, z).isReplaceable(w, x, y, z);
     }
 
-    protected boolean isTransitionPlane(final TileEntity blockTileEntity, final ForgeDirection side) {
-        if (blockTileEntity instanceof IPartHost) {
-            final IPart p = ((IPartHost) blockTileEntity).getPart(side);
-            return p instanceof PartBaseFormationPlane;
-        }
-        return false;
+    protected boolean isTransitionPlane(final TileEntity te, final ForgeDirection side) {
+        return (Platform.getPartFromTE(te, side) instanceof PartBaseFormationPlane);
     }
 
     @Override

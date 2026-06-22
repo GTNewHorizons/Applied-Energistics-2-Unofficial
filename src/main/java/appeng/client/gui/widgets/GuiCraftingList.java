@@ -30,7 +30,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
 import appeng.core.AELog;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.util.ColorPickHelper;
 import appeng.util.ReadableNumberConverter;
@@ -103,6 +103,7 @@ public class GuiCraftingList {
                             GL11.glPushMatrix();
                             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
                             GL11.glScaled(4, 4, 1);
+                            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                             parent.bindTexture(FIELD_TEXTURE);
                             parent.drawTexturedModalRect(
                                     0,
@@ -118,6 +119,7 @@ public class GuiCraftingList {
                             GL11.glPushMatrix();
                             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
                             GL11.glScaled(4, 4, 1);
+                            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                             parent.bindTexture(FIELD_TEXTURE);
                             parent.drawTexturedModalRect(0, 0, 0, 0, FIELD_WIDTH, FIELD_HEIGHT);
                             GL11.glPopMatrix();
@@ -210,6 +212,7 @@ public class GuiCraftingList {
             GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             GL11.glScaled(2.0d, 2.0d, 0.5d);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
             int lines = 0;
 
@@ -237,7 +240,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
                 downY += 5 * 4;
             }
 
@@ -249,7 +252,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
 
                 downY += 5 * 4;
             }
@@ -262,7 +265,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
 
                 downY += 5 * 4;
                 str = GuiText.ToCraftRequests.getLocal() + ": "
@@ -272,7 +275,7 @@ public class GuiCraftingList {
                         str,
                         (int) ((xo + FIELD_SECTIONLENGTH - 20 - (w * 2)) / 4),
                         (yo + 6 - negY + downY) / 2,
-                        GuiColors.GuiTextColorGray.getColor());
+                        ColorUtils.guiTextColorGray.getColor());
             }
 
             if (stored != null && stored.getStackSize() > 0 && missingStack == null && pendingStack == null) {

@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IDisplayRepo;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 
 public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
 
@@ -46,8 +46,8 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
      * Draw tinted backgrounds for pin slots. Use config colors (ARGB); 0 for no tint.
      */
     public static void drawSlotsBackground(VirtualMEPinSlot[] slots, Minecraft mc, float z) {
-        final int craftingColor = GuiColors.CraftingPinSlotBackground.getColor();
-        final int playerColor = GuiColors.PlayerPinSlotBackground.getColor();
+        final int craftingColor = ColorUtils.craftingPinSlotBackground.getColor();
+        final int playerColor = ColorUtils.playerPinSlotBackground.getColor();
         final Tessellator tessellator = Tessellator.instance;
 
         for (VirtualMEPinSlot slot : slots) {

@@ -251,7 +251,7 @@ public class EnergyGridCache implements IEnergyGrid {
                 extractedPower = extractFromOtherGrids(amt, mode, seen, extractedPower);
             }
 
-            return extractedPower;
+            return Math.min(extractedPower, amt);
         } else {
             this.extra = 0;
             extractedPower = this.doExtract(extractedPower, amt);

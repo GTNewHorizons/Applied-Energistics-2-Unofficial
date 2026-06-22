@@ -9,12 +9,12 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.parts.IPart;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.client.texture.CableBusTextures;
 import appeng.parts.PartBasicState;
+import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -164,12 +164,8 @@ public abstract class PartBaseAnnihilationPlane extends PartBasicState {
         return 1;
     }
 
-    protected boolean isAnnihilationPlane(final TileEntity blockTileEntity, final ForgeDirection side) {
-        if (blockTileEntity instanceof IPartHost iph) {
-            final IPart p = iph.getPart(side);
-            return p instanceof PartBaseAnnihilationPlane;
-        }
-        return false;
+    protected boolean isAnnihilationPlane(final TileEntity te, final ForgeDirection side) {
+        return Platform.getPartFromTE(te, side) instanceof PartBaseAnnihilationPlane;
     }
 
     @Override

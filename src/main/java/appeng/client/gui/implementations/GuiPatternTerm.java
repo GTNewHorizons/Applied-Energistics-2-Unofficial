@@ -46,7 +46,7 @@ import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.core.localization.ButtonToolTips;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
@@ -305,7 +305,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                 GuiText.PatternTerminal.getLocal(),
                 8,
                 this.ySize - 96 + 2 - this.getReservedSpace(),
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
     }
 
     private void updateButtonVisibility() {

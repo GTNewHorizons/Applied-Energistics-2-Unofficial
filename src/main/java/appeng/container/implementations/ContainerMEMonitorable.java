@@ -985,25 +985,23 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 if (hand.stackSize == 1) {
                     fillSingleFluidContainer(player, hand, stackInSlot, type, monitor);
                 } else {
-                    long capacity = type.getContainerItemCapacity(hand, stackInSlot);
-                    if (capacity <= 0) return;
-
                     ObjectLongPair<ItemStack> fullFilledPair = type.fillContainer(
                             Platform.copyStackWithSizeOne(hand),
                             stackInSlot.copy().setStackSize(Long.MAX_VALUE));
                     ItemStack fullFilledContainer = fullFilledPair.left();
-                    if (fullFilledContainer == null) return;
+                    long amountPerContainer = fullFilledPair.rightLong();
+                    if (fullFilledContainer == null || amountPerContainer <= 0) return;
 
                     if (fullFilledContainer.getMaxStackSize() >= hand.stackSize
-                            && capacity * hand.stackSize <= stackInSlot.getStackSize()) {
+                            && amountPerContainer * hand.stackSize <= stackInSlot.getStackSize()) {
                         // Fill all item in player hand
                         final IAEStack<?> stackToFill = monitor.extractItems(
-                                stackInSlot.copy().setStackSize(capacity * hand.stackSize),
+                                stackInSlot.copy().setStackSize(amountPerContainer * hand.stackSize),
                                 Actionable.MODULATE,
                                 this.getActionSource());
                         if (stackToFill == null) return;
 
-                        if (stackToFill.getStackSize() == capacity * hand.stackSize) {
+                        if (stackToFill.getStackSize() == amountPerContainer * hand.stackSize) {
                             fullFilledContainer.stackSize = hand.stackSize;
                             player.inventory.setItemStack(fullFilledContainer);
                         }

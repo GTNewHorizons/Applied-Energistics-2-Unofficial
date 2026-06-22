@@ -116,36 +116,36 @@ public class CraftingGridCache
         CRAFTING_POOL = Executors.newCachedThreadPool(factory);
     }
 
-    private final Set<CraftingCPUCluster> craftingCPUClusters = new HashSet<>();
-    private final Set<ICraftingProvider> craftingProviders = new HashSet<>();
-    private final Map<IGridNode, ICraftingWatcher> craftingWatchers = new HashMap<>();
-    private final IGrid grid;
-    private final Map<ICraftingPatternDetails, List<ICraftingMedium>> craftingMethods = new HashMap<>();
+    protected final Set<CraftingCPUCluster> craftingCPUClusters = new HashSet<>();
+    protected final Set<ICraftingProvider> craftingProviders = new HashSet<>();
+    protected final Map<IGridNode, ICraftingWatcher> craftingWatchers = new HashMap<>();
+    protected final IGrid grid;
+    protected final Map<ICraftingPatternDetails, List<ICraftingMedium>> craftingMethods = new HashMap<>();
     // Used for fuzzy lookups
-    private final OreListMultiMap<ICraftingPatternDetails> craftableItemSubstitutes = new OreListMultiMap<>();
-    private final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItemsLegacy = new HashMap<>();
-    private final Map<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
-    private final Set<IAEStack<?>> emitableItems = new HashSet<>();
-    private final Map<UUID, ICraftingPatternDetails> inputOnlyPatterns = new HashMap<>();
-    private final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<>();
-    private final Multimap<IAEStack, CraftingWatcher> interests = HashMultimap.create();
-    private final GenericInterestManager<CraftingWatcher> interestManager = new GenericInterestManager<>(
+    protected final OreListMultiMap<ICraftingPatternDetails> craftableItemSubstitutes = new OreListMultiMap<>();
+    protected final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItemsLegacy = new HashMap<>();
+    protected final Map<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
+    protected final Set<IAEStack<?>> emitableItems = new HashSet<>();
+    protected final Map<UUID, ICraftingPatternDetails> inputOnlyPatterns = new HashMap<>();
+    protected final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<>();
+    protected final Multimap<IAEStack, CraftingWatcher> interests = HashMultimap.create();
+    protected final GenericInterestManager<CraftingWatcher> interestManager = new GenericInterestManager<>(
             this.interests);
-    private IStorageGrid storageGrid;
-    private IEnergyGrid energyGrid;
-    private boolean updateList = false;
-    private static int pauseRebuilds = 0;
-    private static Set<CraftingGridCache> rebuildNeeded = new HashSet<>();
+    protected IStorageGrid storageGrid;
+    protected IEnergyGrid energyGrid;
+    protected boolean updateList = false;
+    protected static int pauseRebuilds = 0;
+    protected static Set<CraftingGridCache> rebuildNeeded = new HashSet<>();
 
-    private final Set<ICraftingPostPatternChangeListener> postPatternChangeListeners = Collections
+    protected final Set<ICraftingPostPatternChangeListener> postPatternChangeListeners = Collections
             .newSetFromMap(new WeakHashMap<>());
-    private final CraftingNetworkDiagnostics diagnostics = new CraftingNetworkDiagnostics();
-    private final Set<Long> loadedDiagnosticStorageIds = new HashSet<>();
-    private boolean diagnosticsEnabled = false;
-    private long diagnosticsRevision = 0L;
-    private static final String DIAGNOSTICS_KEY = "CraftingDiagnostics";
-    private static final String DIAGNOSTICS_ENABLED_KEY = "CraftingDiagnosticsEnabled";
-    private static final String DIAGNOSTICS_SESSION_COUNTER_KEY = "CraftingDiagnosticsSessionCounter";
+    protected final CraftingNetworkDiagnostics diagnostics = new CraftingNetworkDiagnostics();
+    protected final Set<Long> loadedDiagnosticStorageIds = new HashSet<>();
+    protected boolean diagnosticsEnabled = false;
+    protected long diagnosticsRevision = 0L;
+    public static final String DIAGNOSTICS_KEY = "CraftingDiagnostics";
+    public static final String DIAGNOSTICS_ENABLED_KEY = "CraftingDiagnosticsEnabled";
+    public static final String DIAGNOSTICS_SESSION_COUNTER_KEY = "CraftingDiagnosticsSessionCounter";
 
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
@@ -277,7 +277,7 @@ public class CraftingGridCache
         }
     }
 
-    private void updatePatterns() {
+    protected void updatePatterns() {
         // coalesce change events during a grid traversal to a single rebuild
         if (pauseRebuilds != 0) {
             rebuildNeeded.add(this);
@@ -324,7 +324,7 @@ public class CraftingGridCache
         setPatternsFromCraftingMethods();
     }
 
-    private void setPatternsFromCraftingMethods() {
+    protected void setPatternsFromCraftingMethods() {
         final Map<IAEStack<?>, Set<ICraftingPatternDetails>> tmpCraft = new HashMap<>();
 
         // new craftables!
@@ -366,7 +366,7 @@ public class CraftingGridCache
         return this.inputOnlyPatterns.get(uuid);
     }
 
-    private void updateCPUClusters() {
+    protected void updateCPUClusters() {
         this.craftingCPUClusters.clear();
 
         for (Object cls : StreamSupport.stream(grid.getMachinesClasses().spliterator(), false)
@@ -579,6 +579,10 @@ public class CraftingGridCache
      */
     public static ExecutorService getCraftingPool() {
         return CRAFTING_POOL;
+    }
+
+    public static Comparator<ICraftingPatternDetails> getCOMPARATOR() {
+        return COMPARATOR;
     }
 
     @Override
@@ -802,16 +806,16 @@ public class CraftingGridCache
         return this.diagnostics.createRows(search, sortMode, ascending);
     }
 
-    private NBTTagList writeDiagnosticsToNBT() {
+    protected NBTTagList writeDiagnosticsToNBT() {
         return this.diagnostics.writeToNBT();
     }
 
-    private void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
+    protected void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
         this.diagnostics.readFromNBT(list, merge);
         this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
-    private static class ActiveCpuIterator implements Iterator<ICraftingCPU> {
+    public static class ActiveCpuIterator implements Iterator<ICraftingCPU> {
 
         private final Iterator<CraftingCPUCluster> iterator;
         private CraftingCPUCluster cpuCluster;
@@ -828,7 +832,7 @@ public class CraftingGridCache
             return this.cpuCluster != null;
         }
 
-        private void findNext() {
+        protected void findNext() {
             while (this.iterator.hasNext() && this.cpuCluster == null) {
                 this.cpuCluster = this.iterator.next();
                 if (!this.cpuCluster.isActive() || this.cpuCluster.isDestroyed()) {

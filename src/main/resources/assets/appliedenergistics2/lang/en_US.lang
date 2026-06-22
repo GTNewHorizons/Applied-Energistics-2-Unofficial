@@ -517,6 +517,7 @@ gui.appliedenergistics2.itemMEStackPacketDesc1=Leftover after inject in system o
 gui.appliedenergistics2.itemMEStackPacketDesc2=Make sure you have free space and then put this item in ME Terminal
 
 gui.appliedenergistics2.WirelessManagerToolTips=Network\n§6LClick§7 - Select\n §6+ %s§7 - Rename\n §6+ Sneak§7 - Remove
+gui.appliedenergistics2.HoldCtrlForContents=Hold Ctrl for cell contents
 
 # GUI Tooltips
 gui.tooltips.appliedenergistics2.Stash=Store Items

@@ -5,7 +5,7 @@ import java.util.Objects;
 import net.minecraft.client.Minecraft;
 
 import appeng.api.util.AEColor;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 
 public class GuiColorButton extends GuiAeButton {
 
@@ -41,22 +41,22 @@ public class GuiColorButton extends GuiAeButton {
                     this.xPosition,
                     this.yPosition,
                     this.yPosition + this.height - 1,
-                    GuiColors.ColorButtonOutline.getColor());
+                    ColorUtils.colorButtonOutline.getColor());
             drawVerticalLine(
                     this.xPosition + this.width - 1,
                     this.yPosition,
                     this.yPosition + this.height - 1,
-                    GuiColors.ColorButtonOutline.getColor());
+                    ColorUtils.colorButtonOutline.getColor());
             drawHorizontalLine(
                     this.xPosition,
                     this.xPosition + this.width - 1,
                     this.yPosition,
-                    GuiColors.ColorButtonOutline.getColor());
+                    ColorUtils.colorButtonOutline.getColor());
             drawHorizontalLine(
                     this.xPosition,
                     this.xPosition + this.width - 1,
                     this.yPosition + this.height - 1,
-                    GuiColors.ColorButtonOutline.getColor());
+                    ColorUtils.colorButtonOutline.getColor());
 
             if (this.drawDisplayString && !Objects.equals(this.displayString, "")) {
                 mc.fontRenderer.drawString(

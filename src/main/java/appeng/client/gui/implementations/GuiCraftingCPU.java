@@ -41,7 +41,7 @@ import appeng.container.implementations.CraftingCpuEntry;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.Localization;
 import appeng.core.localization.PlayerMessages;
@@ -105,6 +105,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
     private int remainingOperations;
     private int hoveredVisibleIndex = -1;
     private IAEStack<?> hoveredStack;
+    private long hoveredStackActiveSize;
     private List<NamedDimensionalCoord> hoveredInterfaceLocations;
 
     public GuiCraftingCPU(final InventoryPlayer inventoryPlayer, final Object target) {
@@ -209,7 +210,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
             final PacketInventoryAction packet = new PacketInventoryAction(
                     InventoryAction.AUTO_CRAFT,
                     this.inventorySlots.inventorySlots.size(),
-                    this.hoveredStack.getStackSize());
+                    this.hoveredStackActiveSize);
             NetworkHandler.instance.sendToServer(packet);
         }
 
@@ -363,9 +364,9 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                 String.valueOf(this.remainingOperations),
                 TITLE_LEFT_OFFSET + REMAINING_OPERATIONS_RIGHT_OFFSET - this.remainingOperationsTooltip.getWidth(),
                 TITLE_TOP_OFFSET,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj
-                .drawString(title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, GuiColors.GuiTextColorGray.getColor());
+                .drawString(title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, ColorUtils.guiTextColorGray.getColor());
     }
 
     private void drawVisibleEntries() {
@@ -423,7 +424,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y,
                     negY,
                     downY,
-                    GuiColors.GuiTextColorGray.getColor(),
+                    ColorUtils.guiTextColorGray.getColor(),
                     visibleIndex,
                     lineList);
         }
@@ -436,7 +437,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y,
                     negY,
                     downY,
-                    GuiColors.GuiTextColorGray.getColor(),
+                    ColorUtils.guiTextColorGray.getColor(),
                     visibleIndex,
                     lineList);
         }
@@ -449,7 +450,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y,
                     negY,
                     downY,
-                    GuiColors.GuiTextColorGray.getColor(),
+                    ColorUtils.guiTextColorGray.getColor(),
                     visibleIndex,
                     lineList);
         }
@@ -473,6 +474,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     y * SECTION_HEIGHT + ITEMSTACK_TOP_OFFSET + 10,
                     tooltipMessage);
             this.hoveredStack = hoveredVisualStack;
+            this.hoveredStackActiveSize = entry.getActiveAmount();
         }
 
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
@@ -514,15 +516,15 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
 
     private int getCraftingStateColor(final ScheduledReason scheduledReason, final boolean active) {
         if (scheduledReason == ScheduledReason.UNDEFINED) {
-            return active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
+            return active ? ColorUtils.craftingCPUActive.getColor() : ColorUtils.craftingCPUInactive.getColor();
         }
 
         return switch (scheduledReason) {
-            case UNSUPPORTED_STACK -> GuiColors.CraftingCPUUnsupportedStack.getColor();
-            case SAME_NETWORK -> GuiColors.CraftingCPUSameNetwork.getColor();
-            case SOMETHING_STUCK -> GuiColors.CraftingCPUSomethingStuck.getColor();
-            case NO_TARGET -> GuiColors.CraftingCPUNoTarget.getColor();
-            default -> active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
+            case UNSUPPORTED_STACK -> ColorUtils.craftingCPUUnsupportedStack.getColor();
+            case SAME_NETWORK -> ColorUtils.craftingCPUSameNetwork.getColor();
+            case SOMETHING_STUCK -> ColorUtils.craftingCPUSomethingStuck.getColor();
+            case NO_TARGET -> ColorUtils.craftingCPUNoTarget.getColor();
+            default -> active ? ColorUtils.craftingCPUActive.getColor() : ColorUtils.craftingCPUInactive.getColor();
         };
     }
 
