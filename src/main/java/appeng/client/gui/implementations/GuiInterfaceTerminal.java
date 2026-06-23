@@ -33,7 +33,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.client.resources.Language;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
@@ -1938,6 +1937,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 // send packet to server, request an update
                 // TODO: Client prediction.
                 PacketInventoryAction packet;
+                
                 if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
                     packet = new PacketInventoryAction(InventoryAction.MOVE_REGION, 0, id);
                 } else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && (btn == 0)) {
