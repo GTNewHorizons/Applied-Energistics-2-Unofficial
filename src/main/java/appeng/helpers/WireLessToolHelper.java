@@ -86,6 +86,7 @@ public class WireLessToolHelper {
         is.setTagCompound(new NBTTagCompound());
         clearNBT(is, WirelessToolMode.Simple, null);
         clearNBT(is, WirelessToolMode.Advanced, null);
+        clearNBT(is, WirelessToolMode.AdvancedLine, null);
         clearNBT(is, WirelessToolMode.Super, null);
     }
 
@@ -93,8 +94,8 @@ public class WireLessToolHelper {
         final NBTTagCompound tag = is.getTagCompound();
         switch (mode) {
             case Simple -> tag.setTag(NbtSimple, new NBTTagCompound());
-            case Advanced -> {
-                tag.setTag(NbtAdvanced, new NBTTagCompound());
+            case Advanced -> tag.setTag(NbtAdvanced, new NBTTagCompound());
+            case AdvancedLine -> {
                 tag.setTag(NbtAdvancedLineQueue, new NBTTagCompound());
                 tag.setTag(NbtAdvancedLineBinding, new NBTTagCompound());
             }
@@ -486,17 +487,15 @@ public class WireLessToolHelper {
         return success;
     }
 
-    public static boolean bindAdvanced(TileWirelessBase target, ItemStack tool, World w, EntityPlayer p) {
+    public static boolean bindAdvanced(TileWirelessBase target, ItemStack tool, World w, EntityPlayer p, boolean line) {
         if (!securityCheck(target, new PlayerSource(p, null))) return false;
 
         AdvancedWirelessToolMode mod = (AdvancedWirelessToolMode) getConfigManager(tool)
                 .getSetting(Settings.ADVANCED_WIRELESS_TOOL_MODE);
 
         return switch (mod) {
-            case Queueing -> addToQueue(target, tool, p);
-            case Binding -> bindFromQueue(target, tool, w, p);
-            case QueueingLine -> addToQueueLine(target, tool, p);
-            case BindingLine -> bindFromQueueLine(target, tool, w, p);
+            case Queueing -> line ? addToQueueLine(target, tool, p) : addToQueue(target, tool, p);
+            case Binding -> line ? bindFromQueueLine(target, tool, w, p) : bindFromQueue(target, tool, w, p);
         };
     }
 

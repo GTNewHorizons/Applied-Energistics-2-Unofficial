@@ -1127,6 +1127,7 @@ item.appliedenergistics2.WirelessMessages.SimpleBound=§aBound to %s
 item.appliedenergistics2.WirelessMessages.SimpleBounded=Click another Wireless Connector to connect
 
 item.appliedenergistics2.WirelessMessages.Advanced=§eAdvanced
+item.appliedenergistics2.WirelessMessages.AdvancedLine=§eAdvanced Line
 item.appliedenergistics2.WirelessMessages.AdvancedActivated=%s §aactivated
 item.appliedenergistics2.WirelessMessages.AdvancedNext=§9Next connector in queue: %s
 item.appliedenergistics2.WirelessMessages.AdvancedHowToggle=Sneak + R-click to toggle advanced modes
