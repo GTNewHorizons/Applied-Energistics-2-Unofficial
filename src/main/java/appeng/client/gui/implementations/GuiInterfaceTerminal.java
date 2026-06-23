@@ -1964,20 +1964,18 @@ public class GuiInterfaceTerminal extends AEBaseGui
     public void handleMouseInput() {
         if (!Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
             super.handleMouseInput();
-        } else 
-        {
-            final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
-            final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-
+        } else {
             int wheel = Mouse.getEventDWheel();
             if (wheel == 0) {
-                return;
-            }
-            boolean ret = false;
-            if (wheel > 0) {
-                mouseClicked(x, y, 0);
+                super.handleMouseInput();
             } else {
-                mouseClicked(x, y, 1);
+                final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
+                final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+                if (wheel > 0) {
+                    mouseClicked(x, y, 0);
+                } else {
+                    mouseClicked(x, y, 1);
+                }
             }
         }
     }
