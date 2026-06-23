@@ -249,6 +249,7 @@ gui.appliedenergistics2.MolecularAssembler=ME分子組立機
 gui.appliedenergistics2.ProcessingPattern=実行パターン
 gui.appliedenergistics2.Crafts=クラフト
 gui.appliedenergistics2.HoldShift=Hold [LSHIFT] to show Ingredients
+gui.appliedenergistics2.HoldControl=Hold [LCONTROL] to multiply/divide pattern
 gui.appliedenergistics2.PatternView=Press [%s] to view pattern
 gui.appliedenergistics2.Result=Result
 gui.appliedenergistics2.Results=Results

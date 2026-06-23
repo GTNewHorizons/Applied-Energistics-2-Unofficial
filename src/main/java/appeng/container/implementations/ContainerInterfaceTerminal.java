@@ -55,6 +55,7 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.inv.ItemSlot;
+import appeng.util.PatternMultiplierHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -232,6 +233,24 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                         }
                         dirty.addOverwriteEntry(id).setItems(validIndices, tag);
                         isDirty = true;
+                    }
+                }
+                case MULTIPLY_PATTERN -> {
+                    if (slotStack != null) {
+                        ItemStack copy = slotStack.copy();
+                        PatternMultiplierHelper
+                                .applyModification(copy, 1);
+                        inv.patterns.setInventorySlotContents(slot, copy);
+                        syncIfaceSlot(inv, id, slot, copy);
+                    }
+                }
+                case DIVIDE_PATTERN -> {
+                    if (slotStack != null) {
+                        ItemStack copy = slotStack.copy();
+                        PatternMultiplierHelper
+                                .applyModification(copy, -1);
+                        inv.patterns.setInventorySlotContents(slot, copy);
+                        syncIfaceSlot(inv, id, slot, copy);
                     }
                 }
                 case CREATIVE_DUPLICATE -> {

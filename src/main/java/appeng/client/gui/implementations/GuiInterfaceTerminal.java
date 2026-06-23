@@ -33,6 +33,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.resources.Language;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
@@ -1937,9 +1938,12 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 // send packet to server, request an update
                 // TODO: Client prediction.
                 PacketInventoryAction packet;
-
                 if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
                     packet = new PacketInventoryAction(InventoryAction.MOVE_REGION, 0, id);
+                } else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && (btn == 0)) {
+                    packet = new PacketInventoryAction(InventoryAction.MULTIPLY_PATTERN, slotIdx, id);
+                } else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && (btn == 1)) {
+                    packet = new PacketInventoryAction(InventoryAction.DIVIDE_PATTERN, slotIdx, id);
                 } else if (isShiftKeyDown() && (btn == 0 || btn == 1)) {
                     packet = new PacketInventoryAction(InventoryAction.SHIFT_CLICK, slotIdx, id);
                 } else if (btn == 0 || btn == 1) {
@@ -1955,4 +1959,26 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
     }
 
+    // Individual pattern slot multiplication using scrollwheel
+    @Override
+    public void handleMouseInput() {
+        if (!Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
+            super.handleMouseInput();
+        } else 
+        {
+            final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
+            final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+
+            int wheel = Mouse.getEventDWheel();
+            if (wheel == 0) {
+                return;
+            }
+            boolean ret = false;
+            if (wheel > 0) {
+                mouseClicked(x, y, 0);
+            } else {
+                mouseClicked(x, y, 1);
+            }
+        }
+    }
 }
