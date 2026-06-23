@@ -52,10 +52,10 @@ import appeng.parts.AEBasePart;
 import appeng.parts.misc.PartPatternRepeater;
 import appeng.parts.p2p.PartP2PTunnel;
 import appeng.util.InventoryAdaptor;
+import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.inv.ItemSlot;
-import appeng.util.PatternMultiplierHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -238,8 +238,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                 case MULTIPLY_PATTERN -> {
                     if (slotStack != null) {
                         ItemStack copy = slotStack.copy();
-                        PatternMultiplierHelper
-                                .applyModification(copy, 1);
+                        PatternMultiplierHelper.applyModification(copy, 1);
                         inv.patterns.setInventorySlotContents(slot, copy);
                         syncIfaceSlot(inv, id, slot, copy);
                     }
@@ -247,8 +246,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                 case DIVIDE_PATTERN -> {
                     if (slotStack != null) {
                         ItemStack copy = slotStack.copy();
-                        PatternMultiplierHelper
-                                .applyModification(copy, -1);
+                        PatternMultiplierHelper.applyModification(copy, -1);
                         inv.patterns.setInventorySlotContents(slot, copy);
                         syncIfaceSlot(inv, id, slot, copy);
                     }

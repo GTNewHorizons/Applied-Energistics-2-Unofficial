@@ -1937,7 +1937,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 // send packet to server, request an update
                 // TODO: Client prediction.
                 PacketInventoryAction packet;
-                
+
                 if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
                     packet = new PacketInventoryAction(InventoryAction.MOVE_REGION, 0, id);
                 } else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && (btn == 0)) {
