@@ -102,4 +102,8 @@ public class ModelCompass extends ModelBase {
         this.Ring3.render(0.0625F);
         this.Ring4.render(0.0625F);
     }
+
+    public void renderAll(final float rad, final boolean mirror) {
+        renderAll(mirror ? (float) (Math.PI - rad) : rad);
+    }
 }
