@@ -28,22 +28,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.StatCollector;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants.NBT;
-
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -96,6 +80,23 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.resources.Language;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Container;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.StatCollector;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 /**
  * Interface Terminal GUI <br/>
@@ -1940,9 +1941,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
                 if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
                     packet = new PacketInventoryAction(InventoryAction.MOVE_REGION, 0, id);
-                } else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && (btn == 0)) {
+                } else if (GuiScreen.isCtrlKeyDown() && (btn == 0)) {
                     packet = new PacketInventoryAction(InventoryAction.MULTIPLY_PATTERN, slotIdx, id);
-                } else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && (btn == 1)) {
+                } else if (GuiScreen.isCtrlKeyDown() && (btn == 1)) {
                     packet = new PacketInventoryAction(InventoryAction.DIVIDE_PATTERN, slotIdx, id);
                 } else if (isShiftKeyDown() && (btn == 0 || btn == 1)) {
                     packet = new PacketInventoryAction(InventoryAction.SHIFT_CLICK, slotIdx, id);
@@ -1962,7 +1963,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     // Individual pattern slot multiplication using scrollwheel
     @Override
     public void handleMouseInput() {
-        if (!Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
+        if (!GuiScreen.isCtrlKeyDown()) {
             super.handleMouseInput();
         } else {
             int wheel = Mouse.getEventDWheel();
