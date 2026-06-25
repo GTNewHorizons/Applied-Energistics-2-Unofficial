@@ -120,6 +120,7 @@ public enum GuiText implements Localization {
     ProcessingPattern,
     Crafts,
     HoldShift,
+    HoldControl,
     Result,
     Results,
     Ingredients,
