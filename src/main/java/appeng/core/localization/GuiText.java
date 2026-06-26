@@ -120,6 +120,7 @@ public enum GuiText implements Localization {
     ProcessingPattern,
     Crafts,
     HoldShift,
+    HoldControl,
     Result,
     Results,
     Ingredients,
@@ -404,6 +405,14 @@ public enum GuiText implements Localization {
     GuiDimensionalCoordShort,
     GuiDimensionalCoordNoDim,
     GuiDimensionalCoordShortNoDim,
+
+    SuperMEReplenisherBytesTotal,
+    SuperMEReplenisherBytesUnlimited,
+    SuperMEReplenisherBytesUsed,
+    SuperMEReplenisherTickRate,
+    SuperMEReplenisherThreshold,
+    SuperMEReplenisherTarget,
+    SuperMEReplenisherStored,
 
     itemMEStackPacketDesc1,
     itemMEStackPacketDesc2,

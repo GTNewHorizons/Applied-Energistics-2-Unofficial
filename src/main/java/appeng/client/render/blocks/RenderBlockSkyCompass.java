@@ -30,6 +30,8 @@ import appeng.client.render.model.ModelCompass;
 import appeng.hooks.CompassManager;
 import appeng.hooks.CompassResult;
 import appeng.tile.misc.TileSkyCompass;
+import appeng.util.Platform;
+import xonin.backhand.api.core.BackhandUtils;
 
 public class RenderBlockSkyCompass extends BaseBlockRender<BlockSkyCompass, TileSkyCompass> {
 
@@ -109,26 +111,36 @@ public class RenderBlockSkyCompass extends BaseBlockRender<BlockSkyCompass, Tile
                 }
             }
 
+            boolean mirrored = false;
+            if (Platform.isBackhandLoaded && type != ItemRenderType.INVENTORY) {
+                // Need to mirror the direction if the item is held in the backhand
+                // Otherwise the compass needle points the wrong way
+                mirrored = BackhandUtils.getOffhandItem(p) == is;
+            }
+
             if (cr.isValidResult()) {
                 if (cr.isSpin()) {
                     now %= 100000;
-                    this.model.renderAll((now / 50000.0f) * (float) Math.PI * 500.0f);
+                    this.model.renderAll((now / 50000.0f) * (float) Math.PI * 500.0f, mirrored);
                 } else {
                     if (type == ItemRenderType.EQUIPPED_FIRST_PERSON) {
                         final float offRads = rYaw / 180.0f * (float) Math.PI;
                         final float adjustment = (float) Math.PI * 0.74f;
 
-                        this.model.renderAll((float) this.flipidiy(cr.getRad() + offRads + adjustment));
+                        this.model.renderAll((float) this.flipidiy(cr.getRad() + offRads + adjustment), mirrored);
                     } else {
                         final float offRads = rYaw / 180.0f * (float) Math.PI;
-                        final float adjustment = (float) Math.PI * -0.74f;
+                        float adjustment = (float) Math.PI * -0.74f;
+                        if (mirrored) {
+                            adjustment += (float) Math.PI / 2f;
+                        }
 
-                        this.model.renderAll((float) this.flipidiy(cr.getRad() + offRads + adjustment));
+                        this.model.renderAll((float) this.flipidiy(cr.getRad() + offRads + adjustment), mirrored);
                     }
                 }
             } else {
                 now %= 1000000;
-                this.model.renderAll((now / 500000.0f) * (float) Math.PI * 500.0f);
+                this.model.renderAll((now / 500000.0f) * (float) Math.PI * 500.0f, mirrored);
             }
         } else {
             now %= 100000;
