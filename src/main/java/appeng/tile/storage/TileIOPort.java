@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -29,6 +30,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
+import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergySource;
@@ -44,6 +46,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
+import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.settings.TickRates;
@@ -63,7 +66,8 @@ import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.WrapperInventoryRange;
 
-public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IConfigManagerHost, IGridTickable {
+public class TileIOPort extends AENetworkInvTile
+        implements IUpgradeableHost, IConfigManagerHost, IGridTickable, IColorableTile {
 
     private static final int INPUT_SLOT_INDEX_TOP_LEFT = 0;
     private static final int INPUT_SLOT_INDEX_TOP_RIGHT = 1;
@@ -102,6 +106,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     private ItemStack currentCell;
     private IMEInventory<?> cachedInventory;
     private int[] moveQueue = { 0, 0, 0, 0, 0, 0 };
+    private AEColor paintedColor = AEColor.Transparent;
 
     private static final class TransferResult {
 
@@ -139,6 +144,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         this.upgrades.writeToNBT(data, "upgrades");
         data.setInteger("lastRedstoneState", this.lastRedstoneState.ordinal());
         data.setIntArray("moveQueue", moveQueue);
+        data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
@@ -151,6 +157,10 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         }
         if (data.hasKey("moveQueue")) {
             moveQueue = data.getIntArray("moveQueue");
+        }
+        if (data.hasKey("paintedColor")) {
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
+            this.getProxy().setColor(this.paintedColor);
         }
     }
 
@@ -607,5 +617,25 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                 drops.add(stackInSlot);
             }
         }
+    }
+
+    @Override
+    public AEColor getColor() {
+        return this.paintedColor;
+    }
+
+    @Override
+    public boolean recolourBlock(ForgeDirection side, AEColor newPaintedColor, EntityPlayer who) {
+        if (this.paintedColor == newPaintedColor) {
+            return false;
+        }
+        this.paintedColor = newPaintedColor;
+        this.getProxy().setColor(this.paintedColor);
+        if (getGridNode(side) != null) {
+            getGridNode(side).updateState();
+        }
+        this.markDirty();
+        this.markForUpdate();
+        return true;
     }
 }
