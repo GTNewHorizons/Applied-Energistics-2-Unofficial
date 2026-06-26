@@ -3,6 +3,7 @@ package appeng.client.gui.implementations;
 import java.util.ArrayList;
 
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Keyboard;
@@ -55,8 +56,8 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
                     12,
                     AEColor.values()[y],
                     keyStatus.value(),
-                    GuiText.WirelessManagerToolTips
-                            .getLocal(ServerHelper.WIRELESS_EXTRA_ACTION.getKeybindDisplayName()));
+                    GuiText.WirelessManagerToolTips.getLocal(
+                            GameSettings.getKeyDisplayString(ServerHelper.WIRELESS_EXTRA_ACTION.getKeyCode())));
             btn.visible = keyStatus.key();
             this.colorButtons.add(btn);
             this.buttonList.add(btn);

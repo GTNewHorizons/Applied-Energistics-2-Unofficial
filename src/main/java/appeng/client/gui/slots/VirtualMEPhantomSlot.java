@@ -9,6 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.StorageName;
@@ -204,7 +205,7 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
                 if (stack != null && stack.getStackSize() > 0) {
                     lines.add(
                             ButtonToolTips.RegisterContainerContent.getLocal(
-                                    CONTAINER_INTERACTION_KEY.getKeybindDisplayName(),
+                                    GameSettings.getKeyDisplayString(CONTAINER_INTERACTION_KEY.getKeyCode()),
                                     stack.getDisplayName()));
                     return;
                 }

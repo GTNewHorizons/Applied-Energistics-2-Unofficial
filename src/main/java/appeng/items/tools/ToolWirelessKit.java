@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -122,7 +123,9 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
         final IConfigManager cm = getConfigManager(is);
         final WirelessToolMode currentMode = (WirelessToolMode) cm.getSetting(Settings.WIRELESS_TOOL_MODE);
         lines.add(WirelessMessages.Mode.getLocal(currentMode.getLocal()));
-        lines.add(WirelessMessages.ModeToggle.getLocal(ServerHelper.WIRELESS_MODE_SWITCH.getKeybindDisplayName()));
+        lines.add(
+                WirelessMessages.ModeToggle
+                        .getLocal(GameSettings.getKeyDisplayString(ServerHelper.WIRELESS_MODE_SWITCH.getKeyCode())));
         lines.add(WirelessMessages.SuperClear.getLocal());
 
         final NBTTagCompound tag = ItemStackNBT.get(is);
