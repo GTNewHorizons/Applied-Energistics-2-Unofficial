@@ -54,19 +54,16 @@ public class RenderIOPort extends BaseBlockRender<BlockIOPort, TileIOPort> {
 
         renderer.setRenderBounds(0, 0, 0, 1, 1, 1);
 
-        int driveColor = sp.getColor().driveVariant;
-        float driveRed = (float) (driveColor >> 16 & 255) / 255.0F;
-        float driveGreen = (float) (driveColor >> 8 & 255) / 255.0F;
-        float driveBlue = (float) (driveColor & 255) / 255.0F;
+        int iopColor = sp.getColor().driveVariant;
+        float iopRed = (float) (iopColor >> 16 & 255) / 255.0F;
+        float iopGreen = (float) (iopColor >> 8 & 255) / 255.0F;
+        float iopBlue = (float) (iopColor & 255) / 255.0F;
 
         this.preRenderInWorld(imb, world, x, y, z, renderer);
 
-        final boolean result = renderer
-                .renderStandardBlockWithColorMultiplier(imb, x, y, z, driveRed, driveGreen, driveBlue);
+        final boolean result = renderer.renderStandardBlockWithColorMultiplier(imb, x, y, z, iopRed, iopGreen, iopBlue);
 
         this.postRenderInWorld(renderer);
-
-        this.selectFace(renderer, west, up, forward, 0, 0, 0, 0);
 
         renderer.overrideBlockTexture = null;
 

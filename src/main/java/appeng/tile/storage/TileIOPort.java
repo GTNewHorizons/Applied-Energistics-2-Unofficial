@@ -65,6 +65,7 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.WrapperInventoryRange;
+import io.netty.buffer.ByteBuf;
 
 public class TileIOPort extends AENetworkInvTile
         implements IUpgradeableHost, IConfigManagerHost, IGridTickable, IColorableTile {
@@ -162,6 +163,21 @@ public class TileIOPort extends AENetworkInvTile
             this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
             this.getProxy().setColor(this.paintedColor);
         }
+    }
+
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void writeToStream_TileIOPort(final ByteBuf data) {
+        data.writeByte(this.paintedColor.ordinal());
+    }
+
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean readFromStream_TileIOPort(final ByteBuf data) {
+
+        final AEColor oldPaintedColor = this.paintedColor;
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
+        this.getProxy().setColor(this.paintedColor);
+
+        return oldPaintedColor != this.paintedColor;
     }
 
     @Override
