@@ -98,8 +98,8 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.storage.ItemViewCell;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.IConfigManagerHost;
-import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
@@ -153,7 +153,7 @@ public class GuiMEMonitorable extends AEBaseGui
     protected VirtualMEPinSlot[] pinSlots = null;
     protected VirtualMEMonitorableSlot[] monitorableSlots = null;
     @Nullable
-    protected Reference2BooleanMap<IAEStackType<?>> typeFilters;
+    protected AEStackTypeFilter typeFilters;
 
     public GuiMEMonitorable(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         this(inventoryPlayer, te, new ContainerMEMonitorable(inventoryPlayer, te));
@@ -202,7 +202,7 @@ public class GuiMEMonitorable extends AEBaseGui
         NEI.searchField.putFormatter(this.searchField);
 
         if (te instanceof ITerminalTypeFilterProvider) {
-            this.typeFilters = MonitorableTypeFilter.createDefaultMap();
+            this.typeFilters = new AEStackTypeFilter();
         }
     }
 
@@ -230,14 +230,14 @@ public class GuiMEMonitorable extends AEBaseGui
             final IAEStackType<?> type = this.typeToggleButtons.get(tbtn);
             if (type != null && this.typeFilters != null) {
                 // Optimistic client-side feedback; server will sync authoritative state shortly.
-                final boolean next = !this.typeFilters.getBoolean(type);
-                this.typeFilters.put(type, next);
+                final boolean next = !this.typeFilters.isEnabled(type);
+                this.typeFilters.setEnabled(type, next);
                 tbtn.setEnabled(next);
                 this.repo.updateView();
 
                 try {
                     NetworkHandler.instance
-                            .sendToServer(new PacketMonitorableTypeFilter(this.typeFilters, this.inventorySlots.windowId));
+                            .sendToServer(new PacketMonitorableTypeFilter(this.typeFilters.getImmutableFilters(), this.inventorySlots.windowId));
                 } catch (final IOException e) {
                     AELog.debug(e);
                 }
@@ -349,7 +349,7 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     private boolean checkTypeFilter(IAEStackType<?> type) {
-        return this.typeFilters == null || this.typeFilters.getBoolean(type);
+        return this.typeFilters == null || this.typeFilters.isEnabled(type);
     }
 
     @Override
@@ -570,7 +570,7 @@ public class GuiMEMonitorable extends AEBaseGui
 
             final TypeToggleButton btn = new TypeToggleButton(x, y, texture, icon, type.getDisplayName());
 
-            btn.setEnabled(this.typeFilters.getBoolean(type));
+            btn.setEnabled(this.typeFilters.isEnabled(type));
             this.typeToggleButtons.put(btn, type);
             this.buttonList.add(btn);
 
@@ -676,7 +676,7 @@ public class GuiMEMonitorable extends AEBaseGui
         final boolean isLShiftDown = isShiftKeyDown();
         final boolean isLControlDown = isCtrlKeyDown();
         final boolean nonItemInteraction = isLControlDown
-                || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
+                || (this.typeFilters != null && !this.typeFilters.isEnabled(ITEM_STACK_TYPE));
 
         switch (mouseButton) {
             case 0 -> { // left click
@@ -948,7 +948,7 @@ public class GuiMEMonitorable extends AEBaseGui
     @Override
     @Nullable
     public Reference2BooleanMap<IAEStackType<?>> getTypeFilter() {
-        return this.typeFilters;
+        return this.typeFilters == null ? null : this.typeFilters.getFiltersMap();
     }
 
     @Override
@@ -977,12 +977,12 @@ public class GuiMEMonitorable extends AEBaseGui
         if (this.typeFilters == null) return;
 
         for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
-            this.typeFilters.put(entry.getKey(), entry.getBooleanValue());
+            this.typeFilters.setEnabled(entry.getKey(), entry.getBooleanValue());
         }
 
         // Update Buttons
         for (final Map.Entry<TypeToggleButton, IAEStackType<?>> entry : this.typeToggleButtons.entrySet()) {
-            final boolean enabled = this.typeFilters.getBoolean(entry.getValue());
+            final boolean enabled = this.typeFilters.isEnabled(entry.getValue());
             entry.getKey().setEnabled(enabled);
         }
 
@@ -1130,7 +1130,7 @@ public class GuiMEMonitorable extends AEBaseGui
 
         final boolean isRealItem = this.mc.thePlayer.inventory.getItemStack() != null;
         final boolean nonItemInteraction = isCtrlKeyDown()
-                || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
+                || (this.typeFilters != null && !this.typeFilters.isEnabled(ITEM_STACK_TYPE));
 
         if (nonItemInteraction) {
             for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {

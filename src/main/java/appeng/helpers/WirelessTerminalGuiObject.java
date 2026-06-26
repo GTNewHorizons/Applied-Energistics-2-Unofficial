@@ -309,7 +309,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
 
     @Override
     public @NotNull Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
-        return this.terminalSettings.getFilters(player).getImmutableFilters();
+        return this.terminalSettings.getFilters(player).getFiltersMap();
     }
 
     @Override
