@@ -36,7 +36,8 @@ public class WireLessToolHelper {
         SUCCESS,
         INVALID_TARGET,
         FAILED,
-        ALREADY_BIND
+        ALREADY_BIND,
+        TEMPORARY_FAILURE
     }
 
     public final static String NbtSimple = "Simple";
@@ -155,27 +156,31 @@ public class WireLessToolHelper {
 
     public static BindResult performConnection(TileWirelessBase target, TileWirelessBase source,
             BaseActionSource actionSource) {
-        return performConnection(target, source, actionSource, true);
+        return performConnection(target, source, actionSource, true, true, false);
     }
 
-    public static BindResult performConnection(TileWirelessBase target, TileWirelessBase source,
-            BaseActionSource actionSource, boolean sendMessages) {
+    private static BindResult performConnection(TileWirelessBase target, TileWirelessBase source,
+            BaseActionSource actionSource, boolean sendMessages, boolean unlinkExisting, boolean restoring) {
         if (target.getLocation().getDimension() != source.getLocation().getDimension()) {
             if (sendMessages && actionSource instanceof PlayerSource ps)
                 ps.player.addChatMessage(WirelessMessages.DimensionMismatch.toChat());
             return BindResult.FAILED;
         }
 
-        final BindResult securityCheck = securityCheck(target, source, actionSource);
-        if (securityCheck != BindResult.SUCCESS) return securityCheck;
+        if (target.getLocation().isEqual(source.getLocation())) return BindResult.FAILED;
 
-        if (target.isHub() && !target.canAddLink()) {
+        final BindResult securityCheck = securityCheck(target, source, actionSource);
+        if (securityCheck != BindResult.SUCCESS) return restoring ? BindResult.TEMPORARY_FAILURE : securityCheck;
+
+        if (target.isConnectedTo(source)) return BindResult.ALREADY_BIND;
+
+        if (target.isHub() && !target.canAddLink(source)) {
             if (sendMessages && actionSource instanceof PlayerSource ps)
                 ps.player.addChatMessage(WirelessMessages.TargetHubFull.toChat());
             return BindResult.INVALID_TARGET;
         }
 
-        if (source.isHub() && !source.canAddLink()) {
+        if (source.isHub() && !source.canAddLink(target)) {
             final DimensionalCoord loc = source.getLocation();
             if (sendMessages && actionSource instanceof PlayerSource ps)
                 ps.player.addChatMessage(WirelessMessages.SourceHubFull.toChat(loc.getGuiTextShortNoDim()));
@@ -188,10 +193,12 @@ public class WireLessToolHelper {
             return BindResult.INVALID_SOURCE;
         }
 
-        if (!target.isHub()) target.doUnlink();
-        if (!source.isHub()) source.doUnlink();
+        if (unlinkExisting) {
+            if (!target.isHub()) target.unlinkAll();
+            if (!source.isHub()) source.unlinkAll();
+        }
 
-        final BindResult result = target.doLink(source);
+        final BindResult result = unlinkExisting ? target.doLink(source) : target.restoreLink(source);
         switch (result) {
             case SUCCESS -> {
                 final DimensionalCoord dc = source.getLocation();
@@ -208,22 +215,34 @@ public class WireLessToolHelper {
         return result;
     }
 
+    public static BindResult restoreConnection(TileWirelessBase target, TileWirelessBase source,
+            BaseActionSource actionSource) {
+        final BindResult result = performConnection(target, source, actionSource, false, false, true);
+        if (result != BindResult.SUCCESS && result != BindResult.ALREADY_BIND
+                && result != BindResult.TEMPORARY_FAILURE) {
+            source.unlink(target);
+            target.unlink(source);
+        }
+        return result;
+    }
+
     public static void breakConnection(TileWirelessBase source, BaseActionSource actionSource) {
-        source.getConnectedTiles().forEach(t -> {
-            final BindResult securityCheck = securityCheck(t, source, actionSource);
-            if (securityCheck == BindResult.SUCCESS) WireLessToolHelper.breakConnection(t, source, actionSource);
-            if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
-                    WirelessMessages.Disconnected.toChat(
-                            source.getLocation().getGuiTextShortNoDim(),
-                            t.getLocation().getGuiTextShortNoDim()));
-        });
+        if (!securityCheck(source, actionSource)) return;
+
+        final List<TileWirelessBase> connectedTiles = new ArrayList<>(source.getConnectedTiles());
+        source.unlinkAll();
+        if (actionSource instanceof PlayerSource ps) connectedTiles.forEach(
+                t -> ps.player.addChatMessage(
+                        WirelessMessages.Disconnected.toChat(
+                                source.getLocation().getGuiTextShortNoDim(),
+                                t.getLocation().getGuiTextShortNoDim())));
     }
 
     public static void breakConnection(TileWirelessBase target, TileWirelessBase source,
             BaseActionSource actionSource) {
         final BindResult securityCheck = securityCheck(target, source, actionSource);
         if (securityCheck != BindResult.SUCCESS) return;
-        target.doUnlink(source);
+        target.unlink(source);
         if (actionSource instanceof PlayerSource ps) ps.player.addChatMessage(
                 WirelessMessages.Disconnected.toChat(
                         source.getLocation().getGuiTextShortNoDim(),

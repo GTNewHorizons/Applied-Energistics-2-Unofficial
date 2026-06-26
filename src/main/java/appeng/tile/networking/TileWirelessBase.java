@@ -7,12 +7,12 @@
 package appeng.tile.networking;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,6 +23,9 @@ import com.google.common.collect.ImmutableList;
 
 import appeng.api.AEApi;
 import appeng.api.config.PowerMultiplier;
+import appeng.api.exceptions.ExistingConnectionException;
+import appeng.api.exceptions.FailedConnection;
+import appeng.api.exceptions.SecurityConnectionException;
 import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridConnection;
@@ -48,33 +51,17 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     private AEColor color = AEColor.Transparent;
 
     private final int maxConnections;
+    private final Set<DimensionalCoord> linkedTargets = new LinkedHashSet<>();
 
-    protected abstract void setDataConnections(TileWirelessBase other, IGridConnection connection);
+    protected abstract void addActiveConnection(TileWirelessBase other, IGridConnection connection);
 
-    protected abstract void removeDataConnections(TileWirelessBase other);
+    protected abstract void removeActiveConnection(TileWirelessBase other);
 
     public abstract List<TileWirelessBase> getConnectedTiles();
 
     public List<DimensionalCoord> getConnectedCoords() {
-        return ImmutableList.copyOf(new Iterator<>() {
-
-            final Iterator<TileWirelessBase> it = getConnectedTiles().iterator();
-
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public DimensionalCoord next() {
-                return it.next().getLocation();
-            }
-        });
+        return ImmutableList.copyOf(this.linkedTargets);
     }
-
-    public abstract List<IGridConnection> getAllConnections();
-
-    public abstract Map<TileWirelessBase, IGridConnection> getConnectionMap();
 
     public abstract IGridConnection getConnection(TileWirelessBase other);
 
@@ -82,8 +69,12 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         return getConnection(other) != null && other.getConnection(this) != null;
     }
 
+    private boolean isSameLocation(TileWirelessBase other) {
+        return getLocation().isEqual(other.getLocation());
+    }
+
     public boolean isLinked() {
-        return !getConnectedTiles().isEmpty();
+        return !this.linkedTargets.isEmpty();
     }
 
     public boolean isHub() {
@@ -91,11 +82,15 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     }
 
     public int getFreeSlots() {
-        return maxConnections - getConnectedTiles().size();
+        return maxConnections - this.linkedTargets.size();
     }
 
     public boolean canAddLink() {
         return getFreeSlots() > 0;
+    }
+
+    public boolean canAddLink(TileWirelessBase other) {
+        return this.hasLinkedTarget(other.getLocation()) || canAddLink();
     }
 
     public int getUsedChannels() {
@@ -112,53 +107,106 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     public abstract BindResult doLink(TileWirelessBase other);
 
     /**
-     * DO NOT USE THIS, USE WireLessToolHelper.breakConnection()
+     * DO NOT USE THIS, USE WireLessToolHelper.restoreConnection()
      **/
-    public abstract void doUnlink(TileWirelessBase other);
+    public BindResult restoreLink(TileWirelessBase other) {
+        return setupConnection(other, true);
+    }
 
     /**
      * DO NOT USE THIS, USE WireLessToolHelper.breakConnection()
      **/
-    public abstract void doUnlink();
+    public abstract void unlink(TileWirelessBase other);
+
+    /**
+     * DO NOT USE THIS, USE WireLessToolHelper.breakConnection()
+     **/
+    public abstract void unlinkAll();
+
+    protected void removeActiveConnectionToLocation(DimensionalCoord location) {
+        for (TileWirelessBase other : getConnectedTiles()) {
+            if (other.getLocation().isEqual(location)) {
+                breakActiveConnection(other);
+            }
+        }
+    }
 
     protected BindResult setupConnection(TileWirelessBase other) {
-        if (!canAddLink()) return BindResult.INVALID_SOURCE;
+        return setupConnection(other, false);
+    }
+
+    private BindResult setupConnection(TileWirelessBase other, boolean restoring) {
+        if (this == other || isSameLocation(other)) return BindResult.INVALID_SOURCE;
+        if (isConnectedTo(other)) return BindResult.ALREADY_BIND;
+
+        removeActiveConnectionToLocation(other.getLocation());
+        other.removeActiveConnectionToLocation(getLocation());
+
+        if (!canAddLink(other)) return BindResult.INVALID_SOURCE;
 
         try {
             final IGridNode selfNode = getGridNode(ForgeDirection.UNKNOWN);
             final IGridNode targetNode = other.getGridNode(ForgeDirection.UNKNOWN);
 
-            if (selfNode == null) return BindResult.INVALID_SOURCE;
-            if (targetNode == null) return BindResult.INVALID_SOURCE;
+            if (selfNode == null) return restoring ? BindResult.TEMPORARY_FAILURE : BindResult.INVALID_SOURCE;
+            if (targetNode == null) return restoring ? BindResult.TEMPORARY_FAILURE : BindResult.INVALID_SOURCE;
 
             final IGridConnection connection = AEApi.instance().createGridConnection(selfNode, targetNode);
 
-            setDataConnections(other, connection);
-            other.setDataConnections(this, connection);
+            addActiveConnection(other, connection);
+            other.addActiveConnection(this, connection);
+            addLinkedTarget(other.getLocation());
+            other.addLinkedTarget(getLocation());
             updateActive();
             other.updateActive();
             shareCustomName(other);
+
             return BindResult.SUCCESS;
-        } catch (Exception e) {
-            if (e.getMessage().equals("Connection already set!")) return BindResult.ALREADY_BIND;
+        } catch (ExistingConnectionException e) {
+            return BindResult.ALREADY_BIND;
+        } catch (SecurityConnectionException e) {
+            return restoring ? BindResult.TEMPORARY_FAILURE : BindResult.FAILED;
+        } catch (FailedConnection e) {
+            return restoring ? BindResult.TEMPORARY_FAILURE : BindResult.FAILED;
+        }
+    }
+
+    protected void breakActiveConnection(TileWirelessBase other) {
+        IGridConnection connection = getConnection(other);
+        if (connection != null) connection.destroy();
+        removeActiveConnection(other);
+        other.removeActiveConnection(this);
+        updateActiveIfLoaded();
+        other.updateActiveIfLoaded();
+    }
+
+    private void updateActiveIfLoaded() {
+        if (worldObj != null && worldObj.blockExists(this.xCoord, this.yCoord, this.zCoord)) updateActive();
+    }
+
+    protected void breakAllLinks() {
+        for (TileWirelessBase other : getConnectedTiles()) {
+            other.removeLinkedTarget(getLocation());
         }
 
-        return BindResult.FAILED;
-    }
+        clearLinkedTargets();
 
-    protected void breakConnection(TileWirelessBase other) {
-        IGridConnection connection = getConnection(other);
-        if (connection == null) return;
-        connection.destroy();
-        removeDataConnections(other);
-        other.removeDataConnections(this);
-        updateActive();
-        other.updateActive();
-    }
-
-    protected void breakAllConnections() {
         for (TileWirelessBase other : getConnectedTiles()) {
-            breakConnection(other);
+            breakActiveConnection(other);
+        }
+
+        updateActiveIfLoaded();
+    }
+
+    protected void breakLink(TileWirelessBase other) {
+        removeLinkedTarget(other.getLocation());
+        other.removeLinkedTarget(getLocation());
+        breakActiveConnection(other);
+    }
+
+    protected void breakAllActiveConnections() {
+        for (TileWirelessBase other : getConnectedTiles()) {
+            breakActiveConnection(other);
         }
     }
 
@@ -219,18 +267,31 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         return oldColor != this.color;
     }
 
-    private final Set<DimensionalCoord> locList = new HashSet<>();
+    protected abstract void tryRestoreConnection(Iterable<DimensionalCoord> linkedTargets);
 
-    public void injectConnection(DimensionalCoord target) {
-        this.locList.add(target);
+    @Nullable
+    protected TileWirelessBase getTargetOrRemoveLink(DimensionalCoord target) {
+        if (target.getDimension() != worldObj.provider.dimensionId) {
+            removeLinkedTarget(target);
+            return null;
+        }
+
+        if (!worldObj.blockExists(target.x, target.y, target.z)) return null;
+
+        // ae2stuff persisted hub links only on the connector side.
+        if (worldObj.getTileEntity(target.x, target.y, target.z) instanceof TileWirelessBase tile
+                && (tile.isHub() || tile.hasLinkedTarget(getLocation()))) {
+            return tile;
+        }
+
+        removeLinkedTarget(target);
+        return null;
     }
-
-    protected abstract void tryRestoreConnection(Set<DimensionalCoord> locList);
 
     @TileEvent(TileEventType.TICK)
     public void onTick() {
-        if (!Platform.isServer() || this.locList.isEmpty()) return;
-        this.tryRestoreConnection(this.locList);
+        if (!Platform.isServer() || this.linkedTargets.isEmpty()) return;
+        this.tryRestoreConnection(ImmutableList.copyOf(this.linkedTargets));
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
@@ -242,10 +303,8 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     public void writeToNBT_TileWirelessConnector(final NBTTagCompound data) {
         data.setShort("Color", (short) color.ordinal());
 
-        final Set<DimensionalCoord> toSave = new HashSet<>(locList);
-        getConnectedTiles().forEach(t -> toSave.add(t.getLocation()));
         final NBTTagCompound nbt = new NBTTagCompound();
-        DimensionalCoord.writeListToNBT(nbt, new ArrayList<>(toSave));
+        DimensionalCoord.writeListToNBT(nbt, new ArrayList<>(this.linkedTargets));
         data.setTag("connectedTargets", nbt);
     }
 
@@ -256,7 +315,48 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
             this.getProxy().setColor(this.color);
         }
 
-        this.locList.addAll(DimensionalCoord.readAsListFromNBT(data.getCompoundTag("connectedTargets")));
+        this.linkedTargets.clear();
+        for (DimensionalCoord target : DimensionalCoord.readAsListFromNBT(data.getCompoundTag("connectedTargets"))) {
+            if (this.isHub() || this.linkedTargets.isEmpty()) this.addLinkedTarget(target, false);
+        }
+    }
+
+    protected boolean hasLinkedTarget(DimensionalCoord location) {
+        return this.linkedTargets.contains(location);
+    }
+
+    protected void addLinkedTarget(DimensionalCoord location) {
+        addLinkedTarget(location, true);
+    }
+
+    private void addLinkedTarget(DimensionalCoord location, boolean notifyDirty) {
+        if (worldObj != null && location.isEqual(getLocation())) return;
+
+        this.linkedTargets.add(new DimensionalCoord(location));
+        if (notifyDirty) markDirty();
+    }
+
+    protected void removeLinkedTarget(DimensionalCoord location) {
+        this.linkedTargets.remove(location);
+        markDirty();
+    }
+
+    private void clearLinkedTargets() {
+        if (this.linkedTargets.isEmpty()) return;
+        this.linkedTargets.clear();
+        markDirty();
+    }
+
+    @Override
+    public void onChunkUnload() {
+        breakAllActiveConnections();
+        super.onChunkUnload();
+    }
+
+    @Override
+    public void invalidate() {
+        breakAllActiveConnections();
+        super.invalidate();
     }
 
     @Override

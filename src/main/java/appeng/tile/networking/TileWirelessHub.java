@@ -1,15 +1,10 @@
 package appeng.tile.networking;
 
-import static appeng.helpers.WireLessToolHelper.getAndCheckTile;
-
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.security.MachineSource;
@@ -19,42 +14,39 @@ import appeng.helpers.WireLessToolHelper.BindResult;
 
 public class TileWirelessHub extends TileWirelessBase {
 
-    HashMap<TileWirelessBase, IGridConnection> connections = new HashMap<>();
+    private final HashMap<DimensionalCoord, ActiveConnection> connections = new HashMap<>();
 
     public TileWirelessHub() {
         super(32);
     }
 
     @Override
-    protected void setDataConnections(TileWirelessBase target, IGridConnection connection) {
-        if (connections.containsKey(target)) throw new IllegalStateException("Connection already set!");
+    protected void addActiveConnection(TileWirelessBase target, IGridConnection connection) {
+        final DimensionalCoord location = target.getLocation();
+        if (connections.containsKey(location)) throw new IllegalStateException("Active connection already registered");
 
-        connections.put(target, connection);
+        connections.put(new DimensionalCoord(location), new ActiveConnection(target, connection));
     }
 
     @Override
-    protected void removeDataConnections(TileWirelessBase target) {
-        connections.remove(target);
+    protected void removeActiveConnection(TileWirelessBase target) {
+        connections.remove(target.getLocation());
     }
 
     @Override
     public List<TileWirelessBase> getConnectedTiles() {
-        return ImmutableList.copyOf(connections.keySet());
-    }
-
-    @Override
-    public List<IGridConnection> getAllConnections() {
-        return ImmutableList.copyOf(connections.values());
-    }
-
-    @Override
-    public Map<TileWirelessBase, IGridConnection> getConnectionMap() {
-        return ImmutableMap.copyOf(connections);
+        final List<TileWirelessBase> tiles = new ArrayList<>();
+        for (ActiveConnection connection : connections.values()) {
+            tiles.add(connection.target);
+        }
+        return ImmutableList.copyOf(tiles);
     }
 
     @Override
     public IGridConnection getConnection(TileWirelessBase target) {
-        return connections.get(target);
+        final ActiveConnection connection = connections.get(target.getLocation());
+        if (connection == null || connection.target != target) return null;
+        return connection.connection;
     }
 
     @Override
@@ -63,28 +55,34 @@ public class TileWirelessHub extends TileWirelessBase {
     }
 
     @Override
-    public void doUnlink(TileWirelessBase target) {
-        breakConnection(target);
+    public void unlink(TileWirelessBase target) {
+        if (hasLinkedTarget(target.getLocation())) {
+            breakLink(target);
+        }
     }
 
     @Override
-    public void doUnlink() {
-        breakAllConnections();
+    public void unlinkAll() {
+        breakAllLinks();
     }
 
     @Override
-    protected void tryRestoreConnection(Set<DimensionalCoord> locList) {
-        final Iterator<DimensionalCoord> iterator = locList.iterator();
-        while (iterator.hasNext()) {
-            final DimensionalCoord target = iterator.next();
-            TileWirelessBase tile = getAndCheckTile(target, worldObj, null);
+    protected void tryRestoreConnection(Iterable<DimensionalCoord> linkedTargets) {
+        for (DimensionalCoord target : linkedTargets) {
+            TileWirelessBase tile = getTargetOrRemoveLink(target);
             if (tile == null) continue;
-            if (isConnectedTo(tile)) {
-                iterator.remove();
-                continue;
-            }
-            final BindResult result = WireLessToolHelper.performConnection(tile, this, new MachineSource(this));
-            if (result == BindResult.SUCCESS || result == BindResult.ALREADY_BIND) iterator.remove();
+            if (!isConnectedTo(tile)) WireLessToolHelper.restoreConnection(tile, this, new MachineSource(this));
+        }
+    }
+
+    private static class ActiveConnection {
+
+        private final TileWirelessBase target;
+        private final IGridConnection connection;
+
+        private ActiveConnection(TileWirelessBase target, IGridConnection connection) {
+            this.target = target;
+            this.connection = connection;
         }
     }
 }
