@@ -12,7 +12,13 @@ package appeng.core.sync.packets;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.parts.IPartHost;
+import appeng.api.util.DimensionalCoord;
 import appeng.core.CommonHelper;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -25,47 +31,73 @@ public class PacketPartPlacement extends AppEngPacket {
     private int x;
     private int y;
     private int z;
-    private int face;
-    private float eyeHeight;
+    private ForgeDirection face;
+    private boolean isFacade;
 
     // automatic.
     public PacketPartPlacement(final ByteBuf stream) {
         this.x = stream.readInt();
         this.y = stream.readInt();
         this.z = stream.readInt();
-        this.face = stream.readByte();
-        this.eyeHeight = stream.readFloat();
+        this.face = ForgeDirection.getOrientation(stream.readByte());
+        this.isFacade = stream.readBoolean();
     }
 
     // api
-    public PacketPartPlacement(final int x, final int y, final int z, final int face, final float eyeHeight) {
+    public PacketPartPlacement(final int x, final int y, final int z, final ForgeDirection face,
+            final boolean isFacade) {
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
         data.writeInt(x);
         data.writeInt(y);
         data.writeInt(z);
-        data.writeByte(face);
-        data.writeFloat(eyeHeight);
+        data.writeByte(face.ordinal());
+        data.writeBoolean(isFacade);
 
         this.configureWrite(data);
+    }
+
+    private PacketPartPlacement(DimensionalCoord loc, final ForgeDirection face, final boolean isFacade) {
+        this(loc.x, loc.y, loc.z, face, isFacade);
+    }
+
+    public PacketPartPlacement(IPartHost host, final ForgeDirection face, final boolean isFacade) {
+        this(host.getLocation(), face, isFacade);
     }
 
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
         CommonHelper.proxy.updateRenderMode(sender);
-        PartPlacement.setEyeHeight(this.eyeHeight);
-        PartPlacement.place(
-                sender.getHeldItem(),
-                this.x,
-                this.y,
-                this.z,
-                this.face,
-                sender,
-                sender.worldObj,
-                PartPlacement.PlaceType.INTERACT_FIRST_PASS,
-                0);
+        process(sender);
         CommonHelper.proxy.updateRenderMode(null);
+    }
+
+    private void process(final EntityPlayerMP player) {
+        ItemStack held = player.getHeldItem();
+        if (held == null) {
+            resync(player);
+            return;
+        }
+        World world = player.worldObj;
+        TileEntity te = world.getTileEntity(x, y, z);
+        if (isFacade) {
+            IPartHost host = PartPlacement.getExistingHost(te);
+            if (!PartPlacement.facadeLogic(held, player, face, host)) {
+                resync(player);
+            }
+        } else {
+            IPartHost host = PartPlacement.getOrCreateHost(te, player, face.ordinal());
+            if (!PartPlacement.tryPlace(held, player, world, x, y, z, face, host)) {
+                resync(player);
+            }
+        }
+    }
+
+    private void resync(final EntityPlayerMP player) {
+        player.worldObj.markBlockForUpdate(x, y, z);
+        player.worldObj.markBlockForUpdate(x + face.offsetX, y + face.offsetY, z + face.offsetZ);
+        player.sendContainerToPlayer(player.inventoryContainer);
     }
 }

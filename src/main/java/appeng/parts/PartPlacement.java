@@ -42,10 +42,11 @@ import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartItemStack;
 import appeng.api.parts.SelectedPart;
-import appeng.api.util.DimensionalCoord;
+import appeng.core.AELog;
 import appeng.core.CommonHelper;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
+import appeng.core.sync.packets.PacketPartInteraction;
 import appeng.core.sync.packets.PacketPartPlacement;
 import appeng.facade.IFacadeItem;
 import appeng.integration.IntegrationRegistry;
@@ -61,7 +62,11 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 public class PartPlacement {
 
     private static float eyeHeight = 0.0f;
+    // After we do a placement and cancel the event, we will also receive event for RIGHT_CLICK_AIR
+    // Only used client side, do not use this server side
+    private boolean placing = false;
 
+    // Last 2 arguments are ignored
     public static boolean place(final ItemStack held, final int x, final int y, final int z, final int face,
             final EntityPlayer player, final World world, PlaceType pass, final int depth) {
         final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
@@ -81,10 +86,16 @@ public class PartPlacement {
 
         ForgeDirection side = ForgeDirection.getOrientation(face);
 
-        if (wrenchLogic(held, player, world, x, y, z, hitVec)) return true;
-
         TileEntity tile = world.getTileEntity(x, y, z);
         IPartHost host = getExistingHost(tile);
+
+        if (host != null) {
+            if (Platform.isWrench(player, held, x, y, z) && player.isSneaking()) {
+                if (wrenchLogic(player, world, x, y, z, host, selectPart(player, host, hitVec))) {
+                    return true;
+                }
+            }
+        }
 
         if (facadeLogic(held, player, side, host)) return true;
 
@@ -99,10 +110,14 @@ public class PartPlacement {
             if (sPart != null && sPart.part != null) {
                 if (player.isSneaking()) {
                     if (sPart.part.onShiftActivate(player, hitVec)) {
+                        NetworkHandler.instance
+                                .sendToServer(new PacketPartInteraction(x, y, z, sPart.side, true, false, hitVec));
                         return true;
                     }
                 } else {
                     if (sPart.part.onActivate(player, hitVec)) {
+                        NetworkHandler.instance
+                                .sendToServer(new PacketPartInteraction(x, y, z, sPart.side, true, false, hitVec));
                         return true;
                     }
                 }
@@ -127,82 +142,63 @@ public class PartPlacement {
         TileEntity te = world.getTileEntity(tx, ty, tz);
         IPartHost targetHost = getOrCreateHost(te, player, opposite.ordinal());
 
-        if (targetHost == null) {
-            // No host, try to replace the block with cable host
-            final IBlockDefinition multiPart = AEApi.instance().definitions().blocks().multiPart();
-            final Optional<ItemBlock> maybeMultiPartItemBlock = multiPart.maybeItemBlock();
-            if (!maybeMultiPartItemBlock.isPresent()) return false;
-            if (!maybeMultiPartItemBlock.get().field_150939_a.canPlaceBlockAt(world, tx, ty, tz)) return false;
-            maybeMultiPartItemBlock.get().placeBlockAt(
-                    new ItemStack(maybeMultiPartItemBlock.get()),
-                    player,
-                    world,
-                    tx,
-                    ty,
-                    tz,
-                    opposite.ordinal(),
-                    0.5f,
-                    0.5f,
-                    0.5f,
-                    0);
-            targetHost = getExistingHost(world.getTileEntity(tx, ty, tz));
-        }
-
-        return targetHost != null && tryPlace(held, player, world, tx, ty, tz, opposite, targetHost);
+        return tryPlace(held, player, world, tx, ty, tz, opposite, targetHost);
     }
 
-    private static boolean wrenchLogic(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
-            Vec3 hitVec) {
-        if (Platform.isWrench(player, held, x, y, z) && player.isSneaking()) {
-            final Block block = world.getBlock(x, y, z);
-            final TileEntity tile = world.getTileEntity(x, y, z);
-            final IPartHost host = getExistingHost(tile);
+    public static boolean wrenchLogic(EntityPlayer player, World world, int x, int y, int z, IPartHost host,
+            SelectedPart sp) {
+        final Block block = world.getBlock(x, y, z);
+        if (host != null) {
+            final List<ItemStack> is = new LinkedList<>();
 
-            if (host != null) {
-                final List<ItemStack> is = new LinkedList<>();
-                final SelectedPart sp = selectPart(player, host, hitVec);
-
-                BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(
-                        x,
-                        y,
-                        z,
-                        world,
-                        block,
-                        world.getBlockMetadata(x, y, z),
-                        player);
-                MinecraftForge.EVENT_BUS.post(event);
-                if (event.isCanceled()) {
-                    return false;
-                }
-
-                if (sp.part != null) {
-                    is.add(sp.part.getItemStack(PartItemStack.Wrench));
-                    sp.part.getDrops(is, true);
-                    host.removePart(sp.side, false);
-                }
-
-                if (sp.facade != null) {
-                    is.add(sp.facade.getItemStack());
-                    host.getFacadeContainer().removeFacade(host, sp.side);
-                    Platform.notifyBlocksOfNeighbors(world, x, y, z);
-                }
-
-                if (host.isEmpty()) {
-                    host.cleanup();
-                }
-
-                if (world.isRemote) {
-                    // send packet
-                } else {
-                    Platform.spawnDrops(world, x, y, z, is);
-                }
-                return true;
+            BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(
+                    x,
+                    y,
+                    z,
+                    world,
+                    block,
+                    world.getBlockMetadata(x, y, z),
+                    player);
+            MinecraftForge.EVENT_BUS.post(event);
+            if (event.isCanceled()) {
+                return false;
             }
+
+            if (sp.part != null) {
+                is.add(sp.part.getItemStack(PartItemStack.Wrench));
+                sp.part.getDrops(is, true);
+                host.removePart(sp.side, false);
+            }
+
+            if (sp.facade != null) {
+                is.add(sp.facade.getItemStack());
+                host.getFacadeContainer().removeFacade(host, sp.side);
+                Platform.notifyBlocksOfNeighbors(world, x, y, z);
+            }
+
+            if (host.isEmpty()) {
+                host.cleanup();
+            }
+
+            if (world.isRemote) {
+                NetworkHandler.instance.sendToServer(
+                        new PacketPartInteraction(
+                                x,
+                                y,
+                                z,
+                                sp.side,
+                                sp.part != null,
+                                true,
+                                Vec3.createVectorHelper(0.5, 0.5, 0.5)));
+            } else {
+                Platform.spawnDrops(world, x, y, z, is);
+            }
+            return true;
         }
         return false;
     }
 
-    private static boolean facadeLogic(ItemStack held, EntityPlayer player, ForgeDirection side, IPartHost host) {
+    public static boolean facadeLogic(ItemStack held, EntityPlayer player, ForgeDirection side, IPartHost host) {
         if (held != null) {
             final IFacadePart fp = isFacade(held, side);
             if (fp != null && host != null) {
@@ -214,6 +210,7 @@ public class PartPlacement {
                     if (host.getFacadeContainer().addFacade(fp)) {
                         host.markForUpdate();
                         decreaseHeldItem(held, player);
+                        NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, side, true));
                         return true;
                     }
                 }
@@ -222,11 +219,10 @@ public class PartPlacement {
         return false;
     }
 
-    private static boolean tryPlace(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
+    public static boolean tryPlace(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
             ForgeDirection side, IPartHost host) {
         final IBlockDefinition multiPart = AEApi.instance().definitions().blocks().multiPart();
-        final DimensionalCoord dc = host.getLocation();
-        if (!Platform.hasPermissions(dc, player)) {
+        if (!world.canMineBlock(player, x, y, z)) {
             return false;
         }
 
@@ -237,6 +233,27 @@ public class PartPlacement {
         MinecraftForge.EVENT_BUS.post(event);
         if (event.isCanceled()) {
             return false;
+        }
+
+        if (host == null) {
+            // No host, try to replace the block with cable host
+            final Optional<ItemBlock> maybeMultiPartItemBlock = multiPart.maybeItemBlock();
+            if (!maybeMultiPartItemBlock.isPresent()) return false;
+            if (!maybeMultiPartItemBlock.get().field_150939_a.canPlaceBlockAt(world, x, y, z)) return false;
+            maybeMultiPartItemBlock.get().placeBlockAt(
+                    new ItemStack(maybeMultiPartItemBlock.get()),
+                    player,
+                    world,
+                    x,
+                    y,
+                    z,
+                    side.ordinal(),
+                    0.5f,
+                    0.5f,
+                    0.5f,
+                    0);
+            host = getExistingHost(world.getTileEntity(x, y, z));
+            if (host == null) return false;
         }
         final ForgeDirection mySide = host.addPart(held, side, player);
         if (mySide != null) {
@@ -253,6 +270,7 @@ public class PartPlacement {
             }
 
             decreaseHeldItem(held, player);
+            NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, mySide, false));
             return true;
         }
         return false;
@@ -308,9 +326,25 @@ public class PartPlacement {
         PartPlacement.eyeHeight = eyeHeight;
     }
 
+    // We use receiveCanceled in order to perform cleanup of placing field and skip further processing
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    public void cancelSubsequentRightClickAirEvent(final PlayerInteractEvent event) {
+        if (!event.entityPlayer.worldObj.isRemote) return;
+        if (placing) {
+            if (event.action != Action.RIGHT_CLICK_AIR) {
+                AELog.error("Unexpected sequence for playerInteract event");
+            }
+            placing = false;
+            event.setCanceled(true);
+        }
+    }
+
     @SubscribeEvent(priority = EventPriority.LOW)
     public void playerInteract(final PlayerInteractEvent event) {
-        if (event.action == Action.RIGHT_CLICK_AIR && event.entityPlayer.worldObj.isRemote) {
+        // Strictly client only, we cancel the event and send the packet ourselves
+        // Server will handle the packet directly instead of player interaction
+        if (!event.entityPlayer.worldObj.isRemote) return;
+        if (event.action == Action.RIGHT_CLICK_AIR) {
             final ItemStack held = event.entityPlayer.getHeldItem();
             final IItems items = AEApi.instance().definitions().items();
 
@@ -318,6 +352,7 @@ public class PartPlacement {
             supportedItem |= items.colorApplicator().isSameAs(held);
 
             if (event.entityPlayer.isSneaking() && held != null && supportedItem) {
+                event.setCanceled(true);
                 NetworkHandler.instance.sendToServer(new PacketClick(event.x, event.y, event.z, event.face, 0, 0, 0));
             }
         } else if (event.action == Action.RIGHT_CLICK_BLOCK) {
@@ -333,21 +368,16 @@ public class PartPlacement {
                     PlaceType.INTERACT_FIRST_PASS,
                     0)) {
                 event.setCanceled(true);
-                if (event.entityPlayer.worldObj.isRemote) {
-                    NetworkHandler.instance.sendToServer(
-                            new PacketPartPlacement(
-                                    event.x,
-                                    event.y,
-                                    event.z,
-                                    event.face,
-                                    getEyeOffset(event.entityPlayer)));
+                // Forge won't have right click air event if held is null
+                if (held != null) {
+                    placing = true;
                 }
             }
         }
     }
 
     @Nullable
-    private static IPartHost getExistingHost(@Nullable final TileEntity tile) {
+    public static IPartHost getExistingHost(@Nullable final TileEntity tile) {
         if (tile == null) {
             return null;
         }
@@ -365,7 +395,7 @@ public class PartPlacement {
     }
 
     @Nullable
-    private static IPartHost getOrCreateHost(@Nullable final TileEntity tile, final EntityPlayer player,
+    public static IPartHost getOrCreateHost(@Nullable final TileEntity tile, final EntityPlayer player,
             final int face) {
         IPartHost host = getExistingHost(tile);
 
