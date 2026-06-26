@@ -156,16 +156,11 @@ public class WireLessToolHelper {
 
     public static BindResult performConnection(TileWirelessBase target, TileWirelessBase source,
             BaseActionSource actionSource) {
-        return performConnection(target, source, actionSource, true);
-    }
-
-    public static BindResult performConnection(TileWirelessBase target, TileWirelessBase source,
-            BaseActionSource actionSource, boolean sendMessages) {
-        return performConnection(target, source, actionSource, sendMessages, true);
+        return performConnection(target, source, actionSource, true, true, false);
     }
 
     private static BindResult performConnection(TileWirelessBase target, TileWirelessBase source,
-            BaseActionSource actionSource, boolean sendMessages, boolean unlinkExisting) {
+            BaseActionSource actionSource, boolean sendMessages, boolean unlinkExisting, boolean restoring) {
         if (target.getLocation().getDimension() != source.getLocation().getDimension()) {
             if (sendMessages && actionSource instanceof PlayerSource ps)
                 ps.player.addChatMessage(WirelessMessages.DimensionMismatch.toChat());
@@ -175,7 +170,7 @@ public class WireLessToolHelper {
         if (target.getLocation().isEqual(source.getLocation())) return BindResult.FAILED;
 
         final BindResult securityCheck = securityCheck(target, source, actionSource);
-        if (securityCheck != BindResult.SUCCESS) return securityCheck;
+        if (securityCheck != BindResult.SUCCESS) return restoring ? BindResult.TEMPORARY_FAILURE : securityCheck;
 
         if (target.isConnectedTo(source)) return BindResult.ALREADY_BIND;
 
@@ -222,7 +217,7 @@ public class WireLessToolHelper {
 
     public static BindResult restoreConnection(TileWirelessBase target, TileWirelessBase source,
             BaseActionSource actionSource) {
-        final BindResult result = performConnection(target, source, actionSource, false, false);
+        final BindResult result = performConnection(target, source, actionSource, false, false, true);
         if (result != BindResult.SUCCESS && result != BindResult.ALREADY_BIND
                 && result != BindResult.TEMPORARY_FAILURE) {
             source.unlink(target);

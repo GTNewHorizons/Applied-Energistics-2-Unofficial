@@ -165,7 +165,7 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         } catch (ExistingConnectionException e) {
             return BindResult.ALREADY_BIND;
         } catch (SecurityConnectionException e) {
-            return BindResult.FAILED;
+            return restoring ? BindResult.TEMPORARY_FAILURE : BindResult.FAILED;
         } catch (FailedConnection e) {
             return restoring ? BindResult.TEMPORARY_FAILURE : BindResult.FAILED;
         }
