@@ -44,6 +44,7 @@ import appeng.block.misc.BlockQuartzTorch;
 import appeng.block.misc.BlockSecurity;
 import appeng.block.misc.BlockSkyCompass;
 import appeng.block.misc.BlockStorageReshuffle;
+import appeng.block.misc.BlockSuperMEReplenisher;
 import appeng.block.misc.BlockTinyTNT;
 import appeng.block.misc.BlockVibrationChamber;
 import appeng.block.networking.BlockCableBus;
@@ -182,6 +183,7 @@ public final class ApiBlocks implements IBlocks {
     private final IBlockDefinition chunkLoader;
     private final IBlockDefinition phantomNode;
     private final IBlockDefinition cubeGenerator;
+    private final IBlockDefinition superMEReplenisher;
 
     private final Set<IOrientableBlock> orientables;
 
@@ -342,6 +344,7 @@ public final class ApiBlocks implements IBlocks {
         this.chunkLoader = constructor.registerBlockDefinition(new BlockChunkloader());
         this.phantomNode = constructor.registerBlockDefinition(new BlockPhantomNode());
         this.cubeGenerator = constructor.registerBlockDefinition(new BlockCubeGenerator());
+        this.superMEReplenisher = constructor.registerBlockDefinition(new BlockSuperMEReplenisher());
         this.wirelessConnector = constructor.registerTileDefinition(new BlockWirelessConnector());
         this.wirelessHub = constructor.registerTileDefinition(new BlockWirelessHub());
         this.crystalGrowthChamber = constructor.registerTileDefinition(new BlockCrystalGrowthChamber());

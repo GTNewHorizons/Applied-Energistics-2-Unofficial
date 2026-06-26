@@ -1,5 +1,7 @@
 package appeng.client.gui.implementations;
 
+import static appeng.util.Platform.fmt;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,8 +22,6 @@ import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
-
-import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 
 import appeng.api.config.ActionItems;
 import appeng.api.config.HealthSortOrder;
@@ -942,10 +942,6 @@ public class GuiStorageReshuffle extends AEBaseGui {
             sb.append(type.getDisplayName());
         }
         return sb.toString();
-    }
-
-    private static String fmt(double v) {
-        return NumberFormatUtil.formatNumber(v);
     }
 
     private static String diffColor(double delta) {
