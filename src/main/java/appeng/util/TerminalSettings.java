@@ -16,30 +16,26 @@ import org.jetbrains.annotations.Nullable;
 public class TerminalSettings {
 
     private final Map<UUID, TerminalPlayerSettings> perPlayer = new HashMap<>();
-    private static final String NBT_FILTERS = "typeFilters";
-    private static final String NBT_UUID = "uuid";
+
+    private static final String NBT = "terminalSettings";
+    private static final String NBT_UUID_MOST = "uuid_m";
+    private static final String NBT_UUID_LEAST = "uuid_l";
 
     public void readFromNBT(@Nullable NBTTagCompound tag) {
         this.perPlayer.clear();
 
-        if (tag == null || !tag.hasKey(NBT_FILTERS, Constants.NBT.TAG_LIST)) {
+        if (tag == null || !tag.hasKey(NBT, Constants.NBT.TAG_LIST)) {
             return;
         }
 
-        final NBTTagList players = tag.getTagList(NBT_FILTERS, Constants.NBT.TAG_COMPOUND);
+        final NBTTagList players = tag.getTagList(NBT, Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < players.tagCount(); i++) {
             final NBTTagCompound playerTag = players.getCompoundTagAt(i);
-            final String uuidString = playerTag.getString(NBT_UUID);
-            if (uuidString == null || uuidString.isEmpty()) {
-                continue;
-            }
 
             final UUID id;
-            try {
-                id = UUID.fromString(uuidString);
-            } catch (IllegalArgumentException e) {
-                continue;
-            }
+            if (playerTag.hasKey(NBT_UUID_MOST)) {
+                id = new UUID(playerTag.getLong(NBT_UUID_MOST), playerTag.getLong(NBT_UUID_LEAST));
+            } else continue;
 
             final TerminalPlayerSettings settings = new TerminalPlayerSettings();
             settings.readFromNBT(playerTag);
@@ -65,15 +61,17 @@ public class TerminalSettings {
             final TerminalPlayerSettings settings = entry.getValue();
 
             final NBTTagCompound playerTag = new NBTTagCompound();
-            playerTag.setString(NBT_UUID, id.toString());
+            playerTag.setLong(NBT_UUID_MOST, id.getMostSignificantBits());
+            playerTag.setLong(NBT_UUID_LEAST, id.getLeastSignificantBits());
+
             settings.writeToNBT(playerTag);
             players.appendTag(playerTag);
         }
 
         if (players.tagCount() == 0) {
-            tag.removeTag(NBT_FILTERS);
+            tag.removeTag(NBT);
         } else {
-            tag.setTag(NBT_FILTERS, players);
+            tag.setTag(NBT, players);
         }
     }
 

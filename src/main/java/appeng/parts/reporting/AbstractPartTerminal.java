@@ -200,6 +200,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     @Override
     public void saveSearchString(String searchString, EntityPlayer player) {
         this.terminalSettings.setSavedSearchString(searchString, player);
+        this.saveChanges();
     }
 
     @Override
