@@ -13,6 +13,8 @@ package appeng.parts;
 import java.util.LinkedList;
 import java.util.List;
 
+import appeng.core.sync.packets.PacketPartPlacement;
+import codechicken.lib.raytracer.RayTracer;
 import net.minecraft.block.Block;
 import net.minecraft.block.Block.SoundType;
 import net.minecraft.client.Minecraft;
@@ -61,7 +63,21 @@ public class PartPlacement {
 
     private static float eyeHeight = 0.0f;
 
+
     public static boolean place(final ItemStack held, final int x, final int y, final int z, final int face,
+                                 final EntityPlayer player, final World world, PlaceType pass, final int depth) {
+        final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
+        final Block block = world.getBlock(x, y, z);
+        final MovingObjectPosition mop = block
+                .collisionRayTrace(world, x, y, z, dir.getA(), dir.getB());
+        if (mop == null || mop.sideHit == -1) return false;
+        mop.hitVec.xCoord -= mop.blockX;
+        mop.hitVec.yCoord -= mop.blockY;
+        mop.hitVec.zCoord -= mop.blockZ;
+        return place(held, mop.blockX, mop.blockY, mop.blockZ, mop.sideHit, player, world, mop.hitVec, pass, depth);
+    }
+
+    private static boolean place(final ItemStack held, final int x, final int y, final int z, final int face,
             final EntityPlayer player, final World world, final Vec3 hitVec, PlaceType pass, final int depth) {
         if (depth > 3) {
             return false;
@@ -369,26 +385,20 @@ public class PartPlacement {
             }
         } else if (event.action == Action.RIGHT_CLICK_BLOCK) {
             final ItemStack held = event.entityPlayer.getHeldItem();
-            final LookDirection dir = Platform.getPlayerRay(event.entityPlayer, getEyeOffset(event.entityPlayer));
-            final Block block = event.world.getBlock(event.x, event.y, event.z);
-            final MovingObjectPosition mop = block
-                    .collisionRayTrace(event.world, event.x, event.y, event.z, dir.getA(), dir.getB());
-            if (mop == null || mop.sideHit == -1) return;
-            mop.hitVec.xCoord -= mop.blockX;
-            mop.hitVec.yCoord -= mop.blockY;
-            mop.hitVec.zCoord -= mop.blockZ;
             if (place(
                     held,
-                    mop.blockX,
-                    mop.blockY,
-                    mop.blockZ,
-                    mop.sideHit,
+                    event.x,
+                    event.y,
+                    event.z,
+                    event.face,
                     event.entityPlayer,
                     event.world,
-                    mop.hitVec,
                     PlaceType.INTERACT_FIRST_PASS,
                     0)) {
                 event.setCanceled(true);
+                if (event.entityPlayer.worldObj.isRemote) {
+                    NetworkHandler.instance.sendToServer(new PacketPartPlacement(event.x, event.y, event.z, event.face, getEyeOffset(event.entityPlayer)));
+                }
             }
         }
     }

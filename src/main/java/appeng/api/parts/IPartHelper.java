@@ -63,8 +63,7 @@ public interface IPartHelper {
      * @param world  part in world
      * @return true if placing was successful
      */
-    boolean placeBus(ItemStack is, int x, int y, int z, int side, EntityPlayer player, World world, float hitX,
-            float hitY, float hitZ);
+    boolean placeBus(ItemStack is, int x, int y, int z, int side, EntityPlayer player, World world);
 
     /**
      * @return the render mode

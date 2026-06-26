@@ -23,7 +23,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 
@@ -271,18 +270,8 @@ public class ApiPart implements IPartHelper {
 
     @Override
     public boolean placeBus(final ItemStack is, final int x, final int y, final int z, final int side,
-            final EntityPlayer player, final World w, float hitX, float hitY, float hitZ) {
-        return PartPlacement.place(
-                is,
-                x,
-                y,
-                z,
-                side,
-                player,
-                w,
-                Vec3.createVectorHelper(hitX, hitY, hitZ),
-                PartPlacement.PlaceType.PLACE_ITEM,
-                0);
+            final EntityPlayer player, final World w) {
+        return PartPlacement.place(is, x, y, z, side, player, w, PartPlacement.PlaceType.PLACE_ITEM, 0);
     }
 
     @Override

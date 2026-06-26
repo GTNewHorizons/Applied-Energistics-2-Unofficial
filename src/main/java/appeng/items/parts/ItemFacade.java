@@ -65,7 +65,7 @@ public class ItemFacade extends AEBaseItem implements IFacadeItem, IAlphaPassIte
     @Override
     public boolean onItemUse(final ItemStack is, final EntityPlayer player, final World w, final int x, final int y,
             final int z, final int side, final float hitX, final float hitY, final float hitZ) {
-        return AEApi.instance().partHelper().placeBus(is, x, y, z, side, player, w, hitX, hitY, hitZ);
+        return AEApi.instance().partHelper().placeBus(is, x, y, z, side, player, w);
     }
 
     @Override
