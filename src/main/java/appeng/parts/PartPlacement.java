@@ -176,7 +176,7 @@ public class PartPlacement {
                 Platform.notifyBlocksOfNeighbors(world, x, y, z);
             }
 
-            if (host.isEmpty()) {
+            if (host.isEmpty() && !world.isRemote) {
                 host.cleanup();
             }
 
