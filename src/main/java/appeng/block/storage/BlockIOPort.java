@@ -19,10 +19,13 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.block.AEBaseTileBlock;
+import appeng.client.render.blocks.RenderIOPort;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.tile.storage.TileIOPort;
 import appeng.util.Platform;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockIOPort extends AEBaseTileBlock {
 
@@ -38,6 +41,12 @@ public class BlockIOPort extends AEBaseTileBlock {
         if (te != null) {
             te.updateRedstoneState();
         }
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderIOPort getRenderer() {
+        return new RenderIOPort();
     }
 
     @Override
