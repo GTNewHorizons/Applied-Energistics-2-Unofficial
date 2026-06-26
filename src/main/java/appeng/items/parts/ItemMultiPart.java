@@ -189,7 +189,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             return false;
         }
 
-        return AEApi.instance().partHelper().placeBus(is, x, y, z, side, player, w);
+        return AEApi.instance().partHelper().placeBus(is, x, y, z, side, player, w, hitX, hitY, hitZ);
     }
 
     @Override

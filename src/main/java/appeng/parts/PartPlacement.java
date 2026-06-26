@@ -47,7 +47,6 @@ import appeng.api.util.DimensionalCoord;
 import appeng.core.CommonHelper;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
-import appeng.core.sync.packets.PacketPartPlacement;
 import appeng.facade.IFacadeItem;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -57,78 +56,59 @@ import appeng.integration.abstraction.IImmibisMicroblocks;
 import appeng.util.LookDirection;
 import appeng.util.Platform;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class PartPlacement {
 
     private static float eyeHeight = 0.0f;
-    private final ThreadLocal<Object> placing = new ThreadLocal<>();
-    private boolean wasCanceled = false;
 
     public static boolean place(final ItemStack held, final int x, final int y, final int z, final int face,
-            final EntityPlayer player, final World world, PlaceType pass, final int depth) {
+            final EntityPlayer player, final World world, final Vec3 hitVec, PlaceType pass, final int depth) {
         if (depth > 3) {
             return false;
         }
 
         ForgeDirection side = ForgeDirection.getOrientation(face);
 
-        if (held != null && Platform.isWrench(player, held, x, y, z) && player.isSneaking()) {
-            if (!Platform.hasPermissions(new DimensionalCoord(world, x, y, z), player)) {
-                return false;
-            }
-
+        if (Platform.isWrench(player, held, x, y, z) && player.isSneaking()) {
             final Block block = world.getBlock(x, y, z);
             final TileEntity tile = world.getTileEntity(x, y, z);
             final IPartHost host = getExistingHost(tile);
 
             if (host != null) {
-                if (!world.isRemote) {
-                    final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
-                    final MovingObjectPosition mop = block.collisionRayTrace(world, x, y, z, dir.getA(), dir.getB());
-                    if (mop != null) {
-                        final List<ItemStack> is = new LinkedList<>();
-                        final SelectedPart sp = selectPart(
-                                player,
-                                host,
-                                mop.hitVec.addVector(-mop.blockX, -mop.blockY, -mop.blockZ));
+                final List<ItemStack> is = new LinkedList<>();
+                final SelectedPart sp = selectPart(player, host, hitVec);
 
-                        BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(
-                                x,
-                                y,
-                                z,
-                                world,
-                                block,
-                                world.getBlockMetadata(x, y, z),
-                                player);
-                        MinecraftForge.EVENT_BUS.post(event);
-                        if (event.isCanceled()) {
-                            return false;
-                        }
+                BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(
+                        x,
+                        y,
+                        z,
+                        world,
+                        block,
+                        world.getBlockMetadata(x, y, z),
+                        player);
+                MinecraftForge.EVENT_BUS.post(event);
+                if (event.isCanceled()) {
+                    return false;
+                }
 
-                        if (sp.part != null) {
-                            is.add(sp.part.getItemStack(PartItemStack.Wrench));
-                            sp.part.getDrops(is, true);
-                            host.removePart(sp.side, false);
-                        }
+                if (sp.part != null) {
+                    is.add(sp.part.getItemStack(PartItemStack.Wrench));
+                    sp.part.getDrops(is, true);
+                    host.removePart(sp.side, false);
+                }
 
-                        if (sp.facade != null) {
-                            is.add(sp.facade.getItemStack());
-                            host.getFacadeContainer().removeFacade(host, sp.side);
-                            Platform.notifyBlocksOfNeighbors(world, x, y, z);
-                        }
+                if (sp.facade != null) {
+                    is.add(sp.facade.getItemStack());
+                    host.getFacadeContainer().removeFacade(host, sp.side);
+                    Platform.notifyBlocksOfNeighbors(world, x, y, z);
+                }
 
-                        if (host.isEmpty()) {
-                            host.cleanup();
-                        }
+                if (host.isEmpty()) {
+                    host.cleanup();
+                }
 
-                        if (!is.isEmpty()) {
-                            Platform.spawnDrops(world, x, y, z, is);
-                        }
-                    }
-                } else {
-                    player.swingItem();
-                    NetworkHandler.instance.sendToServer(new PacketPartPlacement(x, y, z, face, getEyeOffset(player)));
+                if (!is.isEmpty()) {
+                    Platform.spawnDrops(world, x, y, z, is);
                 }
                 return true;
             }
@@ -143,29 +123,22 @@ public class PartPlacement {
             final IFacadePart fp = isFacade(held, side);
             if (fp != null) {
                 if (host != null) {
-                    if (!world.isRemote) {
-                        if (host.getPart(ForgeDirection.UNKNOWN) == null) {
-                            return false;
-                        }
+                    if (host.getPart(ForgeDirection.UNKNOWN) == null) {
+                        return false;
+                    }
 
-                        if (host.canAddPart(held, side)) {
-                            if (host.getFacadeContainer().addFacade(fp)) {
-                                host.markForUpdate();
-                                if (!player.capabilities.isCreativeMode) {
-                                    held.stackSize--;
-                                    if (held.stackSize == 0) {
-                                        player.inventory.mainInventory[player.inventory.currentItem] = null;
-                                        MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, held));
-                                    }
+                    if (host.canAddPart(held, side)) {
+                        if (host.getFacadeContainer().addFacade(fp)) {
+                            host.markForUpdate();
+                            if (!player.capabilities.isCreativeMode) {
+                                held.stackSize--;
+                                if (held.stackSize == 0) {
+                                    player.inventory.mainInventory[player.inventory.currentItem] = null;
+                                    MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, held));
                                 }
-                                return true;
                             }
+                            return true;
                         }
-                    } else {
-                        player.swingItem();
-                        NetworkHandler.instance
-                                .sendToServer(new PacketPartPlacement(x, y, z, face, getEyeOffset(player)));
-                        return true;
                     }
                 }
                 return false;
@@ -180,19 +153,10 @@ public class PartPlacement {
         {
             final Block block = world.getBlock(x, y, z);
             if (host != null && player.isSneaking() && block != null) {
-                final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
-                final MovingObjectPosition mop = block.collisionRayTrace(world, x, y, z, dir.getA(), dir.getB());
-                if (mop != null) {
-                    mop.hitVec = mop.hitVec.addVector(-mop.blockX, -mop.blockY, -mop.blockZ);
-                    final SelectedPart sPart = selectPart(player, host, mop.hitVec);
-                    if (sPart != null && sPart.part != null) {
-                        if (sPart.part.onShiftActivate(player, mop.hitVec)) {
-                            if (world.isRemote) {
-                                NetworkHandler.instance
-                                        .sendToServer(new PacketPartPlacement(x, y, z, face, getEyeOffset(player)));
-                            }
-                            return true;
-                        }
+                final SelectedPart sPart = selectPart(player, host, hitVec);
+                if (sPart != null && sPart.part != null) {
+                    if (sPart.part.onShiftActivate(player, hitVec)) {
+                        return true;
                     }
                 }
             }
@@ -213,9 +177,7 @@ public class PartPlacement {
             final Block blkID = world.getBlock(x, y, z);
             if (blkID != null && !blkID.isReplaceable(world, x, y, z)) {
                 offset = side;
-                if (Platform.isServer()) {
-                    side = side.getOpposite();
-                }
+                side = side.getOpposite();
             }
 
             te_x = x + offset.offsetX;
@@ -244,20 +206,14 @@ public class PartPlacement {
                             te_y,
                             te_z,
                             side.ordinal(),
-                            0.5f,
-                            0.5f,
-                            0.5f,
+                            (float) hitVec.xCoord,
+                            (float) hitVec.yCoord,
+                            (float) hitVec.zCoord,
                             0)) {
-                if (!world.isRemote) {
-                    tile = world.getTileEntity(te_x, te_y, te_z);
-                    host = getExistingHost(tile);
+                tile = world.getTileEntity(te_x, te_y, te_z);
+                host = getExistingHost(tile);
 
-                    pass = PlaceType.INTERACT_SECOND_PASS;
-                } else {
-                    player.swingItem();
-                    NetworkHandler.instance.sendToServer(new PacketPartPlacement(x, y, z, face, getEyeOffset(player)));
-                    return true;
-                }
+                pass = PlaceType.INTERACT_SECOND_PASS;
             } else if (host != null && !host.canAddPart(held, side)) {
                 return false;
             }
@@ -287,6 +243,7 @@ public class PartPlacement {
                             side.getOpposite().ordinal(),
                             player,
                             world,
+                            hitVec,
                             pass == PlaceType.INTERACT_FIRST_PASS ? PlaceType.INTERACT_SECOND_PASS
                                     : PlaceType.PLACE_ITEM,
                             depth + 1);
@@ -295,61 +252,48 @@ public class PartPlacement {
             return false;
         }
 
-        if (!world.isRemote) {
-            final Block block = world.getBlock(x, y, z);
-            final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
-            final MovingObjectPosition mop = block.collisionRayTrace(world, x, y, z, dir.getA(), dir.getB());
-            if (mop != null) {
-                final SelectedPart sp = selectPart(
-                        player,
-                        host,
-                        mop.hitVec.addVector(-mop.blockX, -mop.blockY, -mop.blockZ));
+        final SelectedPart sp = selectPart(player, host, hitVec);
 
-                if (sp.part != null) {
-                    if (!player.isSneaking() && sp.part.onActivate(player, mop.hitVec)) {
-                        return false;
-                    }
-                }
-            }
-
-            final DimensionalCoord dc = host.getLocation();
-            if (!Platform.hasPermissions(dc, player)) {
+        if (sp.part != null) {
+            if (!player.isSneaking() && sp.part.onActivate(player, hitVec)) {
                 return false;
             }
+        }
 
-            BlockEvent.PlaceEvent event = new BlockEvent.PlaceEvent(
-                    BlockSnapshot.getBlockSnapshot(world, x, y, z),
-                    world.getBlock(x, y, z),
-                    player);
-            MinecraftForge.EVENT_BUS.post(event);
-            if (event.isCanceled()) {
-                return false;
+        final DimensionalCoord dc = host.getLocation();
+        if (!Platform.hasPermissions(dc, player)) {
+            return false;
+        }
+
+        BlockEvent.PlaceEvent event = new BlockEvent.PlaceEvent(
+                BlockSnapshot.getBlockSnapshot(world, x, y, z),
+                world.getBlock(x, y, z),
+                player);
+        MinecraftForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) {
+            return false;
+        }
+        final ForgeDirection mySide = host.addPart(held, side, player);
+        if (mySide != null) {
+            for (final Block multiPartBlock : multiPart.maybeBlock().asSet()) {
+                final SoundType ss = multiPartBlock.stepSound;
+
+                world.playSoundEffect(
+                        hitVec.xCoord + x,
+                        hitVec.yCoord + y,
+                        hitVec.zCoord + z,
+                        ss.func_150496_b(),
+                        (ss.getVolume() + 1.0F) / 2.0F,
+                        ss.getPitch() * 0.8F);
             }
-            final ForgeDirection mySide = host.addPart(held, side, player);
-            if (mySide != null) {
-                for (final Block multiPartBlock : multiPart.maybeBlock().asSet()) {
-                    final SoundType ss = multiPartBlock.stepSound;
 
-                    world.playSoundEffect(
-                            0.5 + x,
-                            0.5 + y,
-                            0.5 + z,
-                            ss.func_150496_b(),
-                            (ss.getVolume() + 1.0F) / 2.0F,
-                            ss.getPitch() * 0.8F);
-                }
-
-                if (!player.capabilities.isCreativeMode) {
-                    held.stackSize--;
-                    if (held.stackSize == 0) {
-                        player.inventory.mainInventory[player.inventory.currentItem] = null;
-                        MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, held));
-                    }
+            if (!player.capabilities.isCreativeMode) {
+                held.stackSize--;
+                if (held.stackSize == 0) {
+                    player.inventory.mainInventory[player.inventory.currentItem] = null;
+                    MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, held));
                 }
             }
-        } else {
-            player.swingItem();
-            NetworkHandler.instance.sendToServer(new PacketPartPlacement(x, y, z, face, getEyeOffset(player)));
         }
         return true;
     }
@@ -395,11 +339,6 @@ public class PartPlacement {
     }
 
     @SubscribeEvent
-    public void playerInteract(final TickEvent.ClientTickEvent event) {
-        this.wasCanceled = false;
-    }
-
-    @SubscribeEvent
     public void playerInteract(final PlayerInteractEvent event) {
         if (event.action == Action.RIGHT_CLICK_AIR && event.entityPlayer.worldObj.isRemote) {
             // re-check to see if this event was already channeled, cause these two events are really stupid...
@@ -411,11 +350,11 @@ public class PartPlacement {
             final Vec3 vec3 = mc.renderViewEntity.getPosition(f);
 
             if (mop != null && mop.hitVec.distanceTo(vec3) < d0) {
-                final World w = event.entity.worldObj;
-                final TileEntity te = w.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
-                if (getExistingHost(te) != null && this.wasCanceled) {
-                    event.setCanceled(true);
-                }
+                // final World w = event.entity.worldObj;
+                // final TileEntity te = w.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
+                // if (getExistingHost(te) != null && this.wasCanceled) {
+                // event.setCanceled(true);
+                // }
             } else {
                 final ItemStack held = event.entityPlayer.getHeldItem();
                 final IItems items = AEApi.instance().definitions().items();
@@ -428,29 +367,29 @@ public class PartPlacement {
                             .sendToServer(new PacketClick(event.x, event.y, event.z, event.face, 0, 0, 0));
                 }
             }
-        } else if (event.action == Action.RIGHT_CLICK_BLOCK && event.entityPlayer.worldObj.isRemote) {
-            if (this.placing.get() != null) {
-                return;
-            }
-
-            this.placing.set(event);
-
+        } else if (event.action == Action.RIGHT_CLICK_BLOCK) {
             final ItemStack held = event.entityPlayer.getHeldItem();
+            final LookDirection dir = Platform.getPlayerRay(event.entityPlayer, getEyeOffset(event.entityPlayer));
+            final Block block = event.world.getBlock(event.x, event.y, event.z);
+            final MovingObjectPosition mop = block
+                    .collisionRayTrace(event.world, event.x, event.y, event.z, dir.getA(), dir.getB());
+            if (mop == null || mop.sideHit == -1) return;
+            mop.hitVec.xCoord -= mop.blockX;
+            mop.hitVec.yCoord -= mop.blockY;
+            mop.hitVec.zCoord -= mop.blockZ;
             if (place(
                     held,
-                    event.x,
-                    event.y,
-                    event.z,
-                    event.face,
+                    mop.blockX,
+                    mop.blockY,
+                    mop.blockZ,
+                    mop.sideHit,
                     event.entityPlayer,
-                    event.entityPlayer.worldObj,
+                    event.world,
+                    mop.hitVec,
                     PlaceType.INTERACT_FIRST_PASS,
                     0)) {
                 event.setCanceled(true);
-                this.wasCanceled = true;
             }
-
-            this.placing.set(null);
         }
     }
 

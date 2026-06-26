@@ -869,7 +869,7 @@ public class Platform {
         return false;
     }
 
-    public static boolean isWrench(final EntityPlayer player, final ItemStack stack, final int x, final int y,
+    public static boolean isWrench(final EntityPlayer player, final @Nullable ItemStack stack, final int x, final int y,
             final int z) {
         if (stack != null) {
             Item itemWrench = stack.getItem();
