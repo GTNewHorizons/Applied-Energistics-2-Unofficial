@@ -75,6 +75,7 @@ import org.jetbrains.annotations.NotNull;
 import com.glodblock.github.common.item.ItemFluidDrop;
 import com.glodblock.github.common.item.ItemFluidPacket;
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
@@ -2064,7 +2065,16 @@ public class Platform {
     }
 
     public static IItemList<IAEStack<?>> readAEStackListNBT(final NBTTagList tag, boolean convert) {
-        final IItemList<IAEStack<?>> out = AEApi.instance().storage().createAEStackList();
+        return readAEStackListNBT(null, tag, convert);
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(final IItemList<IAEStack<?>> out, final NBTTagList tag) {
+        return readAEStackListNBT(out, tag, false);
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(IItemList<IAEStack<?>> out, final NBTTagList tag,
+            boolean convert) {
+        if (out == null) out = AEApi.instance().storage().createAEStackList();
 
         if (tag != null) {
             for (int x = 0; x < tag.tagCount(); x++) {
@@ -2166,6 +2176,10 @@ public class Platform {
         } else {
             return null;
         }
+    }
+
+    public static String fmt(double v) {
+        return NumberFormatUtil.formatNumber(v);
     }
 
     @NotNull

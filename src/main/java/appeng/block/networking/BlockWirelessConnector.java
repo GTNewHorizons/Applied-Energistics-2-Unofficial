@@ -113,7 +113,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
 
     @Override
     public void breakBlock(World w, int x, int y, int z, Block a, int b) {
-        if (w.getTileEntity(x, y, z) instanceof TileWirelessBase twc) twc.doUnlink();
+        if (w.getTileEntity(x, y, z) instanceof TileWirelessBase twc) twc.unlinkAll();
         super.breakBlock(w, x, y, z, a, b);
     }
 

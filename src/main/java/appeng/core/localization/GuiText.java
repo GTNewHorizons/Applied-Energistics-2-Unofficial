@@ -406,6 +406,14 @@ public enum GuiText implements Localization {
     GuiDimensionalCoordNoDim,
     GuiDimensionalCoordShortNoDim,
 
+    SuperMEReplenisherBytesTotal,
+    SuperMEReplenisherBytesUnlimited,
+    SuperMEReplenisherBytesUsed,
+    SuperMEReplenisherTickRate,
+    SuperMEReplenisherThreshold,
+    SuperMEReplenisherTarget,
+    SuperMEReplenisherStored,
+
     itemMEStackPacketDesc1,
     itemMEStackPacketDesc2,
 
