@@ -190,7 +190,7 @@ public class PartPlacement {
                                 sp.part != null,
                                 true,
                                 Vec3.createVectorHelper(0.5, 0.5, 0.5)));
-            } else {
+            } else if (player.capabilities.isCreativeMode) {
                 Platform.spawnDrops(world, x, y, z, is);
             }
             return true;
