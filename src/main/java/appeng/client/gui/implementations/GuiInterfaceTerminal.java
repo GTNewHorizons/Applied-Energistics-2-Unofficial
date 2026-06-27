@@ -30,6 +30,7 @@ import java.util.function.Predicate;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
@@ -1940,6 +1941,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
                 if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
                     packet = new PacketInventoryAction(InventoryAction.MOVE_REGION, 0, id);
+                } else if (GuiScreen.isCtrlKeyDown() && (btn == 0)) {
+                    packet = new PacketInventoryAction(InventoryAction.MULTIPLY_PATTERN, slotIdx, id);
+                } else if (GuiScreen.isCtrlKeyDown() && (btn == 1)) {
+                    packet = new PacketInventoryAction(InventoryAction.DIVIDE_PATTERN, slotIdx, id);
                 } else if (isShiftKeyDown() && (btn == 0 || btn == 1)) {
                     packet = new PacketInventoryAction(InventoryAction.SHIFT_CLICK, slotIdx, id);
                 } else if (btn == 0 || btn == 1) {
@@ -1955,4 +1960,24 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
     }
 
+    // Individual pattern slot multiplication using scrollwheel
+    @Override
+    public void handleMouseInput() {
+        if (!GuiScreen.isCtrlKeyDown()) {
+            super.handleMouseInput();
+        } else {
+            int wheel = Mouse.getEventDWheel();
+            if (wheel == 0) {
+                super.handleMouseInput();
+            } else {
+                final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
+                final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+                if (wheel > 0) {
+                    mouseClicked(x, y, 0);
+                } else {
+                    mouseClicked(x, y, 1);
+                }
+            }
+        }
+    }
 }

@@ -184,7 +184,16 @@ public interface IMEInventory<StackType extends IAEStack> {
      * @deprecated Use {@link IMEInventory#getStackType()} instead
      */
     @Deprecated
-    StorageChannel getChannel();
+    default StorageChannel getChannel() {
+        final IAEStackType<?> type = this.getStackType();
+        if (type == ITEM_STACK_TYPE) {
+            return StorageChannel.ITEMS;
+        } else if (type == FLUID_STACK_TYPE) {
+            return StorageChannel.FLUIDS;
+        } else {
+            return null;
+        }
+    }
 
     /**
      * @return stack type your handler should be part of

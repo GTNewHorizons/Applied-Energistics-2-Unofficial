@@ -6,7 +6,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
 
-import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.implementations.GuiPatternItemRenamer;
@@ -23,7 +22,7 @@ public class ContainerPatternValueAmount extends ContainerSubGui implements IVir
     private IAEStack<?> aes;
     private int slotIndex;
 
-    public ContainerPatternValueAmount(final InventoryPlayer ip, final ITerminalHost te) {
+    public ContainerPatternValueAmount(final InventoryPlayer ip, final Object te) {
         super(ip, te);
     }
 
