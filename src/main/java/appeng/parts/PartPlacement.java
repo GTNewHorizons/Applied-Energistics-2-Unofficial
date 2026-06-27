@@ -54,6 +54,7 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBuildCraftTransport;
 import appeng.integration.abstraction.IFMP;
 import appeng.integration.abstraction.IImmibisMicroblocks;
+import appeng.items.tools.quartz.ToolQuartzWrench;
 import appeng.util.LookDirection;
 import appeng.util.Platform;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -107,7 +108,10 @@ public class PartPlacement {
                         }
 
                         if (sp.part != null) {
-                            is.add(sp.part.getItemStack(PartItemStack.Wrench));
+                            is.add(
+                                    sp.part.getItemStack(
+                                            held.getItem() instanceof ToolQuartzWrench ? PartItemStack.Wrench
+                                                    : PartItemStack.Break));
                             sp.part.getDrops(is, true);
                             host.removePart(sp.side, false);
                         }
