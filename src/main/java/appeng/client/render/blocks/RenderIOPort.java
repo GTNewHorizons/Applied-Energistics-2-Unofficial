@@ -15,6 +15,7 @@ import java.util.EnumSet;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -51,6 +52,8 @@ public class RenderIOPort extends BaseBlockRender<BlockIOPort, TileIOPort> {
         final ForgeDirection up = sp.getUp();
         final ForgeDirection forward = sp.getForward();
         final ForgeDirection west = Platform.crossProduct(forward, up);
+        final ForgeDirection east = Platform.crossProduct(up, forward);
+        final ForgeDirection backward = Platform.crossProduct(up, east);
 
         renderer.setRenderBounds(0, 0, 0, 1, 1, 1);
 
@@ -62,6 +65,22 @@ public class RenderIOPort extends BaseBlockRender<BlockIOPort, TileIOPort> {
         this.preRenderInWorld(imb, world, x, y, z, renderer);
 
         final boolean result = renderer.renderStandardBlockWithColorMultiplier(imb, x, y, z, iopRed, iopGreen, iopBlue);
+
+        if (sp.getColor().getUnlocalized() != "gui.appliedenergistics2.Fluix") {
+
+            final Tessellator tess = Tessellator.instance;
+
+            tess.setColorOpaque_I(sp.getColor().whiteVariant);
+            IIcon ico = ExtraBlockTextures.BlockIOPortSideLights.getIcon();
+
+            this.renderFace(x, y, z, imb, ico, renderer, west);
+            this.renderFace(x, y, z, imb, ico, renderer, forward);
+            this.renderFace(x, y, z, imb, ico, renderer, east);
+            this.renderFace(x, y, z, imb, ico, renderer, backward);
+
+            ico = ExtraBlockTextures.BlockIOPortTopLights.getIcon();
+            this.renderFace(x, y, z, imb, ico, renderer, up);
+        }
 
         this.postRenderInWorld(renderer);
 
