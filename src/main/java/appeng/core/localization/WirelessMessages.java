@@ -48,6 +48,7 @@ public enum WirelessMessages implements Localization {
     AdvancedBindingEmpty,
     AdvancedBindingNotEmpty,
 
+    AdvancedLine,
     AdvancedQueueingLine,
     AdvancedBindingLine,
     AdvancedQueueingLineNotEmpty,
