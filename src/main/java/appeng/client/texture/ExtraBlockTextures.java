@@ -170,7 +170,8 @@ public enum ExtraBlockTextures {
     BlockSpatialNetworkRelayConnected("BlockSpatialNetworkRelayConnected"),
     BlockSpatialLinkChamberFrontFull("BlockSpatialLinkChamberFrontFull"),
 
-    ;
+    BlockSuperMEReplenisherDraw("BlockSuperMEReplenisherDraw"),
+    BlockSuperMEReplenisherExt("BlockSuperMEReplenisherExt"),;
 
     private final String name;
     private IIcon IIcon;

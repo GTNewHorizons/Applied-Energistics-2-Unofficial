@@ -27,5 +27,7 @@ public enum InventoryAction {
     UPDATE_HAND,
     AUTO_CRAFT,
     PLACE_SINGLE,
-    FIND_ITEMS
+    FIND_ITEMS,
+    MULTIPLY_PATTERN,
+    DIVIDE_PATTERN
 }

@@ -52,6 +52,7 @@ import appeng.parts.AEBasePart;
 import appeng.parts.misc.PartPatternRepeater;
 import appeng.parts.p2p.PartP2PTunnel;
 import appeng.util.InventoryAdaptor;
+import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.inv.ItemSlot;
@@ -232,6 +233,22 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                         }
                         dirty.addOverwriteEntry(id).setItems(validIndices, tag);
                         isDirty = true;
+                    }
+                }
+                case MULTIPLY_PATTERN -> {
+                    if (slotStack != null) {
+                        ItemStack copy = slotStack.copy();
+                        PatternMultiplierHelper.applyModification(copy, 1);
+                        inv.patterns.setInventorySlotContents(slot, copy);
+                        syncIfaceSlot(inv, id, slot, copy);
+                    }
+                }
+                case DIVIDE_PATTERN -> {
+                    if (slotStack != null) {
+                        ItemStack copy = slotStack.copy();
+                        PatternMultiplierHelper.applyModification(copy, -1);
+                        inv.patterns.setInventorySlotContents(slot, copy);
+                        syncIfaceSlot(inv, id, slot, copy);
                     }
                 }
                 case CREATIVE_DUPLICATE -> {

@@ -218,4 +218,23 @@ public class TickManagerCache implements ITickManager {
 
         return false;
     }
+
+    @Override
+    public void updateTickRate(IGridNode gridNode) {
+        final IGridHost machine = gridNode.getMachine();
+        if (machine instanceof IGridTickable) {
+            final TickingRequest tr = ((IGridTickable) machine).getTickingRequest(gridNode);
+            if (tr != null) {
+                final TickTracker tt = new TickTracker(tr, gridNode, (IGridTickable) machine, this.currentTick, this);
+                this.alertable.replace(gridNode, tt);
+                this.sleeping.replace(gridNode, tt);
+                final TickTracker awakeTT = this.awake.get(gridNode);
+                if (awakeTT != null) {
+                    this.upcomingTicks.remove(awakeTT);
+                    this.upcomingTicks.add(tt);
+                }
+                this.awake.replace(gridNode, tt);
+            }
+        }
+    }
 }

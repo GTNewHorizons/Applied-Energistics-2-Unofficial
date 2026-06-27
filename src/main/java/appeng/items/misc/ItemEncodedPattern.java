@@ -155,6 +155,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final String ingredients = (inItems.length > 1 ? EnumChatFormatting.DARK_GREEN + GuiText.Ingredients.getLocal()
                 : EnumChatFormatting.DARK_GREEN + GuiText.Ingredient.getLocal()) + ": " + EnumChatFormatting.RESET;
         final String holdShift = EnumChatFormatting.GRAY + GuiText.HoldShift.getLocal() + EnumChatFormatting.RESET;
+        final String holdControl = EnumChatFormatting.GRAY + GuiText.HoldControl.getLocal() + EnumChatFormatting.RESET;
         final String viewPattern = EnumChatFormatting.GRAY
                 + String.format(GuiText.PatternView.getLocal(), NEIClientConfig.getKeyName("gui.pattern_view"))
                 + EnumChatFormatting.RESET;
@@ -170,6 +171,11 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 lines.addAll(in);
             } else {
                 lines.add(holdShift);
+                if (GuiScreen.isCtrlKeyDown()) {
+                    lines.add("x2/x0.5");
+                } else {
+                    lines.add(holdControl);
+                }
             }
 
             lines.add(viewPattern);
