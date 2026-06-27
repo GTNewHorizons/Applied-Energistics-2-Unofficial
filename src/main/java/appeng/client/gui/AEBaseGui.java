@@ -731,7 +731,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.mc.thePlayer.closeScreen();
     }
 
-    protected void flushPendingSync() {
+    protected final void flushPendingSync() {
         if (this.inventorySlots instanceof AEBaseContainer container) {
             container.getSyncManager().flushSync();
         }
