@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import appeng.api.config.SortDir;
 import appeng.api.config.ViewItems;
 import appeng.api.storage.data.IAEStackType;
-import appeng.util.MonitorableTypeFilter;
+import appeng.util.AEStackTypeFilter;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public interface ISortSource {
@@ -37,6 +37,6 @@ public interface ISortSource {
 
     @Nullable
     default Reference2BooleanMap<IAEStackType<?>> getTypeFilter() {
-        return MonitorableTypeFilter.createDefaultMap();
+        return new AEStackTypeFilter().getFiltersMap();
     }
 }
