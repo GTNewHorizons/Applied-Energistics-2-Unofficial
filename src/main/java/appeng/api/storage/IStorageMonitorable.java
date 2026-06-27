@@ -34,12 +34,16 @@ public interface IStorageMonitorable {
     /**
      * Access the item inventory for the monitorable storage.
      */
-    IMEMonitor<IAEItemStack> getItemInventory();
+    default IMEMonitor<IAEItemStack> getItemInventory() {
+        return (IMEMonitor<IAEItemStack>) this.getMEMonitor(ITEM_STACK_TYPE);
+    }
 
     /**
      * Access the fluid inventory for the monitorable storage.
      */
-    IMEMonitor<IAEFluidStack> getFluidInventory();
+    default IMEMonitor<IAEFluidStack> getFluidInventory() {
+        return (IMEMonitor<IAEFluidStack>) this.getMEMonitor(FLUID_STACK_TYPE);
+    }
 
     @Nullable
     default IMEMonitor<?> getMEMonitor(@Nonnull IAEStackType<?> type) {
