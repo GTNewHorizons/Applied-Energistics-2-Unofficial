@@ -69,18 +69,14 @@ public class RenderIOPort extends BaseBlockRender<BlockIOPort, TileIOPort> {
 
         if (sp.getColor() != AEColor.Transparent) {
 
-            final Tessellator tess = Tessellator.instance;
-
-            tess.setColorOpaque_I(sp.getColor().whiteVariant);
             IIcon ico = ExtraBlockTextures.BlockIOPortSideLights.getIcon();
-
-            this.renderFace(x, y, z, imb, ico, renderer, west);
-            this.renderFace(x, y, z, imb, ico, renderer, forward);
-            this.renderFace(x, y, z, imb, ico, renderer, east);
-            this.renderFace(x, y, z, imb, ico, renderer, backward);
+            this.renderColoredOverlayFace(sp, world, x, y, z, imb, ico, renderer, west);
+            this.renderColoredOverlayFace(sp, world, x, y, z, imb, ico, renderer, forward);
+            this.renderColoredOverlayFace(sp, world, x, y, z, imb, ico, renderer, east);
+            this.renderColoredOverlayFace(sp, world, x, y, z, imb, ico, renderer, backward);
 
             ico = ExtraBlockTextures.BlockIOPortTopLights.getIcon();
-            this.renderFace(x, y, z, imb, ico, renderer, up);
+            this.renderColoredOverlayFace(sp, world, x, y, z, imb, ico, renderer, up);
         }
 
         this.postRenderInWorld(renderer);
@@ -88,5 +84,18 @@ public class RenderIOPort extends BaseBlockRender<BlockIOPort, TileIOPort> {
         renderer.overrideBlockTexture = null;
 
         return result;
+    }
+
+    public void renderColoredOverlayFace(final TileIOPort tile, final IBlockAccess world, final int x, final int y,
+            final int z, final BlockIOPort imb, final IIcon icon, final RenderBlocks renderer,
+            final ForgeDirection face) {
+
+        final Tessellator tess = Tessellator.instance;
+
+        tess.setBrightness(
+                world.getLightBrightnessForSkyBlocks(x + face.offsetX, y + face.offsetY, z + face.offsetZ, 0));
+
+        tess.setColorOpaque_I(tile.getColor().whiteVariant);
+        this.renderFace(x, y, z, imb, icon, renderer, face);
     }
 }
