@@ -13,6 +13,10 @@
 
 package appeng.api.storage;
 
+import javax.annotation.Nullable;
+
+import net.minecraft.entity.player.EntityPlayer;
+
 import appeng.api.util.IConfigurableObject;
 import appeng.core.localization.GuiText;
 
@@ -22,4 +26,10 @@ public interface ITerminalHost extends IStorageMonitorable, IConfigurableObject 
         return GuiText.Terminal;
     }
 
+    default void saveSearchString(final String searchString, final EntityPlayer player) {}
+
+    @Nullable
+    default String getSearchString(EntityPlayer player) {
+        return null;
+    }
 }
