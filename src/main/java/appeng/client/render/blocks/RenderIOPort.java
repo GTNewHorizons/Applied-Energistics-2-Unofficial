@@ -20,6 +20,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.util.AEColor;
 import appeng.block.storage.BlockIOPort;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
@@ -66,7 +67,7 @@ public class RenderIOPort extends BaseBlockRender<BlockIOPort, TileIOPort> {
 
         final boolean result = renderer.renderStandardBlockWithColorMultiplier(imb, x, y, z, iopRed, iopGreen, iopBlue);
 
-        if (sp.getColor().getUnlocalized() != "gui.appliedenergistics2.Fluix") {
+        if (sp.getColor() != AEColor.Transparent) {
 
             final Tessellator tess = Tessellator.instance;
 
