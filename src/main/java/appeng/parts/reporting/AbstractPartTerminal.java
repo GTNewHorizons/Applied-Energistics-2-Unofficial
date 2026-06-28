@@ -45,8 +45,8 @@ import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
-import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
+import appeng.util.TerminalSettings;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 /**
@@ -66,9 +66,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
     private final PinsHolder pinsInv = new PinsHolder(this);
-
-    @NotNull
-    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
+    private final TerminalSettings terminalSettings = new TerminalSettings();
 
     public AbstractPartTerminal(final ItemStack is) {
         super(is);
@@ -100,7 +98,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.cm.readFromNBT(data);
         this.viewCell.readFromNBT(data, "viewCell");
         pinsInv.readFromNBT(data, "pins");
-        this.typeFilters.readFromNBT(data);
+        this.terminalSettings.readFromNBT(data);
     }
 
     @Override
@@ -109,7 +107,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.cm.writeToNBT(data);
         this.viewCell.writeToNBT(data, "viewCell");
         pinsInv.writeToNBT(data, "pins");
-        this.typeFilters.writeToNBT(data);
+        this.terminalSettings.writeToNBT(data);
     }
 
     @Override
@@ -191,11 +189,22 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     @Override
     @NotNull
     public Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
-        return this.typeFilters.getFilters(player);
+        return this.terminalSettings.getFilters(player).getFiltersMap();
     }
 
     @Override
     public void saveTypeFilter() {
         this.saveChanges();
+    }
+
+    @Override
+    public void saveSearchString(String searchString, EntityPlayer player) {
+        this.terminalSettings.setSavedSearchString(searchString, player);
+        this.saveChanges();
+    }
+
+    @Override
+    public @Nullable String getSearchString(EntityPlayer player) {
+        return this.terminalSettings.getSavedSearchString(player);
     }
 }

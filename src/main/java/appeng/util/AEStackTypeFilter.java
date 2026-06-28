@@ -116,6 +116,11 @@ public class AEStackTypeFilter implements IGuiPacketWritable {
         return Reference2BooleanMaps.unmodifiable(new Reference2BooleanOpenHashMap<>(this.filters));
     }
 
+    @NotNull
+    public Reference2BooleanMap<IAEStackType<?>> getFiltersMap() {
+        return this.filters;
+    }
+
     public void setEnabled(@NotNull final IAEStackType<?> type, final boolean enabled) {
         this.filters.put(type, enabled);
     }
