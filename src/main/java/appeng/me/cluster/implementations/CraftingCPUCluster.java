@@ -1249,6 +1249,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             tasksBackup.put(entry.getKey(), newTaskProgress);
         }
 
+        this.isMissingMode |= job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+        ci.setMissingMode(this.isMissingMode);
+        ci.setCpuInventory(this.inventory);
+
         try {
             this.currentPlanningDiagnosticSessionId = this.generateDiagnosticSessionId(g);
             job.startCrafting(ci, this, src);
