@@ -40,6 +40,11 @@ public interface ICellInventory<StackType extends IAEStack<StackType>> extends I
     FuzzyMode getFuzzyMode();
 
     /**
+     * @return if it has a Distribution card
+     */
+    boolean isDistribution();
+
+    /**
      * @return access configured list
      * @deprecated Use {@link ICellInventory#getConfigAEInventory()}
      */

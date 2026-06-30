@@ -169,6 +169,11 @@ public class CreativeCellInventory<StackType extends IAEStack<StackType>>
     }
 
     @Override
+    public boolean isDistribution() {
+        return false;
+    }
+
+    @Override
     public IInventory getUpgradesInventory() {
         return this.cellType.getUpgradesInventory(this.cellItem);
     }

@@ -27,5 +27,7 @@ public interface ICellInventoryHandler<StackType extends IAEStack<StackType>> ex
 
     boolean isFuzzy();
 
+    boolean isDistribution();
+
     IncludeExclude getIncludeExcludeMode();
 }
