@@ -537,11 +537,6 @@ public class CraftingGridCache
     }
 
     @Override
-    public ImmutableSet<IAEStack<?>> getEmitableItems() {
-        return ImmutableSet.copyOf(this.emitableItems);
-    }
-
-    @Override
     public ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> getCraftingPatterns() {
         return ImmutableMap.copyOf(this.craftableItemsLegacy);
     }
