@@ -42,7 +42,9 @@ public interface ICellInventory<StackType extends IAEStack<StackType>> extends I
     /**
      * @return if it has a Distribution card
      */
-    boolean isDistribution();
+    default boolean isDistribution() {
+        return false;
+    }
 
     /**
      * @return access configured list

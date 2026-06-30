@@ -96,11 +96,6 @@ public class VoidCellInventory<StackType extends IAEStack<StackType>> implements
     }
 
     @Override
-    public boolean isDistribution() {
-        return false;
-    }
-
-    @Override
     @Deprecated
     public IInventory getConfigInventory() {
         return this.cellType.getConfigInventory(this.cellItem);
