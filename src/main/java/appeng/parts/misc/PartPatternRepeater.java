@@ -76,6 +76,7 @@ public class PartPatternRepeater extends PartBasicState
         implements ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
 
     private final Set<ICraftingPatternDetails> craftingList = new HashSet<>();
+    private final Set<IAEStack<?>> emitableList = new HashSet<>();
     private IItemList<IAEStack<?>> waitingStacks = AEApi.instance().storage().createAEStackList();
     private CraftingGridCache targetCraftingGrid = null;
     private CraftingGridCache currentCraftingGrid = null;
@@ -278,6 +279,9 @@ public class PartPatternRepeater extends PartBasicState
             for (final ICraftingPatternDetails details : this.craftingList) {
                 craftingTracker.addCraftingOption(this, details);
             }
+            for (final IAEStack<?> item : this.emitableList) {
+                craftingTracker.setEmitable(item);
+            }
         }
     }
 
@@ -287,6 +291,7 @@ public class PartPatternRepeater extends PartBasicState
         if (this.duringFletchPatterns) return;
         this.unregisterPostPatternChangeListener();
         this.craftingList.clear();
+        this.emitableList.clear();
         this.targetCraftingGrid = null;
         this.targetNetworkProxy = null;
         this.pairPatternRepeater = null;
@@ -317,6 +322,8 @@ public class PartPatternRepeater extends PartBasicState
                         .getCraftingMultiPatterns().entrySet();
 
                 tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
+
+                this.emitableList.addAll(this.targetCraftingGrid.getEmitableItems());
 
                 this.triggerPatternUpdate();
 
