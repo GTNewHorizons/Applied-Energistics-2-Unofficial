@@ -1249,8 +1249,9 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             tasksBackup.put(entry.getKey(), newTaskProgress);
         }
 
-        boolean missingMode = this.isMissingMode || job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
-        ci.setMissingMode(missingMode);
+        boolean oldMissingMode = this.isMissingMode;
+        this.isMissingMode |= job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+        ci.setMissingMode(this.isMissingMode);
         ci.setCpuInventory(this.inventory);
 
         try {
@@ -1259,7 +1260,6 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (ci.commit(src)) {
                 this.finalOutput.merge(job.getOutput());
                 this.usedStorage += job.getByteTotal();
-                this.isMissingMode = missingMode;
                 this.currentJobSource = src;
                 if (src.isPlayer() && src instanceof PlayerSource ps) {
                     this.sourcePlayer = ps.player.getCommandSenderName();
@@ -1291,12 +1291,14 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             } else {
                 inventory = backupInventory;
                 waitingForMissing = backupWaitingForMissing;
+                isMissingMode = oldMissingMode;
                 tasks.clear();
                 tasks.putAll(tasksBackup);
             }
         } catch (final CraftBranchFailure e) {
             inventory = backupInventory;
             waitingForMissing = backupWaitingForMissing;
+            isMissingMode = oldMissingMode;
             tasks.clear();
             tasks.putAll(tasksBackup);
             handleCraftBranchFailure(e, src);
