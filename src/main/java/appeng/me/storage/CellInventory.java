@@ -446,6 +446,11 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
     }
 
     @Override
+    public boolean isDistribution() {
+        return cardDistribution;
+    }
+
+    @Override
     public String getOreFilter() {
         return this.cellType.getOreFilter(this.cellItem);
     }

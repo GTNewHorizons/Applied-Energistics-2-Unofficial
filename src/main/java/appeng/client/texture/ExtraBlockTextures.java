@@ -107,6 +107,9 @@ public enum ExtraBlockTextures {
     BlockReshuffleTop("BlockReshuffleTop"),
     BlockReshuffleBottom("BlockReshuffleBottom"),
 
+    BlockIOPortSideLights("BlockIOPortSideLights"),
+    BlockIOPortTopLights("BlockIOPortTopLights"),
+
     BlockInscriberInside("BlockInscriberInside"),
 
     BlockQuartzGrowthAcceleratorOn("BlockQuartzGrowthAcceleratorOn"),

@@ -100,6 +100,11 @@ public abstract class CellInventoryHandler<StackType extends IAEStack<StackType>
     }
 
     @Override
+    public boolean isDistribution() {
+        return this.getCellInv().isDistribution();
+    }
+
+    @Override
     public IncludeExclude getIncludeExcludeMode() {
         return this.getWhitelist();
     }
