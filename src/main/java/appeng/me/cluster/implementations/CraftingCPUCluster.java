@@ -1147,6 +1147,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     }
                     for (IAEStack<?> wfm : this.waitingForMissing) {
                         this.waitingFor.add(wfm);
+                        this.postCraftingStatusChange(wfm);
                     }
                     this.markDirty();
 
@@ -1248,16 +1249,33 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             tasksBackup.put(entry.getKey(), newTaskProgress);
         }
 
+        boolean oldMissingMode = this.isMissingMode;
+        this.isMissingMode |= job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+        ci.setMissingMode(this.isMissingMode);
+        ci.setCpuInventory(this.inventory);
+
         try {
             this.currentPlanningDiagnosticSessionId = this.generateDiagnosticSessionId(g);
             job.startCrafting(ci, this, src);
             if (ci.commit(src)) {
                 this.finalOutput.merge(job.getOutput());
                 this.usedStorage += job.getByteTotal();
-                this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
                 this.currentJobSource = src;
                 if (src.isPlayer() && src instanceof PlayerSource ps) {
                     this.sourcePlayer = ps.player.getCommandSenderName();
+                }
+
+                for (IAEStack<?> fte : ci.getExtractFailedList()) {
+                    this.waitingForMissing.add(fte);
+                }
+                for (IAEStack<?> wfm : this.waitingForMissing) {
+                    final IAEStack<?> before = backupWaitingForMissing.findPrecise(wfm);
+                    final long delta = wfm.getStackSize() - (before != null ? before.getStackSize() : 0L);
+                    if (delta > 0) {
+                        final IAEStack<?> add = wfm.copy().setStackSize(delta);
+                        this.waitingFor.add(add);
+                        this.postCraftingStatusChange(add);
+                    }
                 }
 
                 this.prepareStepCount();
@@ -1273,12 +1291,14 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             } else {
                 inventory = backupInventory;
                 waitingForMissing = backupWaitingForMissing;
+                isMissingMode = oldMissingMode;
                 tasks.clear();
                 tasks.putAll(tasksBackup);
             }
         } catch (final CraftBranchFailure e) {
             inventory = backupInventory;
             waitingForMissing = backupWaitingForMissing;
+            isMissingMode = oldMissingMode;
             tasks.clear();
             tasks.putAll(tasksBackup);
             handleCraftBranchFailure(e, src);
@@ -1455,7 +1475,9 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void addEmitable(final IAEStack<?> i) {
-        this.waitingForMissing.add(i);
+        if (i != null && i.getStackSize() > 0) {
+            this.waitingForMissing.add(i.copy().setCraftable(false).setCountRequestable(0));
+        }
     }
 
     public void addCrafting(final ICraftingPatternDetails details, final long crafts) {
@@ -2291,7 +2313,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
             }
 
-            if (details == null) return;
+            if (details == null) {
+                this.outputs.add(output.copy().setCraftable(false).setCountRequestable(0));
+                return;
+            }
 
             this.patternOutputs = details.getAEOutputs().clone();
 
