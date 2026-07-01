@@ -1249,8 +1249,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             tasksBackup.put(entry.getKey(), newTaskProgress);
         }
 
-        this.isMissingMode |= job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
-        ci.setMissingMode(this.isMissingMode);
+        boolean missingMode = this.isMissingMode || job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+        ci.setMissingMode(missingMode);
         ci.setCpuInventory(this.inventory);
 
         try {
@@ -1259,7 +1259,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (ci.commit(src)) {
                 this.finalOutput.merge(job.getOutput());
                 this.usedStorage += job.getByteTotal();
-                this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+                this.isMissingMode = missingMode;
                 this.currentJobSource = src;
                 if (src.isPlayer() && src instanceof PlayerSource ps) {
                     this.sourcePlayer = ps.player.getCommandSenderName();
