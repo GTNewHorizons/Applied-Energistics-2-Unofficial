@@ -50,6 +50,7 @@ import appeng.core.sync.packets.PacketNetworkVisualiserData;
 import appeng.core.sync.packets.PacketNewStorageDimension;
 import appeng.core.sync.packets.PacketOptimizePatterns;
 import appeng.core.sync.packets.PacketPaintedEntity;
+import appeng.core.sync.packets.PacketPartInteraction;
 import appeng.core.sync.packets.PacketPartPlacement;
 import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketPatternMultiSet;
@@ -86,6 +87,8 @@ public class AppEngPacketHandlerBase {
         PACKET_CONFIG_BUTTON(PacketConfigButton.class),
 
         PACKET_MULTIPART(PacketMultiPart.class),
+
+        PACKET_PART_INTERACTION(PacketPartInteraction.class),
 
         PACKET_PART_PLACEMENT(PacketPartPlacement.class),
 
