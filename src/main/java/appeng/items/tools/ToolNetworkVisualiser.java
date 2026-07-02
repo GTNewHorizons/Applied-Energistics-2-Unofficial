@@ -232,7 +232,9 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
     @Override
     public void onUpdate(ItemStack is, World w, Entity entity, int slot, boolean active) {
-        if (Platform.isClient() || !(entity instanceof EntityPlayerMP player) || is.getTagCompound() == null) {
+        if (!active || Platform.isClient()
+                || !(entity instanceof EntityPlayerMP player)
+                || is.getTagCompound() == null) {
             return;
         }
         ItemStack currentItem = player.inventory.getCurrentItem();
