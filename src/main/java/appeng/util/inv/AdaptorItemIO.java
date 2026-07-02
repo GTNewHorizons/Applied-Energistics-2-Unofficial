@@ -5,6 +5,7 @@ import java.util.Iterator;
 import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.Iterators;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
@@ -15,6 +16,7 @@ import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.config.FuzzyMode;
+import appeng.api.config.InsertionMode;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 
@@ -173,6 +175,17 @@ public class AdaptorItemIO extends InventoryAdaptor {
     }
 
     @Override
+    public ItemStack addItems(ItemStack toBeAdded, InsertionMode insertionMode) {
+        if (toBeAdded == null || toBeAdded.stackSize == 0) return null;
+        if (insertionMode == InsertionMode.DEFAULT) return addItems(toBeAdded);
+
+        ItemStack left = insertIntoEmptySlots(toBeAdded, itemIO.sinkIterator());
+        if (left == null || insertionMode == InsertionMode.ONLY_EMPTY) return left;
+
+        return addItems(left);
+    }
+
+    @Override
     public ItemStack simulateAdd(ItemStack toBeSimulated) {
         if (toBeSimulated == null || toBeSimulated.stackSize == 0) return null;
 
@@ -190,6 +203,34 @@ public class AdaptorItemIO extends InventoryAdaptor {
         }
 
         final ItemStack left = toBeSimulated.copy();
+        left.stackSize = insertion.getStackSize();
+        return left;
+    }
+
+    @Override
+    public ItemStack simulateAdd(ItemStack toBeSimulated, InsertionMode insertionMode) {
+        if (toBeSimulated == null || toBeSimulated.stackSize == 0) return null;
+        if (insertionMode != InsertionMode.ONLY_EMPTY) return simulateAdd(toBeSimulated);
+
+        return insertIntoEmptySlots(toBeSimulated, itemIO.simulatedSinkIterator());
+    }
+
+    private static @Nullable ItemStack insertIntoEmptySlots(ItemStack stack, @Nullable InventoryIterator iter) {
+        if (iter == null) return stack;
+
+        InsertionItemStack insertion = new InsertionItemStack(new FastImmutableItemStack(stack));
+
+        while (iter.hasNext()) {
+            ImmutableItemStack slot = iter.next();
+
+            if (slot != null && !slot.isEmpty()) continue;
+
+            insertion.set(iter.insert(insertion, false));
+
+            if (insertion.isEmpty()) return null;
+        }
+
+        final ItemStack left = stack.copy();
         left.stackSize = insertion.getStackSize();
         return left;
     }
