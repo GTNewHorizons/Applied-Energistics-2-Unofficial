@@ -258,6 +258,10 @@ public enum ButtonToolTips implements Localization {
     ToggleShowOnlySubstituteOnDesc,
     ToggleShowOnlySubstituteOffDesc,
 
+    FlowingItems,
+    FlowRateTooltipFull,
+    FlowRateTooltipShort,
+
     CPUName,
     CPUCrafting,
     Automation,

@@ -1,10 +1,13 @@
 package appeng.api.storage.data;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
 import appeng.helpers.IPinsHandler;
+import appeng.me.cache.ItemFlowGridCache.FlowRate;
 
 /**
  * Used to display and filter items shown.
@@ -52,4 +55,8 @@ public interface IDisplayRepo extends IPinsHandler {
     boolean isPaused();
 
     void setPaused(boolean paused);
+
+    FlowRate getFlowRate(IAEStack<?> stack);
+
+    void updateFlowRates(final Map<IAEStack<?>, FlowRate> rates);
 }
