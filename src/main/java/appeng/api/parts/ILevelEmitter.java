@@ -24,4 +24,10 @@ public interface ILevelEmitter
     default AEStackTypeFilter getTypeFilters() {
         return new AEStackTypeFilter();
     }
+
+    default boolean isCraftable(IAEStack<?> stack) {
+        return false;
+    }
+
+    default void updateEmitableStatus(IAEStack<?> stack) {}
 }

@@ -14,6 +14,7 @@ import static appeng.util.Platform.readAEStackListNBT;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingMedium;
@@ -44,6 +46,8 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingPostPatternChangeListener;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
+import appeng.api.networking.crafting.ICraftingWatcher;
+import appeng.api.networking.crafting.ICraftingWatcherHost;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -51,9 +55,11 @@ import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStorageInterceptor;
+import appeng.api.parts.ILevelEmitter;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -73,15 +79,18 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class PartPatternRepeater extends PartBasicState
-        implements ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
+        implements ICraftingWatcherHost, ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
 
     private final Set<ICraftingPatternDetails> craftingList = new HashSet<>();
+    private final Map<IAEStack<?>, Boolean> emitableCrafting = new HashMap<>();
     private IItemList<IAEStack<?>> waitingStacks = AEApi.instance().storage().createAEStackList();
     private CraftingGridCache targetCraftingGrid = null;
     private CraftingGridCache currentCraftingGrid = null;
     private AENetworkProxy targetNetworkProxy = null;
     private boolean provider = false;
     private PartPatternRepeater pairPatternRepeater = null;
+
+    private ICraftingWatcher myCraftingWatcher = null;
 
     @SuppressWarnings({ "rawtypes" })
     private final Map<IAEStackType<?>, MEMonitorPassThrough> monitors = new IdentityHashMap<>();
@@ -228,11 +237,11 @@ public class PartPatternRepeater extends PartBasicState
     }
 
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
-        return pushPatternToRepeater(patternDetails, table, new ArrayList<>());
+        return pushPatternToRepeater(patternDetails, table, new HashSet<>());
     }
 
     public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final InventoryCrafting table,
-            List<CraftingGridCache> visitedRepeaters) {
+            Set<CraftingGridCache> visitedRepeaters) {
         if (this.targetCraftingGrid == null) return false;
 
         // Keeps track of the nets of pattern repeaters that are called recursively to ensure no loops occur
@@ -278,6 +287,9 @@ public class PartPatternRepeater extends PartBasicState
             for (final ICraftingPatternDetails details : this.craftingList) {
                 craftingTracker.addCraftingOption(this, details);
             }
+            for (final IAEStack<?> item : this.emitableCrafting.keySet()) {
+                craftingTracker.setEmitable(this, item);
+            }
         }
     }
 
@@ -287,6 +299,7 @@ public class PartPatternRepeater extends PartBasicState
         if (this.duringFletchPatterns) return;
         this.unregisterPostPatternChangeListener();
         this.craftingList.clear();
+        this.emitableCrafting.clear();
         this.targetCraftingGrid = null;
         this.targetNetworkProxy = null;
         this.pairPatternRepeater = null;
@@ -318,7 +331,11 @@ public class PartPatternRepeater extends PartBasicState
 
                 tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
 
+                this.targetCraftingGrid.getEmitableItems().forEach((stack) -> this.emitableCrafting.put(stack, false));
+
                 this.triggerPatternUpdate();
+                this.configureWatchers();
+                this.updateEmitableStatus();
 
                 this.duringFletchPatterns = false;
             } else {
@@ -372,9 +389,17 @@ public class PartPatternRepeater extends PartBasicState
 
     private boolean injecting = false;
 
+    public boolean isRequestingEmitable(IAEStack<?> stack) {
+        return this.emitableCrafting.getOrDefault(stack, false);
+    }
+
+    public boolean isRequesting(IAEStack<?> stack) {
+        return this.waitingStacks.findPrecise(stack) != null || this.isRequestingEmitable(stack);
+    }
+
     @Override
     public boolean canAccept(IAEStack<?> stack) {
-        return !injecting && this.waitingStacks.findPrecise(stack) != null;
+        return !injecting && this.isRequesting(stack);
     }
 
     @Override
@@ -386,15 +411,17 @@ public class PartPatternRepeater extends PartBasicState
 
         final IAEStack<?> waitingStack = this.waitingStacks.findPrecise(input);
 
-        final long inputSize = input.getStackSize();
-        final long waitingSize = waitingStack.getStackSize();
-
         final IAEStack<?> tempStack = input.copy();
         long leftOver = 0;
 
-        if (inputSize > waitingSize) {
-            leftOver = inputSize - waitingSize;
-            tempStack.setStackSize(waitingSize);
+        if (waitingStack != null) {
+            final long inputSize = input.getStackSize();
+            final long waitingSize = waitingStack.getStackSize();
+
+            if (inputSize > waitingSize) {
+                leftOver = inputSize - waitingSize;
+                tempStack.setStackSize(waitingSize);
+            }
         }
 
         final long tempStackSize = tempStack.getStackSize();
@@ -408,7 +435,9 @@ public class PartPatternRepeater extends PartBasicState
 
         final long returnSize = reducedSize + leftOver;
 
-        if (type == Actionable.MODULATE) waitingStack.setStackSize(waitingSize - tempStackSize + reducedSize);
+        if (waitingStack != null && type == Actionable.MODULATE) {
+            waitingStack.setStackSize(waitingStack.getStackSize() - tempStackSize + reducedSize);
+        }
 
         injecting = false;
         return returnSize > 0 ? input.copy().setStackSize(returnSize) : null;
@@ -416,16 +445,26 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public boolean shouldRemoveInterceptor(IAEStack<?> stack) {
-        return this.waitingStacks.isEmpty();
+        return this.waitingStacks.isEmpty() && !this.emitableCrafting.containsValue(true);
     }
 
     private void addInterception() {
-        if (waitingStacks.isEmpty() || this.targetNetworkProxy == null) return;
+        if (this.targetNetworkProxy == null) return;
 
         List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
+        List<IAEStackType<?>> addedTypes = new ArrayList<>();
 
         for (IAEStack<?> aes : this.waitingStacks) {
-            IAEStackType<?> type = aes.getStackType();
+            addedTypes.add(aes.getStackType());
+        }
+
+        for (Entry<IAEStack<?>, Boolean> entry : this.emitableCrafting.entrySet()) {
+            if (entry.getValue()) {
+                addedTypes.add(entry.getKey().getStackType());
+            }
+        }
+
+        for (IAEStackType<?> type : addedTypes) {
             if (types.contains(type)) {
                 types.remove(type);
                 try {
@@ -476,5 +515,84 @@ public class PartPatternRepeater extends PartBasicState
 
     public PartPatternRepeater getPair() {
         return this.pairPatternRepeater;
+    }
+
+    private static void fletchRepeaters(final IGrid grid, final Set<IGrid> gridSet) {
+        for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
+            final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+            if (!rep.isProvider() || rep.getPair() == null || !node.isActive() || rep.getPair().isProvider()) continue;
+            final IGridNode n = rep.getPair().getGridNode();
+            if (n == null || !n.isActive()) continue;
+            final IGrid currentGrid = n.getGrid();
+            if (!gridSet.contains(currentGrid)) {
+                gridSet.add(currentGrid);
+                fletchRepeaters(currentGrid, gridSet);
+            }
+        }
+    }
+
+    public static Set<IGrid> collectReachableGrids(IGrid grid) {
+        final Set<IGrid> gridSet = new HashSet<>();
+        gridSet.add(grid);
+        fletchRepeaters(grid, gridSet);
+        return gridSet;
+    }
+
+    private void configureWatchers() {
+        if (this.myCraftingWatcher != null && this.provider) {
+            this.myCraftingWatcher.clear();
+            this.myCraftingWatcher.addAll(this.emitableCrafting.keySet());
+        }
+    }
+
+    private void propagateEmitableStatus(IAEStack<?> what, Set<CraftingGridCache> visitedRepeaters) {
+        if (this.targetCraftingGrid == null || !this.emitableCrafting.containsKey(what)) {
+            return;
+        }
+
+        visitedRepeaters.add(this.targetCraftingGrid);
+
+        final IGrid grid = this.getGridNode().getGrid();
+        final ICraftingGrid cg = grid.getCache(ICraftingGrid.class);
+        boolean isCrafting = cg.isRequesting(what);
+
+        for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
+            final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+            if (!rep.isProvider() && rep.getPair() != null
+                    && rep.getPair().isProvider()
+                    && rep.getPair().isRequestingEmitable(what)) {
+                isCrafting = true;
+            }
+        }
+
+        this.emitableCrafting.put(what, isCrafting);
+        for (final ICraftingMedium medium : this.targetCraftingGrid.getEmitableMediums(what)) {
+            if (medium instanceof ILevelEmitter emitter) {
+                emitter.updateEmitableStatus(what);
+            } else
+                if (medium instanceof PartPatternRepeater rep && !visitedRepeaters.contains(rep.targetCraftingGrid)) {
+                    rep.propagateEmitableStatus(what, visitedRepeaters);
+                }
+        }
+        this.addInterception();
+    }
+
+    public void updateEmitableStatus(IAEStack<?> what) {
+        propagateEmitableStatus(what, new HashSet<>());
+    }
+
+    public void updateEmitableStatus() {
+        this.emitableCrafting.keySet().forEach(this::updateEmitableStatus);
+    }
+
+    @Override
+    public void updateWatcher(final ICraftingWatcher newWatcher) {
+        this.myCraftingWatcher = newWatcher;
+        this.configureWatchers();
+    }
+
+    @Override
+    public void onRequestChange(final ICraftingGrid craftingGrid, IAEItemStack what) {
+        this.updateEmitableStatus(what);
     }
 }

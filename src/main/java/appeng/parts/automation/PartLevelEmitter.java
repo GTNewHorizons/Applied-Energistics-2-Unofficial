@@ -73,6 +73,7 @@ import appeng.core.AELog;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
+import appeng.parts.misc.PartPatternRepeater;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
@@ -165,7 +166,20 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
         if (this.getInstalledUpgrades(Upgrades.CRAFTING) > 0) {
             try {
-                return this.getProxy().getCrafting().isRequesting(this.config.getAEStackInSlot(0));
+                final IAEStack<?> what = this.config.getAEStackInSlot(0);
+                if (this.getProxy().getCrafting().isRequesting(what)) {
+                    return true;
+                }
+
+                for (IGridNode node : this.getProxy().getGrid().getMachines(PartPatternRepeater.class)) {
+                    final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+                    if (!rep.isProvider() && rep.getPair() != null
+                            && rep.getPair().isProvider()
+                            && rep.getPair().isRequestingEmitable(what)) {
+                        return true;
+                    }
+                }
+                return false;
             } catch (final GridAccessException e) {
                 // :P
             }
@@ -176,6 +190,11 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         final boolean flipState = this.getConfigManager().getSetting(Settings.REDSTONE_EMITTER)
                 == RedstoneMode.LOW_SIGNAL;
         return flipState == (this.reportingValue >= this.lastReportedValue + 1);
+    }
+
+    @Override
+    public void updateEmitableStatus(IAEStack<?> stack) {
+        this.updateState();
     }
 
     @MENetworkEventSubscribe
@@ -809,7 +828,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
             if (this.getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE) == YesNo.YES) {
                 final IAEStack<?> what = this.config.getAEStackInSlot(0);
                 if (what != null) {
-                    craftingTracker.setEmitable(what);
+                    craftingTracker.setEmitable(this, what);
                 }
             }
         }
@@ -842,6 +861,13 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     @Override
     public AEStackTypeFilter getTypeFilters() {
         return this.typeFilters;
+    }
+
+    @Override
+    public boolean isCraftable(IAEStack<?> stack) {
+        return this.getInstalledUpgrades(Upgrades.CRAFTING) > 0
+                && this.getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE) == YesNo.YES
+                && this.config.getAEStackInSlot(0).equals(stack);
     }
 
     private void applyLegacyTypeFilter(final String typeName) {
