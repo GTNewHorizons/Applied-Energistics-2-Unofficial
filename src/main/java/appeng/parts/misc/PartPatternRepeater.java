@@ -517,27 +517,6 @@ public class PartPatternRepeater extends PartBasicState
         return this.pairPatternRepeater;
     }
 
-    private static void fletchRepeaters(final IGrid grid, final Set<IGrid> gridSet) {
-        for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
-            final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
-            if (!rep.isProvider() || rep.getPair() == null || !node.isActive() || rep.getPair().isProvider()) continue;
-            final IGridNode n = rep.getPair().getGridNode();
-            if (n == null || !n.isActive()) continue;
-            final IGrid currentGrid = n.getGrid();
-            if (!gridSet.contains(currentGrid)) {
-                gridSet.add(currentGrid);
-                fletchRepeaters(currentGrid, gridSet);
-            }
-        }
-    }
-
-    public static Set<IGrid> collectReachableGrids(IGrid grid) {
-        final Set<IGrid> gridSet = new HashSet<>();
-        gridSet.add(grid);
-        fletchRepeaters(grid, gridSet);
-        return gridSet;
-    }
-
     private void configureWatchers() {
         if (this.myCraftingWatcher != null && this.provider) {
             this.myCraftingWatcher.clear();

@@ -304,6 +304,27 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         return playerInv.addItems(stack);
     }
 
+    private void fletchRepeaters(final IGrid grid, final Set<IGrid> gridSet) {
+        for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
+            final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+            if (!rep.isProvider() || rep.getPair() == null || !node.isActive() || rep.getPair().isProvider()) continue;
+            final IGridNode n = rep.getPair().getGridNode();
+            if (n == null || !n.isActive()) continue;
+            final IGrid currentGrid = n.getGrid();
+            if (!gridSet.contains(currentGrid)) {
+                gridSet.add(currentGrid);
+                this.fletchRepeaters(currentGrid, gridSet);
+            }
+        }
+    }
+
+    private Set<IGrid> collectReachableGrids() {
+        final Set<IGrid> gridSet = new HashSet<>();
+        gridSet.add(this.grid);
+        this.fletchRepeaters(this.grid, gridSet);
+        return gridSet;
+    }
+
     /**
      * Finds out whether any updates are needed, and if so, incrementally updates the list.
      */
@@ -312,7 +333,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
         Set<IInterfaceViewable> visited = new HashSet<>();
 
-        for (final IGrid currentGrid : PartPatternRepeater.collectReachableGrids(this.grid)) {
+        for (final IGrid currentGrid : this.collectReachableGrids()) {
             for (Class<? extends IInterfaceViewable> c : supported) {
                 for (IGridNode node : currentGrid.getMachines(c)) {
                     IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
