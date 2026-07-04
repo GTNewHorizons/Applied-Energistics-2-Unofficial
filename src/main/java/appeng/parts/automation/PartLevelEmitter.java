@@ -863,13 +863,6 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         return this.typeFilters;
     }
 
-    @Override
-    public boolean isCraftable(IAEStack<?> stack) {
-        return this.getInstalledUpgrades(Upgrades.CRAFTING) > 0
-                && this.getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE) == YesNo.YES
-                && this.config.getAEStackInSlot(0).equals(stack);
-    }
-
     private void applyLegacyTypeFilter(final String typeName) {
         if ("ALL".equals(typeName)) {
             this.typeFilters.setAllEnabled(true);
