@@ -38,6 +38,7 @@ import appeng.client.gui.widgets.GuiSimpleImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerInterface;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.ColorUtils;
@@ -246,12 +247,14 @@ public class GuiInterface extends GuiUpgradeable {
             }
         }
 
-        // highlight pattern slots with unsupported stack types
-        for (final Object obj : this.cvb.inventorySlots) {
-            if (obj instanceof Slot slot && hasInvalidTypeStack(slot.getStack())) {
-                final int sx = offsetX + slot.xDisplayPosition;
-                final int sy = offsetY + slot.yDisplayPosition;
-                drawRect(sx, sy, sx + 16, sy + 16, ColorUtils.itemSlotOverlayFluidMismatch.getColor());
+        if (AEConfig.instance.highlightPatternTypeMismatchInGUI) {
+            // highlight pattern slots with unsupported stack types
+            for (final Object obj : this.cvb.inventorySlots) {
+                if (obj instanceof Slot slot && hasInvalidTypeStack(slot.getStack())) {
+                    final int sx = offsetX + slot.xDisplayPosition;
+                    final int sy = offsetY + slot.yDisplayPosition;
+                    drawRect(sx, sy, sx + 16, sy + 16, ColorUtils.itemSlotOverlayFluidMismatch.getColor());
+                }
             }
         }
     }

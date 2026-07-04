@@ -953,7 +953,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         } else if (entry.filteredRecipes[slotIdx]) {
                             GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayUnpowered.getColor());
-                        } else if (hasInvalidTypeStack(stack, entry.supportedStackTypes)) {
+                        } else if (AEConfig.instance.highlightPatternTypeMismatchInGUI
+                                && hasInvalidTypeStack(stack, entry.supportedStackTypes)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayFluidMismatch.getColor());
                         }
