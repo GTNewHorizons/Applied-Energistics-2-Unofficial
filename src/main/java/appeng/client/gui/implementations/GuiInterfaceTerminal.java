@@ -953,7 +953,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         } else if (entry.filteredRecipes[slotIdx]) {
                             GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayUnpowered.getColor());
-                        } else if (hasInvalidTypeStack(stack, entry.supportedStackTypes)) {
+                        } else if (AEConfig.instance.highlightPatternTypeMismatchInGUI
+                                && hasInvalidTypeStack(stack, entry.supportedStackTypes)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayFluidMismatch.getColor());
                         }
@@ -1371,8 +1372,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (stack == null || stack.getTagCompound() == null) return false;
         final NBTTagCompound nbt = stack.getTagCompound();
         if (nbt.getBoolean("InvalidPattern")) return false;
-        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes)
-                || hasInvalidTypeInTagList(nbt.getTagList("out", NBT.TAG_COMPOUND), supportedTypes);
+        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes);
     }
 
     private static boolean hasInvalidTypeInTagList(final NBTTagList tagList, final IAEStackType<?>[] supportedTypes) {

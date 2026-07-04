@@ -263,6 +263,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
         if (diff.getStackSize() != 0) {
             this.postChangesToListeners(ImmutableList.of(diff), src);
+            final ItemFlowGridCache flowCache = this.myGridCache.getGrid().getCache(ItemFlowGridCache.class);
+            flowCache.recordFlow(diff, src);
         }
 
         return leftOvers;

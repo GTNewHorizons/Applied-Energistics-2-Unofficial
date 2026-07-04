@@ -95,6 +95,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int MEMonitorableSmallSize = 6;
     public int InterfaceTerminalSmallSize = 6;
     public boolean highlightWhenSomethingStuckInInterface = true;
+    public boolean highlightPatternTypeMismatchInGUI = true;
     public int screenColor = 0xFFFFFF;
 
     /** Max rows for crafting pins section (1-16). Caps the cycle button options. */
@@ -144,6 +145,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
     public int maxRecursiveDepth = 100;
     public int maxMachineChecks = 10000;
+    public boolean enableItemFlowTracking = true;
+    public int itemFlowTrackingWindowMinutes = 2;
 
     public AEConfig(final File configFile) {
         super(configFile);
@@ -302,6 +305,13 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.maxMachineChecks = this.get("networksearch", "maxMachineChecks", this.maxMachineChecks)
                 .getInt(this.maxMachineChecks);
 
+        this.enableItemFlowTracking = this
+                .get("Features.ItemFlowTracking", "enableItemFlowTracking", this.enableItemFlowTracking)
+                .getBoolean(this.enableItemFlowTracking);
+        this.itemFlowTrackingWindowMinutes = this
+                .get("Features.ItemFlowTracking", "itemFlowTrackingWindowMinutes", this.itemFlowTrackingWindowMinutes)
+                .getInt(this.itemFlowTrackingWindowMinutes);
+
         this.clientSync();
 
         for (final AEFeature feature : AEFeature.values()) {
@@ -383,6 +393,10 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getBoolean(true);
         this.highlightWhenSomethingStuckInInterface = this.get("Client", "highlightWhenSomethingStuckInInterface", true)
                 .getBoolean(true);
+        final Property highlightPatternTypeMismatchInGUI = this
+                .get("Client", "highlightPatternTypeMismatchInGUI", true);
+        highlightPatternTypeMismatchInGUI.comment = "Highlight pattern slots in red when the pattern uses unsupported stack types.";
+        this.highlightPatternTypeMismatchInGUI = highlightPatternTypeMismatchInGUI.getBoolean(true);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
         Property screenColorProperty = this.get("Client", "screenColor", this.screenColor);
