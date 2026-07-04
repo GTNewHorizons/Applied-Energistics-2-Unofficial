@@ -72,7 +72,7 @@ public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWren
             if (b.rotateBlock(world, x, y, z, mySide)) {
                 b.onNeighborBlockChange(world, x, y, z, Platform.AIR_BLOCK);
                 player.swingItem();
-                return true;
+                return !world.isRemote;
             }
         }
         return false;

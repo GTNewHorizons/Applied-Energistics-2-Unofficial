@@ -5,6 +5,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
@@ -84,6 +86,22 @@ public class PacketPartInteraction extends AppEngPacket {
                 resync(player);
             }
         } else {
+            if (spart.part == null) {
+                resync(player);
+                return;
+            }
+            PlayerInteractEvent event = ForgeEventFactory.onPlayerInteract(
+                    player,
+                    PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK,
+                    x,
+                    y,
+                    z,
+                    face == ForgeDirection.UNKNOWN ? -1 : face.ordinal(),
+                    player.worldObj);
+            if (event.isCanceled()) {
+                resync(player);
+                return;
+            }
             if (player.isSneaking()) {
                 if (!spart.part.onShiftActivate(player, hitVec)) {
                     resync(player);

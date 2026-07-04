@@ -84,7 +84,7 @@ public class PacketPartPlacement extends AppEngPacket {
         TileEntity te = world.getTileEntity(x, y, z);
         if (isFacade) {
             IPartHost host = PartPlacement.getExistingHost(te);
-            if (!PartPlacement.facadeLogic(held, player, face, host)) {
+            if (!PartPlacement.facadeLogic(held, player, face, host, false)) {
                 resync(player);
             }
         } else {

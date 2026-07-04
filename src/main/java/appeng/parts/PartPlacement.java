@@ -97,7 +97,7 @@ public class PartPlacement {
             }
         }
 
-        if (facadeLogic(held, player, side, host)) return true;
+        if (facadeLogic(held, player, side, host, world.isRemote)) return true;
 
         if (host == null) {
             host = getOrCreateHost(tile, player, face);
@@ -190,7 +190,7 @@ public class PartPlacement {
                                 sp.part != null,
                                 true,
                                 Vec3.createVectorHelper(0.5, 0.5, 0.5)));
-            } else if (player.capabilities.isCreativeMode) {
+            } else if (!is.isEmpty()) {
                 Platform.spawnDrops(world, x, y, z, is);
             }
             return true;
@@ -198,7 +198,8 @@ public class PartPlacement {
         return false;
     }
 
-    public static boolean facadeLogic(ItemStack held, EntityPlayer player, ForgeDirection side, IPartHost host) {
+    public static boolean facadeLogic(ItemStack held, EntityPlayer player, ForgeDirection side, IPartHost host,
+            boolean isClient) {
         if (held != null) {
             final IFacadePart fp = isFacade(held, side);
             if (fp != null && host != null) {
@@ -210,7 +211,9 @@ public class PartPlacement {
                     if (host.getFacadeContainer().addFacade(fp)) {
                         host.markForUpdate();
                         decreaseHeldItem(held, player);
-                        NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, side, true));
+                        if (isClient) {
+                            NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, side, true));
+                        }
                         return true;
                     }
                 }
