@@ -7,6 +7,7 @@ public enum WirelessToolMode implements Localization {
 
     Simple,
     Advanced,
+    AdvancedLine,
     Super;
 
     @Override
@@ -14,6 +15,7 @@ public enum WirelessToolMode implements Localization {
         return switch (this) {
             case Simple -> WirelessMessages.Simple.getUnlocalized();
             case Advanced -> WirelessMessages.Advanced.getUnlocalized();
+            case AdvancedLine -> WirelessMessages.AdvancedLine.getUnlocalized();
             case Super -> WirelessMessages.Super.getUnlocalized();
         };
     }

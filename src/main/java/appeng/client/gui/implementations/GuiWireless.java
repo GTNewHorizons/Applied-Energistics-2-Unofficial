@@ -20,7 +20,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerWireless;
 import appeng.core.AEConfig;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.tile.networking.TileWireless;
 import appeng.util.Platform;
@@ -64,12 +64,12 @@ public class GuiWireless extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.Wireless.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
 
         final ContainerWireless cw = (ContainerWireless) this.inventorySlots;
 
@@ -82,8 +82,8 @@ public class GuiWireless extends AEBaseGui {
                     this.fontRendererObj.getStringWidth(firstMessage),
                     this.fontRendererObj.getStringWidth(secondMessage));
             final int cOffset = (this.xSize / 2) - (strWidth / 2);
-            this.fontRendererObj.drawString(firstMessage, cOffset, 20, GuiColors.GuiTextColorGray.getColor());
-            this.fontRendererObj.drawString(secondMessage, cOffset, 20 + 12, GuiColors.GuiTextColorGray.getColor());
+            this.fontRendererObj.drawString(firstMessage, cOffset, 20, ColorUtils.guiTextColorGray.getColor());
+            this.fontRendererObj.drawString(secondMessage, cOffset, 20 + 12, ColorUtils.guiTextColorGray.getColor());
         }
     }
 

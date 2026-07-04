@@ -163,13 +163,18 @@ public class RenderBlocksWorkaround extends RenderBlocks {
                 return;
             }
 
-            if (!RenderBlocksWorkaround.fixedBottomFaceUV && this.isFacade()) {
+            if (this.isFacade()) {
                 final Tessellator tessellator = Tessellator.instance;
 
-                final double d3 = par8Icon.getInterpolatedU(this.renderMinX * 16.0D);
-                final double d4 = par8Icon.getInterpolatedU(this.renderMaxX * 16.0D);
+                double d3 = par8Icon.getInterpolatedU(this.renderMinX * 16.0D);
+                double d4 = par8Icon.getInterpolatedU(this.renderMaxX * 16.0D);
                 final double d5 = par8Icon.getInterpolatedV(this.renderMinZ * 16.0D);
                 final double d6 = par8Icon.getInterpolatedV(this.renderMaxZ * 16.0D);
+
+                if (RenderBlocksWorkaround.fixedBottomFaceUV) {
+                    d3 = par8Icon.getInterpolatedU(16.0D - this.renderMinX * 16.0D);
+                    d4 = par8Icon.getInterpolatedU(16.0D - this.renderMaxX * 16.0D);
+                }
 
                 final double d11 = par2 + this.renderMinX;
                 final double d12 = par2 + this.renderMaxX;

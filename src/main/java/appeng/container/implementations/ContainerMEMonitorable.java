@@ -72,6 +72,7 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
+import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.AppEngSlot;
@@ -79,7 +80,9 @@ import appeng.container.slot.SlotRestrictedInput;
 import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.container.sync.ActionHandler;
 import appeng.container.sync.StreamCodecs;
+import appeng.container.sync.SyncCodecs;
 import appeng.container.sync.SyncRegistrar;
+import appeng.container.sync.handlers.ObjectSyncHandler;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
@@ -102,6 +105,7 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.item.AEItemStack;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap.Entry;
@@ -139,6 +143,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
     private boolean lastFlowRatesEmpty = true;
 
     public final ActionHandler<Integer> toggleViewCellAction;
+
+    private final ObjectSyncHandler<String> savedSearchSync;
 
     public ContainerMEMonitorable(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
@@ -213,6 +219,23 @@ public class ContainerMEMonitorable extends AEBaseContainer
         final SyncRegistrar sync = this.syncRegistrar();
         this.toggleViewCellAction = sync.actionC2S("toggleViewCell", StreamCodecs.intValue())
                 .onServerAction(this::toggleViewCell);
+        this.savedSearchSync = sync
+                .object(
+                        "savedSearch",
+                        SyncCodecs.of(
+                                "String",
+                                ByteBufUtils::writeUTF8String,
+                                ByteBufUtils::readUTF8String,
+                                String::new,
+                                String::equals),
+
+                        this.host.getSearchString(ip.player))
+                .onServerChange(
+                        (oldValue, newValue) -> this.host.saveSearchString(newValue, this.getPlayerInv().player))
+                .onClientChange(
+                        (oldValue, newValue) -> {
+                            if (this.gui instanceof GuiMEMonitorable gm) gm.memoryTextUpdated();
+                        });
     }
 
     public IGridNode getNetworkNode() {
@@ -1051,25 +1074,23 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 if (hand.stackSize == 1) {
                     fillSingleFluidContainer(player, hand, stackInSlot, type, monitor);
                 } else {
-                    long capacity = type.getContainerItemCapacity(hand, stackInSlot);
-                    if (capacity <= 0) return;
-
                     ObjectLongPair<ItemStack> fullFilledPair = type.fillContainer(
                             Platform.copyStackWithSizeOne(hand),
                             stackInSlot.copy().setStackSize(Long.MAX_VALUE));
                     ItemStack fullFilledContainer = fullFilledPair.left();
-                    if (fullFilledContainer == null) return;
+                    long amountPerContainer = fullFilledPair.rightLong();
+                    if (fullFilledContainer == null || amountPerContainer <= 0) return;
 
                     if (fullFilledContainer.getMaxStackSize() >= hand.stackSize
-                            && capacity * hand.stackSize <= stackInSlot.getStackSize()) {
+                            && amountPerContainer * hand.stackSize <= stackInSlot.getStackSize()) {
                         // Fill all item in player hand
                         final IAEStack<?> stackToFill = monitor.extractItems(
-                                stackInSlot.copy().setStackSize(capacity * hand.stackSize),
+                                stackInSlot.copy().setStackSize(amountPerContainer * hand.stackSize),
                                 Actionable.MODULATE,
                                 this.getActionSource());
                         if (stackToFill == null) return;
 
-                        if (stackToFill.getStackSize() == capacity * hand.stackSize) {
+                        if (stackToFill.getStackSize() == amountPerContainer * hand.stackSize) {
                             fullFilledContainer.stackSize = hand.stackSize;
                             player.inventory.setItemStack(fullFilledContainer);
                         }
@@ -1376,5 +1397,14 @@ public class ContainerMEMonitorable extends AEBaseContainer
             return null;
         }
         return ais.getItemStack();
+    }
+
+    public void saveSearchString(final String searchString) {
+        this.savedSearchSync.set(searchString);
+        this.host.saveSearchString(searchString, getInventoryPlayer().player);
+    }
+
+    public String getSavedSearchString() {
+        return this.savedSearchSync.get();
     }
 }

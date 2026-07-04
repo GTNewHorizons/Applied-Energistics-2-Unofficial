@@ -14,7 +14,7 @@ import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -86,13 +86,13 @@ public class GuiOreFilter extends GuiSub implements IDropToFillTextField {
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
         this.fontRendererObj
-                .drawString(GuiText.OreFilterLabel.getLocal(), 12, 8, GuiColors.GuiTextColorGray.getColor());
+                .drawString(GuiText.OreFilterLabel.getLocal(), 12, 8, ColorUtils.guiTextColorGray.getColor());
 
         String counterText = String.valueOf(textField.getText().length()) + "/"
                 + String.valueOf(textField.getMaxStringLength());
         int counterColor = textField.getText().length() == textField.getMaxStringLength()
-                ? GuiColors.OreFilterTextLengthFull.getColor()
-                : GuiColors.GuiTextColorGray.getColor();
+                ? ColorUtils.oreFilterTextLengthFull.getColor()
+                : ColorUtils.guiTextColorGray.getColor();
         this.fontRendererObj
                 .drawString(counterText, xSize - fontRendererObj.getStringWidth(counterText) - 13, 25, counterColor);
     }

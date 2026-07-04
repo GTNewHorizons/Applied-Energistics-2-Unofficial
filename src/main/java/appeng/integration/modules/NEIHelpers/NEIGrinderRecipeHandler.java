@@ -25,7 +25,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.AEApi;
 import appeng.api.features.IGrinderEntry;
 import appeng.client.gui.implementations.GuiGrinder;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.NEIServerUtils;
@@ -116,7 +116,7 @@ public class NEIGrinderRecipeHandler extends TemplateRecipeHandler {
                             cachedRecipe.displayChance,
                             (168 - width) / 2,
                             5,
-                            GuiColors.NEIGrindstoneRecipeChance.getColor());
+                            ColorUtils.neiGrindstoneRecipeChance.getColor());
                 } else {
                     final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
                     final int width = fr.getStringWidth(GuiText.NoSecondOutput.getLocal());
@@ -124,7 +124,7 @@ public class NEIGrinderRecipeHandler extends TemplateRecipeHandler {
                             GuiText.NoSecondOutput.getLocal(),
                             (168 - width) / 2,
                             5,
-                            GuiColors.NEIGrindstoneNoSecondOutput.getColor());
+                            ColorUtils.neiGrindstoneNoSecondOutput.getColor());
                 }
             }
         }

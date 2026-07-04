@@ -8,9 +8,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.item.ItemStack;
-
-import org.lwjgl.input.Keyboard;
 
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
@@ -70,8 +69,8 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                             ButtonToolTips.ExtractFromNetworkToContainer
                                     .getLocal(
                                             this.typeFilterChecker.check(ITEM_STACK_TYPE)
-                                                    ? Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode())
-                                                            + " + "
+                                                    ? GameSettings.getKeyDisplayString(
+                                                            CONTAINER_INTERACTION_KEY.getKeyCode()) + " + "
                                                     : "",
                                             stackInSlot.getDisplayName()));
                     added = true;
@@ -87,8 +86,8 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                             ButtonToolTips.InsertFromContainerToNetwork
                                     .getLocal(
                                             this.typeFilterChecker.check(ITEM_STACK_TYPE)
-                                                    ? Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode())
-                                                            + " + "
+                                                    ? GameSettings.getKeyDisplayString(
+                                                            CONTAINER_INTERACTION_KEY.getKeyCode()) + " + "
                                                     : "",
                                             stack.getDisplayName()));
                     added = true;

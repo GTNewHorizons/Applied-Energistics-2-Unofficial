@@ -31,7 +31,7 @@ import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -64,17 +64,17 @@ public class GuiCraftingCPUTable {
     private String selectedCPUName = "";
     private static final DecimalFormat DF = new DecimalFormat("#.##");
 
-    private static int processBarStartColorInt = GuiColors.ProcessBarStartColor.getColor();
+    private static int processBarStartColorInt = ColorUtils.processBarStartColor.getColor();
     private static final int[] PROCESS_BAR_START_COLOR_INT_ARR = new int[] { (processBarStartColorInt >> 24) & 0xFF,
             (processBarStartColorInt >> 16) & 0xFF, (processBarStartColorInt >> 8) & 0xFF,
             processBarStartColorInt & 0xFF };
 
-    private static int processBarMiddleColorInt = GuiColors.ProcessBarMiddleColor.getColor();
+    private static int processBarMiddleColorInt = ColorUtils.processBarMiddleColor.getColor();
     private static final int[] PROCESS_BAR_MIDDLE_COLOR_INT_ARR = new int[] { (processBarMiddleColorInt >> 24) & 0xFF,
             (processBarMiddleColorInt >> 16) & 0xFF, (processBarMiddleColorInt >> 8) & 0xFF,
             processBarMiddleColorInt & 0xFF };
 
-    private static int processBarEndColorInt = GuiColors.ProcessBarEndColor.getColor();
+    private static int processBarEndColorInt = ColorUtils.processBarEndColor.getColor();
     private static final int[] PROCESS_BAR_END_COLOR_INT_ARR = new int[] { (processBarEndColorInt >> 24) & 0xFF,
             (processBarEndColorInt >> 16) & 0xFF, (processBarEndColorInt >> 8) & 0xFF, processBarEndColorInt & 0xFF };
 
@@ -180,7 +180,7 @@ public class GuiCraftingCPUTable {
                 GL11.glPushMatrix();
                 GL11.glTranslatef(x + 3, y + 3, 0);
                 GL11.glScalef(0.8f, 0.8f, 1.0f);
-                font.drawString(name, 0, 0, GuiColors.CraftingStatusCPUName.getColor());
+                font.drawString(name, 0, 0, ColorUtils.craftingStatusCPUName.getColor());
                 GL11.glPopMatrix();
 
                 GL11.glPushMatrix();
@@ -203,7 +203,7 @@ public class GuiCraftingCPUTable {
                         amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(craftingStack.getStackSize());
                     }
                     GL11.glScalef(1.5f, 1.5f, 1.0f);
-                    font.drawString(amount, 0, 0, GuiColors.CraftingStatusCPUAmount.getColor());
+                    font.drawString(amount, 0, 0, ColorUtils.craftingStatusCPUAmount.getColor());
 
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
@@ -244,12 +244,12 @@ public class GuiCraftingCPUTable {
                     GL11.glTranslatef(18.0f, 6.0f, 0.0f);
                     GL11.glScalef(1.1f, 1.1f, 1f);
 
-                    font.drawString(cpu.formatStorage(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
+                    font.drawString(cpu.formatStorage(), 0, 0, ColorUtils.craftingStatusCPUStorage.getColor());
                     font.drawString(
                             cpu.formatShorterCoprocessors(),
                             16 * 4 - 5,
                             0,
-                            GuiColors.CraftingStatusCPUStorage.getColor());
+                            ColorUtils.craftingStatusCPUStorage.getColor());
 
                 }
                 GL11.glPopMatrix();

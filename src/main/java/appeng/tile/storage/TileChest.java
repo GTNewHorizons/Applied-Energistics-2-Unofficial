@@ -98,8 +98,8 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
-import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
+import appeng.util.TerminalSettings;
 import appeng.util.item.AEFluidStack;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
@@ -130,7 +130,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     private final Map<IAEStackType<?>, MEMonitorHandler> cellMap = new IdentityHashMap<>();
     private boolean displayNeedsUpdate;
     @NotNull
-    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
+    private final TerminalSettings terminalSettings = new TerminalSettings();
 
     public TileChest() {
         this.setInternalMaxPower(PowerMultiplier.CONFIG.multiply(40));
@@ -427,7 +427,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
             this.getProxy().setColor(this.paintedColor);
         }
-        this.typeFilters.readFromNBT(data);
+        this.terminalSettings.readFromNBT(data);
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
@@ -435,7 +435,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.config.writeToNBT(data);
         data.setInteger("priority", this.priority);
         data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
-        this.typeFilters.writeToNBT(data);
+        this.terminalSettings.writeToNBT(data);
     }
 
     @MENetworkEventSubscribe
@@ -772,7 +772,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @Override
     @NotNull
     public Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
-        return this.typeFilters.getFilters(player);
+        return this.terminalSettings.getFilters(player).getFiltersMap();
     }
 
     @Override

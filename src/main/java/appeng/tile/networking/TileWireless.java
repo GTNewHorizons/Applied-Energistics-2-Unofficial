@@ -56,8 +56,6 @@ public class TileWireless extends AENetworkInvTile implements IWirelessAccessPoi
     public TileWireless() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
         this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
-
-        this.serial = UUID.randomUUID().hashCode();
     }
 
     @Override
@@ -78,7 +76,7 @@ public class TileWireless extends AENetworkInvTile implements IWirelessAccessPoi
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileWireless(final NBTTagCompound data) {
-        if (data.hasKey("serial")) this.serial = data.getLong("serial");
+        this.serial = data.getLong("serial");
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
@@ -136,7 +134,7 @@ public class TileWireless extends AENetworkInvTile implements IWirelessAccessPoi
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed,
             final ItemStack added) {
-        // :P
+        if (mc == InvOperation.markDirty) this.markDirty();
     }
 
     @Override
@@ -150,6 +148,14 @@ public class TileWireless extends AENetworkInvTile implements IWirelessAccessPoi
         super.onReady();
 
         if (Platform.isServer()) {
+            if (this.serial == 0) {
+                do {
+                    this.serial = UUID.randomUUID().hashCode();
+                } while (this.serial == 0);
+
+                this.markDirty();
+            }
+
             MinecraftForge.EVENT_BUS.post(new LocatableEventAnnounce(this, LocatableEvent.Register));
         }
     }
@@ -177,6 +183,7 @@ public class TileWireless extends AENetworkInvTile implements IWirelessAccessPoi
     @Override
     public void markDirty() {
         this.updatePower();
+        super.markDirty();
     }
 
     @Override

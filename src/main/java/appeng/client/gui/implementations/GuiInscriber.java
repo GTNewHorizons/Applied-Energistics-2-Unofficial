@@ -17,7 +17,7 @@ import appeng.client.gui.widgets.GuiProgressBar;
 import appeng.client.gui.widgets.GuiProgressBar.Direction;
 import appeng.container.implementations.ContainerInscriber;
 import appeng.container.implementations.ContainerUpgradeable;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.tile.misc.TileInscriber;
 
@@ -53,12 +53,12 @@ public class GuiInscriber extends AEBaseGui {
                 this.getGuiDisplayName(GuiText.Inscriber.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

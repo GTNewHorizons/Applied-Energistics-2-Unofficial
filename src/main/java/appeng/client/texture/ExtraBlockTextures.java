@@ -107,6 +107,9 @@ public enum ExtraBlockTextures {
     BlockReshuffleTop("BlockReshuffleTop"),
     BlockReshuffleBottom("BlockReshuffleBottom"),
 
+    BlockIOPortSideLights("BlockIOPortSideLights"),
+    BlockIOPortTopLights("BlockIOPortTopLights"),
+
     BlockInscriberInside("BlockInscriberInside"),
 
     BlockQuartzGrowthAcceleratorOn("BlockQuartzGrowthAcceleratorOn"),
@@ -170,7 +173,8 @@ public enum ExtraBlockTextures {
     BlockSpatialNetworkRelayConnected("BlockSpatialNetworkRelayConnected"),
     BlockSpatialLinkChamberFrontFull("BlockSpatialLinkChamberFrontFull"),
 
-    ;
+    BlockSuperMEReplenisherDraw("BlockSuperMEReplenisherDraw"),
+    BlockSuperMEReplenisherExt("BlockSuperMEReplenisherExt"),;
 
     private final String name;
     private IIcon IIcon;

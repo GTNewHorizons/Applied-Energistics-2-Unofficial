@@ -30,6 +30,7 @@ import java.util.function.Predicate;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
@@ -77,7 +78,7 @@ import appeng.core.AEConfig;
 import appeng.core.AppEng;
 import appeng.core.CommonHelper;
 import appeng.core.localization.ButtonToolTips;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
@@ -372,12 +373,12 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 getGuiDisplayName(GuiText.InterfaceTerminal.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 GuiInterfaceTerminal.VIEW_LEFT + 2,
                 this.ySize - 96,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
         }
@@ -718,7 +719,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
      */
     private int drawSection(InterfaceSection section, int viewY, int relMouseX, int relMouseY) {
         int renderY = 0;
-        final int fontColor = GuiColors.GuiTextColorGray.getColor();
+        final int fontColor = ColorUtils.guiTextColorGray.getColor();
 
         ItemStack sectionIcon = null;
         for (InterfaceTerminalEntry e : section.entries) {
@@ -948,13 +949,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     if (!tooltip) {
                         if (entry.slotIsBroken(slotIdx)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
-                            drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayInvalid.getColor());
+                            drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayInvalid.getColor());
                         } else if (entry.filteredRecipes[slotIdx]) {
                             GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
-                            drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayUnpowered.getColor());
+                            drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayUnpowered.getColor());
                         } else if (hasInvalidTypeStack(stack, entry.supportedStackTypes)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
-                            drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
+                            drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayFluidMismatch.getColor());
                         }
                     } else {
                         tooltipStack = stack;
@@ -963,7 +964,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 } else if (entry.filteredRecipes[slotIdx]) {
                     GL11.glPushMatrix();
                     GL11.glTranslatef(colLeft, viewY + rowYTop + 1, ITEM_STACK_OVERLAY_Z);
-                    drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayUnpowered.getColor());
+                    drawRect(0, 0, 16, 16, ColorUtils.itemSlotOverlayUnpowered.getColor());
                     GL11.glPopMatrix();
                 }
                 if (tooltip) {
@@ -1940,6 +1941,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
                 if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
                     packet = new PacketInventoryAction(InventoryAction.MOVE_REGION, 0, id);
+                } else if (GuiScreen.isCtrlKeyDown() && (btn == 0)) {
+                    packet = new PacketInventoryAction(InventoryAction.MULTIPLY_PATTERN, slotIdx, id);
+                } else if (GuiScreen.isCtrlKeyDown() && (btn == 1)) {
+                    packet = new PacketInventoryAction(InventoryAction.DIVIDE_PATTERN, slotIdx, id);
                 } else if (isShiftKeyDown() && (btn == 0 || btn == 1)) {
                     packet = new PacketInventoryAction(InventoryAction.SHIFT_CLICK, slotIdx, id);
                 } else if (btn == 0 || btn == 1) {
@@ -1955,4 +1960,24 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
     }
 
+    // Individual pattern slot multiplication using scrollwheel
+    @Override
+    public void handleMouseInput() {
+        if (!GuiScreen.isCtrlKeyDown()) {
+            super.handleMouseInput();
+        } else {
+            int wheel = Mouse.getEventDWheel();
+            if (wheel == 0) {
+                super.handleMouseInput();
+            } else {
+                final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
+                final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+                if (wheel > 0) {
+                    mouseClicked(x, y, 0);
+                } else {
+                    mouseClicked(x, y, 1);
+                }
+            }
+        }
+    }
 }

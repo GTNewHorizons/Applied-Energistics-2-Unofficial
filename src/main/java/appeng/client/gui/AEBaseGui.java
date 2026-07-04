@@ -82,7 +82,7 @@ import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClickOrDragFakeSlot;
@@ -341,13 +341,26 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
         this.currentToolTip.shift(ox, oy);
         this.drawFG(ox, oy, x, y);
-        this.currentToolTip.shift(0, 0);
 
         this.hoveredVirtualSlot = null;
         this.drawVirtualSlots(this.virtualSlots, x, y);
+
+        this.drawVirtualSlotTooltips(x, y);
+        this.currentToolTip.shift(0, 0);
     }
 
     public abstract void drawFG(int offsetX, int offsetY, int mouseX, int mouseY);
+
+    protected void drawVirtualSlotTooltips(final int mouseX, final int mouseY) {
+        VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+        if (slot != null) {
+            List<String> lines = new ArrayList<>();
+            slot.addTooltip(lines);
+            if (!lines.isEmpty()) {
+                this.drawTooltip(mouseX - guiLeft, mouseY - guiTop, lines.toArray(new String[0]));
+            }
+        }
+    }
 
     @Override
     protected final void drawGuiContainerBackgroundLayer(final float f, final int x, final int y) {
@@ -932,7 +945,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                                 s.yDisplayPosition,
                                 16 + s.xDisplayPosition,
                                 16 + s.yDisplayPosition,
-                                GuiColors.ItemSlotOverlayInvalid.getColor());
+                                ColorUtils.itemSlotOverlayInvalid.getColor());
                         GL11.glEnable(GL11.GL_LIGHTING);
 
                         this.zLevel = 0.0F;

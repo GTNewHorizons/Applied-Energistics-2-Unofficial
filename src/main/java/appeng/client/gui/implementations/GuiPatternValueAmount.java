@@ -3,10 +3,9 @@ package appeng.client.gui.implementations;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
-import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.slots.VirtualMESlotSingle;
 import appeng.container.implementations.ContainerPatternValueAmount;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPatternValueSet;
@@ -18,7 +17,7 @@ public class GuiPatternValueAmount extends GuiAmount {
     private final VirtualMESlotSingle slot;
 
     @Reflected
-    public GuiPatternValueAmount(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
+    public GuiPatternValueAmount(final InventoryPlayer inventoryPlayer, final Object te) {
         super(new ContainerPatternValueAmount(inventoryPlayer, te));
         this.container = (ContainerPatternValueAmount) this.inventorySlots;
 
@@ -33,7 +32,7 @@ public class GuiPatternValueAmount extends GuiAmount {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.GuiTextColorGray.getColor());
+        this.fontRendererObj.drawString(GuiText.SelectAmount.getLocal(), 8, 6, ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

@@ -51,7 +51,7 @@ import appeng.items.contents.PinsHandler;
 import appeng.items.contents.PinsHolder;
 import appeng.items.contents.WirelessTerminalViewCells;
 import appeng.tile.networking.TileWireless;
-import appeng.util.MonitorableTypeFilter;
+import appeng.util.TerminalSettings;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
@@ -73,8 +73,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     private final PinsHolder pinsInv;
     private final boolean infinityRange;
     private final boolean infinityEnergy;
-    @NotNull
-    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
+    private final TerminalSettings terminalSettings = new TerminalSettings();
 
     public WirelessTerminalGuiObject(final IWirelessTermHandler wh, final ItemStack is, final EntityPlayer ep,
             final World w, final int x, final int y, final int z) {
@@ -87,7 +86,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
         this.inventorySlot = x;
         this.viewCells = new WirelessTerminalViewCells(is);
         this.pinsInv = new PinsHolder(is);
-        this.typeFilters.readFromNBT(is.getTagCompound());
+        this.terminalSettings.readFromNBT(is.getTagCompound());
 
         ILocatable obj = null;
 
@@ -310,11 +309,21 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
 
     @Override
     public @NotNull Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
-        return this.typeFilters.getFilters(player);
+        return this.terminalSettings.getFilters(player).getFiltersMap();
     }
 
     @Override
     public void saveTypeFilter() {
-        this.typeFilters.writeToNBT(this.effectiveItem);
+        this.terminalSettings.writeToNBT(this.effectiveItem);
+    }
+
+    @Override
+    public void saveSearchString(String searchString, EntityPlayer player) {
+        this.effectiveItem.getTagCompound().setString("searchString", searchString);
+    }
+
+    @Override
+    public @Nullable String getSearchString(EntityPlayer player) {
+        return this.effectiveItem.getTagCompound().getString("searchString");
     }
 }

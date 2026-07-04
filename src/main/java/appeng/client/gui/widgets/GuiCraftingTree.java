@@ -39,7 +39,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.crafting.v2.CraftingRequest;
 import appeng.crafting.v2.CraftingRequest.UsedResolverEntry;
@@ -66,7 +66,7 @@ public class GuiCraftingTree {
     public static final int X_SPACING = 24;
     public static final int REQUEST_RESOLVER_Y_SPACING = 10;
     public static final int RESOLVER_CHILD_Y_SPACING = 12;
-    public final int textColor = GuiColors.SearchboxText.getColor();
+    public final int textColor = ColorUtils.searchboxText.getColor();
     private static long animationFrame = System.currentTimeMillis() / 500;
     private String search = "";
     private ArrayList<Node> goToData = new ArrayList<Node>();
@@ -128,9 +128,9 @@ public class GuiCraftingTree {
             int color = request.wasSimulated ? 0xCCAAAA : 0xAAAAAA;
             if (!search.isEmpty() && goToData.contains(this)) {
                 if (needHighlight.equals(this)) {
-                    color = GuiColors.SearchGoToHighlight.getColor();
+                    color = ColorUtils.searchGoToHighlight.getColor();
                 } else {
-                    color = GuiColors.SearchHighlight.getColor();
+                    color = ColorUtils.searchHighlight.getColor();
                 }
             }
             drawSlotOutline(x, y, color, false);
@@ -181,9 +181,9 @@ public class GuiCraftingTree {
             int color = 0x777777;
             if (!search.isEmpty() && goToData.contains(this)) {
                 if (needHighlight.equals(this)) {
-                    color = GuiColors.SearchGoToHighlight.getColor();
+                    color = ColorUtils.searchGoToHighlight.getColor();
                 } else {
-                    color = GuiColors.SearchHighlight.getColor();
+                    color = ColorUtils.searchHighlight.getColor();
                 }
             }
             drawSlotOutline(x, y, color, true);
@@ -704,7 +704,7 @@ public class GuiCraftingTree {
     }
 
     private void drawStack(final int x, final int y, final IAEStack<?> stack, boolean drawCount) {
-        final int textColor = GuiColors.SearchboxText.getColor();
+        final int textColor = ColorUtils.searchboxText.getColor();
 
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
         RenderHelper.enableGUIStandardItemLighting();

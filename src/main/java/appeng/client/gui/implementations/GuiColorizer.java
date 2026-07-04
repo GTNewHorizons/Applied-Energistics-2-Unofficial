@@ -12,7 +12,7 @@ import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerColorizer;
 import appeng.core.AEConfig;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.items.contents.ColorizerObj;
 import cpw.mods.fml.client.config.GuiSlider;
@@ -100,12 +100,12 @@ public class GuiColorizer extends AEBaseGui implements GuiSlider.ISlider {
                 this.getGuiDisplayName(GuiText.Colorizer.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
                 this.ySize - 96 + 3,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

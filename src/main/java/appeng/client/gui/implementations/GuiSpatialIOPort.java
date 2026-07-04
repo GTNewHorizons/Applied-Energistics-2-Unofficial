@@ -20,7 +20,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerSpatialIOPort;
 import appeng.core.AEConfig;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.tile.spatial.TileSpatialIOPort;
 import appeng.util.Platform;
@@ -67,31 +67,31 @@ public class GuiSpatialIOPort extends AEBaseGui {
                         + Platform.formatPowerLong(this.container.getCurrentPower(), false),
                 13,
                 21,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong(this.container.getMaxPower(), false),
                 13,
                 31,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.RequiredPower.getLocal() + ": "
                         + Platform.formatPowerLong(this.container.getRequiredPower(), false),
                 13,
                 78,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj.drawString(
                 GuiText.Efficiency.getLocal() + ": " + (((float) this.container.getEfficency()) / 100) + '%',
                 13,
                 88,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
 
         this.fontRendererObj.drawString(
                 this.getGuiDisplayName(GuiText.SpatialIOPort.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
         this.fontRendererObj
-                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96, GuiColors.GuiTextColorGray.getColor());
+                .drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96, ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

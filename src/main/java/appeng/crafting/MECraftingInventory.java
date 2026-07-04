@@ -317,20 +317,10 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
                 if (result == null || result.getStackSize() != extra.getStackSize()) {
                     if (isMissingMode) {
-                        if (result == null) {
-                            failedToExtract.add(extra.copy());
-
-                            this.cpuinv.inventoryMap.get(extra.getStackType()).findPrecise(extra).setStackSize(0);
-
-                            extra.setStackSize(0);
-                        } else if (result.getStackSize() != extra.getStackSize()) {
-                            failedToExtract
-                                    .add(extra.copy().setStackSize(extra.getStackSize() - result.getStackSize()));
-
-                            this.cpuinv.inventoryMap.get(extra.getStackType()).findPrecise(extra);
-
-                            extra.setStackSize(result.getStackSize());
-                        }
+                        long delta = extra.getStackSize() - (result == null ? 0L : result.getStackSize());
+                        failedToExtract.add(extra.copy().setStackSize(delta));
+                        this.cpuinv.inventoryMap.get(extra.getStackType()).findPrecise(extra).decStackSize(delta);
+                        extra.decStackSize(delta);
                     } else {
                         failed = true;
                         handleCraftExtractFailure(extra, result, src);
@@ -390,9 +380,8 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             String expectedCount = EnumChatFormatting.RED
                     + NumberFormat.getNumberInstance(Locale.getDefault()).format(expected.getStackSize())
                     + EnumChatFormatting.RESET;
-            String extractedCount = EnumChatFormatting.RED
-                    + NumberFormat.getNumberInstance(Locale.getDefault()).format(extracted.getStackSize())
-                    + EnumChatFormatting.RESET;
+            String extractedCount = EnumChatFormatting.RED + NumberFormat.getNumberInstance(Locale.getDefault())
+                    .format(extracted == null ? 0 : extracted.getStackSize()) + EnumChatFormatting.RESET;
 
             player.addChatMessage(
                     new ChatComponentTranslation(

@@ -28,5 +28,7 @@ public enum InventoryAction {
     AUTO_CRAFT,
     PLACE_SINGLE,
     FIND_ITEMS,
-    LOCATE_ITEM_FLOW
+    LOCATE_ITEM_FLOW,
+    MULTIPLY_PATTERN,
+    DIVIDE_PATTERN
 }

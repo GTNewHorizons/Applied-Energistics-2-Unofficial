@@ -21,7 +21,7 @@ import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerCraftingTerm;
 import appeng.container.slot.SlotCraftingMatrix;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
@@ -75,7 +75,7 @@ public class GuiCraftingTerm extends GuiMEMonitorable {
                 GuiText.CraftingTerminal.getLocal(),
                 8,
                 this.ySize - 96 + 1 - this.getReservedSpace(),
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override

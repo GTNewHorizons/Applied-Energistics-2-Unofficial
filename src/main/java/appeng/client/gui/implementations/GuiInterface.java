@@ -40,7 +40,7 @@ import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerInterface;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
-import appeng.core.localization.GuiColors;
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
@@ -200,7 +200,7 @@ public class GuiInterface extends GuiUpgradeable {
                 this.getGuiDisplayName(GuiText.Interface.getLocal()),
                 8,
                 6,
-                GuiColors.GuiTextColorGray.getColor());
+                ColorUtils.guiTextColorGray.getColor());
     }
 
     @Override
@@ -251,7 +251,7 @@ public class GuiInterface extends GuiUpgradeable {
             if (obj instanceof Slot slot && hasInvalidTypeStack(slot.getStack())) {
                 final int sx = offsetX + slot.xDisplayPosition;
                 final int sy = offsetY + slot.yDisplayPosition;
-                drawRect(sx, sy, sx + 16, sy + 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
+                drawRect(sx, sy, sx + 16, sy + 16, ColorUtils.itemSlotOverlayFluidMismatch.getColor());
             }
         }
     }

@@ -27,6 +27,11 @@ public class TileCraftingStorageTile extends TileCraftingTile {
         final IBlocks blocks = AEApi.instance().definitions().blocks();
         final long storage = ((TileCraftingTile) obj).getStorageBytes() / KILO_SCALAR;
 
+        if (storage == 1) {
+            for (final ItemStack stack : blocks.craftingStorage1k().maybeStack(1).asSet()) {
+                return stack;
+            }
+        }
         if (storage == 4) {
             for (final ItemStack stack : blocks.craftingStorage4k().maybeStack(1).asSet()) {
                 return stack;

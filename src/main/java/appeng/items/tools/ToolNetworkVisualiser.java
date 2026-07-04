@@ -228,21 +228,13 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         return false;
     }
 
-    ItemStack currItem;
-
     @Override
     public void onUpdate(ItemStack is, World w, Entity entity, int slot, boolean active) {
-        if (Platform.isClient() || !(entity instanceof EntityPlayerMP player) || is.getTagCompound() == null) {
+        if (!active || Platform.isClient()
+                || !(entity instanceof EntityPlayerMP player)
+                || is.getTagCompound() == null) {
             return;
         }
-        ItemStack currentItem = player.inventory.getCurrentItem();
-        if (currentItem != currItem) {
-            currItem = currentItem;
-        }
-        if (currentItem == null || !(currentItem.getItem() instanceof ToolNetworkVisualiser)) {
-            return;
-        }
-        currItem = currentItem;
 
         DimensionalCoord dc = DimensionalCoord.readFromNBT(is.getTagCompound());
         if (w.provider.dimensionId != dc.getDimension()) return;

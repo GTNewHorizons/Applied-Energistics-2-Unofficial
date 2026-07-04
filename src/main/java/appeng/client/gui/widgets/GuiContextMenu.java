@@ -10,7 +10,7 @@ import net.minecraft.client.gui.FontRenderer;
 
 import org.lwjgl.opengl.GL11;
 
-import appeng.api.util.AEColor;
+import appeng.core.localization.ColorUtils;
 
 public abstract class GuiContextMenu {
 
@@ -104,22 +104,32 @@ public abstract class GuiContextMenu {
         for (int i = scrollOffset; j < visibleSections && i < list.size(); i++) {
             int yPos = y + (SECTION_HEIGHT * j);
             int xOff = x + width;
-            int color = AEColor.LightGray.mediumVariant - 16777216;
+            int color = ColorUtils.contextMenuBackground.getColor();
 
             if (mouseX >= x && mouseX < xOff && mouseY >= yPos && mouseY < yPos + SECTION_HEIGHT) {
-                color = AEColor.Gray.mediumVariant - 16777216;
+                color = ColorUtils.contextMenuBackgroundHover.getColor();
             }
 
             GL11.glPushMatrix();
             GL11.glTranslatef(0.0f, 0.0f, 1000f);
             drawRect(x, yPos, xOff, yPos + SECTION_HEIGHT, color);
 
-            fontRenderer.drawString(getDrawText(i), x + 2, yPos + 2, 0x404040);
+            fontRenderer.drawString(getDrawText(i), x + 2, yPos + 2, ColorUtils.contextMenuText.getColor());
 
-            drawRect(x, yPos, xOff, yPos + 1, 0xFF404040);
-            drawRect(x, yPos + SECTION_HEIGHT - 1, xOff, yPos + SECTION_HEIGHT, 0xFF404040);
-            drawRect(x, yPos, x + 1, yPos + SECTION_HEIGHT, 0xFF404040);
-            drawRect(xOff - 1, y + (SECTION_HEIGHT * j), xOff, yPos + SECTION_HEIGHT, 0xFF404040);
+            drawRect(x, yPos, xOff, yPos + 1, ColorUtils.contextMenuBorder.getColor());
+            drawRect(
+                    x,
+                    yPos + SECTION_HEIGHT - 1,
+                    xOff,
+                    yPos + SECTION_HEIGHT,
+                    ColorUtils.contextMenuBorder.getColor());
+            drawRect(x, yPos, x + 1, yPos + SECTION_HEIGHT, ColorUtils.contextMenuBorder.getColor());
+            drawRect(
+                    xOff - 1,
+                    y + (SECTION_HEIGHT * j),
+                    xOff,
+                    yPos + SECTION_HEIGHT,
+                    ColorUtils.contextMenuBorder.getColor());
             GL11.glTranslatef(0.0f, 0.0f, 0f);
 
             GL11.glPopMatrix();
