@@ -264,8 +264,7 @@ public class GuiInterface extends GuiUpgradeable {
         final NBTTagCompound nbt = stack.getTagCompound();
         if (nbt.getBoolean("InvalidPattern")) return false;
         IAEStackType<?>[] supportedTypes = ((ContainerInterface) this.cvb).getSupportedStackTypes();
-        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes)
-                || hasInvalidTypeInTagList(nbt.getTagList("out", NBT.TAG_COMPOUND), supportedTypes);
+        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes);
     }
 
     private static boolean hasInvalidTypeInTagList(final NBTTagList tagList, IAEStackType<?>[] supportedTypes) {

@@ -1372,8 +1372,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (stack == null || stack.getTagCompound() == null) return false;
         final NBTTagCompound nbt = stack.getTagCompound();
         if (nbt.getBoolean("InvalidPattern")) return false;
-        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes)
-                || hasInvalidTypeInTagList(nbt.getTagList("out", NBT.TAG_COMPOUND), supportedTypes);
+        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes);
     }
 
     private static boolean hasInvalidTypeInTagList(final NBTTagList tagList, final IAEStackType<?>[] supportedTypes) {
