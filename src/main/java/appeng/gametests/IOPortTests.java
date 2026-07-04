@@ -16,6 +16,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.glodblock.github.loader.ItemAndBlockHolder;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -39,15 +40,9 @@ import appeng.util.item.AEItemStack;
 @GameTestHolder(AppEng.MOD_ID)
 public class IOPortTests {
 
-    private static final int IOPORT_X = 0;
-    private static final int IOPORT_Y = 0;
-    private static final int IOPORT_Z = 0;
-    private static final int DRIVE_X = 1;
-    private static final int DRIVE_Y = 0;
-    private static final int DRIVE_Z = 1;
-    private static final int REDSTONE_X = 0;
-    private static final int REDSTONE_Y = 0;
-    private static final int REDSTONE_Z = 1;
+    private static final String IO_PORT_LABEL = "io_port";
+    private static final String DRIVE_LABEL = "drive";
+    private static final String REDSTONE_LABEL = "redstone";
     private static final BaseActionSource TEST_SOURCE = new BaseActionSource();
 
     // Moves an empty cell from an input slot to an output slot.
@@ -459,7 +454,7 @@ public class IOPortTests {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "HIGH_SIGNAL mode should keep the input cell without power");
-                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
+                    setRedstoneInput(helper, 15);
                 }).thenIdle(1).thenExecute(() -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
@@ -478,7 +473,7 @@ public class IOPortTests {
 
         helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
                 .thenExecuteAtStart(() -> {
-                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
+                    setRedstoneInput(helper, 15);
                     installRedstoneUpgrade(ioport);
                     configureRedstone(ioport, RedstoneMode.LOW_SIGNAL);
                     ioport.setInventorySlotContents(0, cell1k());
@@ -486,7 +481,7 @@ public class IOPortTests {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "LOW_SIGNAL mode should keep the input cell while powered");
-                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 0);
+                    setRedstoneInput(helper, 0);
                 }).thenIdle(1).thenExecute(() -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
@@ -514,7 +509,7 @@ public class IOPortTests {
                             2,
                             countFilledSlots(ioport, 0, 6),
                             "SIGNAL_PULSE mode should keep both cells before a pulse");
-                    helper.setRedstoneInput(REDSTONE_X, REDSTONE_Y, REDSTONE_Z, 15);
+                    setRedstoneInput(helper, 15);
                 }).thenIdle(5).thenExecute(() -> {
                     helper.assertEquals(
                             1,
@@ -601,11 +596,18 @@ public class IOPortTests {
     }
 
     private static TileIOPort getIOPort(GameTestHelper helper) {
-        return helper.assertTileEntityPresent(TileIOPort.class, IOPORT_X, IOPORT_Y, IOPORT_Z);
+        TestPos pos = helper.pos(IO_PORT_LABEL);
+        return helper.assertTileEntityPresent(TileIOPort.class, pos.x(), pos.y(), pos.z());
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {
-        return helper.assertTileEntityPresent(TileDrive.class, DRIVE_X, DRIVE_Y, DRIVE_Z);
+        TestPos pos = helper.pos(DRIVE_LABEL);
+        return helper.assertTileEntityPresent(TileDrive.class, pos.x(), pos.y(), pos.z());
+    }
+
+    private static void setRedstoneInput(GameTestHelper helper, int strength) {
+        TestPos pos = helper.pos(REDSTONE_LABEL);
+        helper.setRedstoneInput(pos.x(), pos.y(), pos.z(), strength);
     }
 
     private static void assertIOPortActive(GameTestHelper helper, TileIOPort ioport) {

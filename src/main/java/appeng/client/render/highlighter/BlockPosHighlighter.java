@@ -117,6 +117,20 @@ public class BlockPosHighlighter implements IHighlighter {
     }
 
     public void renderHighlightedBlocks(RenderWorldLastEvent event) {
+        updateCameraState(event);
+
+        for (DimensionalCoord c : highlightedBlocks) {
+            if (dimension != c.getDimension()) {
+                continue;
+            }
+
+            beginOutline();
+            renderHighLightedBlocksOutline(c.x, c.y, c.z);
+            endOutline();
+        }
+    }
+
+    protected void updateCameraState(RenderWorldLastEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
         dimension = mc.theWorld.provider.dimensionId;
 
@@ -124,31 +138,32 @@ public class BlockPosHighlighter implements IHighlighter {
         doubleX = p.lastTickPosX + (p.posX - p.lastTickPosX) * event.partialTicks;
         doubleY = p.lastTickPosY + (p.posY - p.lastTickPosY) * event.partialTicks;
         doubleZ = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * event.partialTicks;
-
-        for (DimensionalCoord c : highlightedBlocks) {
-            if (dimension != c.getDimension()) {
-                continue;
-            }
-            GL11.glPushMatrix();
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-            GL11.glLineWidth(3);
-            GL11.glTranslated(-doubleX, -doubleY, -doubleZ);
-
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
-
-            renderHighLightedBlocksOutline(c.x, c.y, c.z);
-
-            GL11.glPopAttrib();
-            GL11.glPopMatrix();
-        }
     }
 
-    void renderHighLightedBlocksOutline(double x, double y, double z) {
+    protected void beginOutline() {
+        GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glLineWidth(3);
+        GL11.glTranslated(-doubleX, -doubleY, -doubleZ);
+
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+    }
+
+    protected void endOutline() {
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
+    }
+
+    protected void renderHighLightedBlocksOutline(double x, double y, double z) {
+        renderHighLightedBlocksOutline(x, y, z, 1.0f, 0.0f, 0.0f, 1.0f);
+    }
+
+    protected void renderHighLightedBlocksOutline(double x, double y, double z, float r, float g, float b, float a) {
         Tessellator tess = Tessellator.instance;
         tess.startDrawing(GL11.GL_LINE_STRIP);
 
-        tess.setColorRGBA_F(1.0f, 0.0f, 0.0f, 1.0f);
+        tess.setColorRGBA_F(r, g, b, a);
 
         tess.addVertex(x, y, z);
         tess.addVertex(x, y + 1, z);
