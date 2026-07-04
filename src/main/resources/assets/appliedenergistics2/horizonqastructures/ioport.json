@@ -11,5 +11,12 @@
       "CA",
       ".B"
     ]
-  ]
+  ],
+  "annotations": {
+    "labels": {
+      "io_port": [0, 0, 0],
+      "drive": [1, 0, 1],
+      "redstone": [0, 0, 1]
+    }
+  }
 }
