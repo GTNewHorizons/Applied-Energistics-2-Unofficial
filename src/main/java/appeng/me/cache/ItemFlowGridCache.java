@@ -2,8 +2,6 @@ package appeng.me.cache;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +18,10 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.FlowSearchDTO;
 import appeng.core.AEConfig;
+import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public class ItemFlowGridCache implements IGridCache {
 
@@ -49,7 +51,7 @@ public class ItemFlowGridCache implements IGridCache {
     private static final class Bucket {
 
         public final long start;
-        public final Map<IAEStack<?>, ItemFlowAccumulator> byItem = new HashMap<>();
+        public final Map<IAEStack<?>, ItemFlowAccumulator> byItem = new Object2ObjectOpenHashMap<>();
 
         public Bucket(final long start) {
             this.start = start;
@@ -60,7 +62,7 @@ public class ItemFlowGridCache implements IGridCache {
 
         public long in;
         public long out;
-        public final Map<DimensionalCoord, Long> netByLocation = new HashMap<>();
+        public final Object2LongOpenHashMap<DimensionalCoord> netByLocation = new Object2LongOpenHashMap<>();
 
     }
 
@@ -122,11 +124,11 @@ public class ItemFlowGridCache implements IGridCache {
             accumulator.in += size;
         }
 
-        accumulator.netByLocation.merge(location, size, Long::sum);
+        accumulator.netByLocation.addTo(location, size);
     }
 
     public List<FlowSearchDTO> getRecentFlow(final IAEStack<?> queryStack) {
-        final Map<DimensionalCoord, Long> sources = new LinkedHashMap<>();
+        final Object2LongLinkedOpenHashMap<DimensionalCoord> sources = new Object2LongLinkedOpenHashMap<>();
         final List<FlowSearchDTO> result = new ArrayList<>();
 
         for (final Bucket bucket : this.buckets) {
@@ -136,16 +138,16 @@ public class ItemFlowGridCache implements IGridCache {
                     continue;
                 }
 
-                for (final Map.Entry<DimensionalCoord, Long> locationEntry : entry.getValue().netByLocation
-                        .entrySet()) {
-                    sources.merge(locationEntry.getKey(), locationEntry.getValue(), Long::sum);
+                for (final Object2LongMap.Entry<DimensionalCoord> locationEntry : entry.getValue().netByLocation
+                        .object2LongEntrySet()) {
+                    sources.addTo(locationEntry.getKey(), locationEntry.getLongValue());
                 }
             }
         }
 
-        for (final Map.Entry<DimensionalCoord, Long> entry : sources.entrySet()) {
-            if (entry.getValue() != 0) {
-                result.add(new FlowSearchDTO(entry.getKey(), entry.getValue()));
+        for (final Object2LongMap.Entry<DimensionalCoord> entry : sources.object2LongEntrySet()) {
+            if (entry.getLongValue() != 0) {
+                result.add(new FlowSearchDTO(entry.getKey(), entry.getLongValue()));
             }
         }
 
@@ -153,19 +155,19 @@ public class ItemFlowGridCache implements IGridCache {
     }
 
     public Map<IAEStack<?>, FlowRate> getAllRecentFlow() {
-        final Map<IAEStack<?>, Long> totalsIn = new LinkedHashMap<>();
-        final Map<IAEStack<?>, Long> totalsOut = new LinkedHashMap<>();
-        final Map<IAEStack<?>, FlowRate> result = new HashMap<>();
+        final Object2LongLinkedOpenHashMap<IAEStack<?>> totalsIn = new Object2LongLinkedOpenHashMap<>();
+        final Object2LongLinkedOpenHashMap<IAEStack<?>> totalsOut = new Object2LongLinkedOpenHashMap<>();
+        final Map<IAEStack<?>, FlowRate> result = new Object2ObjectOpenHashMap<>();
 
         for (final Bucket bucket : this.buckets) {
             for (final Map.Entry<IAEStack<?>, ItemFlowAccumulator> entry : bucket.byItem.entrySet()) {
-                totalsIn.merge(entry.getKey(), entry.getValue().in, Long::sum);
-                totalsOut.merge(entry.getKey(), entry.getValue().out, Long::sum);
+                totalsIn.addTo(entry.getKey(), entry.getValue().in);
+                totalsOut.addTo(entry.getKey(), entry.getValue().out);
             }
         }
 
-        for (final Map.Entry<IAEStack<?>, Long> entry : totalsIn.entrySet()) {
-            result.put(entry.getKey(), new FlowRate(entry.getValue(), totalsOut.get(entry.getKey())));
+        for (final Object2LongMap.Entry<IAEStack<?>> entry : totalsIn.object2LongEntrySet()) {
+            result.put(entry.getKey(), new FlowRate(entry.getLongValue(), totalsOut.getLong(entry.getKey())));
         }
 
         return result;
