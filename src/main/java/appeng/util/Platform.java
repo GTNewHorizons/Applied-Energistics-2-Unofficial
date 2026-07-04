@@ -87,6 +87,7 @@ import appeng.api.config.PowerUnits;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.SortOrder;
+import appeng.api.config.ViewItems;
 import appeng.api.definitions.IItemDefinition;
 import appeng.api.definitions.IMaterials;
 import appeng.api.definitions.IParts;
@@ -350,7 +351,11 @@ public class Platform {
             return true;
         }
 
-        return e == SearchBoxMode.NEI_MANUAL_SEARCH && !IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI);
+        if (e == SearchBoxMode.NEI_MANUAL_SEARCH && !IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)) {
+            return true;
+        }
+
+        return e == ViewItems.FLOWING && !AEConfig.instance.enableItemFlowTracking;
     }
 
     // xCord game limit

@@ -325,12 +325,17 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         return this.linkedTargets.contains(location);
     }
 
-    protected void addLinkedTarget(DimensionalCoord location) {
+    public void addLinkedTarget(DimensionalCoord location) {
         addLinkedTarget(location, true);
     }
 
     private void addLinkedTarget(DimensionalCoord location, boolean notifyDirty) {
         if (worldObj != null && location.isEqual(getLocation())) return;
+
+        if (this.linkedTargets.contains(location)) return;
+
+        if (!isHub() && !this.linkedTargets.isEmpty()) return;
+        if (this.linkedTargets.size() >= this.maxConnections) return;
 
         this.linkedTargets.add(new DimensionalCoord(location));
         if (notifyDirty) markDirty();

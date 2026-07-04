@@ -73,6 +73,7 @@ import appeng.items.materials.ItemMultiMaterial;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cache.EnergyGridCache;
 import appeng.me.cache.GridStorageCache;
+import appeng.me.cache.ItemFlowGridCache;
 import appeng.me.cache.P2PCache;
 import appeng.me.cache.PathGridCache;
 import appeng.me.cache.SecurityCache;
@@ -548,6 +549,7 @@ public final class Registration {
         gcr.registerGridCache(ISpatialCache.class, SpatialPylonCache.class);
         gcr.registerGridCache(ISecurityGrid.class, SecurityCache.class);
         gcr.registerGridCache(ICraftingGrid.class, CraftingGridCache.class);
+        gcr.registerGridCache(ItemFlowGridCache.class, ItemFlowGridCache.class);
 
         registries.externalStorage().addExternalStorageInterface(new AEExternalHandler());
 

@@ -32,8 +32,10 @@ import appeng.core.sync.packets.PacketCraftingDiagnosticReset;
 import appeng.core.sync.packets.PacketCraftingDiagnosticsUpdate;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingTreeData;
+import appeng.core.sync.packets.PacketFlowRates;
 import appeng.core.sync.packets.PacketGuiDataSync;
 import appeng.core.sync.packets.PacketHighlightBlockStorage;
+import appeng.core.sync.packets.PacketHighlightItemFlow;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketLightning;
@@ -157,7 +159,9 @@ public class AppEngPacketHandlerBase {
         PACKET_NETWORK_VISUALISER_DATA(PacketNetworkVisualiserData.class),
         PACKET_SUPER_WIRELESS_TOOL_DATA(PacketWirelessToolData.class),
         PACKET_SUPER_WIRELESS_TOOL_COMMAND(PacketWirelessToolCommand.class),
-        PACKET_CRAFTING_DIAGNOSTIC_RESET(PacketCraftingDiagnosticReset.class);
+        PACKET_CRAFTING_DIAGNOSTIC_RESET(PacketCraftingDiagnosticReset.class),
+        PACKET_HIGHLIGHT_ITEM_FLOW(PacketHighlightItemFlow.class),
+        PACKET_FLOW_RATES(PacketFlowRates.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;
