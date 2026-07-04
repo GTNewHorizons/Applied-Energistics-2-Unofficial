@@ -5,6 +5,8 @@ the growth and stability of AE2. There are a few guidelines that we
 need contributors to follow so that we can have a chance of keeping on
 top of things.
 
+Also, make sure you are familiar with the general [GT:NH Contributing Guidelines](https://github.com/GTNewHorizons/.github/blob/master/CONTRIBUTING.md).
+
 ## Getting Started
 
 ### Reporting an Issue
