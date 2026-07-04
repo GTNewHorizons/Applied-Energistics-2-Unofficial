@@ -273,7 +273,9 @@ public class PartPlacement {
             }
 
             decreaseHeldItem(held, player);
-            NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, mySide, false));
+            if (world.isRemote) {
+                NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, mySide, false));
+            }
             return true;
         }
         return false;
