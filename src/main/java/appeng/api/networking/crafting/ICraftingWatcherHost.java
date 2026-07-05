@@ -27,13 +27,16 @@ public interface ICraftingWatcherHost {
     void updateWatcher(ICraftingWatcher newWatcher);
 
     /**
+     * @deprecated use {@link #onRequestChange(ICraftingGrid, IAEStack)}
+     */
+    @Deprecated
+    void onRequestChange(ICraftingGrid craftingGrid, IAEItemStack what);
+
+    /**
      * Called when a crafting status changes.
      *
      * @param craftingGrid current crafting grid
      * @param what         change
      */
-    @Deprecated
-    void onRequestChange(ICraftingGrid craftingGrid, IAEItemStack what);
-
     void onRequestChange(ICraftingGrid craftingGrid, IAEStack<?> what);
 }
