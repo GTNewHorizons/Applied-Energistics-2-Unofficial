@@ -200,7 +200,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     }
 
     @Override
-    public void onRequestChange(final ICraftingGrid craftingGrid, final IAEItemStack what) {
+    public void onRequestChange(final ICraftingGrid craftingGrid, final IAEStack<?> what) {
         this.updateState();
     }
 
