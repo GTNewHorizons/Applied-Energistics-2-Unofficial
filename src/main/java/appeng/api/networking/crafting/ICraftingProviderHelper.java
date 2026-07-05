@@ -27,7 +27,9 @@ public interface ICraftingProviderHelper {
     void addCraftingOption(ICraftingMedium medium, ICraftingPatternDetails api);
 
     @Deprecated
-    void setEmitable(ICraftingMedium medium, IAEItemStack what);
+    void setEmitable(IAEItemStack what);
+
+    void setEmitable(IAEStack<?> what);
 
     /**
      * Set an item can Emitable

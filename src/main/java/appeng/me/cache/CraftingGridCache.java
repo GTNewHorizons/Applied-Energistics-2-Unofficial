@@ -421,8 +421,13 @@ public class CraftingGridCache
     }
 
     @Override
-    public void setEmitable(ICraftingMedium medium, final IAEItemStack someItem) {
-        setEmitable(medium, convertStack(someItem));
+    public void setEmitable(final IAEItemStack someItem) {
+        setEmitable(null, convertStack(someItem));
+    }
+
+    @Override
+    public void setEmitable(final IAEStack<?> someItem) {
+        setEmitable(null, someItem);
     }
 
     @Override
@@ -431,7 +436,9 @@ public class CraftingGridCache
         item.reset();
         item.setCraftable(true);
         List<ICraftingMedium> mediumList = this.emitableMediums.computeIfAbsent(item, k -> new ArrayList<>());
-        mediumList.add(medium);
+        if (medium != null) {
+            mediumList.add(medium);
+        }
     }
 
     @Override
