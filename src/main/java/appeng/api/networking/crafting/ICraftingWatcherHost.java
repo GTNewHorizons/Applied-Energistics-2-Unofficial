@@ -13,10 +13,10 @@
 
 package appeng.api.networking.crafting;
 
+import static appeng.util.Platform.stackConvert;
+
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
-
-import static appeng.util.Platform.stackConvert;
 
 public interface ICraftingWatcherHost {
 
