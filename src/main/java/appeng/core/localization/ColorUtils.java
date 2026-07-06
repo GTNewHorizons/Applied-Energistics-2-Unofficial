@@ -39,7 +39,8 @@ public class ColorUtils {
         wirelessKitNeutral                  = color.rgb("wirelessKitNeutral",                   "0xFAAE44"),
         wirelessKitBad                      = color.rgb("wirelessKitBad",                       "0xFF003C"),
         contextMenuText                     = color.rgb("contextMenuText",                      "0x404040"),
-        
+        interfaceStuck                      = color.rgb("interfaceStuck",                       "0xff8080"),
+
         searchboxFocused                    = color.argb("searchboxFocused",                    "0x6E000000"),
         searchboxUnfocused                  = color.argb("searchboxUnfocused",                  "0x00000000"),
         itemSlotOverlayUnpowered            = color.argb("itemSlotOverlayUnpowered",            "0x66111111"),
