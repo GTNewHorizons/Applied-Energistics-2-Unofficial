@@ -40,11 +40,11 @@ public class NEIInputHandler implements IContainerInputHandler {
             if (outputs.length == 0) return false;
             stack = outputs[0].getItemStackForNEI();
 
-            if (NEIClientConfig.isKeyHashDown("gui.recipe")) {
+            if (NEIClientConfig.isKeyHashDown("recipe.recipe")) {
                 return GuiCraftingRecipe.openRecipeGui("item", stack);
             }
 
-            if (NEIClientConfig.isKeyHashDown("gui.usage")) {
+            if (NEIClientConfig.isKeyHashDown("recipe.usage")) {
                 return GuiUsageRecipe.openRecipeGui("item", stack);
             }
         }
