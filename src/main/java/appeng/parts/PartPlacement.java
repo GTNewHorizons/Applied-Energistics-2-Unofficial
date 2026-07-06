@@ -66,7 +66,7 @@ public class PartPlacement {
     // Only used client side, do not use this server side
     private boolean placing = false;
 
-    // Last 2 arguments are ignored
+    // Last argument is ignored
     public static boolean place(final ItemStack held, final int x, final int y, final int z, final int face,
             final EntityPlayer player, final World world, PlaceType pass, final int depth) {
         final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
@@ -76,11 +76,11 @@ public class PartPlacement {
         mop.hitVec.xCoord -= mop.blockX;
         mop.hitVec.yCoord -= mop.blockY;
         mop.hitVec.zCoord -= mop.blockZ;
-        return place(held, mop.blockX, mop.blockY, mop.blockZ, mop.sideHit, player, world, mop.hitVec);
+        return place(held, mop.blockX, mop.blockY, mop.blockZ, mop.sideHit, player, world, mop.hitVec, pass);
     }
 
     private static boolean place(final ItemStack held, final int x, final int y, final int z, final int face,
-            final EntityPlayer player, final World world, final Vec3 hitVec) {
+            final EntityPlayer player, final World world, final Vec3 hitVec, PlaceType pass) {
 
         // analogous to onItemUseFirst
 
@@ -114,7 +114,7 @@ public class PartPlacement {
                                 .sendToServer(new PacketPartInteraction(x, y, z, sPart.side, true, false, hitVec));
                         return true;
                     }
-                } else {
+                } else if (pass != PlaceType.INTERACT_FIRST_PASS) {
                     if (sPart.part.onActivate(player, hitVec)) {
                         NetworkHandler.instance
                                 .sendToServer(new PacketPartInteraction(x, y, z, sPart.side, true, false, hitVec));
