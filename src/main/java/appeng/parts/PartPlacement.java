@@ -58,10 +58,10 @@ import appeng.util.LookDirection;
 import appeng.util.Platform;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 
 public class PartPlacement {
 
-    private static float eyeHeight = 0.0f;
     // After we do a placement and cancel the event, we will also receive event for RIGHT_CLICK_AIR
     // Only used client side, do not use this server side
     private boolean placing = false;
@@ -112,37 +112,24 @@ public class PartPlacement {
                     if (sPart.part.onShiftActivate(player, hitVec)) {
                         NetworkHandler.instance
                                 .sendToServer(new PacketPartInteraction(x, y, z, sPart.side, true, false, hitVec));
+                        player.swingItem();
                         return true;
                     }
                 } else if (pass != PlaceType.INTERACT_FIRST_PASS) {
                     if (sPart.part.onActivate(player, hitVec)) {
                         NetworkHandler.instance
                                 .sendToServer(new PacketPartInteraction(x, y, z, sPart.side, true, false, hitVec));
+                        player.swingItem();
                         return true;
                     }
                 }
             }
         }
 
+        if (pass == PlaceType.INTERACT_FIRST_PASS) return false;
+
         // analogous to onItemUse
-
-        if (held == null || !(held.getItem() instanceof IPartItem)) {
-            return false;
-        }
-
-        // Try to add the part to the target block
-        if (host != null && tryPlace(held, player, world, x, y, z, side, host)) return true;
-
-        // If that didn't work, we try to place on the face of the target block
-        int tx = x + side.offsetX;
-        int ty = y + side.offsetY;
-        int tz = z + side.offsetZ;
-        ForgeDirection opposite = side.getOpposite();
-
-        TileEntity te = world.getTileEntity(tx, ty, tz);
-        IPartHost targetHost = getOrCreateHost(te, player, opposite.ordinal());
-
-        return tryPlace(held, player, world, tx, ty, tz, opposite, targetHost);
+        return placeItemPart(held, player, world, x, y, z, side);
     }
 
     public static boolean wrenchLogic(EntityPlayer player, World world, int x, int y, int z, IPartHost host,
@@ -193,6 +180,7 @@ public class PartPlacement {
             } else if (!is.isEmpty()) {
                 Platform.spawnDrops(world, x, y, z, is);
             }
+            player.swingItem();
             return true;
         }
         return false;
@@ -210,6 +198,7 @@ public class PartPlacement {
                 if (host.canAddPart(held, side)) {
                     if (host.getFacadeContainer().addFacade(fp)) {
                         host.markForUpdate();
+                        player.swingItem();
                         decreaseHeldItem(held, player);
                         if (isClient) {
                             NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, side, true));
@@ -220,6 +209,29 @@ public class PartPlacement {
             }
         }
         return false;
+    }
+
+    public static boolean placeItemPart(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
+            ForgeDirection side) {
+        if (held == null || !(held.getItem() instanceof IPartItem)) {
+            return false;
+        }
+
+        IPartHost host = getOrCreateHost(world.getTileEntity(x, y, z), player, side.ordinal());
+
+        // Try to add the part to the target block
+        if (host != null && tryPlace(held, player, world, x, y, z, side, host)) return true;
+
+        // If that didn't work, we try to place on the face of the target block
+        int tx = x + side.offsetX;
+        int ty = y + side.offsetY;
+        int tz = z + side.offsetZ;
+        ForgeDirection opposite = side.getOpposite();
+
+        TileEntity te = world.getTileEntity(tx, ty, tz);
+        IPartHost targetHost = getOrCreateHost(te, player, opposite.ordinal());
+
+        return tryPlace(held, player, world, tx, ty, tz, opposite, targetHost);
     }
 
     public static boolean tryPlace(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
@@ -272,6 +284,7 @@ public class PartPlacement {
                         ss.getPitch() * 0.8F);
             }
 
+            player.swingItem();
             decreaseHeldItem(held, player);
             if (world.isRemote) {
                 NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, mySide, false));
@@ -296,7 +309,14 @@ public class PartPlacement {
             return Platform.getEyeOffset(p);
         }
 
-        return getEyeHeight();
+        // Ideally this code is not used, it's here just in case some code that other mod use do end up here on server
+        // side
+        AELog.error(new Throwable(), "getEyeOffset called on server");
+        float eyeOffset = (float) (p.posY + p.getEyeHeight());
+        if (p.isSneaking()) {
+            eyeOffset -= 0.08f; // 0.2 * 0.4
+        }
+        return eyeOffset;
     }
 
     private static SelectedPart selectPart(final EntityPlayer player, final IPartHost host, final Vec3 pos) {
@@ -323,25 +343,17 @@ public class PartPlacement {
         return null;
     }
 
-    private static float getEyeHeight() {
-        return eyeHeight;
-    }
-
-    public static void setEyeHeight(final float eyeHeight) {
-        PartPlacement.eyeHeight = eyeHeight;
-    }
-
-    // We use receiveCanceled in order to perform cleanup of placing field and skip further processing
-    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void cancelSubsequentRightClickAirEvent(final PlayerInteractEvent event) {
         if (!event.entityPlayer.worldObj.isRemote) return;
         if (placing) {
-            if (event.action != Action.RIGHT_CLICK_AIR) {
-                AELog.error("Unexpected sequence for playerInteract event");
-            }
-            placing = false;
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    public void playerInteract(final ClientTickEvent event) {
+        placing = false;
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
