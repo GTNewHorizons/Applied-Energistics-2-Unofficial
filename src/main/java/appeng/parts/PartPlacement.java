@@ -286,9 +286,6 @@ public class PartPlacement {
 
             player.swingItem();
             decreaseHeldItem(held, player);
-            if (world.isRemote) {
-                NetworkHandler.instance.sendToServer(new PacketPartPlacement(host, mySide, false));
-            }
             return true;
         }
         return false;

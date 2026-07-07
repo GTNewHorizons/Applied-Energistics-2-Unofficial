@@ -190,7 +190,6 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             return false;
         }
 
-        // Ideally only client side but forge send some annoying packet
         return PartPlacement.placeItemPart(is, player, w, x, y, z, ForgeDirection.getOrientation(side));
     }
 

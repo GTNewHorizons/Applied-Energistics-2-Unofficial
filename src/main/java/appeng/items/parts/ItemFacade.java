@@ -66,7 +66,6 @@ public class ItemFacade extends AEBaseItem implements IFacadeItem, IAlphaPassIte
     @Override
     public boolean onItemUse(final ItemStack is, final EntityPlayer player, final World w, final int x, final int y,
             final int z, final int side, final float hitX, final float hitY, final float hitZ) {
-        // Ideally only client side but forge send some annoying packet
         return PartPlacement.placeItemPart(is, player, w, x, y, z, ForgeDirection.getOrientation(side));
     }
 
