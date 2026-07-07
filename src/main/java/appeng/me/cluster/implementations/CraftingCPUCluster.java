@@ -935,6 +935,11 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         }
 
                         if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
+                            craftingInventory = null; // hand off complete!
+                            didPatternCraft = true;
+                            this.markDirty();
+
+                            executedTasks += 1;
                             craftingEntry.getValue().value--;
 
                             if (craftingEntry.getValue().value <= 0) {
@@ -945,11 +950,30 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                                 this.finalOutput.performFakeCrafting(details);
 
-                                break;
+                                break doWhileCraftingLoop;
                             } else {
                                 this.finalOutput.performFakeCrafting(details);
 
-                                continue;
+                                if (this.remainingOperations == 0) {
+                                    if (mediumListCheck != null) parallelismProvider.put(details, mediumListCheck);
+                                    return;
+                                }
+
+                                // Smart blocking is fine sending the same recipe again.
+                                if (medium.getBlockingMode() == BlockingMode.BLOCKING) break;
+
+                                final List<IAEStack<?>> condensedInputsForRetry = getExpandedCondensedInputs(
+                                        details,
+                                        cc);
+                                if (condensedInputsForRetry == null) {
+                                    throw new IllegalStateException("Input-only pattern expansion failed");
+                                }
+                                if (!this.canCraft(details, condensedInputsForRetry)) {
+                                    sr = ScheduledReason.NOT_ENOUGH_INGREDIENTS;
+                                    break;
+                                }
+
+                                continue doWhileCraftingLoop;
                             }
                         }
 
