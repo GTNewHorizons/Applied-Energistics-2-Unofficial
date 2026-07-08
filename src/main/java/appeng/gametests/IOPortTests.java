@@ -1,9 +1,15 @@
 package appeng.gametests;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+import static appeng.gametests.AEGameTestHelpers.assertActive;
+import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertStoredFluidAmount;
+import static appeng.gametests.AEGameTestHelpers.cell1k;
+import static appeng.gametests.AEGameTestHelpers.cell4k;
+import static appeng.gametests.AEGameTestHelpers.cell64k;
+import static appeng.gametests.AEGameTestHelpers.insertFluids;
+import static appeng.gametests.AEGameTestHelpers.insertItems;
+import static appeng.gametests.AEGameTestHelpers.tile;
 
-import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
@@ -12,30 +18,20 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
 
 import com.glodblock.github.loader.ItemAndBlockHolder;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
-import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
-import appeng.api.config.Actionable;
 import appeng.api.config.FullnessMode;
 import appeng.api.config.OperationMode;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.storage.ICellHandler;
-import appeng.api.storage.IMEInventoryHandler;
-import appeng.api.storage.data.IAEFluidStack;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AppEng;
 import appeng.tile.storage.TileDrive;
 import appeng.tile.storage.TileIOPort;
-import appeng.util.item.AEFluidStack;
-import appeng.util.item.AEItemStack;
 
 @GameTestHolder(AppEng.MOD_ID)
 public class IOPortTests {
@@ -43,7 +39,6 @@ public class IOPortTests {
     private static final String IO_PORT_LABEL = "io_port";
     private static final String DRIVE_LABEL = "drive";
     private static final String REDSTONE_LABEL = "redstone";
-    private static final BaseActionSource TEST_SOURCE = new BaseActionSource();
 
     // Moves an empty cell from an input slot to an output slot.
     @GameTest(template = "ioport", timeoutTicks = 20)
@@ -596,34 +591,19 @@ public class IOPortTests {
     }
 
     private static TileIOPort getIOPort(GameTestHelper helper) {
-        TestPos pos = helper.pos(IO_PORT_LABEL);
-        return helper.assertTileEntityPresent(TileIOPort.class, pos.x(), pos.y(), pos.z());
+        return tile(helper, TileIOPort.class, IO_PORT_LABEL);
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {
-        TestPos pos = helper.pos(DRIVE_LABEL);
-        return helper.assertTileEntityPresent(TileDrive.class, pos.x(), pos.y(), pos.z());
+        return tile(helper, TileDrive.class, DRIVE_LABEL);
     }
 
     private static void setRedstoneInput(GameTestHelper helper, int strength) {
-        TestPos pos = helper.pos(REDSTONE_LABEL);
-        helper.setRedstoneInput(pos.x(), pos.y(), pos.z(), strength);
+        AEGameTestHelpers.setRedstoneInput(helper, REDSTONE_LABEL, strength);
     }
 
     private static void assertIOPortActive(GameTestHelper helper, TileIOPort ioport) {
-        helper.assertTrue(ioport.getProxy().isActive(), "IO port network should become active");
-    }
-
-    private static ItemStack cell1k() {
-        return AEApi.instance().definitions().items().cell1k().maybeStack(1).get();
-    }
-
-    private static ItemStack cell4k() {
-        return AEApi.instance().definitions().items().cell4k().maybeStack(1).get();
-    }
-
-    private static ItemStack cell64k() {
-        return AEApi.instance().definitions().items().cell64k().maybeStack(1).get();
+        assertActive(helper, ioport.getProxy(), "IO port network should become active");
     }
 
     private static ItemStack fluidCell1k(GameTestHelper helper) {
@@ -647,71 +627,6 @@ public class IOPortTests {
     private static void installUpgrade(TileIOPort ioport, ItemStack upgrade, int slot) {
         IInventory upgrades = ioport.getInventoryByName("upgrades");
         upgrades.setInventorySlotContents(slot, upgrade);
-    }
-
-    private static void insertItems(GameTestHelper helper, ItemStack cell, Block block, long amount) {
-        IAEItemStack remainder = itemInventory(helper, cell)
-                .injectItems(itemStack(block, amount), Actionable.MODULATE, TEST_SOURCE);
-        helper.assertNull(remainder, "Items should fit completely into the cell");
-    }
-
-    private static void insertFluids(GameTestHelper helper, ItemStack cell, Fluid fluid, long amount) {
-        IAEFluidStack remainder = fluidInventory(helper, cell)
-                .injectItems(fluidStack(fluid, amount), Actionable.MODULATE, TEST_SOURCE);
-        helper.assertNull(remainder, "Fluids should fit completely into the cell");
-    }
-
-    private static void assertStoredAmount(GameTestHelper helper, ItemStack cell, Block block, long expectedAmount) {
-        helper.assertNotNull(cell, "Cell should exist");
-        helper.assertEquals(expectedAmount, storedAmount(helper, cell, block), "Stored item amount should match");
-    }
-
-    private static void assertStoredFluidAmount(GameTestHelper helper, ItemStack cell, Fluid fluid,
-            long expectedAmount) {
-        helper.assertNotNull(cell, "Cell should exist");
-        helper.assertEquals(expectedAmount, storedFluidAmount(helper, cell, fluid), "Stored fluid amount should match");
-    }
-
-    private static long storedAmount(GameTestHelper helper, ItemStack cell, Block block) {
-        IAEItemStack request = itemStack(block, Integer.MAX_VALUE);
-        IAEItemStack extracted = itemInventory(helper, cell).extractItems(request, Actionable.SIMULATE, TEST_SOURCE);
-        return extracted == null ? 0 : extracted.getStackSize();
-    }
-
-    private static long storedFluidAmount(GameTestHelper helper, ItemStack cell, Fluid fluid) {
-        IAEFluidStack request = fluidStack(fluid, Long.MAX_VALUE);
-        IAEFluidStack extracted = fluidInventory(helper, cell).extractItems(request, Actionable.SIMULATE, TEST_SOURCE);
-        return extracted == null ? 0 : extracted.getStackSize();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static IMEInventoryHandler<IAEItemStack> itemInventory(GameTestHelper helper, ItemStack cell) {
-        ICellHandler cellHandler = AEApi.instance().registries().cell().getHandler(cell);
-        helper.assertNotNull(cellHandler, "Cell handler should exist");
-        IMEInventoryHandler<IAEItemStack> cellInv = cellHandler.getCellInventory(cell, null, ITEM_STACK_TYPE);
-        helper.assertNotNull(cellInv, "Item cell inventory should exist");
-        return cellInv;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static IMEInventoryHandler<IAEFluidStack> fluidInventory(GameTestHelper helper, ItemStack cell) {
-        ICellHandler cellHandler = AEApi.instance().registries().cell().getHandler(cell);
-        helper.assertNotNull(cellHandler, "Cell handler should exist");
-        IMEInventoryHandler<IAEFluidStack> cellInv = cellHandler.getCellInventory(cell, null, FLUID_STACK_TYPE);
-        helper.assertNotNull(cellInv, "Fluid cell inventory should exist");
-        return cellInv;
-    }
-
-    private static IAEItemStack itemStack(Block block, long amount) {
-        IAEItemStack stack = AEItemStack.create(new ItemStack(block, 1));
-        stack.setStackSize(amount);
-        return stack;
-    }
-
-    private static IAEFluidStack fluidStack(Fluid fluid, long amount) {
-        IAEFluidStack stack = AEFluidStack.create(new FluidStack(fluid, 1));
-        stack.setStackSize(amount);
-        return stack;
     }
 
     private static int countFilledSlots(TileIOPort ioport, int startInclusive, int endExclusive) {

@@ -1,6 +1,13 @@
 package appeng.gametests;
 
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+import static appeng.gametests.AEGameTestHelpers.assertActive;
+import static appeng.gametests.AEGameTestHelpers.assertInactive;
+import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.cell1k;
+import static appeng.gametests.AEGameTestHelpers.insertItems;
+import static appeng.gametests.AEGameTestHelpers.pos;
+import static appeng.gametests.AEGameTestHelpers.tile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,23 +24,15 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
-import appeng.api.config.Actionable;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.security.BaseActionSource;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
-import appeng.api.storage.ICellHandler;
-import appeng.api.storage.IMEInventoryHandler;
-import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
-import appeng.me.GridAccessException;
-import appeng.me.helpers.AENetworkProxy;
+import appeng.gametests.AEGameTestHelpers.Coord;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
-import appeng.util.item.AEItemStack;
 
 @GameTestHolder(AppEng.MOD_ID)
 public class NetworkCoreTests {
@@ -45,7 +44,6 @@ public class NetworkCoreTests {
     private static final String BREAKABLE_CABLE_LABEL = "breakable_cable";
     private static final String TOGGLE_BUS_LABEL = "toggle_bus";
     private static final String REDSTONE_LABEL = "redstone";
-    private static final BaseActionSource TEST_SOURCE = new BaseActionSource();
 
     // Boots a controller-backed grid and gives channels to labelled devices.
     @GameTest(template = "network_core", timeoutTicks = 80)
@@ -144,13 +142,11 @@ public class NetworkCoreTests {
     }
 
     private static TileController getController(GameTestHelper helper) {
-        Coord pos = pos(helper, CONTROLLER_LABEL);
-        return helper.assertTileEntityPresent(TileController.class, pos.x(), pos.y(), pos.z());
+        return tile(helper, TileController.class, CONTROLLER_LABEL);
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {
-        Coord pos = pos(helper, DRIVE_LABEL);
-        return helper.assertTileEntityPresent(TileDrive.class, pos.x(), pos.y(), pos.z());
+        return tile(helper, TileDrive.class, DRIVE_LABEL);
     }
 
     private static void installCableLine(GameTestHelper helper, int firstXOffset, int lastXOffset) {
@@ -199,41 +195,12 @@ public class NetworkCoreTests {
     }
 
     private static void setRedstoneInput(GameTestHelper helper, int strength) {
-        Coord pos = pos(helper, REDSTONE_LABEL);
-        helper.setRedstoneInput(pos.x(), pos.y(), pos.z(), strength);
+        AEGameTestHelpers.setRedstoneInput(helper, REDSTONE_LABEL, strength);
     }
 
     private static Coord offsetFromController(GameTestHelper helper, int x, int y, int z) {
         Coord controller = pos(helper, CONTROLLER_LABEL);
         return new Coord(controller.x() + x, controller.y() + y, controller.z() + z);
-    }
-
-    private static Coord pos(GameTestHelper helper, String label) {
-        TestPos pos = helper.pos(label);
-        return new Coord(pos.x(), pos.y(), pos.z());
-    }
-
-    private static void assertActive(GameTestHelper helper, AENetworkProxy proxy, String message) {
-        IGridNode node = proxy.getNode();
-        helper.assertNotNull(node, "Grid proxy should have a node");
-        helper.assertTrue(node.isActive(), message);
-    }
-
-    private static void assertInactive(GameTestHelper helper, AENetworkProxy proxy, String message) {
-        IGridNode node = proxy.getNode();
-        helper.assertFalse(node != null && node.isActive(), message);
-    }
-
-    private static void assertActive(GameTestHelper helper, IPart part, String message) {
-        IGridNode node = part.getGridNode();
-        helper.assertNotNull(node, "Part should have a grid node");
-        helper.assertTrue(node.isActive(), message);
-    }
-
-    private static void assertInactive(GameTestHelper helper, IPart part, String message) {
-        IGridNode node = part.getGridNode();
-        helper.assertNotNull(node, "Part should have a grid node");
-        helper.assertFalse(node.isActive(), message);
     }
 
     private static int countActive(List<IPart> parts) {
@@ -245,58 +212,6 @@ public class NetworkCoreTests {
             }
         }
         return count;
-    }
-
-    private static void assertNetworkStoredAmount(GameTestHelper helper, TileController controller, Block block,
-            long expectedAmount) {
-        helper.assertEquals(
-                expectedAmount,
-                networkStoredAmount(controller, block),
-                "Network-visible stored item amount should match");
-    }
-
-    private static long networkStoredAmount(TileController controller, Block block) {
-        try {
-            IMEMonitor<IAEItemStack> monitor = controller.getProxy().getStorage().getItemInventory();
-            IAEItemStack extracted = monitor
-                    .extractItems(itemStack(block, Integer.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
-            return extracted == null ? 0 : extracted.getStackSize();
-        } catch (GridAccessException e) {
-            throw new AssertionError("Network storage should be accessible", e);
-        }
-    }
-
-    private static void insertItems(GameTestHelper helper, ItemStack cell, Block block, long amount) {
-        IAEItemStack remainder = itemInventory(helper, cell)
-                .injectItems(itemStack(block, amount), Actionable.MODULATE, TEST_SOURCE);
-        helper.assertNull(remainder, "Items should fit completely into the cell");
-    }
-
-    private static void assertStoredAmount(GameTestHelper helper, ItemStack cell, Block block, long expectedAmount) {
-        helper.assertNotNull(cell, "Cell should exist");
-        IAEItemStack extracted = itemInventory(helper, cell)
-                .extractItems(itemStack(block, Integer.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
-        long stored = extracted == null ? 0 : extracted.getStackSize();
-        helper.assertEquals(expectedAmount, stored, "Stored item amount should match");
-    }
-
-    @SuppressWarnings("unchecked")
-    private static IMEInventoryHandler<IAEItemStack> itemInventory(GameTestHelper helper, ItemStack cell) {
-        ICellHandler cellHandler = AEApi.instance().registries().cell().getHandler(cell);
-        helper.assertNotNull(cellHandler, "Cell handler should exist");
-        IMEInventoryHandler<IAEItemStack> cellInv = cellHandler.getCellInventory(cell, null, ITEM_STACK_TYPE);
-        helper.assertNotNull(cellInv, "Item cell inventory should exist");
-        return cellInv;
-    }
-
-    private static IAEItemStack itemStack(Block block, long amount) {
-        IAEItemStack stack = AEItemStack.create(new ItemStack(block, 1));
-        stack.setStackSize(amount);
-        return stack;
-    }
-
-    private static ItemStack cell1k() {
-        return AEApi.instance().definitions().items().cell1k().maybeStack(1).get();
     }
 
     private static ItemStack cableStack() {
@@ -319,28 +234,4 @@ public class NetworkCoreTests {
         return AEApi.instance().definitions().blocks().multiPart().maybeBlock().get();
     }
 
-    private static final class Coord {
-
-        private final int x;
-        private final int y;
-        private final int z;
-
-        private Coord(int x, int y, int z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        private int x() {
-            return this.x;
-        }
-
-        private int y() {
-            return this.y;
-        }
-
-        private int z() {
-            return this.z;
-        }
-    }
 }
