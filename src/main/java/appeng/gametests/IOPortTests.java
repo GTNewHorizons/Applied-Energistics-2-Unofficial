@@ -1,6 +1,7 @@
 package appeng.gametests;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
+import static appeng.gametests.AEGameTestHelpers.assertInactive;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredFluidAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
@@ -8,8 +9,12 @@ import static appeng.gametests.AEGameTestHelpers.cell4k;
 import static appeng.gametests.AEGameTestHelpers.cell64k;
 import static appeng.gametests.AEGameTestHelpers.insertFluids;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
+import static appeng.gametests.AEGameTestHelpers.itemInventory;
+import static appeng.gametests.AEGameTestHelpers.itemStack;
+import static appeng.gametests.AEGameTestHelpers.pos;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
@@ -29,7 +34,14 @@ import appeng.api.config.FullnessMode;
 import appeng.api.config.OperationMode;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
+import appeng.api.storage.ICellInventory;
+import appeng.api.storage.ICellInventoryHandler;
+import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AppEng;
+import appeng.gametests.AEGameTestHelpers.Coord;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.storage.TileDrive;
 import appeng.tile.storage.TileIOPort;
 
@@ -100,6 +112,36 @@ public class IOPortTests {
                     helper.assertNotNull(ioport.getStackInSlot(6), "Imported cell should move to the output slot");
                     assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 100);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
+                }).thenSucceed();
+    }
+
+    // Imports only stacks allowed by the target cell partition in FILL mode.
+    @GameTest(template = "ioport", timeoutTicks = 40)
+    public static void partitionedTargetCellOnlyImportsMatchingStacks(GameTestHelper helper) {
+        TileIOPort ioport = getIOPort(helper);
+        TileDrive drive = getDrive(helper);
+        configure(ioport, OperationMode.FILL, FullnessMode.EMPTY);
+        ItemStack targetCell = cell1k();
+        partitionCell(helper, targetCell, Blocks.cobblestone);
+        ItemStack driveCell = cell1k();
+        insertItems(helper, driveCell, Blocks.cobblestone, 100);
+        insertItems(helper, driveCell, Blocks.dirt, 100);
+
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, targetCell);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNull(
+                            ioport.getStackInSlot(0),
+                            "Partitioned cell should leave input once no more matching stacks can be imported");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "Partitioned cell should move to output after importing matching stacks");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 100);
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.dirt, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.dirt, 100);
                 }).thenSucceed();
     }
 
@@ -339,6 +381,58 @@ public class IOPortTests {
                 }).thenSucceed();
     }
 
+    // Preserves a queued transferred cell through network loss and resumes without duplication or loss.
+    @GameTest(template = "ioport", timeoutTicks = 120)
+    public static void queuedCellSurvivesPowerLoss(GameTestHelper helper) {
+        TileIOPort ioport = getIOPort(helper);
+        TileDrive drive = getDrive(helper);
+        ItemStack sourceCell = cell4k();
+        ItemStack driveCell = cell1k();
+        insertItems(helper, sourceCell, Blocks.cobblestone, 100);
+
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    for (int slot = 6; slot < 12; slot++) {
+                        ioport.setInventorySlotContents(slot, cell1k());
+                    }
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Transferred cell should be queued in input while output is full");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                    removePowerAndChannel(helper);
+                }).thenWaitUntil(40, () -> assertInactive(
+                        helper,
+                        ioport.getProxy(),
+                        "IO port should lose its channel when the controller is removed"))
+                .thenExecute(() -> ioport.setInventorySlotContents(6, null)).thenIdle(5).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Queued cell should stay in input while the IO port is inactive");
+                    helper.assertNull(
+                            ioport.getStackInSlot(6),
+                            "Opened output slot should stay empty while the IO port is inactive");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                    restorePowerAndChannel(helper);
+                }).thenWaitUntil(40, () -> {
+                    assertIOPortActive(helper, ioport);
+                    helper.assertEquals(
+                            0,
+                            countFilledSlots(ioport, 0, 6),
+                            "No input cells should remain after resume");
+                    helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cells should be exactly full");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "Queued cell should move into the reopened output slot after power returns");
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                }).thenSucceed();
+    }
+
     // Keeps source cell contents unchanged when EMPTY mode cannot export into full network storage.
     @GameTest(template = "ioport", timeoutTicks = 40)
     public static void emptyModeKeepsSourceCellWhenDestinationStorageIsFull(GameTestHelper helper) {
@@ -407,6 +501,33 @@ public class IOPortTests {
                             "Cell with remaining contents should stay in input after speed transfer");
                     assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 88);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 512);
+                }).thenSucceed();
+    }
+
+    // Transfers 2048 item units per tick with all three Speed upgrade slots filled.
+    @GameTest(template = "ioport", timeoutTicks = 30)
+    public static void maxSpeedUpgradesApplyExpectedBudget(GameTestHelper helper) {
+        TileIOPort ioport = getIOPort(helper);
+        TileDrive drive = getDrive(helper);
+        installSpeedUpgrades(ioport);
+        helper.assertEquals(
+                3,
+                ioport.getInstalledUpgrades(Upgrades.SPEED),
+                "All Speed upgrades should be installed");
+        ItemStack sourceCell = cell1k();
+        ItemStack driveCell = cell1k();
+        insertItems(helper, sourceCell, Blocks.cobblestone, 3000);
+
+        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
+                .thenExecuteAtStart(() -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                }).thenExecute(() -> {
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(0),
+                            "Cell with remaining contents should stay in input after max-speed transfer");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 952);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 2048);
                 }).thenSucceed();
     }
 
@@ -624,9 +745,47 @@ public class IOPortTests {
         installUpgrade(ioport, AEApi.instance().definitions().materials().cardRedstone().maybeStack(1).get(), 0);
     }
 
+    private static void installSpeedUpgrades(TileIOPort ioport) {
+        ItemStack speedUpgrade = AEApi.instance().definitions().materials().cardSpeed().maybeStack(1).get();
+        for (int slot = 0; slot < 3; slot++) {
+            installUpgrade(ioport, speedUpgrade.copy(), slot);
+        }
+    }
+
     private static void installUpgrade(TileIOPort ioport, ItemStack upgrade, int slot) {
         IInventory upgrades = ioport.getInventoryByName("upgrades");
         upgrades.setInventorySlotContents(slot, upgrade);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void partitionCell(GameTestHelper helper, ItemStack cell, Block block) {
+        IMEInventoryHandler<IAEItemStack> handler = itemInventory(helper, cell);
+        helper.assertTrue(
+                handler instanceof ICellInventoryHandler,
+                "Item cell should expose a configurable inventory");
+        ICellInventoryHandler<IAEItemStack> cellHandler = (ICellInventoryHandler<IAEItemStack>) handler;
+        ICellInventory<IAEItemStack> cellInventory = cellHandler.getCellInv();
+        helper.assertNotNull(cellInventory, "Item cell inventory should expose cell details");
+
+        IAEStackInventory config = cellInventory.getConfigAEInventory();
+        config.putAEStackInSlot(0, itemStack(block, 1));
+    }
+
+    private static void removePowerAndChannel(GameTestHelper helper) {
+        Coord pos = controllerPos(helper);
+        helper.destroyBlock(pos.x(), pos.y(), pos.z());
+    }
+
+    private static void restorePowerAndChannel(GameTestHelper helper) {
+        Coord pos = controllerPos(helper);
+        Block controller = AEApi.instance().definitions().blocks().creativeEnergyController().maybeBlock().get();
+        helper.setBlock(pos.x(), pos.y(), pos.z(), controller);
+        helper.assertBlockPresent(controller, pos.x(), pos.y(), pos.z());
+    }
+
+    private static Coord controllerPos(GameTestHelper helper) {
+        Coord ioPort = pos(helper, IO_PORT_LABEL);
+        return new Coord(ioPort.x() + 1, ioPort.y(), ioPort.z());
     }
 
     private static int countFilledSlots(TileIOPort ioport, int startInclusive, int endExclusive) {
