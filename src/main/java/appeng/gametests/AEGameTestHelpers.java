@@ -6,6 +6,7 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -24,6 +25,7 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
+import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
@@ -42,6 +44,13 @@ public final class AEGameTestHelpers {
     public static Coord pos(GameTestHelper helper, String label) {
         TestPos pos = helper.pos(label);
         return new Coord(pos.x(), pos.y(), pos.z());
+    }
+
+    public static IPart part(GameTestHelper helper, String label, ForgeDirection side) {
+        TileCableBus cableBus = tile(helper, TileCableBus.class, label);
+        IPart part = cableBus.getPart(side);
+        helper.assertNotNull(part, "Placed part should be readable from its host");
+        return part;
     }
 
     public static void setRedstoneInput(GameTestHelper helper, String label, int strength) {
@@ -88,6 +97,19 @@ public final class AEGameTestHelpers {
         IAEItemStack extracted = itemMonitor(controller)
                 .extractItems(itemStack(block, Integer.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
         return extracted == null ? 0 : extracted.getStackSize();
+    }
+
+    public static void assertNetworkMonitorStoredAmount(GameTestHelper helper, TileController controller, Block block,
+            long expectedAmount) {
+        helper.assertEquals(
+                expectedAmount,
+                networkMonitorStoredAmount(controller, block),
+                "Network monitor stored item amount should match");
+    }
+
+    public static long networkMonitorStoredAmount(TileController controller, Block block) {
+        IAEItemStack stored = itemMonitor(controller).getStorageList().findPrecise(itemStack(block, 1));
+        return stored == null ? 0 : stored.getStackSize();
     }
 
     public static IMEMonitor<IAEItemStack> itemMonitor(TileController controller) {
