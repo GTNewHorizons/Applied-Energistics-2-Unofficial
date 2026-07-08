@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "size": [3, 1, 2],
+  "palette": {
+    "A": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self Powered Controller"},
+    "B": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
+    "C": {"name": "appliedenergistics2:tile.BlockChest", "meta": 0, "label": "ME Chest"},
+    "D": {"name": "appliedenergistics2:tile.BlockCellWorkbench", "meta": 0, "label": "Cell Workbench"}
+  },
+  "layers": [
+    [
+      ".D.",
+      "BAC"
+    ]
+  ],
+  "annotations": {
+    "labels": {
+      "controller": [1, 0, 1],
+      "drive": [0, 0, 1],
+      "me_chest": [2, 0, 1],
+      "cell_workbench": [1, 0, 0]
+    }
+  }
+}
