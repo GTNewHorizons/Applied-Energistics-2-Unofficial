@@ -404,10 +404,13 @@ public class IOPortTests {
                     assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
                     removePowerAndChannel(helper);
-                }).thenWaitUntil(40, () -> assertInactive(
-                        helper,
-                        ioport.getProxy(),
-                        "IO port should lose its channel when the controller is removed"))
+                })
+                .thenWaitUntil(
+                        40,
+                        () -> assertInactive(
+                                helper,
+                                ioport.getProxy(),
+                                "IO port should lose its channel when the controller is removed"))
                 .thenExecute(() -> ioport.setInventorySlotContents(6, null)).thenIdle(5).thenExecute(() -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
@@ -420,10 +423,7 @@ public class IOPortTests {
                     restorePowerAndChannel(helper);
                 }).thenWaitUntil(40, () -> {
                     assertIOPortActive(helper, ioport);
-                    helper.assertEquals(
-                            0,
-                            countFilledSlots(ioport, 0, 6),
-                            "No input cells should remain after resume");
+                    helper.assertEquals(0, countFilledSlots(ioport, 0, 6), "No input cells should remain after resume");
                     helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cells should be exactly full");
                     helper.assertNotNull(
                             ioport.getStackInSlot(6),
@@ -510,10 +510,7 @@ public class IOPortTests {
         TileIOPort ioport = getIOPort(helper);
         TileDrive drive = getDrive(helper);
         installSpeedUpgrades(ioport);
-        helper.assertEquals(
-                3,
-                ioport.getInstalledUpgrades(Upgrades.SPEED),
-                "All Speed upgrades should be installed");
+        helper.assertEquals(3, ioport.getInstalledUpgrades(Upgrades.SPEED), "All Speed upgrades should be installed");
         ItemStack sourceCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 3000);
@@ -760,9 +757,7 @@ public class IOPortTests {
     @SuppressWarnings("unchecked")
     private static void partitionCell(GameTestHelper helper, ItemStack cell, Block block) {
         IMEInventoryHandler<IAEItemStack> handler = itemInventory(helper, cell);
-        helper.assertTrue(
-                handler instanceof ICellInventoryHandler,
-                "Item cell should expose a configurable inventory");
+        helper.assertTrue(handler instanceof ICellInventoryHandler, "Item cell should expose a configurable inventory");
         ICellInventoryHandler<IAEItemStack> cellHandler = (ICellInventoryHandler<IAEItemStack>) handler;
         ICellInventory<IAEItemStack> cellInventory = cellHandler.getCellInv();
         helper.assertNotNull(cellInventory, "Item cell inventory should expose cell details");
