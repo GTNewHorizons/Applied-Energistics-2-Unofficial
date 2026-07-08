@@ -15,7 +15,6 @@
   "annotations": {
     "labels": {
       "controller": [0, 0, 1],
-      "power": [0, 0, 1],
       "drive": [11, 0, 1],
       "device_a": [2, 0, 1],
       "device_b": [7, 0, 1],
