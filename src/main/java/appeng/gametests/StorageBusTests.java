@@ -1,6 +1,7 @@
 package appeng.gametests;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
+import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkMonitorStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
@@ -9,6 +10,7 @@ import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
+import static appeng.gametests.AEGameTestHelpers.setChestSlot;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
@@ -46,7 +48,7 @@ public class StorageBusTests {
         TileController controller = getController(helper);
         TileEntityChest chest = getExternalChest(helper);
         IPart storageBus = getStorageBus(helper);
-        setChestContents(chest, Blocks.cobblestone, 64);
+        setChestSlot(chest, 0, Blocks.cobblestone, 64);
 
         helper.startSequence().thenWaitUntil(60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
@@ -61,13 +63,13 @@ public class StorageBusTests {
         TileController controller = getController(helper);
         TileEntityChest chest = getExternalChest(helper);
         IPart storageBus = getStorageBus(helper);
-        setChestContents(chest, Blocks.cobblestone, 16);
+        setChestSlot(chest, 0, Blocks.cobblestone, 16);
 
         helper.startSequence().thenWaitUntil(60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 16);
-        }).thenExecute(() -> setChestContents(chest, Blocks.cobblestone, 40))
+        }).thenExecute(() -> setChestSlot(chest, 0, Blocks.cobblestone, 40))
                 .thenWaitUntil(80, () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 40))
                 .thenSucceed();
     }
@@ -160,11 +162,6 @@ public class StorageBusTests {
         return tile(helper, TileDrive.class, DRIVE_LABEL);
     }
 
-    private static void setChestContents(TileEntityChest chest, Block block, int amount) {
-        chest.setInventorySlotContents(0, new ItemStack(block, amount));
-        chest.markDirty();
-    }
-
     private static void configureStorageBusFilter(PartStorageBus storageBus, Block block) {
         IAEStackInventory config = storageBus.getAEInventoryByName(StorageName.CONFIG);
         config.putAEStackInSlot(0, itemStack(block, 1));
@@ -177,20 +174,4 @@ public class StorageBusTests {
         helper.assertEquals(expectedAmount, remainder.getStackSize(), "Rejected remainder amount should match");
     }
 
-    private static void assertChestStoredAmount(GameTestHelper helper, TileEntityChest chest, Block block,
-            long expectedAmount) {
-        helper.assertEquals(expectedAmount, chestStoredAmount(chest, block), "Chest stored item amount should match");
-    }
-
-    private static long chestStoredAmount(TileEntityChest chest, Block block) {
-        long amount = 0;
-        ItemStack expectedStack = new ItemStack(block, 1);
-        for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
-            ItemStack stack = chest.getStackInSlot(slot);
-            if (stack != null && stack.isItemEqual(expectedStack)) {
-                amount += stack.stackSize;
-            }
-        }
-        return amount;
-    }
 }

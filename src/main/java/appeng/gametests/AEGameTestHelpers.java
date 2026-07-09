@@ -6,6 +6,7 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -118,6 +119,34 @@ public final class AEGameTestHelpers {
         } catch (GridAccessException e) {
             throw new AssertionError("Network storage should be accessible", e);
         }
+    }
+
+    public static void setChestSlot(TileEntityChest chest, int slot, Block block, int amount) {
+        chest.setInventorySlotContents(slot, new ItemStack(block, amount));
+        chest.markDirty();
+    }
+
+    public static void fillChest(TileEntityChest chest, Block block) {
+        for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            setChestSlot(chest, slot, block, 64);
+        }
+    }
+
+    public static void assertChestStoredAmount(GameTestHelper helper, TileEntityChest chest, Block block,
+            long expectedAmount) {
+        helper.assertEquals(expectedAmount, chestStoredAmount(chest, block), "Chest stored item amount should match");
+    }
+
+    public static long chestStoredAmount(TileEntityChest chest, Block block) {
+        long amount = 0;
+        ItemStack expectedStack = new ItemStack(block, 1);
+        for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            ItemStack stack = chest.getStackInSlot(slot);
+            if (stack != null && stack.isItemEqual(expectedStack)) {
+                amount += stack.stackSize;
+            }
+        }
+        return amount;
     }
 
     public static void insertItems(GameTestHelper helper, ItemStack cell, Block block, long amount) {
