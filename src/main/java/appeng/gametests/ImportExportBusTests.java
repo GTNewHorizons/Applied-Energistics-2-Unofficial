@@ -13,7 +13,6 @@ import static appeng.gametests.AEGameTestHelpers.part;
 import static appeng.gametests.AEGameTestHelpers.setChestSlot;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
-import com.github.bsideup.jabel.Desugar;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
@@ -21,6 +20,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
@@ -125,9 +125,7 @@ public class ImportExportBusTests {
         setRedstoneInput(helper, 0);
 
         helper.startSequence().thenWaitUntil(60, () -> assertStorageNetworkActive(helper, busIO)).thenIdle(70)
-                .thenExecute(() -> {
-                    injectCobblestone(helper, busIO, 1);
-                }).thenIdle(70).thenExecute(() -> {
+                .thenExecute(() -> { injectCobblestone(helper, busIO, 1); }).thenIdle(70).thenExecute(() -> {
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, 1);
                     assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 0);
                 }).thenExecute(() -> setRedstoneInput(helper, 15)).thenWaitUntil(90, () -> {
@@ -249,7 +247,7 @@ public class ImportExportBusTests {
 
     @Desugar
     private record BusIO(TileController controller, TileDrive drive, TileEntityChest sourceChest,
-                         TileEntityChest destinationChest, PartImportBus importBus, PartExportBus exportBus) {
+            TileEntityChest destinationChest, PartImportBus importBus, PartExportBus exportBus) {
 
     }
 }
