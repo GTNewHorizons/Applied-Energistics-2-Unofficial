@@ -1,19 +1,22 @@
 {
   "format_version": 1,
-  "size": [3, 1, 1],
+  "size": [3, 1, 2],
   "palette": {
     "A": {"name": "appliedenergistics2:tile.BlockCableBus", "meta": 0, "label": "AE2 Cable and/or Bus"},
     "B": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
-    "C": {"name": "minecraft:chest", "meta": 2, "label": "Chest"}
+    "C": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
+    "D": {"name": "minecraft:chest", "meta": 2, "label": "Chest"}
   },
   "layers": [
     [
-      "BAC"
+      "BAD",
+      "C.."
     ]
   ],
   "annotations": {
     "labels": {
       "controller": [0, 0, 0],
+      "drive": [0, 0, 1],
       "external_chest": [2, 0, 0],
       "storage_bus": [1, 0, 0]
     }
