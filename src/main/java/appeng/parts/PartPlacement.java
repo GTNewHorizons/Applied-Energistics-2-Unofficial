@@ -308,7 +308,6 @@ public class PartPlacement {
 
         // Ideally this code is not used, it's here just in case some code that other mod use do end up here on server
         // side
-        AELog.error(new Throwable(), "getEyeOffset called on server");
         float eyeOffset = (float) (p.posY + p.getEyeHeight());
         if (p.isSneaking()) {
             eyeOffset -= 0.08f; // 0.2 * 0.4
