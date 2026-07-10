@@ -42,7 +42,6 @@ import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartItemStack;
 import appeng.api.parts.SelectedPart;
-import appeng.core.AELog;
 import appeng.core.CommonHelper;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
