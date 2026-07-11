@@ -476,6 +476,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                 this.updateElapsedTime(insert);
                 this.recordReturnedOutputs(insert);
+                this.postCraftingStatusChange(is);
 
                 if (this.finalOutput.isFinalOutput(insert)) {
                     final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(insert, type);
