@@ -105,10 +105,14 @@ public class PacketPartInteraction extends AppEngPacket {
             if (player.isSneaking()) {
                 if (!spart.part.onShiftActivate(player, hitVec)) {
                     resync(player);
+                } else {
+                    player.swingItem();
                 }
             } else {
                 if (!spart.part.onActivate(player, hitVec)) {
                     resync(player);
+                } else {
+                    player.swingItem();
                 }
             }
         }
