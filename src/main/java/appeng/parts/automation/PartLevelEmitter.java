@@ -223,6 +223,11 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         this.updateState();
     }
 
+    @Override
+    public void onRequestChange(final ICraftingGrid craftingGrid, final IAEStack<?> what) {
+        this.updateState();
+    }
+
     // update the system...
     private void configureWatchers() {
         final IAEStack<?> myStack = this.config.getAEStackInSlot(0);
