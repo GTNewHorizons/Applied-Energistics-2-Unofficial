@@ -114,6 +114,17 @@ public interface IPatternTerminal extends IIAEStackInventory, ITerminalHost, ICo
         }
     }
 
+    interface PatternEncodeListener {
+
+        void onEncoded(IPatternTerminal terminal, ItemStack pattern);
+    }
+
+    Iterable<PatternEncodeListener> getPatternEncodeListeners();
+
+    void addPatternEncodeListeners(final PatternEncodeListener listener);
+
+    void removePatternEncodeListeners(final PatternEncodeListener listener);
+
     default boolean encode(String auther, World world) {
         var networkNode = getGridNode(ForgeDirection.UNKNOWN);
         final IGrid g = networkNode.getGrid();

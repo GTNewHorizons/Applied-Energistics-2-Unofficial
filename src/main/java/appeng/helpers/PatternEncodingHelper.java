@@ -15,10 +15,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
 
+import com.google.common.collect.ImmutableList;
+
 import appeng.api.AEApi;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.parts.IPatternTerminal;
+import appeng.api.parts.IPatternTerminal.PatternEncodeListener;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
@@ -186,6 +189,9 @@ public class PatternEncodingHelper {
 
         output.setTagCompound(encodedValue);
         pattern.setInventorySlotContents(1, output);
+        for (final PatternEncodeListener listener : ImmutableList.copyOf(terminal.getPatternEncodeListeners())) {
+            listener.onEncoded(terminal, output);
+        }
         return true;
     }
 }

@@ -10,7 +10,10 @@
 
 package appeng.parts.reporting;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -58,6 +61,7 @@ public class PartPatternTerminal extends AbstractPartTerminal implements IIAESta
             getPatternOutputsWidth() * getPatternOutputsHeigh() * getPatternOutputPages(),
             StorageName.CRAFTING_OUTPUT);
     private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
+    private final Set<PatternEncodeListener> patternEncodeListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
     private boolean craftingMode = true;
     private boolean substitute = false;
@@ -235,5 +239,20 @@ public class PartPatternTerminal extends AbstractPartTerminal implements IIAESta
     public boolean encode(IEnergySource powerSource, IMEMonitor<IAEItemStack> itemMonitor,
             BaseActionSource actionSource, String auther, World world) {
         return PatternEncodingHelper.encode(this, powerSource, itemMonitor, actionSource, auther, world);
+    }
+
+    @Override
+    public Iterable<PatternEncodeListener> getPatternEncodeListeners() {
+        return patternEncodeListeners;
+    }
+
+    @Override
+    public void addPatternEncodeListeners(final PatternEncodeListener listener) {
+        patternEncodeListeners.add(listener);
+    }
+
+    @Override
+    public void removePatternEncodeListeners(final PatternEncodeListener listener) {
+        patternEncodeListeners.remove(listener);
     }
 }
