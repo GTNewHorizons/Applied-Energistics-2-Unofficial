@@ -1,25 +1,40 @@
 package appeng.api.parts;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+
+import appeng.api.AEApi;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.implementations.tiles.IViewCellStorage;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.networking.energy.IEnergyGrid;
+import appeng.api.networking.energy.IEnergySource;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.helpers.PatternHelper;
 import appeng.helpers.UltimatePatternHelper;
 import appeng.items.misc.ItemEncodedPattern;
+import appeng.me.helpers.ChannelPowerSrc;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
 import appeng.util.IConfigManagerHost;
+import appeng.util.item.AEItemStack;
 
 public interface IPatternTerminal extends IIAEStackInventory, ITerminalHost, IConfigManagerHost, IViewCellStorage,
         IAEAppEngInventory, ITerminalPins, IActionHost {
@@ -97,5 +112,31 @@ public interface IPatternTerminal extends IIAEStackInventory, ITerminalHost, ICo
                 }
             }
         }
+    }
+
+    default boolean encode(String auther, World world) {
+        var networkNode = getGridNode(ForgeDirection.UNKNOWN);
+        final IGrid g = networkNode.getGrid();
+        if (g == null) return false;
+        var powerSource = new ChannelPowerSrc(networkNode, g.getCache(IEnergyGrid.class));
+        var itemMonitor = (IMEMonitor<IAEItemStack>) getMEMonitor(ITEM_STACK_TYPE);
+        var actionSource = new MachineSource(this);
+        return encode(powerSource, itemMonitor, actionSource, auther, world);
+    }
+
+    boolean encode(IEnergySource powerSource, IMEMonitor<IAEItemStack> itemMonitor, BaseActionSource actionSource,
+            String auther, World world);
+
+    @NotNull
+    static IAEItemStack createBlankPattern() {
+        return AEItemStack.create(AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get());
+    }
+
+    static boolean isBlankPattern(final ItemStack stack) {
+        return stack != null && AEApi.instance().definitions().materials().blankPattern().isSameAs(stack);
+    }
+
+    static boolean isEncodedPattern(final ItemStack stack) {
+        return stack != null && stack.getItem() instanceof ItemEncodedPattern;
     }
 }

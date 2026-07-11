@@ -10,13 +10,10 @@
 
 package appeng.container.implementations;
 
+import static appeng.api.parts.IPatternTerminal.createBlankPattern;
 import static appeng.parts.reporting.PartPatternTerminal.*;
 import static appeng.util.IterationCounter.fetchNewId;
 import static appeng.util.Platform.isServer;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -28,12 +25,8 @@ import net.minecraft.inventory.SlotCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
-
-import org.jetbrains.annotations.NotNull;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -62,8 +55,6 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.contents.WirelessPatternTerminalGuiObject;
-import appeng.items.misc.ItemEncodedPattern;
-import appeng.items.misc.ItemTunnelPattern;
 import appeng.items.storage.ItemViewCell;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -292,147 +283,16 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     }
 
     private void encode() {
-        ItemStack output = this.patternSlotOUT.getStack();
-
-        final IAEStack<?>[] in = this.getInputs();
-        final IAEStack<?>[] out = this.getOutputs();
-
-        // if there is no input, this would be silly.
-        if (in == null) {
-            return;
+        var player = this.getPlayerInv().player;
+        if (patternTerminal.encode(
+                getPowerSource(),
+                getItemMonitor(),
+                getActionSource(),
+                player.getCommandSenderName(),
+                player.worldObj)) {
+            this.isFirstUpdate = true;
+            this.detectAndSendChanges();
         }
-        final boolean inputOnly = !isCraftingMode() && (out == null || out.length == 0);
-        if (!inputOnly && out == null) {
-            return;
-        }
-        final UUID inputOnlyUuid = inputOnly && ItemTunnelPattern.isTunnelPattern(output)
-                ? ItemTunnelPattern.getTunnelUuid(output)
-                : null;
-
-        // first check the output slots, should either be null, or a pattern
-        if (output != null) {
-            if (!this.isEncodedPattern(output)) {
-                return;
-            }
-        } // if nothing is there we should snag a new pattern.
-        else {
-            ItemStack blank = this.patternSlotIN.getStack();
-
-            if (this.isBlankPattern(blank)) {
-                blank.stackSize--;
-                if (blank.stackSize == 0) {
-                    this.patternSlotIN.putStack(null);
-                }
-            } else if (blank == null) {
-                IMEMonitor<IAEItemStack> itemMonitor = this.getItemMonitor();
-                IAEItemStack extracted = Platform.poweredExtraction(
-                        this.getPowerSource(),
-                        itemMonitor,
-                        createBlankPattern(),
-                        this.getActionSource());
-                if (extracted == null || extracted.getStackSize() <= 0) {
-                    return;
-                }
-            } else {
-                return;
-            }
-        }
-
-        // add a new encoded pattern.
-        if (isCraftingMode()) {
-            output = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).orNull();
-        } else if (inputOnly) {
-            output = AEApi.instance().definitions().items().encodedTunnelPattern().maybeStack(1).orNull();
-        } else {
-            output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();
-        }
-        if (output == null) {
-            return;
-        }
-
-        // encode the slot.
-        final NBTTagCompound encodedValue = new NBTTagCompound();
-
-        final NBTTagList tagIn = new NBTTagList();
-        final NBTTagList tagOut = new NBTTagList();
-
-        for (final IAEStack<?> i : in) {
-            tagIn.appendTag(i != null ? i.toNBTGeneric() : new NBTTagCompound());
-        }
-
-        if (out != null) {
-            for (final IAEStack<?> o : out) {
-                tagOut.appendTag(o != null ? o.toNBTGeneric() : new NBTTagCompound());
-            }
-        }
-
-        encodedValue.setTag("in", tagIn);
-        encodedValue.setTag("out", tagOut);
-        if (isCraftingMode()) encodedValue.setBoolean("crafting", this.isCraftingMode());
-        encodedValue.setBoolean("substitute", this.substituteSync.get());
-        encodedValue.setBoolean("beSubstitute", this.beSubstituteSync.get());
-        if (inputOnly) {
-            final UUID uuid = inputOnlyUuid != null ? inputOnlyUuid : UUID.randomUUID();
-            ItemTunnelPattern.writeTunnelUuid(encodedValue, uuid);
-        }
-        encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
-
-        output.setTagCompound(encodedValue);
-        this.patternSlotOUT.putStack(output);
-    }
-
-    private IAEStack<?>[] getInputs() {
-        final IAEStack<?>[] input = new IAEStack<?>[this.inputs.getSizeInventory()];
-        boolean hasValue = false;
-
-        for (int i = 0; i < this.inputs.getSizeInventory(); i++) {
-            input[i] = this.inputs.getAEStackInSlot(i);
-            if (input[i] != null) {
-                hasValue = true;
-            }
-        }
-
-        if (hasValue) {
-            return input;
-        }
-
-        return null;
-    }
-
-    private IAEStack<?>[] getOutputs() {
-        if (this.isCraftingMode()) {
-            final IAEStack<?> out = AEItemStack.create(this.getAndUpdateOutput());
-
-            if (out != null && out.getStackSize() > 0) {
-                return new IAEStack<?>[] { out };
-            }
-        } else {
-            final List<IAEStack<?>> list = new ArrayList<>(3);
-            boolean hasValue = false;
-
-            for (int i = 0; i < this.outputs.getSizeInventory(); i++) {
-                final IAEStack<?> out = this.outputs.getAEStackInSlot(i);
-
-                if (out != null && out.getStackSize() > 0) {
-                    list.add(out);
-                    hasValue = true;
-                }
-            }
-
-            if (hasValue) {
-                return list.toArray(new IAEStack<?>[0]);
-            }
-        }
-
-        return null;
-    }
-
-    private boolean isBlankPattern(final ItemStack stack) {
-        return stack != null && AEApi.instance().definitions().materials().blankPattern().isSameAs(stack);
-    }
-
-    private boolean isEncodedPattern(final ItemStack stack) {
-        return stack != null && stack.getItem() instanceof ItemEncodedPattern;
     }
 
     @Override
@@ -846,10 +706,5 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                 this.outputsSync.markDirty();
             }
         }
-    }
-
-    @NotNull
-    public static IAEItemStack createBlankPattern() {
-        return AEItemStack.create(AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get());
     }
 }

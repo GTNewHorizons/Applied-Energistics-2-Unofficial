@@ -16,13 +16,19 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
 import appeng.api.AEApi;
+import appeng.api.networking.energy.IEnergySource;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.parts.IPatternTerminal;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.PatternEncodingHelper;
 import appeng.helpers.Reflected;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
@@ -223,5 +229,11 @@ public class PartPatternTerminal extends AbstractPartTerminal implements IIAESta
     @Override
     public ItemStack getPrimaryGuiIcon() {
         return AEApi.instance().definitions().parts().patternTerminal().maybeStack(1).orNull();
+    }
+
+    @Override
+    public boolean encode(IEnergySource powerSource, IMEMonitor<IAEItemStack> itemMonitor,
+            BaseActionSource actionSource, String auther, World world) {
+        return PatternEncodingHelper.encode(this, powerSource, itemMonitor, actionSource, auther, world);
     }
 }

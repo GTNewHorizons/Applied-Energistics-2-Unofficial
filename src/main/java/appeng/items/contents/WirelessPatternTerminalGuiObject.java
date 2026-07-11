@@ -7,10 +7,15 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import appeng.api.features.IWirelessTermHandler;
+import appeng.api.networking.energy.IEnergySource;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.parts.IPatternTerminalEx;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.IConfigManager;
+import appeng.helpers.PatternEncodingHelper;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
@@ -181,4 +186,10 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
 
     @Override
     public void updateSetting(IConfigManager manager, Enum settingName, Enum newValue) {}
+
+    @Override
+    public boolean encode(IEnergySource powerSource, IMEMonitor<IAEItemStack> itemMonitor,
+            BaseActionSource actionSource, String auther, World world) {
+        return PatternEncodingHelper.encode(this, powerSource, itemMonitor, actionSource, auther, world);
+    }
 }
