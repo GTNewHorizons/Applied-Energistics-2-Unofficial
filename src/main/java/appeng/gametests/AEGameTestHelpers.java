@@ -86,6 +86,10 @@ public final class AEGameTestHelpers {
         return itemMonitor(controller).injectItems(itemStack(block, amount), Actionable.MODULATE, TEST_SOURCE);
     }
 
+    public static IAEItemStack simulateInjectIntoGrid(TileController controller, Block block, long amount) {
+        return itemMonitor(controller).injectItems(itemStack(block, amount), Actionable.SIMULATE, TEST_SOURCE);
+    }
+
     public static void assertNetworkStoredAmount(GameTestHelper helper, TileController controller, Block block,
             long expectedAmount) {
         helper.assertEquals(
@@ -123,6 +127,11 @@ public final class AEGameTestHelpers {
 
     public static void setChestSlot(TileEntityChest chest, int slot, Block block, int amount) {
         chest.setInventorySlotContents(slot, new ItemStack(block, amount));
+        chest.markDirty();
+    }
+
+    public static void clearChestSlot(TileEntityChest chest, int slot) {
+        chest.setInventorySlotContents(slot, null);
         chest.markDirty();
     }
 

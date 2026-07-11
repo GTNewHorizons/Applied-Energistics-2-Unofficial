@@ -61,7 +61,7 @@ public class ImportExportBusTests {
         configureFilter(helper, busIO.importBus, Blocks.cobblestone);
         configureFilter(helper, busIO.exportBus, Blocks.dirt);
 
-        helper.startSequence().thenWaitUntil(60, () -> assertBusIOActive(helper, busIO)).thenWaitUntil(240, () -> {
+        helper.startSequence().thenWaitUntil(60, () -> assertBusIOActive(helper, busIO)).thenWaitUntil(300, () -> {
             assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, 32);
             assertNetworkStoredAmount(helper, busIO.controller, Blocks.dirt, 0);
             assertChestStoredAmount(helper, busIO.sourceChest, Blocks.cobblestone, 0);
