@@ -282,7 +282,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         }
     }
 
-    private void encode() {
+    public void encode() {
         var player = this.getPlayerInv().player;
         if (patternTerminal.encode(
                 getPowerSource(),
