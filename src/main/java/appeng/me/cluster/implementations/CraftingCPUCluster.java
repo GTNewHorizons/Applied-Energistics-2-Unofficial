@@ -542,8 +542,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.getCore().markDirty();
     }
 
-    protected void postCraftingStatusChange(final IAEStack<?> aeDiff) {
-        IAEItemStack diff = stackConvert(aeDiff); // emitters
+    protected void postCraftingStatusChange(final IAEStack<?> diff) {
         if (this.getGrid() == null) {
             return;
         }
