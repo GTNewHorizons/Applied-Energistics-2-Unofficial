@@ -10,6 +10,7 @@
 
 package appeng.parts.misc;
 
+import static appeng.util.Platform.convertStack;
 import static appeng.util.Platform.readAEStackListNBT;
 import static appeng.util.Platform.writeAEStackListNBT;
 
@@ -531,29 +532,33 @@ public class PartPatternRepeater extends PartBasicState
 
         visitedRepeaters.add(this.targetCraftingGrid);
 
-        final IGrid grid = this.getGridNode().getGrid();
-        final ICraftingGrid cg = grid.getCache(ICraftingGrid.class);
-        boolean isCrafting = cg.isRequesting(what);
+        try {
+            final IGrid grid = this.getProxy().getGrid();
+            final ICraftingGrid cg = grid.getCache(ICraftingGrid.class);
+            boolean isCrafting = cg.isRequesting(what);
 
-        for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
-            final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
-            if (!rep.isProvider() && rep.getPair() != null
-                    && rep.getPair().isProvider()
-                    && rep.getPair().isRequestingEmitable(what)) {
-                isCrafting = true;
-            }
-        }
-
-        this.emitableCrafting.put(what, isCrafting);
-        for (final ICraftingMedium medium : this.targetCraftingGrid.getEmitableMediums(what)) {
-            if (medium instanceof ILevelEmitter emitter) {
-                emitter.updateEmitableStatus(what);
-            } else
-                if (medium instanceof PartPatternRepeater rep && !visitedRepeaters.contains(rep.targetCraftingGrid)) {
-                    rep.propagateEmitableStatus(what, visitedRepeaters);
+            for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
+                final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+                if (!rep.isProvider() && rep.getPair() != null
+                        && rep.getPair().isProvider()
+                        && rep.getPair().isRequestingEmitable(what)) {
+                    isCrafting = true;
                 }
+            }
+
+            this.emitableCrafting.put(what, isCrafting);
+            for (final ICraftingMedium medium : this.targetCraftingGrid.getEmitableMediums(what)) {
+                if (medium instanceof ILevelEmitter emitter) {
+                    emitter.updateEmitableStatus(what);
+                } else if (medium instanceof PartPatternRepeater rep
+                        && !visitedRepeaters.contains(rep.targetCraftingGrid)) {
+                            rep.propagateEmitableStatus(what, visitedRepeaters);
+                        }
+            }
+            this.addInterception();
+        } catch (final GridAccessException e) {
+            // :P
         }
-        this.addInterception();
     }
 
     public void updateEmitableStatus(IAEStack<?> what) {
@@ -572,6 +577,11 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void onRequestChange(final ICraftingGrid craftingGrid, IAEItemStack what) {
+        this.updateEmitableStatus(convertStack(what));
+    }
+
+    @Override
+    public void onRequestChange(final ICraftingGrid craftingGrid, IAEStack<?> what) {
         this.updateEmitableStatus(what);
     }
 }
