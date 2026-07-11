@@ -484,7 +484,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
             this.registerApp(16, Settings.VIEW_MODE, ViewItems.STORED, ButtonToolTips.View, ButtonToolTips.StoredItems);
             this.registerApp(
-                    17,
+                    200,
                     Settings.VIEW_MODE,
                     ViewItems.FLOWING,
                     ButtonToolTips.View,
