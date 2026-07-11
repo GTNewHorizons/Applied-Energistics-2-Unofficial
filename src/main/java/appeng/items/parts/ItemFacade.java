@@ -38,6 +38,7 @@ import appeng.core.features.AEFeature;
 import appeng.facade.FacadePart;
 import appeng.facade.IFacadeItem;
 import appeng.items.AEBaseItem;
+import appeng.parts.PartPlacement;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
@@ -65,7 +66,7 @@ public class ItemFacade extends AEBaseItem implements IFacadeItem, IAlphaPassIte
     @Override
     public boolean onItemUse(final ItemStack is, final EntityPlayer player, final World w, final int x, final int y,
             final int z, final int side, final float hitX, final float hitY, final float hitZ) {
-        return AEApi.instance().partHelper().placeBus(is, x, y, z, side, player, w);
+        return PartPlacement.placeItemPart(is, player, w, x, y, z, ForgeDirection.getOrientation(side));
     }
 
     @Override

@@ -58,6 +58,10 @@ public class BlockingModeIgnoreItemRegistry implements IBlockingModeIgnoreItemRe
             if (Loader.isModLoaded("ForbiddenMagic")) {
                 register(GameRegistry.findItem("ForbiddenMagic", "EldritchOrb"));
             }
+
+            if (Loader.isModLoaded("BloodArsenal")) {
+                register(GameRegistry.findItem("BloodArsenal", "transparent_orb"));
+            }
         }
     }
 }

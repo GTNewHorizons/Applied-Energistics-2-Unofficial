@@ -33,10 +33,10 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.base.Preconditions;
 
-import appeng.api.AEApi;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHelper;
@@ -53,6 +53,7 @@ import appeng.core.localization.GuiText;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
+import appeng.parts.PartPlacement;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -189,7 +190,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             return false;
         }
 
-        return AEApi.instance().partHelper().placeBus(is, x, y, z, side, player, w);
+        return PartPlacement.placeItemPart(is, player, w, x, y, z, ForgeDirection.getOrientation(side));
     }
 
     @Override
