@@ -1,10 +1,11 @@
-package appeng.gametests;
+package appeng.gametests.crafting;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
+import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
@@ -47,6 +48,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AppEng;
+import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.gametests.AEGameTestHelpers.Coord;
 import appeng.me.GridAccessException;
 import appeng.tile.crafting.TileCraftingStorageTile;
@@ -77,15 +79,24 @@ public class CraftingExecutionTests {
         insertItems(helper, driveCell, Blocks.planks, 4);
         network.drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
-                .thenExecute(() -> installPattern(network.blockInterface, encodedCraftingTablePattern()))
+        helper.startSequence()
                 .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        100,
+                        () -> assertCraftingNetworkActive(helper, network))
+                .thenExecute(
+                        "apply test action",
+                        () -> installPattern(network.blockInterface, encodedCraftingTablePattern()))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
                         80,
                         () -> helper.assertFalse(
                                 craftingOptionsFor(network.controller, Blocks.crafting_table).isEmpty(),
                                 "Crafting table pattern should be advertised"))
-                .thenExecute(() -> submitCraft(helper, network.controller, Blocks.crafting_table, 1))
-                .thenWaitUntil(260, () -> {
+                .thenExecute(
+                        "apply test action",
+                        () -> submitCraft(helper, network.controller, Blocks.crafting_table, 1))
+                .thenWaitUntil("wait for expected observable machine state", 260, () -> {
                     assertNetworkStoredAmount(helper, network.controller, Blocks.crafting_table, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.planks, 0);
                     assertStoredAmount(helper, driveCell, Blocks.crafting_table, 1);
@@ -102,9 +113,13 @@ public class CraftingExecutionTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         network.drive.setInventorySlotContents(0, driveCell);
-
-        helper.startSequence().thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
-                .thenExecute(() -> processingTarget.set(placeProcessingTarget(helper))).thenExecute(() -> {
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        100,
+                        () -> assertCraftingNetworkActive(helper, network))
+                .thenExecute("apply test action", () -> processingTarget.set(placeProcessingTarget(helper)))
+                .thenExecute("apply test action", () -> {
                     installPattern(
                             network.blockInterface,
                             encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1));
@@ -112,11 +127,13 @@ public class CraftingExecutionTests {
                             .putSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.LOCK_UNTIL_RESULT);
                 })
                 .thenWaitUntil(
+                        "wait for expected observable machine state",
                         80,
                         () -> helper.assertFalse(
                                 craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
                                 "Processing pattern output should be advertised"))
-                .thenExecute(() -> submitCraft(helper, network.controller, Blocks.stone, 1)).thenWaitUntil(220, () -> {
+                .thenExecute("apply test action", () -> submitCraft(helper, network.controller, Blocks.stone, 1))
+                .thenWaitUntil("wait for expected observable machine state", 220, () -> {
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 0);
                     assertChestStoredAmount(helper, processingTarget.get(), Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
@@ -124,11 +141,11 @@ public class CraftingExecutionTests {
                             network.blockInterface.getInterfaceDuality().getCraftingLockedReason()
                                     == LockCraftingMode.LOCK_UNTIL_RESULT,
                             "Interface should wait for the processing result");
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     clearInventory(processingTarget.get());
                     IAEItemStack remainder = injectIntoGrid(network.controller, Blocks.stone, 1);
                     helper.assertNull(remainder, "Returned processing output should fit into the network");
-                }).thenWaitUntil(160, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 160, () -> {
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 0);
                     assertStoredAmount(helper, driveCell, Blocks.stone, 1);
@@ -148,27 +165,32 @@ public class CraftingExecutionTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         network.drive.setInventorySlotContents(0, driveCell);
-
-        helper.startSequence().thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        100,
+                        () -> assertCraftingNetworkActive(helper, network))
                 .thenExecute(
+                        "apply test action",
                         () -> installPattern(
                                 network.blockInterface,
                                 encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
                 .thenWaitUntil(
+                        "wait for expected observable machine state",
                         80,
                         () -> helper.assertFalse(
                                 craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
                                 "Blocked processing pattern should be advertised"))
-                .thenExecute(() -> {
+                .thenExecute("apply test action", () -> {
                     link.set(submitCraft(helper, network.controller, Blocks.stone, 1));
                     IAEStack<?> requestedOutput = itemStack(Blocks.stone, 1);
                     helper.assertTrue(
                             craftingGrid(network.controller).isRequesting(requestedOutput),
                             "Submitted craft should be tracked as an active request");
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     link.get().cancel();
                     helper.assertTrue(link.get().isCanceled(), "Crafting link should be canceled");
-                }).thenWaitUntil(120, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 120, () -> {
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
@@ -183,20 +205,48 @@ public class CraftingExecutionTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         network.drive.setInventorySlotContents(0, driveCell);
+        ContinuousInvariant cpuBreakDoesNotDuplicateOrProduceOutput = continuousInvariant(
+                helper,
+                "CPU break must not duplicate ingredients or produce processing output",
+                () -> {
+                    long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
+                            + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.cobblestone);
+                    long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
+                            + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.stone);
+                    helper.assertTrue(
+                            accountedCobblestone <= 1,
+                            "At most one ingredient may exist while CPU break cancellation settles; observed="
+                                    + accountedCobblestone);
+                    helper.assertEquals(0L, accountedStone, "CPU break must never produce the requested output");
+                });
 
-        helper.startSequence().thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        100,
+                        () -> assertCraftingNetworkActive(helper, network))
                 .thenExecute(
+                        "apply test action",
                         () -> installPattern(
                                 network.blockInterface,
                                 encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
                 .thenWaitUntil(
+                        "wait for expected observable machine state",
                         80,
                         () -> helper.assertFalse(
                                 craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
                                 "Blocked processing pattern should be advertised"))
-                .thenExecute(() -> link.set(submitCraft(helper, network.controller, Blocks.stone, 1)))
-                .thenWaitUntil(100, () -> assertStoredAmount(helper, driveCell, Blocks.cobblestone, 0))
-                .thenExecute(() -> destroyBlock(helper, CPU_UNIT_LABEL)).thenIdle(10).thenExecute(() -> {
+                .thenExecute(
+                        "apply test action",
+                        () -> link.set(submitCraft(helper, network.controller, Blocks.stone, 1)))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        100,
+                        () -> assertStoredAmount(helper, driveCell, Blocks.cobblestone, 0))
+                .thenExecute("break CPU unit during active processing job", () -> {
+                    destroyBlock(helper, CPU_UNIT_LABEL);
+                    cpuBreakDoesNotDuplicateOrProduceOutput.enable();
+                }).thenWaitUntil("wait for CPU-break cancellation and ingredient recovery", 40, () -> {
                     long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
                             + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.cobblestone);
                     long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
@@ -209,7 +259,9 @@ public class CraftingExecutionTests {
                             "Ingredient should exist exactly once after CPU break");
                     helper.assertEquals(0L, accountedStone, "CPU break should not produce the requested output");
                     assertNotRequesting(helper, network.controller, Blocks.stone);
-                }).thenSucceed();
+                })
+                .thenExecute("stop CPU-break conservation invariant", cpuBreakDoesNotDuplicateOrProduceOutput::disable)
+                .thenSucceed();
     }
 
     private static CraftingNetwork getCraftingNetwork(GameTestHelper helper) {

@@ -1,9 +1,10 @@
-package appeng.gametests;
+package appeng.gametests.interfaces;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
+import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.tile;
@@ -30,6 +31,8 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.parts.IPart;
 import appeng.container.ContainerNull;
 import appeng.core.AppEng;
+import appeng.gametests.AEGameTestHelpers;
+import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.me.GridAccessException;
@@ -62,9 +65,15 @@ public class InterfaceTests {
         insertItems(helper, driveCell, Blocks.cobblestone, 64);
         network.drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute(() -> configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT))
-                .thenWaitUntil(80, () -> {
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        80,
+                        () -> assertInterfaceNetworkActive(helper, network))
+                .thenExecute(
+                        "apply test action",
+                        () -> configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT))
+                .thenWaitUntil("wait for expected observable machine state", 80, () -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 64 - STOCK_AMOUNT);
                 }).thenSucceed();
@@ -75,22 +84,34 @@ public class InterfaceTests {
     public static void blockingModeWaitsForEmptyInventory(GameTestHelper helper) {
         InterfaceNetwork network = getInterfaceNetwork(helper);
 
-        helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute(() -> {
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        80,
+                        () -> assertInterfaceNetworkActive(helper, network))
+                .thenExecute("apply test action", () -> {
                     network.partInterface.getConfigManager().putSetting(Settings.BLOCK, YesNo.YES);
                     network.partInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(
                             0,
                             encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1));
                     AEGameTestHelpers.setChestSlot(network.adjacentChest, 0, Blocks.dirt, 1);
-                }).thenIdle(5).thenExecute(() -> {
-                    ICraftingPatternDetails details = firstPattern(helper, network.partInterface);
+                })
+                .thenWaitUntil(
+                        "wait for blocking pattern advertisement",
+                        40,
+                        () -> helper.assertFalse(
+                                craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
+                                "Blocking interface should advertise the processing pattern"))
+                .thenExecute("attempt pattern push into occupied target", () -> {
+                    ICraftingPatternDetails details = firstPattern(helper, network.controller, Blocks.stone);
                     boolean pushed = network.partInterface.pushPattern(details, craftingTable(Blocks.cobblestone, 1));
 
                     helper.assertFalse(pushed, "Blocking interface should not push into a non-empty target");
                     assertChestStoredAmount(helper, network.adjacentChest, Blocks.dirt, 1);
                     assertChestStoredAmount(helper, network.adjacentChest, Blocks.cobblestone, 0);
-                }).thenExecute(() -> clearChest(network.adjacentChest)).thenIdle(5).thenExecute(() -> {
-                    ICraftingPatternDetails details = firstPattern(helper, network.partInterface);
+                }).thenExecute("clear blocking target inventory", () -> clearChest(network.adjacentChest))
+                .thenExecute("attempt pattern push into empty target", () -> {
+                    ICraftingPatternDetails details = firstPattern(helper, network.controller, Blocks.stone);
                     boolean pushed = network.partInterface.pushPattern(details, craftingTable(Blocks.cobblestone, 1));
 
                     helper.assertTrue(pushed, "Blocking interface should push once the target is empty");
@@ -103,10 +124,18 @@ public class InterfaceTests {
     public static void interfacePatternSlotsAdvertiseCraftableOutput(GameTestHelper helper) {
         InterfaceNetwork network = getInterfaceNetwork(helper);
 
-        helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network)).thenExecute(
-                () -> network.blockInterface.getInterfaceDuality().getPatterns()
-                        .setInventorySlotContents(0, encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
+        helper.startSequence()
                 .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        80,
+                        () -> assertInterfaceNetworkActive(helper, network))
+                .thenExecute(
+                        "apply test action",
+                        () -> network.blockInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(
+                                0,
+                                encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
                         80,
                         () -> helper.assertFalse(
                                 craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
@@ -123,11 +152,15 @@ public class InterfaceTests {
         insertItems(helper, driveCell, Blocks.dirt, 64);
         network.drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute(() -> {
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        80,
+                        () -> assertInterfaceNetworkActive(helper, network))
+                .thenExecute("apply test action", () -> {
                     configureStock(network.blockInterface, Blocks.cobblestone, 16);
                     configureStock(network.partInterface, Blocks.dirt, 16);
-                }).thenWaitUntil(100, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 100, () -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, 16);
                     assertInterfaceStoredAmount(helper, network.partInterface, Blocks.dirt, 16);
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 48);
@@ -142,16 +175,27 @@ public class InterfaceTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 64);
         network.drive.setInventorySlotContents(0, driveCell);
+        ContinuousInvariant configuredStockDoesNotDrainNetwork = continuousInvariant(
+                helper,
+                "already satisfied interface stock must not drain ME storage",
+                () -> {
+                    assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
+                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 64);
+                });
 
-        helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute(() -> {
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        80,
+                        () -> assertInterfaceNetworkActive(helper, network))
+                .thenExecute("apply test action", () -> {
                     configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
                     network.blockInterface.getInterfaceDuality().getStorage()
                             .setInventorySlotContents(0, new ItemStack(Blocks.cobblestone, STOCK_AMOUNT));
-                }).thenIdle(30).thenExecute(() -> {
-                    assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
-                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 64);
-                }).thenSucceed();
+                    configuredStockDoesNotDrainNetwork.enable();
+                }).thenIdle(30)
+                .thenExecute("finish no-overstock observation window", configuredStockDoesNotDrainNetwork::disable)
+                .thenSucceed();
     }
 
     private static InterfaceNetwork getInterfaceNetwork(GameTestHelper helper) {
@@ -221,12 +265,11 @@ public class InterfaceTests {
         }
     }
 
-    private static ICraftingPatternDetails firstPattern(GameTestHelper helper, IInterfaceHost interfaceHost) {
-        DualityInterface duality = interfaceHost.getInterfaceDuality();
-
-        helper.assertNotNull(duality.craftingList, "Interface should have a crafting list");
-        helper.assertFalse(duality.craftingList.isEmpty(), "Interface should load the encoded pattern");
-        return duality.craftingList.get(0);
+    private static ICraftingPatternDetails firstPattern(GameTestHelper helper, TileController controller,
+            Block output) {
+        ImmutableCollection<ICraftingPatternDetails> patterns = craftingOptionsFor(controller, output);
+        helper.assertFalse(patterns.isEmpty(), "Network crafting cache should advertise the encoded pattern");
+        return patterns.iterator().next();
     }
 
     private static MEInventoryCrafting craftingTable(Block block, int amount) {

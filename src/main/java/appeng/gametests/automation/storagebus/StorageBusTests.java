@@ -1,4 +1,4 @@
-package appeng.gametests;
+package appeng.gametests.automation.storagebus;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
@@ -19,7 +19,6 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityChest;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
@@ -27,11 +26,9 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Settings;
-import appeng.api.parts.IPart;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AppEng;
-import appeng.me.storage.MEInventoryHandler;
 import appeng.parts.misc.PartStorageBus;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.networking.TileController;
@@ -50,10 +47,10 @@ public class StorageBusTests {
     public static void storageBusExposesExternalChestContents(GameTestHelper helper) {
         TileController controller = getController(helper);
         TileEntityChest chest = getExternalChest(helper);
-        IPart storageBus = getStorageBus(helper);
+        PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 64);
 
-        helper.startSequence().thenWaitUntil(60, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 64);
@@ -65,15 +62,18 @@ public class StorageBusTests {
     public static void storageBusReflectsExternalMutation(GameTestHelper helper) {
         TileController controller = getController(helper);
         TileEntityChest chest = getExternalChest(helper);
-        IPart storageBus = getStorageBus(helper);
+        PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 16);
 
-        helper.startSequence().thenWaitUntil(60, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 16);
-        }).thenExecute(() -> setChestSlot(chest, 0, Blocks.cobblestone, 40))
-                .thenWaitUntil(80, () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 40))
+        }).thenExecute("apply test action", () -> setChestSlot(chest, 0, Blocks.cobblestone, 40))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        80,
+                        () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 40))
                 .thenSucceed();
     }
 
@@ -85,17 +85,22 @@ public class StorageBusTests {
         PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 1);
 
-        helper.startSequence().thenWaitUntil(60, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute(() -> clearChestSlot(chest, 0))
-                .thenWaitUntil(60, () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute(() -> storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ))
-                .thenWaitUntil(60, () -> {
+        }).thenExecute("apply test action", () -> clearChestSlot(chest, 0))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        60,
+                        () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
+                .thenExecute(
+                        "apply test action",
+                        () -> storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ))
+                .thenWaitUntil("wait for expected observable machine state", 60, () -> {
                     IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.cobblestone, 64);
                     assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
@@ -113,26 +118,25 @@ public class StorageBusTests {
         ItemStack driveCell = cell1k();
         setChestSlot(chest, 0, Blocks.cobblestone, 1);
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
+        storageBus.setPriority(100);
+        drive.setPriority(0);
 
-        helper.startSequence().thenWaitUntil(60, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute(() -> clearChestSlot(chest, 0))
-                .thenWaitUntil(60, () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute(() -> {
-                    storageBus.setPriority(100);
-                    drive.setPriority(0);
-                    drive.setInventorySlotContents(0, driveCell);
-                }).thenWaitUntil(60, () -> {
-                    MEInventoryHandler<IAEItemStack> handler = getStorageBusHandler(helper, storageBus);
-                    helper.assertEquals(
-                            100,
-                            handler.getPriority(),
-                            "Storage bus handler should apply configured priority");
-                    assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 1);
-                }).thenExecute(() -> {
+        }).thenExecute("apply test action", () -> clearChestSlot(chest, 0))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        60,
+                        () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
+                .thenExecute("insert lower-priority drive cell", () -> drive.setInventorySlotContents(0, driveCell))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        60,
+                        () -> { assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 1); })
+                .thenExecute("apply test action", () -> {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     helper.assertNull(remainder, "Injected items should fit into available network storage");
@@ -150,19 +154,23 @@ public class StorageBusTests {
         PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 1);
 
-        helper.startSequence().thenWaitUntil(60, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute(() -> clearChestSlot(chest, 0))
-                .thenWaitUntil(60, () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute(() -> configureStorageBusFilter(storageBus, Blocks.cobblestone)).thenWaitUntil(60, () -> {
+        }).thenExecute("apply test action", () -> clearChestSlot(chest, 0))
+                .thenWaitUntil(
+                        "wait for expected observable machine state",
+                        60,
+                        () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
+                .thenExecute("apply test action", () -> configureStorageBusFilter(storageBus, Blocks.cobblestone))
+                .thenWaitUntil("wait for expected observable machine state", 60, () -> {
                     helper.assertNull(
                             simulateInjectIntoGrid(controller, Blocks.cobblestone, 1),
                             "Storage bus should accept matching items");
                     IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.dirt, 16);
                     assertItemRemainder(helper, remainder, Blocks.dirt, 16);
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     IAEItemStack matchingRemainder = injectIntoGrid(controller, Blocks.cobblestone, 16);
                     IAEItemStack nonMatchingRemainder = injectIntoGrid(controller, Blocks.dirt, 16);
 
@@ -183,18 +191,7 @@ public class StorageBusTests {
     }
 
     private static PartStorageBus getStorageBus(GameTestHelper helper) {
-        IPart part = part(helper, STORAGE_BUS_LABEL, ForgeDirection.EAST);
-        helper.assertTrue(part instanceof PartStorageBus, "Storage bus label should contain a storage bus");
-        assert part instanceof PartStorageBus;
-        return (PartStorageBus) part;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static MEInventoryHandler<IAEItemStack> getStorageBusHandler(GameTestHelper helper,
-            PartStorageBus storageBus) {
-        MEInventoryHandler<IAEItemStack> handler = storageBus.getInternalHandler();
-        helper.assertNotNull(handler, "Storage bus handler should be available");
-        return handler;
+        return part(helper, STORAGE_BUS_LABEL, PartStorageBus.class);
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {

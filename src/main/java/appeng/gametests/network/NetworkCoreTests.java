@@ -1,10 +1,11 @@
-package appeng.gametests;
+package appeng.gametests.network;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertInactive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
+import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.pos;
 import static appeng.gametests.AEGameTestHelpers.tile;
@@ -29,6 +30,8 @@ import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
+import appeng.gametests.AEGameTestHelpers;
+import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.gametests.AEGameTestHelpers.Coord;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
@@ -44,17 +47,25 @@ public class NetworkCoreTests {
     private static final String BREAKABLE_CABLE_LABEL = "breakable_cable";
     private static final String TOGGLE_BUS_LABEL = "toggle_bus";
     private static final String REDSTONE_LABEL = "redstone";
+    private static final String[] FULL_CABLE_LINE = { "cable_1", "cable_2", "cable_3", "cable_4", "cable_5", "cable_6",
+            "cable_7", "cable_8", "cable_9", "cable_10" };
+    private static final String[] UPSTREAM_CABLE_LINE = { "cable_1", "cable_2", "cable_3" };
+    private static final String[] DOWNSTREAM_CABLE_LINE = { "cable_5", "cable_6", "cable_7", "cable_8", "cable_9",
+            "cable_10" };
+    private static final String[] CHANNEL_DEVICE_LABELS = { "channel_device_1", "channel_device_2", "channel_device_3",
+            "channel_device_4", "channel_device_5", "channel_device_6", "channel_device_7", "channel_device_8",
+            "channel_device_9" };
 
     // Boots a controller-backed grid and gives channels to labelled devices.
     @GameTest(template = "network_core", timeoutTicks = 80)
     public static void networkBootsAndActivatesDevices(GameTestHelper helper) {
         TileController controller = getController(helper);
         TileDrive drive = getDrive(helper);
-        installCableLine(helper, 1, 10);
+        installCableLine(helper, FULL_CABLE_LINE);
         IPart deviceA = placePart(helper, DEVICE_A_LABEL, ForgeDirection.UP, terminal());
         IPart deviceB = placePart(helper, DEVICE_B_LABEL, ForgeDirection.UP, storageMonitor());
 
-        helper.startSequence().thenWaitUntil(40, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertActive(helper, deviceA, "Device A should receive a channel");
@@ -67,24 +78,26 @@ public class NetworkCoreTests {
     public static void splitAndMergePreservesStorageVisibility(GameTestHelper helper) {
         TileController controller = getController(helper);
         TileDrive drive = getDrive(helper);
-        installCableLine(helper, 1, 10);
+        installCableLine(helper, FULL_CABLE_LINE);
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 100);
         drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil(40, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100);
-        }).thenExecute(() -> removeBlock(helper, BREAKABLE_CABLE_LABEL)).thenWaitUntil(30, () -> {
-            assertActive(helper, controller.getProxy(), "Controller side should stay active after split");
-            assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 0);
-        }).thenExecute(() -> placeCable(helper, BREAKABLE_CABLE_LABEL)).thenWaitUntil(40, () -> {
-            assertActive(helper, controller.getProxy(), "Controller grid proxy should reactivate after merge");
-            assertActive(helper, drive.getProxy(), "Drive grid proxy should reactivate after merge");
-            assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100);
-            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
-        }).thenSucceed();
+        }).thenExecute("apply test action", () -> removeBlock(helper, BREAKABLE_CABLE_LABEL))
+                .thenWaitUntil("wait for expected observable machine state", 30, () -> {
+                    assertActive(helper, controller.getProxy(), "Controller side should stay active after split");
+                    assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 0);
+                }).thenExecute("apply test action", () -> placeCable(helper, BREAKABLE_CABLE_LABEL))
+                .thenWaitUntil("wait for expected observable machine state", 40, () -> {
+                    assertActive(helper, controller.getProxy(), "Controller grid proxy should reactivate after merge");
+                    assertActive(helper, drive.getProxy(), "Drive grid proxy should reactivate after merge");
+                    assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                }).thenSucceed();
     }
 
     // A glass cable can carry eight channels, so the ninth device must be left without a channel.
@@ -92,13 +105,13 @@ public class NetworkCoreTests {
     public static void channelLimitDeactivatesOverflowDevice(GameTestHelper helper) {
         getController(helper);
         getDrive(helper);
-        installCableLine(helper, 1, 10);
+        installCableLine(helper, FULL_CABLE_LINE);
         List<IPart> devices = new ArrayList<>();
-        for (int xOffset = 1; xOffset <= 9; xOffset++) {
-            devices.add(placePart(helper, offsetFromController(helper, xOffset, 0, 0), ForgeDirection.UP, terminal()));
+        for (String deviceLabel : CHANNEL_DEVICE_LABELS) {
+            devices.add(placePart(helper, deviceLabel, ForgeDirection.UP, terminal()));
         }
 
-        helper.startSequence().thenWaitUntil(50, () -> {
+        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 50, () -> {
             int activeDevices = countActive(devices);
             helper.assertEquals(8, activeDevices, "Only eight devices should receive channels on a glass cable");
             helper.assertEquals(1, devices.size() - activeDevices, "One device should overflow without a channel");
@@ -110,35 +123,57 @@ public class NetworkCoreTests {
     public static void toggleBusGatesNetworkOnRedstone(GameTestHelper helper) {
         TileController controller = getController(helper);
         TileDrive drive = getDrive(helper);
-        installCableLine(helper, 1, 3);
+        installCableLine(helper, UPSTREAM_CABLE_LINE);
         placeCable(helper, TOGGLE_BUS_LABEL);
-        placePart(helper, TOGGLE_BUS_LABEL, ForgeDirection.EAST, toggleBus());
-        installCableLine(helper, 5, 10);
+        placePart(helper, TOGGLE_BUS_LABEL, directionBetween(helper, TOGGLE_BUS_LABEL, DEVICE_B_LABEL), toggleBus());
+        installCableLine(helper, DOWNSTREAM_CABLE_LINE);
         IPart upstreamDevice = placePart(helper, DEVICE_A_LABEL, ForgeDirection.UP, terminal());
         IPart downstreamDevice = placePart(helper, DEVICE_B_LABEL, ForgeDirection.UP, terminal());
+        ContinuousInvariant unpoweredToggleBusGatesDownstream = continuousInvariant(
+                helper,
+                "unpowered toggle bus must keep only the upstream network active",
+                () -> {
+                    assertActive(helper, controller.getProxy(), "Controller side should remain active");
+                    assertActive(helper, upstreamDevice, "Upstream device should remain active");
+                    assertInactive(helper, drive.getProxy(), "Drive should remain gated");
+                    assertInactive(helper, downstreamDevice, "Downstream device should remain gated");
+                });
 
-        helper.startSequence().thenWaitUntil(40, () -> {
+        helper.startSequence().thenWaitUntil("wait for initial unpowered toggle-bus state", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller side should boot without redstone");
             assertActive(helper, upstreamDevice, "Upstream device should stay active without redstone");
             assertInactive(helper, drive.getProxy(), "Drive should be gated while toggle bus is unpowered");
             assertInactive(helper, downstreamDevice, "Downstream device should be gated while toggle bus is unpowered");
-        }).thenExecute(() -> setRedstoneInput(helper, 15)).thenWaitUntil(40, () -> {
-            assertActive(helper, controller.getProxy(), "Controller side should stay active with redstone");
-            assertActive(helper, upstreamDevice, "Upstream device should stay active with redstone");
-            assertActive(helper, drive.getProxy(), "Drive should become active when the toggle bus is powered");
-            assertActive(
-                    helper,
-                    downstreamDevice,
-                    "Downstream device should become active when the toggle bus is powered");
-        }).thenExecute(() -> setRedstoneInput(helper, 0)).thenWaitUntil(40, () -> {
-            assertActive(helper, controller.getProxy(), "Controller side should stay active after redstone is removed");
-            assertActive(helper, upstreamDevice, "Upstream device should stay active after redstone is removed");
-            assertInactive(helper, drive.getProxy(), "Drive should be gated again after redstone is removed");
-            assertInactive(
-                    helper,
-                    downstreamDevice,
-                    "Downstream device should be gated again after redstone is removed");
-        }).thenSucceed();
+        }).thenExecute("begin unpowered gating invariant", unpoweredToggleBusGatesDownstream::enable).thenIdle(5)
+                .thenExecute("power toggle bus", () -> {
+                    unpoweredToggleBusGatesDownstream.disable();
+                    setRedstoneInput(helper, 15);
+                }).thenWaitUntil("wait for powered downstream activation", 40, () -> {
+                    assertActive(helper, controller.getProxy(), "Controller side should stay active with redstone");
+                    assertActive(helper, upstreamDevice, "Upstream device should stay active with redstone");
+                    assertActive(helper, drive.getProxy(), "Drive should become active when the toggle bus is powered");
+                    assertActive(
+                            helper,
+                            downstreamDevice,
+                            "Downstream device should become active when the toggle bus is powered");
+                }).thenExecute("remove toggle-bus power", () -> setRedstoneInput(helper, 0))
+                .thenWaitUntil("wait for downstream network to become gated again", 40, () -> {
+                    assertActive(
+                            helper,
+                            controller.getProxy(),
+                            "Controller side should stay active after redstone is removed");
+                    assertActive(
+                            helper,
+                            upstreamDevice,
+                            "Upstream device should stay active after redstone is removed");
+                    assertInactive(helper, drive.getProxy(), "Drive should be gated again after redstone is removed");
+                    assertInactive(
+                            helper,
+                            downstreamDevice,
+                            "Downstream device should be gated again after redstone is removed");
+                }).thenExecute("begin restored gating invariant", unpoweredToggleBusGatesDownstream::enable).thenIdle(5)
+                .thenExecute("finish restored gating observation", unpoweredToggleBusGatesDownstream::disable)
+                .thenSucceed();
     }
 
     private static TileController getController(GameTestHelper helper) {
@@ -149,9 +184,9 @@ public class NetworkCoreTests {
         return tile(helper, TileDrive.class, DRIVE_LABEL);
     }
 
-    private static void installCableLine(GameTestHelper helper, int firstXOffset, int lastXOffset) {
-        for (int xOffset = firstXOffset; xOffset <= lastXOffset; xOffset++) {
-            placeCable(helper, offsetFromController(helper, xOffset, 0, 0));
+    private static void installCableLine(GameTestHelper helper, String... cableRoles) {
+        for (String cableRole : cableRoles) {
+            placeCable(helper, cableRole);
         }
     }
 
@@ -198,9 +233,18 @@ public class NetworkCoreTests {
         AEGameTestHelpers.setRedstoneInput(helper, REDSTONE_LABEL, strength);
     }
 
-    private static Coord offsetFromController(GameTestHelper helper, int x, int y, int z) {
-        Coord controller = pos(helper, CONTROLLER_LABEL);
-        return new Coord(controller.x() + x, controller.y() + y, controller.z() + z);
+    private static ForgeDirection directionBetween(GameTestHelper helper, String fromRole, String toRole) {
+        Coord from = pos(helper, fromRole);
+        Coord to = pos(helper, toRole);
+        int dx = Integer.signum(to.x() - from.x());
+        int dy = Integer.signum(to.y() - from.y());
+        int dz = Integer.signum(to.z() - from.z());
+        for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+            if (direction.offsetX == dx && direction.offsetY == dy && direction.offsetZ == dz) {
+                return direction;
+            }
+        }
+        throw new AssertionError("Roles '" + fromRole + "' and '" + toRole + "' must define a direction");
     }
 
     private static int countActive(List<IPart> parts) {

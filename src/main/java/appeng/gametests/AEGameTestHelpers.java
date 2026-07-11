@@ -54,6 +54,18 @@ public final class AEGameTestHelpers {
         return part;
     }
 
+    public static <T extends IPart> T part(GameTestHelper helper, String label, Class<T> type) {
+        TileCableBus cableBus = tile(helper, TileCableBus.class, label);
+        for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+            IPart candidate = cableBus.getPart(side);
+            if (type.isInstance(candidate)) {
+                return type.cast(candidate);
+            }
+        }
+
+        throw new AssertionError("Template role '" + label + "' should contain part type " + type.getSimpleName());
+    }
+
     public static void setRedstoneInput(GameTestHelper helper, String label, int strength) {
         Coord pos = pos(helper, label);
         helper.setRedstoneInput(pos.x(), pos.y(), pos.z(), strength);
@@ -92,10 +104,11 @@ public final class AEGameTestHelpers {
 
     public static void assertNetworkStoredAmount(GameTestHelper helper, TileController controller, Block block,
             long expectedAmount) {
+        long actualAmount = networkStoredAmount(controller, block);
         helper.assertEquals(
                 expectedAmount,
-                networkStoredAmount(controller, block),
-                "Network-visible stored item amount should match");
+                actualAmount,
+                "Network storage for " + describe(block) + " should match; controller=" + describe(controller));
     }
 
     public static long networkStoredAmount(TileController controller, Block block) {
@@ -106,10 +119,11 @@ public final class AEGameTestHelpers {
 
     public static void assertNetworkMonitorStoredAmount(GameTestHelper helper, TileController controller, Block block,
             long expectedAmount) {
+        long actualAmount = networkMonitorStoredAmount(controller, block);
         helper.assertEquals(
                 expectedAmount,
-                networkMonitorStoredAmount(controller, block),
-                "Network monitor stored item amount should match");
+                actualAmount,
+                "Network monitor for " + describe(block) + " should match; controller=" + describe(controller));
     }
 
     public static long networkMonitorStoredAmount(TileController controller, Block block) {
@@ -143,7 +157,10 @@ public final class AEGameTestHelpers {
 
     public static void assertChestStoredAmount(GameTestHelper helper, TileEntityChest chest, Block block,
             long expectedAmount) {
-        helper.assertEquals(expectedAmount, chestStoredAmount(chest, block), "Chest stored item amount should match");
+        helper.assertEquals(
+                expectedAmount,
+                chestStoredAmount(chest, block),
+                "Chest storage for " + describe(block) + " should match; chest=" + describe(chest));
     }
 
     public static long chestStoredAmount(TileEntityChest chest, Block block) {
@@ -171,14 +188,20 @@ public final class AEGameTestHelpers {
     }
 
     public static void assertStoredAmount(GameTestHelper helper, ItemStack cell, Block block, long expectedAmount) {
-        helper.assertNotNull(cell, "Cell should exist");
-        helper.assertEquals(expectedAmount, storedAmount(helper, cell, block), "Stored item amount should match");
+        helper.assertNotNull(cell, "Cell containing " + describe(block) + " should exist");
+        helper.assertEquals(
+                expectedAmount,
+                storedAmount(helper, cell, block),
+                "Cell storage for " + describe(block) + " should match; cell=" + describe(cell));
     }
 
     public static void assertStoredFluidAmount(GameTestHelper helper, ItemStack cell, Fluid fluid,
             long expectedAmount) {
         helper.assertNotNull(cell, "Cell should exist");
-        helper.assertEquals(expectedAmount, storedFluidAmount(helper, cell, fluid), "Stored fluid amount should match");
+        helper.assertEquals(
+                expectedAmount,
+                storedFluidAmount(helper, cell, fluid),
+                "Cell storage for fluid " + fluid.getName() + " should match; cell=" + describe(cell));
     }
 
     public static long storedAmount(GameTestHelper helper, ItemStack cell, Block block) {
@@ -233,6 +256,63 @@ public final class AEGameTestHelpers {
 
     public static ItemStack cell64k() {
         return AEApi.instance().definitions().items().cell64k().maybeStack(1).get();
+    }
+
+    public static ContinuousInvariant continuousInvariant(GameTestHelper helper, String description,
+            Runnable assertion) {
+        ContinuousInvariant invariant = new ContinuousInvariant(description, assertion);
+        helper.onEachTick(invariant::check);
+        return invariant;
+    }
+
+    private static String describe(Block block) {
+        Object registryName = Block.blockRegistry.getNameForObject(block);
+        return registryName == null ? block.getUnlocalizedName() : registryName.toString();
+    }
+
+    private static String describe(ItemStack stack) {
+        if (stack == null) {
+            return "null";
+        }
+        return stack.getDisplayName() + " x" + stack.stackSize + " nbt=" + stack.getTagCompound();
+    }
+
+    private static String describe(TileEntity tile) {
+        return tile.getClass().getSimpleName() + "@(" + tile.xCoord + ',' + tile.yCoord + ',' + tile.zCoord + ')';
+    }
+
+    public static final class ContinuousInvariant {
+
+        private final String description;
+        private final Runnable assertion;
+        private boolean enabled;
+
+        private ContinuousInvariant(String description, Runnable assertion) {
+            this.description = description;
+            this.assertion = assertion;
+        }
+
+        public void enable() {
+            this.enabled = true;
+        }
+
+        public void disable() {
+            this.enabled = false;
+        }
+
+        private void check() {
+            if (!this.enabled) {
+                return;
+            }
+
+            try {
+                this.assertion.run();
+            } catch (AssertionError failure) {
+                throw new AssertionError(
+                        "Continuous invariant '" + this.description + "' failed: " + failure.getMessage(),
+                        failure);
+            }
+        }
     }
 
     public static final class Coord {

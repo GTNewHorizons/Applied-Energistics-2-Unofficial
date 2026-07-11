@@ -1,4 +1,4 @@
-package appeng.gametests;
+package appeng.gametests.storage.ioport;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertInactive;
@@ -7,11 +7,13 @@ import static appeng.gametests.AEGameTestHelpers.assertStoredFluidAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.cell4k;
 import static appeng.gametests.AEGameTestHelpers.cell64k;
+import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertFluids;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemInventory;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.pos;
+import static appeng.gametests.AEGameTestHelpers.storedAmount;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
@@ -20,6 +22,7 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntityHopper;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -40,6 +43,8 @@ import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AppEng;
+import appeng.gametests.AEGameTestHelpers;
+import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.gametests.AEGameTestHelpers.Coord;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.storage.TileDrive;
@@ -49,8 +54,10 @@ import appeng.tile.storage.TileIOPort;
 public class IOPortTests {
 
     private static final String IO_PORT_LABEL = "io_port";
+    private static final String CONTROLLER_LABEL = "controller";
     private static final String DRIVE_LABEL = "drive";
     private static final String REDSTONE_LABEL = "redstone";
+    private static final String AUTOMATION_LABEL = "automation";
 
     // Moves an empty cell from an input slot to an output slot.
     @GameTest(template = "ioport", timeoutTicks = 20)
@@ -59,12 +66,13 @@ public class IOPortTests {
         getDrive(helper);
         ItemStack cell = cell1k();
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("insert empty cell into IO port", () -> {
                     ioport.setInventorySlotContents(0, cell.copy());
                     helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(0), cell));
                     helper.assertTrue(ioport.getStackInSlot(6) == null);
-                }).thenExecute(() -> {
+                }).thenWaitUntil("wait for empty cell to reach output", 5, () -> {
                     helper.assertTrue(ioport.getStackInSlot(0) == null);
                     ItemStack expectedCell = cell.copy();
                     expectedCell.setTagCompound(new NBTTagCompound());
@@ -81,11 +89,12 @@ public class IOPortTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 100);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenWaitUntil(10, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 10, () -> {
                     helper.assertNull(ioport.getStackInSlot(0), "Exported cell should leave the input slot");
                     helper.assertNotNull(ioport.getStackInSlot(6), "Exported cell should move to the output slot");
                     assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
@@ -103,11 +112,12 @@ public class IOPortTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 100);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, targetCell);
-                }).thenWaitUntil(10, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 10, () -> {
                     helper.assertNull(ioport.getStackInSlot(0), "Imported cell should leave the input slot");
                     helper.assertNotNull(ioport.getStackInSlot(6), "Imported cell should move to the output slot");
                     assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 100);
@@ -127,11 +137,12 @@ public class IOPortTests {
         insertItems(helper, driveCell, Blocks.cobblestone, 100);
         insertItems(helper, driveCell, Blocks.dirt, 100);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, targetCell);
-                }).thenIdle(5).thenExecute(() -> {
+                }).thenWaitUntil("wait for partitioned import to stop at non-matching stacks", 10, () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "Partitioned cell should leave input once no more matching stacks can be imported");
@@ -156,11 +167,12 @@ public class IOPortTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 256);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, targetCell);
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "Cell should leave input when the network is exactly drained");
@@ -180,19 +192,24 @@ public class IOPortTests {
         configure(ioport, OperationMode.FILL, FullnessMode.EMPTY);
         ItemStack targetCell = cell1k();
         ItemStack driveCell = cell1k();
-
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
-                    drive.setInventorySlotContents(0, driveCell);
-                    ioport.setInventorySlotContents(0, targetCell);
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Cell should stay in input when the network starts empty");
-                    helper.assertNull(ioport.getStackInSlot(6), "Cell should not move to output when no work was done");
+        ContinuousInvariant emptyNetworkKeepsCell = continuousInvariant(
+                helper,
+                "an empty network must not move an unfilled target cell",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Cell should stay in input");
+                    helper.assertNull(ioport.getStackInSlot(6), "Cell should not move to output");
                     assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
-                }).thenSucceed();
+                });
+
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
+                    drive.setInventorySlotContents(0, driveCell);
+                    ioport.setInventorySlotContents(0, targetCell);
+                    emptyNetworkKeepsCell.enable();
+                }).thenIdle(5).thenExecute("finish empty-network observation window", emptyNetworkKeepsCell::disable)
+                .thenSucceed();
     }
 
     // Covers PR1259: FILL plus MoveWhenEmpty moves the cell when the target cell becomes full.
@@ -205,11 +222,12 @@ public class IOPortTests {
         ItemStack driveCell = cell64k();
         insertItems(helper, driveCell, Blocks.cobblestone, 9000);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, targetCell);
-                }).thenIdle(40).thenExecute(() -> {
+                }).thenWaitUntil("wait for target cell to become full and move to output", 45, () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "Full target cell should leave input in move-when-empty mode");
@@ -229,23 +247,28 @@ public class IOPortTests {
         ItemStack sourceCell = cell1k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 300);
+        ContinuousInvariant nonEmptySourceStaysInInput = continuousInvariant(
+                helper,
+                "source cell must remain in input while it still contains items",
+                () -> {
+                    if (storedAmount(helper, sourceCell, Blocks.cobblestone) > 0) {
+                        helper.assertNotNull(ioport.getStackInSlot(0), "Non-empty source cell should remain in input");
+                        helper.assertNull(ioport.getStackInSlot(6), "Non-empty source cell should not reach output");
+                    }
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Partially transferred cell should remain in the input slot");
-                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
-                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
-                }).thenWaitUntil(10, () -> {
+                    nonEmptySourceStaysInInput.enable();
+                }).thenWaitUntil("wait until the source cell is empty", 10, () -> {
                     helper.assertNull(ioport.getStackInSlot(0), "Emptied cell should leave the input slot");
                     helper.assertNotNull(ioport.getStackInSlot(6), "Emptied cell should move to the output slot");
                     assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 300);
-                }).thenSucceed();
+                }).thenExecute("stop source-cell invariant", nonEmptySourceStaysInInput::disable).thenSucceed();
     }
 
     // Moves a partially transferred cell under FullnessMode.HALF.
@@ -259,11 +282,12 @@ public class IOPortTests {
         insertItems(helper, sourceCell, Blocks.cobblestone, 300);
         insertItems(helper, nearlyFullDriveCell, Blocks.cobblestone, 8028);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, nearlyFullDriveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenWaitUntil(20, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 20, () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "HALF mode should remove the partially transferred cell from input");
@@ -285,11 +309,12 @@ public class IOPortTests {
         ItemStack driveCell = cell64k();
         insertItems(helper, driveCell, Blocks.cobblestone, 9000);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, targetCell);
-                }).thenWaitUntil(40, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 40, () -> {
                     helper.assertNull(ioport.getStackInSlot(0), "Full target cell should leave the input slot");
                     helper.assertNotNull(ioport.getStackInSlot(6), "Full target cell should move to the output slot");
                     assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 8128);
@@ -302,21 +327,27 @@ public class IOPortTests {
     public static void multipleInputSlotsMoveToOutputSlots(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
+        ContinuousInvariant cellConservation = continuousInvariant(
+                helper,
+                "six supplied cells must remain accounted for while moving between slots",
+                () -> helper.assertEquals(
+                        6,
+                        countFilledSlots(ioport, 0, 12),
+                        "Total IO port cell count should remain six"));
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     for (int slot = 0; slot < 6; slot++) {
                         ioport.setInventorySlotContents(slot, cell1k());
                     }
-                }).thenIdle(4).thenExecute(() -> {
-                    helper.assertEquals(1, countFilledSlots(ioport, 0, 6), "Input slots should contain 1 cell");
-                    helper.assertEquals(5, countFilledSlots(ioport, 6, 12), "Output slots should contain 5 cells");
-                }).thenIdle(1).thenExecute(() -> {
+                    cellConservation.enable();
+                }).thenWaitUntil("wait for all six cells to reach output", 10, () -> {
                     for (int slot = 0; slot < 6; slot++) {
                         helper.assertNull(ioport.getStackInSlot(slot), "All input slots should become empty");
                     }
                     helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output slots should contain 6 cells");
-                }).thenSucceed();
+                }).thenExecute("stop cell-conservation invariant", cellConservation::disable).thenSucceed();
     }
 
     // Keeps a cell queued while output is full, then moves it when an output slot opens.
@@ -325,20 +356,26 @@ public class IOPortTests {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
         ItemStack queuedCell = cell4k();
+        ContinuousInvariant fullOutputRetainsCell = continuousInvariant(
+                helper,
+                "a full output inventory must retain the queued cell in input",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Queued cell should remain in input");
+                    helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output should remain full");
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     for (int slot = 6; slot < 12; slot++) {
                         ioport.setInventorySlotContents(slot, cell1k());
                     }
                     ioport.setInventorySlotContents(0, queuedCell);
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Input cell should be retained while output is full");
-                    helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cell count should stay full");
+                    fullOutputRetainsCell.enable();
+                }).thenIdle(5).thenExecute("open an output slot", () -> {
+                    fullOutputRetainsCell.disable();
                     ioport.setInventorySlotContents(6, null);
-                }).thenIdle(1).thenExecute(() -> {
+                }).thenWaitUntil("wait for queued cell to enter opened output slot", 10, () -> {
                     helper.assertNull(ioport.getStackInSlot(0), "Input cell should leave once an output slot opens");
                     helper.assertTrue(
                             ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), queuedCell),
@@ -354,22 +391,28 @@ public class IOPortTests {
         ItemStack sourceCell = cell4k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 100);
+        ContinuousInvariant transferredCellRemainsQueued = continuousInvariant(
+                helper,
+                "a transferred cell must remain queued while output is full",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Transferred cell should remain in input");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     for (int slot = 6; slot < 12; slot++) {
                         ioport.setInventorySlotContents(slot, cell1k());
                     }
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Transferred cell should stay in input while output is full");
-                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
-                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                    transferredCellRemainsQueued.enable();
+                }).thenIdle(5).thenExecute("open an output slot", () -> {
+                    transferredCellRemainsQueued.disable();
                     ioport.setInventorySlotContents(6, null);
-                }).thenIdle(1).thenExecute(() -> {
+                }).thenWaitUntil("wait for transferred cell to enter opened output slot", 10, () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "Transferred cell should leave input once output opens");
@@ -389,39 +432,45 @@ public class IOPortTests {
         ItemStack sourceCell = cell4k();
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 100);
+        ContinuousInvariant inactivePortRetainsQueuedCell = continuousInvariant(
+                helper,
+                "inactive IO port must retain the queued cell without moving or duplicating contents",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Queued cell should remain in input while inactive");
+                    helper.assertNull(ioport.getStackInSlot(6), "Opened output should stay empty while inactive");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     for (int slot = 6; slot < 12; slot++) {
                         ioport.setInventorySlotContents(slot, cell1k());
                     }
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenIdle(5).thenExecute(() -> {
+                }).thenWaitUntil("wait for transferred cell to queue behind full output", 10, () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Transferred cell should be queued in input while output is full");
                     assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
-                    removePowerAndChannel(helper);
-                })
+                }).thenExecute("remove controller power and channel", () -> removePowerAndChannel(helper))
                 .thenWaitUntil(
+                        "wait for expected observable machine state",
                         40,
                         () -> assertInactive(
                                 helper,
                                 ioport.getProxy(),
                                 "IO port should lose its channel when the controller is removed"))
-                .thenExecute(() -> ioport.setInventorySlotContents(6, null)).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Queued cell should stay in input while the IO port is inactive");
-                    helper.assertNull(
-                            ioport.getStackInSlot(6),
-                            "Opened output slot should stay empty while the IO port is inactive");
-                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 0);
-                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                .thenExecute("open output slot while IO port is inactive", () -> {
+                    ioport.setInventorySlotContents(6, null);
+                    inactivePortRetainsQueuedCell.enable();
+                }).thenIdle(5).thenExecute("restore controller power and channel", () -> {
+                    inactivePortRetainsQueuedCell.disable();
                     restorePowerAndChannel(helper);
-                }).thenWaitUntil(40, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 40, () -> {
                     assertIOPortActive(helper, ioport);
                     helper.assertEquals(0, countFilledSlots(ioport, 0, 6), "No input cells should remain after resume");
                     helper.assertEquals(6, countFilledSlots(ioport, 6, 12), "Output cells should be exactly full");
@@ -442,21 +491,25 @@ public class IOPortTests {
         ItemStack fullDriveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 100);
         insertItems(helper, fullDriveCell, Blocks.cobblestone, 8128);
-
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
-                    drive.setInventorySlotContents(0, fullDriveCell);
-                    ioport.setInventorySlotContents(0, sourceCell);
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Source cell should remain in input when destination is full");
-                    helper.assertNull(
-                            ioport.getStackInSlot(6),
-                            "Source cell should not move to output when no export was possible");
+        ContinuousInvariant fullDestinationPreservesSource = continuousInvariant(
+                helper,
+                "full destination storage must preserve the source cell and its contents",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Source cell should remain in input");
+                    helper.assertNull(ioport.getStackInSlot(6), "Source cell should not move to output");
                     assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 100);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 8128);
-                }).thenSucceed();
+                });
+
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
+                    drive.setInventorySlotContents(0, fullDriveCell);
+                    ioport.setInventorySlotContents(0, sourceCell);
+                    fullDestinationPreservesSource.enable();
+                }).thenIdle(5)
+                .thenExecute("finish full-destination observation window", fullDestinationPreservesSource::disable)
+                .thenSucceed();
     }
 
     // Transfers 256 item units per tick without upgrades.
@@ -468,11 +521,12 @@ public class IOPortTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 300);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Cell should remain in input after exhausting transfer budget");
@@ -491,11 +545,12 @@ public class IOPortTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 600);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Cell with remaining contents should stay in input after speed transfer");
@@ -515,11 +570,12 @@ public class IOPortTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 3000);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Cell with remaining contents should stay in input after max-speed transfer");
@@ -539,11 +595,12 @@ public class IOPortTests {
         ItemStack driveCell = fluidCell1k(helper);
         insertFluids(helper, sourceCell, water, 300_000);
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenExecute(() -> {
+                }).thenExecute("apply test action", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Fluid cell should remain in input after exhausting transfer budget");
@@ -557,18 +614,25 @@ public class IOPortTests {
     public static void redstoneHighSignalRequiresPower(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
+        ContinuousInvariant unpoweredHighSignalDoesNotRun = continuousInvariant(
+                helper,
+                "HIGH_SIGNAL mode must not run without redstone power",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Unpowered cell should remain in input");
+                    helper.assertNull(ioport.getStackInSlot(6), "Unpowered cell should not reach output");
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     installRedstoneUpgrade(ioport);
                     configureRedstone(ioport, RedstoneMode.HIGH_SIGNAL);
                     ioport.setInventorySlotContents(0, cell1k());
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "HIGH_SIGNAL mode should keep the input cell without power");
+                    unpoweredHighSignalDoesNotRun.enable();
+                }).thenIdle(5).thenExecute("apply redstone power", () -> {
+                    unpoweredHighSignalDoesNotRun.disable();
                     setRedstoneInput(helper, 15);
-                }).thenIdle(1).thenExecute(() -> {
+                }).thenWaitUntil("wait for powered HIGH_SIGNAL operation", 10, () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "HIGH_SIGNAL mode should remove the input cell when powered");
@@ -583,19 +647,26 @@ public class IOPortTests {
     public static void redstoneLowSignalRunsOnlyWithoutPower(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
+        ContinuousInvariant poweredLowSignalDoesNotRun = continuousInvariant(
+                helper,
+                "LOW_SIGNAL mode must not run while redstone is powered",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Powered cell should remain in input");
+                    helper.assertNull(ioport.getStackInSlot(6), "Powered cell should not reach output");
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     setRedstoneInput(helper, 15);
                     installRedstoneUpgrade(ioport);
                     configureRedstone(ioport, RedstoneMode.LOW_SIGNAL);
                     ioport.setInventorySlotContents(0, cell1k());
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "LOW_SIGNAL mode should keep the input cell while powered");
+                    poweredLowSignalDoesNotRun.enable();
+                }).thenIdle(5).thenExecute("remove redstone power", () -> {
+                    poweredLowSignalDoesNotRun.disable();
                     setRedstoneInput(helper, 0);
-                }).thenIdle(1).thenExecute(() -> {
+                }).thenWaitUntil("wait for unpowered LOW_SIGNAL operation", 10, () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "LOW_SIGNAL mode should remove the input cell without power");
@@ -610,20 +681,33 @@ public class IOPortTests {
     public static void redstonePulseModeRunsAfterPulse(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
+        ContinuousInvariant noPulseDoesNotRun = continuousInvariant(
+                helper,
+                "SIGNAL_PULSE mode must not run before a pulse",
+                () -> {
+                    helper.assertEquals(2, countFilledSlots(ioport, 0, 6), "Both cells should remain in input");
+                    helper.assertEquals(0, countFilledSlots(ioport, 6, 12), "No cell should reach output");
+                });
+        ContinuousInvariant onePulseMovesOnlyOneCell = continuousInvariant(
+                helper,
+                "one signal pulse must not process a second cell",
+                () -> {
+                    helper.assertEquals(1, countFilledSlots(ioport, 0, 6), "One cell should remain in input");
+                    helper.assertEquals(1, countFilledSlots(ioport, 6, 12), "Exactly one cell should be in output");
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     installRedstoneUpgrade(ioport);
                     configureRedstone(ioport, RedstoneMode.SIGNAL_PULSE);
                     ioport.setInventorySlotContents(0, cell1k());
                     ioport.setInventorySlotContents(1, cell1k());
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertEquals(
-                            2,
-                            countFilledSlots(ioport, 0, 6),
-                            "SIGNAL_PULSE mode should keep both cells before a pulse");
+                    noPulseDoesNotRun.enable();
+                }).thenIdle(5).thenExecute("apply one redstone pulse", () -> {
+                    noPulseDoesNotRun.disable();
                     setRedstoneInput(helper, 15);
-                }).thenIdle(5).thenExecute(() -> {
+                }).thenWaitUntil("wait for exactly one cell to process", 10, () -> {
                     helper.assertEquals(
                             1,
                             countFilledSlots(ioport, 0, 6),
@@ -632,29 +716,42 @@ public class IOPortTests {
                             1,
                             countFilledSlots(ioport, 6, 12),
                             "SIGNAL_PULSE mode should move exactly one cell after one pulse");
-                }).thenSucceed();
+                }).thenExecute("begin post-pulse invariant window", onePulseMovesOnlyOneCell::enable).thenIdle(5)
+                .thenExecute("finish post-pulse invariant window", onePulseMovesOnlyOneCell::disable).thenSucceed();
     }
 
-    // Allows cell insertion only into input slots and extraction only from output slots.
+    // A real hopper should reject non-cells, then insert a storage cell for processing.
     @GameTest(template = "ioport", timeoutTicks = 20)
-    public static void sidedInventoryAllowsCellInputAndOutputExtractionOnly(GameTestHelper helper) {
+    public static void sidedAutomationRejectsNonCellsAndInsertsStorageCells(GameTestHelper helper) {
         TileIOPort ioport = getIOPort(helper);
         ItemStack cell = cell1k();
         ItemStack nonCell = new ItemStack(Items.apple);
-        int side = ForgeDirection.UNKNOWN.ordinal();
+        Coord automationPos = pos(helper, AUTOMATION_LABEL);
+        ForgeDirection towardIOPort = directionBetween(helper, AUTOMATION_LABEL, IO_PORT_LABEL);
+        helper.setBlock(automationPos.x(), automationPos.y(), automationPos.z(), Blocks.hopper, towardIOPort.ordinal());
+        TileEntityHopper hopper = tile(helper, TileEntityHopper.class, AUTOMATION_LABEL);
+        ContinuousInvariant rejectedItemStaysInHopper = continuousInvariant(
+                helper,
+                "hopper must not insert an apple into the IO port",
+                () -> {
+                    helper.assertTrue(
+                            ItemStack.areItemStacksEqual(nonCell, hopper.getStackInSlot(0)),
+                            "Automation input should still contain the rejected apple");
+                    helper.assertNull(ioport.getStackInSlot(0), "IO port input should reject the apple");
+                });
 
-        helper.assertTrue(ioport.isItemValidForSlot(0, cell), "Storage cells should be valid items");
-        helper.assertFalse(ioport.isItemValidForSlot(0, nonCell), "Non-cell items should be invalid");
-        helper.assertTrue(ioport.canInsertItem(0, cell, side), "Input slots should accept storage cells");
-        helper.assertFalse(ioport.canInsertItem(6, cell, side), "Output slots should not accept storage cells");
-        helper.assertFalse(ioport.canInsertItem(0, nonCell, side), "Input slots should not accept non-cell items");
-        helper.assertFalse(ioport.canExtractItem(0, cell, side), "Input slots should not allow extraction");
-        helper.assertTrue(ioport.canExtractItem(6, cell, side), "Output slots should allow extraction");
-        helper.assertEquals(
-                12,
-                ioport.getAccessibleSlotsBySide(ForgeDirection.UNKNOWN).length,
-                "All 12 slots should be exposed");
-        helper.succeed();
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("supply non-cell through automation", () -> {
+                    hopper.setInventorySlotContents(0, nonCell.copy());
+                    rejectedItemStaysInHopper.enable();
+                }).thenIdle(5).thenExecute("replace rejected item with a storage cell", () -> {
+                    rejectedItemStaysInHopper.disable();
+                    hopper.setInventorySlotContents(0, cell.copy());
+                }).thenWaitUntil("wait for hopper-fed cell to be processed", 10, () -> {
+                    helper.assertNull(hopper.getStackInSlot(0), "Hopper should insert the storage cell");
+                    helper.assertNotNull(ioport.getStackInSlot(6), "Processed hopper-fed cell should reach output");
+                }).thenSucceed();
     }
 
     // Keeps source cell contents intact when no destination storage exists.
@@ -664,18 +761,23 @@ public class IOPortTests {
         getDrive(helper);
         ItemStack sourceCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 1);
-
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> ioport.setInventorySlotContents(0, sourceCell)).thenIdle(10)
-                .thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Input cell should remain when no destination storage exists");
-                    helper.assertNull(
-                            ioport.getStackInSlot(6),
-                            "Cell should not move to output when no destination storage exists");
+        ContinuousInvariant noDestinationPreservesSource = continuousInvariant(
+                helper,
+                "missing destination storage must preserve the source cell",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Input cell should remain without a destination");
+                    helper.assertNull(ioport.getStackInSlot(6), "Cell should not move without a destination");
                     assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 1);
-                }).thenSucceed();
+                });
+
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("insert source cell without destination storage", () -> {
+                    ioport.setInventorySlotContents(0, sourceCell);
+                    noDestinationPreservesSource.enable();
+                }).thenIdle(10)
+                .thenExecute("finish missing-destination observation window", noDestinationPreservesSource::disable)
+                .thenSucceed();
     }
 
     // Preserves queued cells without duplication or loss when settings change while output is full.
@@ -684,20 +786,30 @@ public class IOPortTests {
         TileIOPort ioport = getIOPort(helper);
         getDrive(helper);
         ItemStack queuedCell = cell4k();
+        ContinuousInvariant queuedCellIsConserved = continuousInvariant(
+                helper,
+                "queued cell must remain exactly once while output is full",
+                () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Queued cell should remain in input");
+                    helper.assertEquals(
+                            7,
+                            countFilledSlots(ioport, 0, 12),
+                            "Seven total cells should be accounted for");
+                });
 
-        helper.startSequence().thenWaitUntilAtEnd(() -> assertIOPortActive(helper, ioport)).thenIdle(1)
-                .thenExecuteAtStart(() -> {
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for expected end-of-tick state", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("apply test supply at tick start", () -> {
                     for (int slot = 6; slot < 12; slot++) {
                         ioport.setInventorySlotContents(slot, cell1k());
                     }
                     ioport.setInventorySlotContents(0, queuedCell);
-                }).thenIdle(5).thenExecute(() -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Queued cell should remain in input before changing settings");
+                    queuedCellIsConserved.enable();
+                }).thenIdle(5).thenExecute("change settings and open output slot", () -> {
+                    queuedCellIsConserved.disable();
                     configure(ioport, OperationMode.EMPTY, FullnessMode.HALF);
                     ioport.setInventorySlotContents(6, null);
-                }).thenWaitUntil(30, () -> {
+                }).thenWaitUntil("wait for expected observable machine state", 30, () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "Queued cell should leave input after changing settings");
@@ -779,8 +891,21 @@ public class IOPortTests {
     }
 
     private static Coord controllerPos(GameTestHelper helper) {
-        Coord ioPort = pos(helper, IO_PORT_LABEL);
-        return new Coord(ioPort.x() + 1, ioPort.y(), ioPort.z());
+        return pos(helper, CONTROLLER_LABEL);
+    }
+
+    private static ForgeDirection directionBetween(GameTestHelper helper, String fromRole, String toRole) {
+        Coord from = pos(helper, fromRole);
+        Coord to = pos(helper, toRole);
+        int dx = Integer.signum(to.x() - from.x());
+        int dy = Integer.signum(to.y() - from.y());
+        int dz = Integer.signum(to.z() - from.z());
+        for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+            if (direction.offsetX == dx && direction.offsetY == dy && direction.offsetZ == dz) {
+                return direction;
+            }
+        }
+        throw new AssertionError("Roles '" + fromRole + "' and '" + toRole + "' must define a direction");
     }
 
     private static int countFilledSlots(TileIOPort ioport, int startInclusive, int endExclusive) {

@@ -1,4 +1,4 @@
-package appeng.gametests;
+package appeng.gametests.storage.drive;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
@@ -8,6 +8,7 @@ import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemInventory;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
+import static appeng.gametests.AEGameTestHelpers.simulateInjectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
@@ -44,11 +45,14 @@ public class DriveAndCellTests {
         ItemStack cell = cell1k();
         insertItems(helper, cell, Blocks.cobblestone, 100);
 
-        helper.startSequence().thenWaitUntil(40, () -> {
+        helper.startSequence().thenWaitUntil("wait for drive network activation", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
-        }).thenExecute(() -> drive.setInventorySlotContents(0, cell))
-                .thenWaitUntil(20, () -> { assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100); })
+        }).thenExecute("insert prefilled cell into drive", () -> drive.setInventorySlotContents(0, cell))
+                .thenWaitUntil(
+                        "wait for prefilled cell contents to become network-visible",
+                        20,
+                        () -> assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100))
                 .thenSucceed();
     }
 
@@ -60,18 +64,24 @@ public class DriveAndCellTests {
         ItemStack cell = cell1k();
         partitionCell(helper, cell, Blocks.cobblestone);
 
-        helper.startSequence().thenWaitUntil(40, () -> {
+        helper.startSequence().thenWaitUntil("wait for drive network activation", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
-        }).thenExecute(() -> drive.setInventorySlotContents(0, cell)).thenIdle(5).thenExecute(() -> {
-            IAEItemStack acceptedRemainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
-            IAEItemStack rejectedRemainder = injectIntoGrid(controller, Blocks.dirt, 64);
+        }).thenExecute("insert partitioned cell into drive", () -> drive.setInventorySlotContents(0, cell))
+                .thenWaitUntil("wait for partition rules to become network-visible", 20, () -> {
+                    helper.assertNull(
+                            simulateInjectIntoGrid(controller, Blocks.cobblestone, 64),
+                            "Configured cobblestone should be accepted by the partitioned cell");
+                    assertRemainder(helper, simulateInjectIntoGrid(controller, Blocks.dirt, 64), Blocks.dirt, 64);
+                }).thenExecute("inject configured and rejected stacks", () -> {
+                    IAEItemStack acceptedRemainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
+                    IAEItemStack rejectedRemainder = injectIntoGrid(controller, Blocks.dirt, 64);
 
-            helper.assertNull(acceptedRemainder, "Configured stack should enter the partitioned cell");
-            assertRemainder(helper, rejectedRemainder, Blocks.dirt, 64);
-            assertStoredAmount(helper, cell, Blocks.cobblestone, 64);
-            assertStoredAmount(helper, cell, Blocks.dirt, 0);
-        }).thenSucceed();
+                    helper.assertNull(acceptedRemainder, "Configured stack should enter the partitioned cell");
+                    assertRemainder(helper, rejectedRemainder, Blocks.dirt, 64);
+                    assertStoredAmount(helper, cell, Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, cell, Blocks.dirt, 0);
+                }).thenSucceed();
     }
 
     // New items should route to the higher-priority ME chest before the lower-priority drive.
@@ -83,23 +93,29 @@ public class DriveAndCellTests {
         ItemStack highPriorityCell = cell1k();
         ItemStack lowPriorityCell = cell1k();
 
-        helper.startSequence().thenWaitUntil(40, () -> {
+        helper.startSequence().thenWaitUntil("wait for prioritized storage network activation", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertActive(helper, meChest.getProxy(), "ME chest grid proxy should become active");
-        }).thenExecute(() -> {
+        }).thenExecute("configure priorities and insert storage cells", () -> {
             meChest.setPriority(100);
             drive.setPriority(0);
             meChest.setInventorySlotContents(1, highPriorityCell);
             drive.setInventorySlotContents(0, lowPriorityCell);
-        }).thenIdle(5).thenExecute(() -> {
-            IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 128);
+        }).thenWaitUntil(
+                "wait for prioritized storage to accept the test stack",
+                20,
+                () -> helper.assertNull(
+                        simulateInjectIntoGrid(controller, Blocks.cobblestone, 128),
+                        "Prioritized storage should accept 128 cobblestone"))
+                .thenExecute("inject cobblestone and validate high-priority routing", () -> {
+                    IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 128);
 
-            helper.assertNull(remainder, "Injected items should fit into available network storage");
-            assertStoredAmount(helper, highPriorityCell, Blocks.cobblestone, 128);
-            assertStoredAmount(helper, lowPriorityCell, Blocks.cobblestone, 0);
-            assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 128);
-        }).thenSucceed();
+                    helper.assertNull(remainder, "Injected items should fit into available network storage");
+                    assertStoredAmount(helper, highPriorityCell, Blocks.cobblestone, 128);
+                    assertStoredAmount(helper, lowPriorityCell, Blocks.cobblestone, 0);
+                    assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 128);
+                }).thenSucceed();
     }
 
     // Once high-priority storage is full, overflow should route to the lower-priority drive cell.
@@ -112,19 +128,20 @@ public class DriveAndCellTests {
         ItemStack lowPriorityCell = cell1k();
         insertItems(helper, highPriorityCell, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
 
-        helper.startSequence().thenWaitUntil(40, () -> {
+        helper.startSequence().thenWaitUntil("wait for prioritized storage network activation", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertActive(helper, meChest.getProxy(), "ME chest grid proxy should become active");
-        }).thenExecute(() -> {
+        }).thenExecute("configure priorities and insert full and empty cells", () -> {
             meChest.setPriority(100);
             drive.setPriority(0);
             meChest.setInventorySlotContents(1, highPriorityCell);
             drive.setInventorySlotContents(0, lowPriorityCell);
         }).thenWaitUntil(
+                "wait for the full high-priority cell to become visible",
                 20,
                 () -> { assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY); })
-                .thenExecute(() -> {
+                .thenExecute("inject overflow and validate fallback routing", () -> {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     helper.assertNull(remainder, "Overflow should fit into lower-priority storage");
