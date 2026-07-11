@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.github.bsideup.jabel.Desugar;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
@@ -31,6 +30,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.AxisAlignedBB;
 
+import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
@@ -104,10 +104,10 @@ public class CraftingExecutionTests {
         network.drive.setInventorySlotContents(0, driveCell);
 
         helper.startSequence().thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
-                .thenExecute(() -> processingTarget.set(placeProcessingTarget(helper)))
-                .thenExecute(() -> {
-                    installPattern(network.blockInterface, encodedProcessingPattern(Blocks.cobblestone, 1,
-                            Blocks.stone, 1));
+                .thenExecute(() -> processingTarget.set(placeProcessingTarget(helper))).thenExecute(() -> {
+                    installPattern(
+                            network.blockInterface,
+                            encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1));
                     network.blockInterface.getConfigManager()
                             .putSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.LOCK_UNTIL_RESULT);
                 })
@@ -116,14 +116,13 @@ public class CraftingExecutionTests {
                         () -> helper.assertFalse(
                                 craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
                                 "Processing pattern output should be advertised"))
-                .thenExecute(() -> submitCraft(helper, network.controller, Blocks.stone, 1))
-                .thenWaitUntil(220, () -> {
+                .thenExecute(() -> submitCraft(helper, network.controller, Blocks.stone, 1)).thenWaitUntil(220, () -> {
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 0);
                     assertChestStoredAmount(helper, processingTarget.get(), Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
                     helper.assertTrue(
-                            network.blockInterface.getInterfaceDuality()
-                                    .getCraftingLockedReason() == LockCraftingMode.LOCK_UNTIL_RESULT,
+                            network.blockInterface.getInterfaceDuality().getCraftingLockedReason()
+                                    == LockCraftingMode.LOCK_UNTIL_RESULT,
                             "Interface should wait for the processing result");
                 }).thenExecute(() -> {
                     clearInventory(processingTarget.get());
@@ -134,8 +133,8 @@ public class CraftingExecutionTests {
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 0);
                     assertStoredAmount(helper, driveCell, Blocks.stone, 1);
                     helper.assertTrue(
-                            network.blockInterface.getInterfaceDuality()
-                                    .getCraftingLockedReason() == LockCraftingMode.NONE,
+                            network.blockInterface.getInterfaceDuality().getCraftingLockedReason()
+                                    == LockCraftingMode.NONE,
                             "Returned output should unlock the interface");
                     assertNotRequesting(helper, network.controller, Blocks.stone);
                 }).thenSucceed();
@@ -150,11 +149,11 @@ public class CraftingExecutionTests {
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         network.drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence()
-                .thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
-                .thenExecute(() -> installPattern(
-                        network.blockInterface,
-                        encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
+        helper.startSequence().thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
+                .thenExecute(
+                        () -> installPattern(
+                                network.blockInterface,
+                                encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
                 .thenWaitUntil(
                         80,
                         () -> helper.assertFalse(
@@ -186,9 +185,10 @@ public class CraftingExecutionTests {
         network.drive.setInventorySlotContents(0, driveCell);
 
         helper.startSequence().thenWaitUntil(100, () -> assertCraftingNetworkActive(helper, network))
-                .thenExecute(() -> installPattern(
-                        network.blockInterface,
-                        encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
+                .thenExecute(
+                        () -> installPattern(
+                                network.blockInterface,
+                                encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
                 .thenWaitUntil(
                         80,
                         () -> helper.assertFalse(
@@ -203,7 +203,10 @@ public class CraftingExecutionTests {
                             + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.stone);
 
                     helper.assertTrue(link.get().isCanceled(), "Crafting link should be canceled when the CPU breaks");
-                    helper.assertEquals(1L, accountedCobblestone, "Ingredient should exist exactly once after CPU break");
+                    helper.assertEquals(
+                            1L,
+                            accountedCobblestone,
+                            "Ingredient should exist exactly once after CPU break");
                     helper.assertEquals(0L, accountedStone, "CPU break should not produce the requested output");
                     assertNotRequesting(helper, network.controller, Blocks.stone);
                 }).thenSucceed();
@@ -234,11 +237,8 @@ public class CraftingExecutionTests {
     private static TileEntityChest placeProcessingTarget(GameTestHelper helper) {
         Coord assemblerPos = pos(helper, ASSEMBLER_LABEL);
         helper.setBlock(assemblerPos.x(), assemblerPos.y(), assemblerPos.z(), Blocks.chest);
-        return helper.assertTileEntityPresent(
-                TileEntityChest.class,
-                assemblerPos.x(),
-                assemblerPos.y(),
-                assemblerPos.z());
+        return helper
+                .assertTileEntityPresent(TileEntityChest.class, assemblerPos.x(), assemblerPos.y(), assemblerPos.z());
     }
 
     private static void installPattern(TileInterface blockInterface, ItemStack encodedPattern) {
@@ -271,7 +271,8 @@ public class CraftingExecutionTests {
 
     private static void assertNotRequesting(GameTestHelper helper, TileController controller, Block output) {
         IAEStack<?> requestedOutput = itemStack(output, 1);
-        helper.assertFalse(craftingGrid(controller).isRequesting(requestedOutput),
+        helper.assertFalse(
+                craftingGrid(controller).isRequesting(requestedOutput),
                 "Crafting grid should not still request the output");
     }
 
@@ -374,8 +375,7 @@ public class CraftingExecutionTests {
 
     @Desugar
     private record CraftingNetwork(TileController controller, TileDrive drive, TileCraftingStorageTile cpuStorage,
-                                   TileCraftingTile cpuUnit, TileInterface blockInterface,
-                                   TileMolecularAssembler assembler) {
+            TileCraftingTile cpuUnit, TileInterface blockInterface, TileMolecularAssembler assembler) {
 
     }
 }

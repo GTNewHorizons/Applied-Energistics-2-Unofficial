@@ -78,25 +78,20 @@ public class InterfaceTests {
         helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network))
                 .thenExecute(() -> {
                     network.partInterface.getConfigManager().putSetting(Settings.BLOCK, YesNo.YES);
-                    network.partInterface.getInterfaceDuality()
-                            .getPatterns()
-                            .setInventorySlotContents(0, encodedProcessingPattern(Blocks.cobblestone, 1,
-                                    Blocks.stone, 1));
+                    network.partInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(
+                            0,
+                            encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1));
                     AEGameTestHelpers.setChestSlot(network.adjacentChest, 0, Blocks.dirt, 1);
                 }).thenIdle(5).thenExecute(() -> {
                     ICraftingPatternDetails details = firstPattern(helper, network.partInterface);
-                    boolean pushed = network.partInterface.pushPattern(
-                            details,
-                            craftingTable(Blocks.cobblestone, 1));
+                    boolean pushed = network.partInterface.pushPattern(details, craftingTable(Blocks.cobblestone, 1));
 
                     helper.assertFalse(pushed, "Blocking interface should not push into a non-empty target");
                     assertChestStoredAmount(helper, network.adjacentChest, Blocks.dirt, 1);
                     assertChestStoredAmount(helper, network.adjacentChest, Blocks.cobblestone, 0);
                 }).thenExecute(() -> clearChest(network.adjacentChest)).thenIdle(5).thenExecute(() -> {
                     ICraftingPatternDetails details = firstPattern(helper, network.partInterface);
-                    boolean pushed = network.partInterface.pushPattern(
-                            details,
-                            craftingTable(Blocks.cobblestone, 1));
+                    boolean pushed = network.partInterface.pushPattern(details, craftingTable(Blocks.cobblestone, 1));
 
                     helper.assertTrue(pushed, "Blocking interface should push once the target is empty");
                     assertChestStoredAmount(helper, network.adjacentChest, Blocks.cobblestone, 1);
@@ -108,14 +103,14 @@ public class InterfaceTests {
     public static void interfacePatternSlotsAdvertiseCraftableOutput(GameTestHelper helper) {
         InterfaceNetwork network = getInterfaceNetwork(helper);
 
-        helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute(() -> network.blockInterface.getInterfaceDuality()
-                        .getPatterns()
-                        .setInventorySlotContents(0, encodedProcessingPattern(Blocks.cobblestone, 1,
-                                Blocks.stone, 1)))
-                .thenWaitUntil(80, () -> helper.assertFalse(
-                        craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
-                        "Interface pattern output should be craftable"))
+        helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network)).thenExecute(
+                () -> network.blockInterface.getInterfaceDuality().getPatterns()
+                        .setInventorySlotContents(0, encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
+                .thenWaitUntil(
+                        80,
+                        () -> helper.assertFalse(
+                                craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
+                                "Interface pattern output should be craftable"))
                 .thenSucceed();
     }
 
@@ -151,8 +146,7 @@ public class InterfaceTests {
         helper.startSequence().thenWaitUntil(80, () -> assertInterfaceNetworkActive(helper, network))
                 .thenExecute(() -> {
                     configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
-                    network.blockInterface.getInterfaceDuality()
-                            .getStorage()
+                    network.blockInterface.getInterfaceDuality().getStorage()
                             .setInventorySlotContents(0, new ItemStack(Blocks.cobblestone, STOCK_AMOUNT));
                 }).thenIdle(30).thenExecute(() -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
@@ -192,9 +186,7 @@ public class InterfaceTests {
     }
 
     private static void configureStock(IInterfaceHost interfaceHost, Block block, int amount) {
-        interfaceHost.getInterfaceDuality()
-                .getConfig()
-                .setInventorySlotContents(0, new ItemStack(block, amount));
+        interfaceHost.getInterfaceDuality().getConfig().setInventorySlotContents(0, new ItemStack(block, amount));
     }
 
     private static void assertInterfaceStoredAmount(GameTestHelper helper, IInterfaceHost interfaceHost, Block block,
@@ -276,6 +268,5 @@ public class InterfaceTests {
 
     @Desugar
     private record InterfaceNetwork(TileController controller, TileDrive drive, TileInterface blockInterface,
-                                    PartInterface partInterface, TileEntityChest adjacentChest) {
-    }
+            PartInterface partInterface, TileEntityChest adjacentChest) {}
 }
