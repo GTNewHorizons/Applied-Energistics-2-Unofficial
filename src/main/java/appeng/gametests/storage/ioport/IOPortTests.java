@@ -67,7 +67,7 @@ public class IOPortTests {
                     ioport.setInventorySlotContents(0, cell.copy());
                     helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(0), cell));
                     helper.assertTrue(ioport.getStackInSlot(6) == null);
-                }).thenWaitUntil("wait for empty cell to reach output", 5, () -> {
+                }).thenExecute("assert empty cell reached output in the same tick", () -> {
                     helper.assertTrue(ioport.getStackInSlot(0) == null);
                     ItemStack expectedCell = cell.copy();
                     expectedCell.setTagCompound(new NBTTagCompound());
@@ -167,8 +167,7 @@ public class IOPortTests {
                 .thenIdle(1).thenExecuteAtStart("insert target and source cells into the IO port network", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, targetCell);
-                })
-                .thenWaitUntil("wait for exact-budget import to drain the network and move the target cell", 5, () -> {
+                }).thenExecute("assert exact-budget import completes in the same tick", () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "Cell should leave input when the network is exactly drained");
@@ -338,7 +337,10 @@ public class IOPortTests {
                         ioport.setInventorySlotContents(slot, cell1k());
                     }
                     cellConservation.enable();
-                }).thenWaitUntil("wait for all six cells to reach output", 10, () -> {
+                }).thenIdle(4).thenExecute("assert five cells moved after five processing ticks", () -> {
+                    helper.assertEquals(1, countFilledSlots(ioport, 0, 6), "Input slots should contain 1 cell");
+                    helper.assertEquals(5, countFilledSlots(ioport, 6, 12), "Output slots should contain 5 cells");
+                }).thenIdle(1).thenExecute("assert all six cells moved after six processing ticks", () -> {
                     for (int slot = 0; slot < 6; slot++) {
                         helper.assertNull(ioport.getStackInSlot(slot), "All input slots should become empty");
                     }
@@ -371,7 +373,7 @@ public class IOPortTests {
                 }).thenIdle(5).thenExecute("open an output slot", () -> {
                     fullOutputRetainsCell.disable();
                     ioport.setInventorySlotContents(6, null);
-                }).thenWaitUntil("wait for queued cell to enter opened output slot", 10, () -> {
+                }).thenIdle(1).thenExecute("assert queued cell entered the opened output slot", () -> {
                     helper.assertNull(ioport.getStackInSlot(0), "Input cell should leave once an output slot opens");
                     helper.assertTrue(
                             ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), queuedCell),
@@ -408,7 +410,7 @@ public class IOPortTests {
                 }).thenIdle(5).thenExecute("open an output slot", () -> {
                     transferredCellRemainsQueued.disable();
                     ioport.setInventorySlotContents(6, null);
-                }).thenWaitUntil("wait for transferred cell to enter opened output slot", 10, () -> {
+                }).thenIdle(1).thenExecute("assert transferred cell entered the opened output slot", () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "Transferred cell should leave input once output opens");
@@ -522,7 +524,7 @@ public class IOPortTests {
                 .thenIdle(1).thenExecuteAtStart("insert test cells into the IO port network", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenWaitUntil("wait for the first 256-item transfer batch", 5, () -> {
+                }).thenExecute("assert the first tick transfers exactly 256 items", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Cell should remain in input after exhausting transfer budget");
@@ -546,7 +548,7 @@ public class IOPortTests {
                 .thenIdle(1).thenExecuteAtStart("insert test cells into the IO port network", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenWaitUntil("wait for the first 512-item transfer batch", 5, () -> {
+                }).thenExecute("assert the first tick transfers exactly 512 items", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Cell with remaining contents should stay in input after speed transfer");
@@ -571,7 +573,7 @@ public class IOPortTests {
                 .thenIdle(1).thenExecuteAtStart("insert test cells into the IO port network", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenWaitUntil("wait for the first 2048-item transfer batch", 5, () -> {
+                }).thenExecute("assert the first tick transfers exactly 2048 items", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Cell with remaining contents should stay in input after max-speed transfer");
@@ -603,7 +605,7 @@ public class IOPortTests {
                 }).thenIdle(5).thenExecute("apply redstone power", () -> {
                     unpoweredHighSignalDoesNotRun.disable();
                     setRedstoneInput(helper, 15);
-                }).thenWaitUntil("wait for powered HIGH_SIGNAL operation", 10, () -> {
+                }).thenIdle(1).thenExecute("assert HIGH_SIGNAL operation on the next tick", () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "HIGH_SIGNAL mode should remove the input cell when powered");
@@ -637,7 +639,7 @@ public class IOPortTests {
                 }).thenIdle(5).thenExecute("remove redstone power", () -> {
                     poweredLowSignalDoesNotRun.disable();
                     setRedstoneInput(helper, 0);
-                }).thenWaitUntil("wait for unpowered LOW_SIGNAL operation", 10, () -> {
+                }).thenIdle(1).thenExecute("assert LOW_SIGNAL operation on the next tick", () -> {
                     helper.assertNull(
                             ioport.getStackInSlot(0),
                             "LOW_SIGNAL mode should remove the input cell without power");
@@ -678,7 +680,7 @@ public class IOPortTests {
                 }).thenIdle(5).thenExecute("apply one redstone pulse", () -> {
                     noPulseDoesNotRun.disable();
                     setRedstoneInput(helper, 15);
-                }).thenWaitUntil("wait for exactly one cell to process", 10, () -> {
+                }).thenIdle(1).thenExecute("assert one pulse processes one cell on the next tick", () -> {
                     helper.assertEquals(
                             1,
                             countFilledSlots(ioport, 0, 6),

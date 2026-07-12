@@ -42,7 +42,7 @@ public class IOPortFluidCompatibilityTests {
                 .thenIdle(1).thenExecuteAtStart("insert AE2FC source and destination fluid cells", () -> {
                     drive.setInventorySlotContents(0, driveCell);
                     ioport.setInventorySlotContents(0, sourceCell);
-                }).thenWaitUntil("wait for the first 256,000 mB transfer batch", 5, () -> {
+                }).thenExecute("assert the first tick transfers exactly 256,000 mB", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Fluid cell should remain in input after exhausting transfer budget");
