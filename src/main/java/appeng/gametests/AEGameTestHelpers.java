@@ -17,6 +17,7 @@ import com.gtnewhorizons.horizonqa.api.TestPos;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.parts.IPart;
 import appeng.api.storage.ICellHandler;
@@ -117,6 +118,21 @@ public final class AEGameTestHelpers {
         return extracted == null ? 0 : extracted.getStackSize();
     }
 
+    public static void assertNetworkStoredAmount(GameTestHelper helper, IGridNode node, Block block,
+            long expectedAmount) {
+        long actualAmount = networkStoredAmount(node, block);
+        helper.assertEquals(
+                expectedAmount,
+                actualAmount,
+                "Network storage for " + describe(block) + " should match; node=" + describe(node));
+    }
+
+    public static long networkStoredAmount(IGridNode node, Block block) {
+        IAEItemStack extracted = itemMonitor(node)
+                .extractItems(itemStack(block, Integer.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
+        return extracted == null ? 0 : extracted.getStackSize();
+    }
+
     public static void assertNetworkMonitorStoredAmount(GameTestHelper helper, TileController controller, Block block,
             long expectedAmount) {
         long actualAmount = networkMonitorStoredAmount(controller, block);
@@ -137,6 +153,18 @@ public final class AEGameTestHelpers {
         } catch (GridAccessException e) {
             throw new AssertionError("Network storage should be accessible", e);
         }
+    }
+
+    public static IMEMonitor<IAEItemStack> itemMonitor(IGridNode node) {
+        if (node == null || node.getGrid() == null) {
+            throw new AssertionError("Network storage should have an attached grid node");
+        }
+
+        IStorageGrid storageGrid = node.getGrid().getCache(IStorageGrid.class);
+        if (storageGrid == null) {
+            throw new AssertionError("Network storage cache should be accessible");
+        }
+        return storageGrid.getItemInventory();
     }
 
     public static void setChestSlot(TileEntityChest chest, int slot, Block block, int amount) {
@@ -279,6 +307,13 @@ public final class AEGameTestHelpers {
 
     private static String describe(TileEntity tile) {
         return tile.getClass().getSimpleName() + "@(" + tile.xCoord + ',' + tile.yCoord + ',' + tile.zCoord + ')';
+    }
+
+    private static String describe(IGridNode node) {
+        if (node == null) {
+            return "null";
+        }
+        return node.getMachine().getClass().getSimpleName() + "[active=" + node.isActive() + ']';
     }
 
     public static final class ContinuousInvariant {
