@@ -137,6 +137,11 @@ public class PartQuartzFiber extends AEBasePart implements IEnergyGridProvider {
     }
 
     @Override
+    public void gridChanged() {
+        this.lastEnergyGrid.clear();
+    }
+
+    @Override
     public double extractAEPower(final double amt, final Actionable mode, final Set<IEnergyGrid> seen) {
         double acquiredPower = 0;
 
