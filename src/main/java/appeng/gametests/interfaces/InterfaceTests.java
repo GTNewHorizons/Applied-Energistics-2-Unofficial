@@ -67,13 +67,13 @@ public class InterfaceTests {
 
         helper.startSequence()
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for interface stocking network to activate",
                         80,
                         () -> assertInterfaceNetworkActive(helper, network))
                 .thenExecute(
-                        "apply test action",
+                        "configure block interface to stock 32 cobblestone",
                         () -> configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT))
-                .thenWaitUntil("wait for expected observable machine state", 80, () -> {
+                .thenWaitUntil("wait for interface to stock 32 cobblestone from the drive", 80, () -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 64 - STOCK_AMOUNT);
                 }).thenSucceed();
@@ -86,10 +86,10 @@ public class InterfaceTests {
 
         helper.startSequence()
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for blocking-interface network to activate",
                         80,
                         () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute("apply test action", () -> {
+                .thenExecute("enable blocking mode, install pattern, and occupy target with dirt", () -> {
                     network.partInterface.getConfigManager().putSetting(Settings.BLOCK, YesNo.YES);
                     network.partInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(
                             0,
@@ -126,16 +126,16 @@ public class InterfaceTests {
 
         helper.startSequence()
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for pattern-advertisement network to activate",
                         80,
                         () -> assertInterfaceNetworkActive(helper, network))
                 .thenExecute(
-                        "apply test action",
+                        "install cobblestone-to-stone processing pattern",
                         () -> network.blockInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(
                                 0,
                                 encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for interface pattern output to become craftable",
                         80,
                         () -> helper.assertFalse(
                                 craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
@@ -154,13 +154,13 @@ public class InterfaceTests {
 
         helper.startSequence()
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for block-and-part interface network to activate",
                         80,
                         () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute("apply test action", () -> {
+                .thenExecute("configure block and part interface stock targets", () -> {
                     configureStock(network.blockInterface, Blocks.cobblestone, 16);
                     configureStock(network.partInterface, Blocks.dirt, 16);
-                }).thenWaitUntil("wait for expected observable machine state", 100, () -> {
+                }).thenWaitUntil("wait for both interfaces to reach their 16-item stock targets", 100, () -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, 16);
                     assertInterfaceStoredAmount(helper, network.partInterface, Blocks.dirt, 16);
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 48);
@@ -185,10 +185,10 @@ public class InterfaceTests {
 
         helper.startSequence()
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for no-overstock interface network to activate",
                         80,
                         () -> assertInterfaceNetworkActive(helper, network))
-                .thenExecute("apply test action", () -> {
+                .thenExecute("pre-stock interface and enable no-overstock invariant", () -> {
                     configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
                     network.blockInterface.getInterfaceDuality().getStorage()
                             .setInventorySlotContents(0, new ItemStack(Blocks.cobblestone, STOCK_AMOUNT));

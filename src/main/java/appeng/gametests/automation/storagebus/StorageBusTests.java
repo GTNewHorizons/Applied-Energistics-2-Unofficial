@@ -50,7 +50,7 @@ public class StorageBusTests {
         PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 64);
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
+        helper.startSequence().thenWaitUntil("wait for storage bus to expose 64 external cobblestone", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 64);
@@ -65,13 +65,15 @@ public class StorageBusTests {
         PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 16);
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
+        helper.startSequence().thenWaitUntil("wait for storage bus to expose the initial 16 cobblestone", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 16);
-        }).thenExecute("apply test action", () -> setChestSlot(chest, 0, Blocks.cobblestone, 40))
+        }).thenExecute(
+                "replace external stack with 40 cobblestone",
+                () -> setChestSlot(chest, 0, Blocks.cobblestone, 40))
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for storage monitor to refresh to 40 external cobblestone",
                         80,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 40))
                 .thenSucceed();
@@ -85,22 +87,22 @@ public class StorageBusTests {
         PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 1);
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
+        helper.startSequence().thenWaitUntil("wait for READ-mode test storage bus to become visible", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute("apply test action", () -> clearChestSlot(chest, 0))
+        }).thenExecute("empty the external chest before enabling READ mode", () -> clearChestSlot(chest, 0))
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for cleared external chest to disappear from the network monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
                 .thenExecute(
-                        "apply test action",
+                        "configure storage bus for READ-only access",
                         () -> storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ))
-                .thenWaitUntil("wait for expected observable machine state", 60, () -> {
+                .thenWaitUntil("wait for READ mode to reject simulated insertion", 60, () -> {
                     IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.cobblestone, 64);
                     assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
-                }).thenExecute("apply test action", () -> {
+                }).thenExecute("attempt real insertion through READ-only storage bus", () -> {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
@@ -121,22 +123,22 @@ public class StorageBusTests {
         storageBus.setPriority(100);
         drive.setPriority(0);
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
+        helper.startSequence().thenWaitUntil("wait for priority test storage network to activate", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute("apply test action", () -> clearChestSlot(chest, 0))
+        }).thenExecute("empty the high-priority external chest", () -> clearChestSlot(chest, 0))
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for the empty external chest to disappear from the storage monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
                 .thenExecute("insert lower-priority drive cell", () -> drive.setInventorySlotContents(0, driveCell))
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for lower-priority drive contents to become visible",
                         60,
                         () -> { assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 1); })
-                .thenExecute("apply test action", () -> {
+                .thenExecute("inject 64 cobblestone and validate high-priority routing", () -> {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     helper.assertNull(remainder, "Injected items should fit into available network storage");
@@ -154,23 +156,25 @@ public class StorageBusTests {
         PartStorageBus storageBus = getStorageBus(helper);
         setChestSlot(chest, 0, Blocks.cobblestone, 1);
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 60, () -> {
+        helper.startSequence().thenWaitUntil("wait for filtered storage bus network to activate", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute("apply test action", () -> clearChestSlot(chest, 0))
+        }).thenExecute("empty the external chest before configuring its filter", () -> clearChestSlot(chest, 0))
                 .thenWaitUntil(
-                        "wait for expected observable machine state",
+                        "wait for the empty external chest to disappear from the storage monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute("apply test action", () -> configureStorageBusFilter(storageBus, Blocks.cobblestone))
-                .thenWaitUntil("wait for expected observable machine state", 60, () -> {
+                .thenExecute(
+                        "configure cobblestone-only storage bus filter",
+                        () -> configureStorageBusFilter(storageBus, Blocks.cobblestone))
+                .thenWaitUntil("wait for filter to accept cobblestone and reject dirt in simulation", 60, () -> {
                     helper.assertNull(
                             simulateInjectIntoGrid(controller, Blocks.cobblestone, 1),
                             "Storage bus should accept matching items");
                     IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.dirt, 16);
                     assertItemRemainder(helper, remainder, Blocks.dirt, 16);
-                }).thenExecute("apply test action", () -> {
+                }).thenExecute("inject matching cobblestone and non-matching dirt", () -> {
                     IAEItemStack matchingRemainder = injectIntoGrid(controller, Blocks.cobblestone, 16);
                     IAEItemStack nonMatchingRemainder = injectIntoGrid(controller, Blocks.dirt, 16);
 

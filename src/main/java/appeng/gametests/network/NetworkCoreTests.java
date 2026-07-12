@@ -20,7 +20,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
-import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -65,12 +64,13 @@ public class NetworkCoreTests {
         IPart deviceA = placePart(helper, DEVICE_A_LABEL, ForgeDirection.UP, terminal());
         IPart deviceB = placePart(helper, DEVICE_B_LABEL, ForgeDirection.UP, storageMonitor());
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 40, () -> {
-            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
-            assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
-            assertActive(helper, deviceA, "Device A should receive a channel");
-            assertActive(helper, deviceB, "Device B should receive a channel");
-        }).thenSucceed();
+        helper.startSequence()
+                .thenWaitUntil("wait for controller, drive, and both labelled devices to activate", 40, () -> {
+                    assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+                    assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
+                    assertActive(helper, deviceA, "Device A should receive a channel");
+                    assertActive(helper, deviceB, "Device B should receive a channel");
+                }).thenSucceed();
     }
 
     // Splits the drive off the controller, then reconnects it without losing stored cell contents.
@@ -83,16 +83,16 @@ public class NetworkCoreTests {
         insertItems(helper, driveCell, Blocks.cobblestone, 100);
         drive.setInventorySlotContents(0, driveCell);
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 40, () -> {
+        helper.startSequence().thenWaitUntil("wait for connected drive contents to become network-visible", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100);
-        }).thenExecute("apply test action", () -> removeBlock(helper, BREAKABLE_CABLE_LABEL))
-                .thenWaitUntil("wait for expected observable machine state", 30, () -> {
+        }).thenExecute("remove the breakable cable", () -> removeBlock(helper, BREAKABLE_CABLE_LABEL))
+                .thenWaitUntil("wait for split controller side to lose drive visibility", 30, () -> {
                     assertActive(helper, controller.getProxy(), "Controller side should stay active after split");
                     assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 0);
-                }).thenExecute("apply test action", () -> placeCable(helper, BREAKABLE_CABLE_LABEL))
-                .thenWaitUntil("wait for expected observable machine state", 40, () -> {
+                }).thenExecute("restore the breakable cable", () -> placeCable(helper, BREAKABLE_CABLE_LABEL))
+                .thenWaitUntil("wait for merged network to restore drive visibility without data loss", 40, () -> {
                     assertActive(helper, controller.getProxy(), "Controller grid proxy should reactivate after merge");
                     assertActive(helper, drive.getProxy(), "Drive grid proxy should reactivate after merge");
                     assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100);
@@ -111,11 +111,18 @@ public class NetworkCoreTests {
             devices.add(placePart(helper, deviceLabel, ForgeDirection.UP, terminal()));
         }
 
-        helper.startSequence().thenWaitUntil("wait for expected observable machine state", 50, () -> {
-            int activeDevices = countActive(devices);
-            helper.assertEquals(8, activeDevices, "Only eight devices should receive channels on a glass cable");
-            helper.assertEquals(1, devices.size() - activeDevices, "One device should overflow without a channel");
-        }).thenSucceed();
+        helper.startSequence()
+                .thenWaitUntil("wait for glass cable to allocate eight channels and reject the ninth", 50, () -> {
+                    int activeDevices = countActive(devices);
+                    helper.assertEquals(
+                            8,
+                            activeDevices,
+                            "Only eight devices should receive channels on a glass cable");
+                    helper.assertEquals(
+                            1,
+                            devices.size() - activeDevices,
+                            "One device should overflow without a channel");
+                }).thenSucceed();
     }
 
     // A toggle bus gates the downstream cable only while redstone is applied.
@@ -208,10 +215,8 @@ public class NetworkCoreTests {
     }
 
     private static IPart placePart(GameTestHelper helper, Coord pos, ForgeDirection side, ItemStack stack) {
-        TestPos absolute = helper.absolute(pos.x(), pos.y(), pos.z());
-        TileEntity tile = helper.getWorld().getTileEntity(absolute.x(), absolute.y(), absolute.z());
+        TileEntity tile = helper.assertTileEntityPresent(pos.x(), pos.y(), pos.z());
         helper.assertTrue(tile instanceof IPartHost, "Labelled cable position should contain an AE part host");
-        assert tile instanceof IPartHost;
         IPartHost host = (IPartHost) tile;
         addPart(helper, host, stack, side);
         IPart part = host.getPart(side);
