@@ -14,6 +14,7 @@ import static appeng.gametests.AEGameTestHelpers.pos;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,9 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.CraftingManager;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntityChest;
@@ -67,13 +71,20 @@ public class CraftingExecutionTests {
     private static final String ASSEMBLER_LABEL = "assembler";
 
     private static final int JOB_CALCULATION_TIMEOUT_MS = 5_000;
+    private static final Block TEST_RECIPE_CORNER = Blocks.bedrock;
+    private static final Block TEST_RECIPE_EDGE = Blocks.obsidian;
+    private static final Block TEST_RECIPE_CENTER = Blocks.diamond_block;
+    private static final Block TEST_RECIPE_OUTPUT = Blocks.sponge;
 
-    // A crafting pattern should execute through the CPU, interface, molecular assembler, and ME storage.
+    // A scoped real crafting recipe should execute through the CPU, interface, molecular assembler, and ME storage.
     @GameTest(template = "crafting_cpu", timeoutTicks = 520)
-    public static void molecularAssemblerCraftsEncodedPattern(GameTestHelper helper) {
+    public static void molecularAssemblerCraftsScopedShapedRecipe(GameTestHelper helper) {
+        registerScopedCraftingRecipe(helper);
         CraftingNetwork network = getCraftingNetwork(helper);
         ItemStack driveCell = cell1k();
-        insertItems(helper, driveCell, Blocks.planks, 4);
+        insertItems(helper, driveCell, TEST_RECIPE_CORNER, 4);
+        insertItems(helper, driveCell, TEST_RECIPE_EDGE, 4);
+        insertItems(helper, driveCell, TEST_RECIPE_CENTER, 1);
         network.drive.setInventorySlotContents(0, driveCell);
 
         helper.startSequence()
@@ -82,26 +93,30 @@ public class CraftingExecutionTests {
                         100,
                         () -> assertCraftingNetworkActive(helper, network))
                 .thenExecute(
-                        "install crafting-table encoded pattern",
-                        () -> installPattern(network.blockInterface, encodedCraftingTablePattern()))
+                        "install scoped shaped-recipe encoded pattern",
+                        () -> installPattern(network.blockInterface, encodedScopedCraftingPattern()))
                 .thenWaitUntil(
-                        "wait for crafting-table pattern advertisement",
+                        "wait for scoped shaped-recipe pattern advertisement",
                         80,
                         () -> helper.assertFalse(
-                                craftingOptionsFor(network.controller, Blocks.crafting_table).isEmpty(),
-                                "Crafting table pattern should be advertised"))
+                                craftingOptionsFor(network.controller, TEST_RECIPE_OUTPUT).isEmpty(),
+                                "Scoped shaped-recipe output should be advertised"))
                 .thenExecute(
-                        "submit one crafting-table craft",
-                        () -> submitCraft(helper, network.controller, Blocks.crafting_table, 1))
+                        "submit one scoped shaped-recipe craft",
+                        () -> submitCraft(helper, network.controller, TEST_RECIPE_OUTPUT, 1))
                 .thenWaitUntil(
-                        "wait for real assembler craft to consume four planks and store one crafting table",
+                        "wait for real assembler craft to consume the nine supplied blocks and store one sponge",
                         260,
                         () -> {
-                            assertNetworkStoredAmount(helper, network.controller, Blocks.crafting_table, 1);
-                            assertNetworkStoredAmount(helper, network.controller, Blocks.planks, 0);
-                            assertStoredAmount(helper, driveCell, Blocks.crafting_table, 1);
-                            assertStoredAmount(helper, driveCell, Blocks.planks, 0);
-                            assertNotRequesting(helper, network.controller, Blocks.crafting_table);
+                            assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_OUTPUT, 1);
+                            assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CORNER, 0);
+                            assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_EDGE, 0);
+                            assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CENTER, 0);
+                            assertStoredAmount(helper, driveCell, TEST_RECIPE_OUTPUT, 1);
+                            assertStoredAmount(helper, driveCell, TEST_RECIPE_CORNER, 0);
+                            assertStoredAmount(helper, driveCell, TEST_RECIPE_EDGE, 0);
+                            assertStoredAmount(helper, driveCell, TEST_RECIPE_CENTER, 0);
+                            assertNotRequesting(helper, network.controller, TEST_RECIPE_OUTPUT);
                         })
                 .thenSucceed();
     }
@@ -346,24 +361,44 @@ public class CraftingExecutionTests {
         return craftingGrid(controller).getCraftingFor(requestedOutput, null, -1, controller.getWorldObj());
     }
 
-    private static ItemStack encodedCraftingTablePattern() {
+    private static ItemStack encodedScopedCraftingPattern() {
         ItemStack encodedPattern = encodedPattern();
         NBTTagCompound patternTags = new NBTTagCompound();
         NBTTagList inputs = new NBTTagList();
+        NBTTagList outputs = new NBTTagList();
 
         patternTags.setBoolean("crafting", true);
         patternTags.setBoolean("substitute", false);
         patternTags.setBoolean("beSubstitute", false);
-        inputs.appendTag(itemTag(Blocks.planks, 1));
-        inputs.appendTag(itemTag(Blocks.planks, 1));
-        inputs.appendTag(new NBTTagCompound());
-        inputs.appendTag(itemTag(Blocks.planks, 1));
-        inputs.appendTag(itemTag(Blocks.planks, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_CORNER, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_EDGE, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_CORNER, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_EDGE, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_CENTER, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_EDGE, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_CORNER, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_EDGE, 1));
+        inputs.appendTag(itemTag(TEST_RECIPE_CORNER, 1));
+        outputs.appendTag(itemTag(TEST_RECIPE_OUTPUT, 1));
         patternTags.setTag("in", inputs);
-        patternTags.setTag("out", new NBTTagList());
+        patternTags.setTag("out", outputs);
         encodedPattern.setTagCompound(patternTags);
 
         return encodedPattern;
+    }
+
+    private static void registerScopedCraftingRecipe(GameTestHelper helper) {
+        ItemStack[] inputs = { new ItemStack(TEST_RECIPE_CORNER), new ItemStack(TEST_RECIPE_EDGE),
+                new ItemStack(TEST_RECIPE_CORNER), new ItemStack(TEST_RECIPE_EDGE), new ItemStack(TEST_RECIPE_CENTER),
+                new ItemStack(TEST_RECIPE_EDGE), new ItemStack(TEST_RECIPE_CORNER), new ItemStack(TEST_RECIPE_EDGE),
+                new ItemStack(TEST_RECIPE_CORNER) };
+        IRecipe recipe = new ShapedRecipes(3, 3, inputs, new ItemStack(TEST_RECIPE_OUTPUT));
+        ScopedCraftingRecipe scopedRecipe = new ScopedCraftingRecipe(
+                CraftingManager.getInstance().getRecipeList(),
+                recipe);
+
+        helper.afterTest(scopedRecipe::remove);
+        scopedRecipe.register();
     }
 
     private static ItemStack encodedProcessingPattern(Block input, int inputAmount, Block output, int outputAmount) {
@@ -425,5 +460,38 @@ public class CraftingExecutionTests {
     private record CraftingNetwork(TileController controller, TileDrive drive, TileCraftingStorageTile cpuStorage,
             TileCraftingTile cpuUnit, TileInterface blockInterface, TileMolecularAssembler assembler) {
 
+    }
+
+    private static final class ScopedCraftingRecipe {
+
+        private final List<IRecipe> recipes;
+        private final IRecipe recipe;
+        private boolean registered;
+
+        private ScopedCraftingRecipe(List<IRecipe> recipes, IRecipe recipe) {
+            this.recipes = recipes;
+            this.recipe = recipe;
+        }
+
+        private void register() {
+            this.recipes.add(0, this.recipe);
+            this.registered = true;
+        }
+
+        private void remove() {
+            if (!this.registered) {
+                return;
+            }
+
+            for (int index = 0; index < this.recipes.size(); index++) {
+                if (this.recipes.get(index) == this.recipe) {
+                    this.recipes.remove(index);
+                    this.registered = false;
+                    return;
+                }
+            }
+
+            throw new AssertionError("Scoped crafting recipe should still be registered during test teardown");
+        }
     }
 }
