@@ -211,7 +211,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
     @Override
     public boolean onBlockActivated(final World w, final int x, final int y, final int z, final EntityPlayer player,
             final int side, final float hitX, final float hitY, final float hitZ) {
-        if (player != null && !w.isRemote) {
+        if (player != null) {
             final ItemStack is = player.inventory.getCurrentItem();
             if (is != null) {
                 if (Platform.isWrench(player, is, x, y, z) && player.isSneaking()) {
@@ -246,7 +246,9 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
 
                         if (id.removedByPlayer(w, player, x, y, z, false)) {
                             final List<ItemStack> l = Lists.newArrayList(drops);
-                            Platform.spawnDrops(w, x, y, z, l);
+                            if (!w.isRemote) {
+                                Platform.spawnDrops(w, x, y, z, l);
+                            }
                             w.setBlockToAir(x, y, z);
                         }
                     }
@@ -260,6 +262,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                             final String name = this.getUnlocalizedName();
                             final NBTTagCompound data = t.downloadSettings(SettingsFrom.MEMORY_CARD);
                             if (data != null) {
+                                if (w.isRemote) return true;
                                 memoryCard.setMemoryCardContents(is, name, data);
 
                                 if (t instanceof IUpgradeableHost iuh) {
@@ -273,6 +276,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                             }
                         }
                     } else {
+                        if (w.isRemote) return false;
                         final String name = memoryCard.getSettingsName(is);
                         final NBTTagCompound data = memoryCard.getData(is);
                         if (this.getUnlocalizedName().equals(name)) {
@@ -298,12 +302,14 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                     if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
                     final AEBaseTile tile = this.getTileEntity(w, x, y, z);
                     if (tile == null) return false;
+                    if (w.isRemote) return true;
                     Platform.openGUI(player, tile, ForgeDirection.getOrientation(side), GuiBridge.GUI_RENAMER);
                     return true;
                 }
                 if (is.getItem() instanceof ToolPriorityCard && !(this instanceof BlockCableBus)) {
                     final AEBaseTile tile = this.getTileEntity(w, x, y, z);
                     if (tile == null) return false;
+                    if (w.isRemote) return true;
                     ToolPriorityCard.handleUse(player, tile, is, ForgeDirection.getOrientation(side));
                     return true;
                 }
