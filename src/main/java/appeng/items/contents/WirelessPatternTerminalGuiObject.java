@@ -1,5 +1,9 @@
 package appeng.items.contents;
 
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -7,10 +11,15 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import appeng.api.features.IWirelessTermHandler;
+import appeng.api.networking.energy.IEnergySource;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.parts.IPatternTerminalEx;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.IConfigManager;
+import appeng.helpers.PatternEncodingHelper;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
@@ -26,6 +35,7 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     IAEStackInventory output;
 
     private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
+    private final Set<PatternEncodeListener> patternEncodeListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
     private boolean craftingMode;
     private boolean substitute = false;
@@ -181,4 +191,25 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
 
     @Override
     public void updateSetting(IConfigManager manager, Enum settingName, Enum newValue) {}
+
+    @Override
+    public boolean encode(IEnergySource powerSource, IMEMonitor<IAEItemStack> itemMonitor,
+            BaseActionSource actionSource, String auther, World world) {
+        return PatternEncodingHelper.encode(this, powerSource, itemMonitor, actionSource, auther, world);
+    }
+
+    @Override
+    public Iterable<PatternEncodeListener> getPatternEncodeListeners() {
+        return patternEncodeListeners;
+    }
+
+    @Override
+    public void addPatternEncodeListeners(final PatternEncodeListener listener) {
+        patternEncodeListeners.add(listener);
+    }
+
+    @Override
+    public void removePatternEncodeListeners(final PatternEncodeListener listener) {
+        patternEncodeListeners.remove(listener);
+    }
 }
