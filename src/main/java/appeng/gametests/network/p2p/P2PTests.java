@@ -83,21 +83,24 @@ public class P2PTests {
         insertItems(helper, remoteCell, Blocks.cobblestone, 64);
         remoteDrive.setInventorySlotContents(0, remoteCell);
 
-        helper.startSequence().thenWaitUntil("wait for the ME P2P pair to create its outer grid connection", 100, () -> {
-            assertCarrierActive(helper, fixture.controller);
-            assertLinkedPair(helper, input, output, ME_FREQUENCY);
-            IGridNode inputOuter = input.getExternalFacingNode();
-            IGridNode outputOuter = output.getExternalFacingNode();
-            helper.assertNotNull(inputOuter, "Input ME tunnel should expose an outer grid node");
-            helper.assertNotNull(outputOuter, "Output ME tunnel should expose an outer grid node");
-            helper.assertTrue(inputOuter.isActive(), "Input-side main network should be powered and active");
-            helper.assertTrue(outputOuter.isActive(), "Remote storage side should be powered through the ME tunnel");
-            helper.assertTrue(
-                    hasConnection(inputOuter, outputOuter),
-                    "ME P2P outer nodes should have the tunnel-created connection; "
-                            + describePair(input, output));
-            assertNetworkStoredAmount(helper, inputOuter, Blocks.cobblestone, 64);
-        }).thenSucceed();
+        helper.startSequence()
+                .thenWaitUntil("wait for the ME P2P pair to create its outer grid connection", 100, () -> {
+                    assertCarrierActive(helper, fixture.controller);
+                    assertLinkedPair(helper, input, output, ME_FREQUENCY);
+                    IGridNode inputOuter = input.getExternalFacingNode();
+                    IGridNode outputOuter = output.getExternalFacingNode();
+                    helper.assertNotNull(inputOuter, "Input ME tunnel should expose an outer grid node");
+                    helper.assertNotNull(outputOuter, "Output ME tunnel should expose an outer grid node");
+                    helper.assertTrue(inputOuter.isActive(), "Input-side main network should be powered and active");
+                    helper.assertTrue(
+                            outputOuter.isActive(),
+                            "Remote storage side should be powered through the ME tunnel");
+                    helper.assertTrue(
+                            hasConnection(inputOuter, outputOuter),
+                            "ME P2P outer nodes should have the tunnel-created connection; "
+                                    + describePair(input, output));
+                    assertNetworkStoredAmount(helper, inputOuter, Blocks.cobblestone, 64);
+                }).thenSucceed();
     }
 
     // P1: all three links are authored in the exported cable-bus NBT; the test performs no binding setup.
@@ -142,7 +145,9 @@ public class P2PTests {
                     assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
                     assertRedstonePower(helper, 15);
                 }).thenExecute("remove power from the redstone P2P input", () -> setRedstoneInput(helper, 0))
-                .thenWaitUntil("wait for the redstone P2P output to return to zero", 40,
+                .thenWaitUntil(
+                        "wait for the redstone P2P output to return to zero",
+                        40,
                         () -> assertRedstonePower(helper, 0))
                 .thenExecute("begin restored-low invariant", unpoweredOutputStaysLow::enable).thenIdle(5)
                 .thenExecute("finish restored-low observation", unpoweredOutputStaysLow::disable).thenSucceed();
@@ -209,8 +214,12 @@ public class P2PTests {
             long expectedFrequency) {
         assertActive(helper, input, "P2P input should be active; " + describePair(input, output));
         assertActive(helper, output, "P2P output should be active; " + describePair(input, output));
-        helper.assertFalse(input.isOutput(), "NBT-authored input should remain an input; " + describePair(input, output));
-        helper.assertTrue(output.isOutput(), "NBT-authored output should remain an output; " + describePair(input, output));
+        helper.assertFalse(
+                input.isOutput(),
+                "NBT-authored input should remain an input; " + describePair(input, output));
+        helper.assertTrue(
+                output.isOutput(),
+                "NBT-authored output should remain an output; " + describePair(input, output));
         helper.assertEquals(
                 expectedFrequency,
                 input.getFrequency(),
@@ -219,7 +228,10 @@ public class P2PTests {
                 expectedFrequency,
                 output.getFrequency(),
                 "Output frequency should match exported template NBT; " + describePair(input, output));
-        helper.assertSame(input, output.getInput(), "Output should resolve its exported input; " + describePair(input, output));
+        helper.assertSame(
+                input,
+                output.getInput(),
+                "Output should resolve its exported input; " + describePair(input, output));
 
         try {
             boolean foundOutput = false;
@@ -229,7 +241,9 @@ public class P2PTests {
                     break;
                 }
             }
-            helper.assertTrue(foundOutput, "Input should enumerate its exported output; " + describePair(input, output));
+            helper.assertTrue(
+                    foundOutput,
+                    "Input should enumerate its exported output; " + describePair(input, output));
         } catch (GridAccessException e) {
             throw new AssertionError("P2P cache should be accessible; " + describePair(input, output), e);
         }
@@ -259,12 +273,16 @@ public class P2PTests {
                 expectedTotal,
                 source + inserter + destination,
                 "Item total across source_chest, source_inserter, and destination_chest should be conserved"
-                        + "; source=" + source
-                        + ", inserter=" + inserter
-                        + ", destination=" + destination);
+                        + "; source="
+                        + source
+                        + ", inserter="
+                        + inserter
+                        + ", destination="
+                        + destination);
         helper.assertTrue(
                 destination <= expectedTotal,
-                "Destination must never contain duplicated items; destination=" + destination + ", supplied="
+                "Destination must never contain duplicated items; destination=" + destination
+                        + ", supplied="
                         + expectedTotal);
     }
 
@@ -311,19 +329,27 @@ public class P2PTests {
         helper.assertEquals(
                 expectedPower,
                 actualPower,
-                "Redstone probe should mirror the P2P input; source=" + REDSTONE_SOURCE_LABEL + ", probe="
+                "Redstone probe should mirror the P2P input; source=" + REDSTONE_SOURCE_LABEL
+                        + ", probe="
                         + REDSTONE_PROBE_LABEL);
     }
 
     private static String describePair(PartP2PTunnel input, PartP2PTunnel output) {
         return "input[type=" + input.getClass().getSimpleName()
-                + ", frequency=" + input.getFrequency()
-                + ", output=" + input.isOutput()
-                + ", active=" + isActive(input)
-                + "], output[type=" + output.getClass().getSimpleName()
-                + ", frequency=" + output.getFrequency()
-                + ", output=" + output.isOutput()
-                + ", active=" + isActive(output)
+                + ", frequency="
+                + input.getFrequency()
+                + ", output="
+                + input.isOutput()
+                + ", active="
+                + isActive(input)
+                + "], output[type="
+                + output.getClass().getSimpleName()
+                + ", frequency="
+                + output.getFrequency()
+                + ", output="
+                + output.isOutput()
+                + ", active="
+                + isActive(output)
                 + ']';
     }
 
