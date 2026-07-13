@@ -48,6 +48,8 @@ public class NetworkCoreTests {
     private static final String REDSTONE_LABEL = "redstone";
     private static final String[] FULL_CABLE_LINE = { "cable_1", "cable_2", "cable_3", "cable_4", "cable_5", "cable_6",
             "cable_7", "cable_8", "cable_9", "cable_10" };
+    private static final String[] CHANNEL_LIMIT_CABLE_LINE = { "cable_1", "cable_2", "cable_3", "cable_4", "cable_5",
+            "cable_6", "cable_7", "cable_8", "cable_9" };
     private static final String[] UPSTREAM_CABLE_LINE = { "cable_1", "cable_2", "cable_3" };
     private static final String[] DOWNSTREAM_CABLE_LINE = { "cable_5", "cable_6", "cable_7", "cable_8", "cable_9",
             "cable_10" };
@@ -104,8 +106,7 @@ public class NetworkCoreTests {
     @GameTest(template = "network_core", timeoutTicks = 100)
     public static void channelLimitDeactivatesOverflowDevice(GameTestHelper helper) {
         getController(helper);
-        getDrive(helper);
-        installCableLine(helper, FULL_CABLE_LINE);
+        installCableLine(helper, CHANNEL_LIMIT_CABLE_LINE);
         List<IPart> devices = new ArrayList<>();
         for (String deviceLabel : CHANNEL_DEVICE_LABELS) {
             devices.add(placePart(helper, deviceLabel, ForgeDirection.UP, terminal()));

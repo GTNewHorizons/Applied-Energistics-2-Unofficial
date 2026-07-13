@@ -11,6 +11,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
+import com.gtnewhorizons.horizonqa.api.GameTestAssertException;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
 
@@ -342,6 +343,13 @@ public final class AEGameTestHelpers {
 
             try {
                 this.assertion.run();
+            } catch (GameTestAssertException failure) {
+                String message = "Continuous invariant '" + this.description + "' failed: " + failure.getMessage();
+                GameTestAssertException enrichedFailure = failure.hasPosition()
+                        ? new GameTestAssertException(message, failure.getPos())
+                        : new GameTestAssertException(message, failure.getX(), failure.getY(), failure.getZ());
+                enrichedFailure.initCause(failure);
+                throw enrichedFailure;
             } catch (AssertionError failure) {
                 throw new AssertionError(
                         "Continuous invariant '" + this.description + "' failed: " + failure.getMessage(),

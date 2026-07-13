@@ -214,6 +214,7 @@ public class CraftingExecutionTests {
                     assertStoredAmount(helper, driveCell, Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
+                    assertNotRequesting(helper, network.controller, Blocks.stone);
                 }).thenSucceed();
     }
 

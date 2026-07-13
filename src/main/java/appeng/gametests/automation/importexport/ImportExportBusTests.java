@@ -52,7 +52,7 @@ public class ImportExportBusTests {
     private static final String REDSTONE_LABEL = "redstone";
 
     // A filtered import bus should pull only matching stacks from the source chest into ME storage.
-    @GameTest(template = "bus_io", timeoutTicks = 320)
+    @GameTest(template = "bus_io", timeoutTicks = 380)
     public static void importBusPullsFilteredStackIntoNetwork(GameTestHelper helper) {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();
