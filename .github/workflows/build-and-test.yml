@@ -15,3 +15,4 @@ jobs:
     with:
      timeout: 150
      horizonqa: true
+     external-deps-inclusion: true
