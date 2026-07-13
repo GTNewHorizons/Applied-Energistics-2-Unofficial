@@ -248,11 +248,12 @@ public class AdaptorIInventory extends InventoryAdaptor {
                 next.stackSize = Math.min(perOperationLimit, next.stackSize);
 
                 if (this.i.isItemValidForSlot(slot, next) && this.i.getStackInSlot(slot) == null) {
+                    final int inserted = next.stackSize;
                     if (modulate) {
                         this.i.setInventorySlotContents(slot, next);
                         this.i.markDirty();
                     }
-                    left.stackSize -= next.stackSize;
+                    left.stackSize -= inserted;
 
                     if (left.stackSize <= 0) {
                         return null;
