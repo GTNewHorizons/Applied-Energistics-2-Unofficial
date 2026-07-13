@@ -223,8 +223,8 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
     private void updateStackTypeFromCell() {
         final ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
-            this.type = wi.getStackType();
             oldCellType = type;
+            this.type = wi.getStackType();
         } else {
             this.type = null;
         }
