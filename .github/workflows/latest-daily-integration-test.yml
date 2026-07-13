@@ -1,0 +1,19 @@
+name: Test integration in latest daily
+
+# Shim to forward the "Build and test" completion to the full pack test wf, whose
+# jobs inherit this workflow_run event context (github.event.workflow_run.*)
+on:
+  workflow_run:
+    workflows: ["Build and test"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  statuses: write
+
+jobs:
+  latest-daily-integration-test:
+    if: github.event.workflow_run.event == 'pull_request'
+    uses: GTNewHorizons/GTNH-Actions-Workflows/.github/workflows/latest-daily-integration-test.yml@master
+    secrets: inherit
