@@ -215,6 +215,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
             final ItemStack is = player.inventory.getCurrentItem();
             if (is != null) {
                 if (Platform.isWrench(player, is, x, y, z) && player.isSneaking()) {
+                    if (w.isRemote) return false;
                     final Block id = w.getBlock(x, y, z);
                     if (id != null) {
                         final AEBaseTile tile = this.getTileEntity(w, x, y, z);
@@ -246,9 +247,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
 
                         if (id.removedByPlayer(w, player, x, y, z, false)) {
                             final List<ItemStack> l = Lists.newArrayList(drops);
-                            if (!w.isRemote) {
-                                Platform.spawnDrops(w, x, y, z, l);
-                            }
+                            Platform.spawnDrops(w, x, y, z, l);
                             w.setBlockToAir(x, y, z);
                         }
                     }
@@ -259,10 +258,10 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                     if (player.isSneaking()) {
                         final AEBaseTile t = this.getTileEntity(w, x, y, z);
                         if (t != null) {
+                            if (w.isRemote) return true;
                             final String name = this.getUnlocalizedName();
                             final NBTTagCompound data = t.downloadSettings(SettingsFrom.MEMORY_CARD);
                             if (data != null) {
-                                if (w.isRemote) return true;
                                 memoryCard.setMemoryCardContents(is, name, data);
 
                                 if (t instanceof IUpgradeableHost iuh) {
@@ -272,8 +271,8 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                                 }
 
                                 memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
-                                return true;
                             }
+                            return true;
                         }
                     } else {
                         if (w.isRemote) return false;
