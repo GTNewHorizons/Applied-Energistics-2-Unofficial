@@ -143,7 +143,6 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         for (IAEStack<?> stack : new ArrayList<>(missingIngredients.keySet())) {
             moveMissingByExtract(stack);
         }
-        byteCost -= CraftingCalculations.adjustByteCost(originalRequest, originalRequest.stack.getStackSize());
         calculated = true;
     }
 
@@ -278,7 +277,11 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
             plan.add(entry.getKey().copy().setStackSize(entry.getLongValue()));
         }
         for (var entry : missingIngredients.object2LongEntrySet()) {
-            plan.add(entry.getKey().copy().setStackSize(entry.getLongValue()));
+            if (originalRequest.craftingMode == CraftingMode.IGNORE_MISSING) {
+                plan.addRequestable(entry.getKey().copy().setStackSize(0).setCountRequestable(entry.getLongValue()));
+            } else {
+                plan.add(entry.getKey().copy().setStackSize(entry.getLongValue()));
+            }
         }
     }
 }

@@ -195,7 +195,7 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
                                 isShiftKeyDown(),
                                 isCtrlKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue(),
-                                liteMode.enabled));
+                                isLiteModePressed));
             }
         } catch (final NumberFormatException e) {
             // nope..
