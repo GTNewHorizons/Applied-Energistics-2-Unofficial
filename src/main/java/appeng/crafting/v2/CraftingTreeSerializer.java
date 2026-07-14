@@ -50,8 +50,10 @@ public final class CraftingTreeSerializer {
     private final World world;
     private final boolean reading;
     private final ByteBuf buffer;
+    private final ByteBuf objCheckBuffer;
 
     private ArrayList<JobFn> workStack = new ArrayList<>(32);
+    private int estimatedObjBufferSize = 0;
 
     /**
      * Registers a serializable type for the crafting tree.
@@ -114,7 +116,9 @@ public final class CraftingTreeSerializer {
      * @param world The world of the AE system in which the tree is serialized
      */
     public CraftingTreeSerializer(final World world) {
-        this.buffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize / 2)
+        this.buffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
+                .order(ByteOrder.LITTLE_ENDIAN);
+        this.objCheckBuffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
                 .order(ByteOrder.LITTLE_ENDIAN);
         this.reading = false;
         this.world = world;
@@ -129,6 +133,7 @@ public final class CraftingTreeSerializer {
     public CraftingTreeSerializer(final World world, final ByteBuf toDeserialize) {
         toDeserialize.order(ByteOrder.LITTLE_ENDIAN);
         this.buffer = toDeserialize;
+        this.objCheckBuffer = null;
         this.reading = true;
         this.world = world;
     }
@@ -195,7 +200,7 @@ public final class CraftingTreeSerializer {
     }
 
     public ByteBuf finalizeSerializer() throws IOException {
-        final ByteBuf objBuffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize / 2)
+        final ByteBuf objBuffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
                 .order(ByteOrder.LITTLE_ENDIAN);
 
         // Write the objects at the beginning
@@ -303,7 +308,14 @@ public final class CraftingTreeSerializer {
                 .computeIfAbsent(klass, k -> new Object2IntOpenHashMap<>());
         int meta = objectMap.computeIfAbsent(obj, k -> objectMap.size());
         List<T> objectList = (List<T>) objectsList.computeIfAbsent(klass, k -> new ArrayList<>());
-        if (meta >= objectList.size()) objectList.add(obj);
+        if (meta >= objectList.size()) {
+            objectList.add(obj);
+            IObjectSerializer serializer = objectSerializers.get(klass);
+            objCheckBuffer.markWriterIndex();
+            serializer.write(objCheckBuffer, obj);
+            estimatedObjBufferSize += objCheckBuffer.readableBytes();
+            objCheckBuffer.resetWriterIndex();
+        } ;
         getBuffer().writeInt(meta);
     }
 
@@ -401,6 +413,11 @@ public final class CraftingTreeSerializer {
             job.run();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        if (!reading && getBuffer().readableBytes() + estimatedObjBufferSize
+                > AEConfig.instance.maxCraftingTreeVisualizationSize) {
+            // Throw when exceeding max size, the caller will catch the error
+            throw new IndexOutOfBoundsException();
         }
     }
 
