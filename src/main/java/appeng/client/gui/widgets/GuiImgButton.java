@@ -822,12 +822,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CraftingMode.IGNORE_MISSING,
                     ButtonToolTips.CraftingModeIgnoreMissing,
                     ButtonToolTips.CraftingModeIgnoreMissingDesc);
-            this.registerApp(
-                    50,
-                    Settings.CRAFTING_MODE,
-                    CraftingMode.LITE,
-                    ButtonToolTips.CraftingModeLite,
-                    ButtonToolTips.CraftingModeLiteDesc);
             this.registerApp(16 * 6 + 5, Settings.ACTIONS, ActionItems.EXTRA_OPTIONS, ButtonToolTips.ExtraOptions, "");
 
             this.registerApp(

@@ -213,8 +213,6 @@ public enum ButtonToolTips implements Localization {
     CraftingModeStandardDesc,
     CraftingModeIgnoreMissing,
     CraftingModeIgnoreMissingDesc,
-    CraftingModeLite,
-    CraftingModeLiteDesc,
     ExtraOptions,
 
     SwitchBytesInfo,

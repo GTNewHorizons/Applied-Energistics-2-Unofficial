@@ -187,7 +187,8 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
 
     @Override
     public boolean isSimulation() {
-        return isSimulated || !missingIngredients.isEmpty();
+        return isSimulated
+                || (originalRequest.craftingMode != CraftingMode.IGNORE_MISSING && !missingIngredients.isEmpty());
     }
 
     @Override
@@ -234,14 +235,28 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
             cluster.addCrafting(entry.getKey(), entry.getLongValue());
         }
         for (var entry : ingredients.object2LongEntrySet()) {
-            IAEStack<?> stack = entry.getKey();
-            long count = entry.getLongValue();
-            IAEStack<?> extracted = storage.extractItems(stack.copy().setStackSize(count), Actionable.MODULATE);
-            if (extracted == null || extracted.getStackSize() != count) {
+            pullStack(storage, cluster, entry.getKey(), entry.getLongValue());
+        }
+        for (var entry : missingIngredients.object2LongEntrySet()) {
+            pullStack(storage, cluster, entry.getKey(), entry.getLongValue());
+        }
+    }
+
+    private void pullStack(MECraftingInventory storage, CraftingCPUCluster cluster, IAEStack<?> stack, long count) {
+        IAEStack<?> extracted = storage.extractItems(stack.copy().setStackSize(count), Actionable.MODULATE);
+        if (extracted == null || extracted.getStackSize() != count) {
+            if (cluster.isMissingMode()) {
+                if (extracted == null) {
+                    cluster.addEmitable(stack.copy().setStackSize(count));
+                    return;
+                } else if (extracted.getStackSize() != count) {
+                    cluster.addEmitable(stack.copy().setStackSize(count - extracted.getStackSize()));
+                }
+            } else {
                 throw new CraftBranchFailure(stack, count);
             }
-            cluster.addStorage(extracted);
         }
+        cluster.addStorage(extracted);
     }
 
     @Override
