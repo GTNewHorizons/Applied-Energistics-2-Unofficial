@@ -60,25 +60,19 @@ public interface ICraftingJob<StackType extends IAEStack<StackType>> {
     /**
      * @return whether this job can run on the given cluster
      */
-    default boolean supportsCPUCluster(final ICraftingCPU cluster) {
-        return false;
-    }
+    boolean supportsCPUCluster(final ICraftingCPU cluster);
 
-    default CraftingMode getCraftingMode() {
-        return null;
-    }
+    CraftingMode getCraftingMode();
 
     /**
      * Begins crafting on a CPU cluster
      */
-    default void startCrafting(final MECraftingInventory storage, final ICraftingCPU craftingCPUCluster,
-            final BaseActionSource src) {}
+    void startCrafting(final MECraftingInventory storage, final ICraftingCPU craftingCPUCluster,
+            final BaseActionSource src);
 
     /**
      * Return the snapshot of the storage when crafting calculation begins, should be read-only, do not modify. Note
      * that this might be different from the current storage.
      */
-    default MECraftingInventory getStorageAtBeginning() {
-        return new MECraftingInventory();
-    }
+    MECraftingInventory getStorageAtBeginning();
 }

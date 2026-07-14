@@ -37,6 +37,7 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.Nonnull;
 
+import appeng.crafting.fast.CraftingJobFast;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
@@ -601,6 +602,10 @@ public class CraftingGridCache
             final IAEStack<?> stack, final CraftingMode craftingMode, final ICraftingCallback cb) {
         if (world == null || grid == null || actionSrc == null || stack == null) {
             throw new IllegalArgumentException("Invalid Crafting Job Request");
+        }
+
+        if (craftingMode == CraftingMode.FAST) {
+            return new CraftingJobFast<>(world, grid, actionSrc, (IAEStack) stack, craftingMode, cb).schedule();
         }
 
         final ICraftingJob job = new CraftingJobV2<>(world, grid, actionSrc, (IAEStack) stack, craftingMode, cb);

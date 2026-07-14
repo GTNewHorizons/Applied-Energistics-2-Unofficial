@@ -2,6 +2,7 @@ package appeng.api.config;
 
 public enum CraftingMode {
     STANDARD,
-    IGNORE_MISSING
+    IGNORE_MISSING,
+    FAST,
 
 }
