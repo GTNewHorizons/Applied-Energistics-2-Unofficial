@@ -1,6 +1,7 @@
 package appeng.crafting.fast;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -104,6 +105,9 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
             if (current == null) {
                 current = loopCandidates.poll();
             }
+            if (current == null) {
+                continue;
+            }
             if (traversed.contains(current)) {
                 // Some form of loop, do not expand again
                 continue;
@@ -119,19 +123,8 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
                     }
                 }
             }
-            long count = missingIngredients.getLong(current);
-            IAEStack<?> result = context.itemModel.extractItems(current.copy(), Actionable.MODULATE);
-            if (result != null) {
-                long extracted = result.getStackSize();
-                addCountToMap(ingredients, current, extracted);
-                byteCost += CraftingCalculations.adjustByteCost(current, extracted);
-                if (extracted >= count) {
-                    missingIngredients.removeLong(current);
-                    continue;
-                }
-                count -= extracted;
-                addCountToMap(missingIngredients, current, -count);
-            }
+            long count = moveMissingByExtract(current);
+            if (count == 0) continue;
             if (currentPair == null) continue;
             // Apply the pattern
             ICraftingPatternDetails pattern = currentPair.right();
@@ -144,10 +137,32 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
             byteCost += CraftingCalculations
                     .adjustByteCost(current, Math.multiplyExact(currentPair.leftLong(), patternMultiplier));
             addCountToMap(missingIngredients, current, -count);
-
+        }
+        // Copy ingredients to a list since we will be modifying it
+        // This allows better pattern loop resolution if the item is actually contained in the network.
+        for (IAEStack<?> stack : new ArrayList<>(missingIngredients.keySet())) {
+            moveMissingByExtract(stack);
         }
         byteCost -= CraftingCalculations.adjustByteCost(originalRequest, originalRequest.stack.getStackSize());
         calculated = true;
+    }
+
+    // Returns the remainder count
+    private long moveMissingByExtract(IAEStack<?> stack) {
+        long count = missingIngredients.getLong(stack);
+        IAEStack<?> result = context.itemModel.extractItems(stack.copy().setStackSize(count), Actionable.MODULATE);
+        if (result != null) {
+            long extracted = result.getStackSize();
+            addCountToMap(ingredients, stack, extracted);
+            byteCost += CraftingCalculations.adjustByteCost(stack, extracted);
+            if (extracted >= count) {
+                missingIngredients.removeLong(stack);
+                return 0;
+            }
+            addCountToMap(missingIngredients, stack, -extracted);
+            return count - extracted;
+        }
+        return count;
     }
 
     private void calculate() {
