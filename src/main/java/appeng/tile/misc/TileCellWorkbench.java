@@ -156,8 +156,7 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
                     icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
             }
 
-            this.updateStackTypeFromCell();
-            if (this.type != null) {
+            if (this.updateStackTypeFromCell()) {
                 if (this.type != this.oldCellType) {
                     for (int x = 0; x < this.config.getSizeInventory(); x++) {
                         this.config.putAEStackInSlot(x, null);
@@ -223,12 +222,14 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
         return this.cacheConfig;
     }
 
-    private void updateStackTypeFromCell() {
+    private boolean updateStackTypeFromCell() {
         final ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
             this.type = wi.getStackType();
+            return true;
         } else {
             this.type = null;
+            return false;
         }
     }
 
