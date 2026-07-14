@@ -6,8 +6,11 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 import net.minecraft.world.World;
+
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.CraftingMode;
@@ -74,7 +77,6 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
      * pattern. This ensures no backtracking is needed.
      */
     private void calculateImpl() {
-        if (calculated) return;
         AbstractObject2ObjectMap<IAEStack<?>, LongObjectPair<ICraftingPatternDetails>> resolved = new Object2ObjectOpenHashMap<>();
         AbstractObject2LongMap<IAEStack<?>> inDegree = new Object2LongOpenHashMap<>();
         Queue<IAEStack<?>> toExpand = new ArrayDeque<>();
@@ -107,6 +109,7 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         Queue<IAEStack<?>> loopCandidates = new ArrayDeque<>();
         // Contains anything that has zero in-degree / search head currently
         Queue<IAEStack<?>> toTraverse = new ArrayDeque<>();
+        List<IAEStack<?>> explorationOrder = new ArrayList<>();
         missingIngredients.put(originalRequest.stack, originalRequest.stack.getStackSize());
         toTraverse.add(originalRequest.stack);
         while (!toTraverse.isEmpty() || !loopCandidates.isEmpty()) {
@@ -122,6 +125,7 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
                 continue;
             }
             traversed.add(current);
+            explorationOrder.add(current);
             var currentPair = resolved.get(current);
             if (currentPair != null) {
                 // Regardless of whether we actually need the pattern / output, need to expand so that in-degrees
@@ -132,27 +136,34 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
                     }
                 }
             }
-            long count = moveMissingByExtract(current);
-            if (count == 0) continue;
-            if (currentPair == null) continue;
-            // Apply the pattern
-            ICraftingPatternDetails pattern = currentPair.right();
-            long patternMultiplier = Platform.ceilDiv(count, currentPair.leftLong());
-            for (IAEStack<?> stack : pattern.getCondensedAEInputs()) {
-                loopCandidates.add(stack);
-                addCountToMap(missingIngredients, stack, Math.multiplyExact(stack.getStackSize(), patternMultiplier));
-            }
-            addCountToMap(tasks, pattern, patternMultiplier);
-            byteCost += CraftingCalculations
-                    .adjustByteCost(current, Math.multiplyExact(currentPair.leftLong(), patternMultiplier));
-            addCountToMap(missingIngredients, current, -count);
+            exploreItem(current, currentPair, loopCandidates::add);
         }
-        // Copy ingredients to a list since we will be modifying it
-        // This allows better pattern loop resolution if the item is actually contained in the network.
-        for (IAEStack<?> stack : new ArrayList<>(missingIngredients.keySet())) {
-            moveMissingByExtract(stack);
+        // This allows better pattern loop resolution, since we adapted an arbitrary tie-breaking for loopCandidates
+        // The tie-breaking will cause patterns that are completely fine to be deferred here due to
+        // duplicated traverse
+        for (IAEStack<?> stack : explorationOrder) {
+            var currentPair = resolved.get(stack);
+            exploreItem(stack, currentPair, $ -> {});
         }
-        calculated = true;
+    }
+
+    // currentPair is the output-pattern pair, where output contains the pattern output count
+    private void exploreItem(IAEStack<?> current, @Nullable LongObjectPair<ICraftingPatternDetails> currentPair,
+            Consumer<IAEStack<?>> inputConsumer) {
+        long count = moveMissingByExtract(current);
+        if (count == 0) return;
+        if (currentPair == null) return;
+        // Apply the pattern
+        ICraftingPatternDetails pattern = currentPair.right();
+        long patternMultiplier = Platform.ceilDiv(count, currentPair.leftLong());
+        for (IAEStack<?> stack : pattern.getCondensedAEInputs()) {
+            inputConsumer.accept(stack);
+            addCountToMap(missingIngredients, stack, Math.multiplyExact(stack.getStackSize(), patternMultiplier));
+        }
+        addCountToMap(tasks, pattern, patternMultiplier);
+        byteCost += CraftingCalculations
+                .adjustByteCost(current, Math.multiplyExact(currentPair.leftLong(), patternMultiplier));
+        addCountToMap(missingIngredients, current, -count);
     }
 
     // Returns the remainder count
@@ -174,11 +185,14 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
     }
 
     private void calculate() {
+        if (calculated) return;
         try {
             calculateImpl();
         } catch (Throwable t) {
             errorMsg = t.toString();
             isSimulated = true;
+        } finally {
+            calculated = true;
         }
     }
 
