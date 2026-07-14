@@ -604,7 +604,7 @@ public class CraftingGridCache
             throw new IllegalArgumentException("Invalid Crafting Job Request");
         }
 
-        if (craftingMode == CraftingMode.FAST) {
+        if (craftingMode == CraftingMode.LITE) {
             return new CraftingJobFast<>(world, grid, actionSrc, (IAEStack) stack, craftingMode, cb).schedule();
         }
 
