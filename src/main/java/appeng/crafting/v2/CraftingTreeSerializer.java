@@ -304,7 +304,7 @@ public final class CraftingTreeSerializer {
     }
 
     public <T> void writeObject(Class<T> klass, T obj) {
-        Map<T, Integer> objectMap = (Map<T, Integer>) objectsMap
+        Object2IntOpenHashMap<T> objectMap = (Object2IntOpenHashMap<T>) objectsMap
                 .computeIfAbsent(klass, k -> new Object2IntOpenHashMap<>());
         int meta = objectMap.computeIfAbsent(obj, k -> objectMap.size());
         List<T> objectList = (List<T>) objectsList.computeIfAbsent(klass, k -> new ArrayList<>());

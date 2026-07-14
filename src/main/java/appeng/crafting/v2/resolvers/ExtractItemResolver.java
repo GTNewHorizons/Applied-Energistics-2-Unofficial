@@ -37,15 +37,15 @@ public class ExtractItemResolver implements CraftingRequestResolver {
         @SuppressWarnings("unused")
         public ExtractItemTask(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
             super(serializer, parent);
-            serializer.readList(removedFromSystem, serializer::readStack);
-            serializer.readList(removedFromByproducts, serializer::readStack);
+            serializer.readList(removedFromSystem, serializer::readStackWithSize);
+            serializer.readList(removedFromByproducts, serializer::readStackWithSize);
         }
 
         @Override
         public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
             super.serializeTree(serializer);
-            serializer.writeList(removedFromSystem, serializer::writeStack);
-            serializer.writeList(removedFromByproducts, serializer::writeStack);
+            serializer.writeList(removedFromSystem, serializer::writeStackWithSize);
+            serializer.writeList(removedFromByproducts, serializer::writeStackWithSize);
             return Collections.emptyList();
         }
 
