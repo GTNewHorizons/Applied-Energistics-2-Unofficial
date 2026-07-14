@@ -75,4 +75,8 @@ public interface ICraftingJob<StackType extends IAEStack<StackType>> {
      * that this might be different from the current storage.
      */
     MECraftingInventory getStorageAtBeginning();
+
+    default boolean supportsOptimization() {
+        return false;
+    }
 }

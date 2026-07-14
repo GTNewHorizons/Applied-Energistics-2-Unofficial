@@ -35,6 +35,7 @@ import it.unimi.dsi.fastutil.objects.AbstractObject2ObjectMap;
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectLongBiConsumer;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public final class CraftingJobFast<StackType extends IAEStack<StackType>> implements ICraftingJob<StackType> {
@@ -58,6 +59,14 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         this.originalRequest = new CraftingRequest(what, SubstitutionMode.PRECISE_FRESH, true, craftingMode);
         this.context.addRequest(this.originalRequest);
         this.context.itemModel.ignore(what);
+    }
+
+    public CraftingContext getContext() {
+        return this.context;
+    }
+
+    public void forEachPattern(ObjectLongBiConsumer<ICraftingPatternDetails> consumer) {
+        tasks.forEach(consumer);
     }
 
     /**

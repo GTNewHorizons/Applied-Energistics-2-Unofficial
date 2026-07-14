@@ -299,4 +299,9 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
     public MECraftingInventory getStorageAtBeginning() {
         return getContext().availableCache;
     }
+
+    @Override
+    public boolean supportsOptimization() {
+        return true;
+    }
 }
