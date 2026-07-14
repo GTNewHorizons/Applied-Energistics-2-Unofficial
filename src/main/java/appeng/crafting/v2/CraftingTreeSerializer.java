@@ -30,6 +30,7 @@ import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 /**
  * Walks down the tree of resolved crafting operations and (de)serializes them into a flat ByteBuf for network
@@ -43,7 +44,7 @@ public final class CraftingTreeSerializer {
     private static final Map<Class<?>, IObjectSerializer<?>> objectSerializers = new HashMap<>();
     private static final Map<String, Class<?>> objectSerializerResolvers = new HashMap<>();
 
-    private final Map<Class<?>, Map<?, Integer>> objectsMap = new HashMap<>();
+    private final Map<Class<?>, Object2IntOpenHashMap<?>> objectsMap = new HashMap<>();
     private final Map<Class<?>, List<?>> objectsList = new HashMap<>();
 
     private final World world;
@@ -240,7 +241,7 @@ public final class CraftingTreeSerializer {
 
             int amount = getBuffer().readInt();
             List<Object> list = new ArrayList<>(amount);
-            Map<Object, Integer> map = new HashMap<>();
+            Object2IntOpenHashMap<Object> map = new Object2IntOpenHashMap<>();
 
             objectsList.put(klass, list);
             objectsMap.put(klass, map);
@@ -298,7 +299,8 @@ public final class CraftingTreeSerializer {
     }
 
     public <T> void writeObject(Class<T> klass, T obj) {
-        Map<T, Integer> objectMap = (Map<T, Integer>) objectsMap.computeIfAbsent(klass, k -> new HashMap<>());
+        Map<T, Integer> objectMap = (Map<T, Integer>) objectsMap
+                .computeIfAbsent(klass, k -> new Object2IntOpenHashMap<>());
         int meta = objectMap.computeIfAbsent(obj, k -> objectMap.size());
         List<T> objectList = (List<T>) objectsList.computeIfAbsent(klass, k -> new ArrayList<>());
         if (meta >= objectList.size()) objectList.add(obj);
