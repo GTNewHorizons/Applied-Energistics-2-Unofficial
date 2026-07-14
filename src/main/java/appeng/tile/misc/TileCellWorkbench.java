@@ -157,10 +157,6 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
             }
 
             this.updateStackTypeFromCell();
-            if (this.type != null && this.type != oldCellType) {
-                for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                    this.config.putAEStackInSlot(x, null);
-                }
             if (this.type != null) {
                 if (this.type != this.oldCellType) {
                     for (int x = 0; x < this.config.getSizeInventory(); x++) {
