@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import appeng.api.storage.data.IAEStack;
 import org.apache.logging.log4j.Level;
 
+import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.crafting.v2.resolvers.CraftableItemResolver;
 import appeng.crafting.v2.resolvers.CraftingRequestResolver;

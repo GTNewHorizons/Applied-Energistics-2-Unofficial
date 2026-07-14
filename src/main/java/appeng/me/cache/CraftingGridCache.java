@@ -37,7 +37,6 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.Nonnull;
 
-import appeng.crafting.fast.CraftingJobFast;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
@@ -93,6 +92,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingLinkNexus;
 import appeng.crafting.CraftingWatcher;
+import appeng.crafting.fast.CraftingJobFast;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.diagnostics.CraftingDiagnosticSessionId;
