@@ -123,8 +123,8 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
                     continue;
                 }
                 count -= extracted;
+                addCountToMap(missingIngredients, current, -count);
             }
-            if (pattern == null) continue;
             // Apply the pattern
             for (IAEStack<?> stack : pattern.getCondensedAEInputs()) {
                 loopCandidates.add(stack);
