@@ -1,0 +1,23 @@
+name: Trigger a rebuild with externally required PRs
+
+# Shim to forward the "Build and test" completion to the rebuild with deps wf, whose
+# job inherits this workflow_run event context (github.event.workflow_run.*)
+on:
+  workflow_run:
+    workflows: ["Build and test"]
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+  statuses: write
+
+jobs:
+  trigger-rebuild-with-deps:
+    # Only act on a failed, first-attempt PR build
+    if: >-
+      github.event.workflow_run.conclusion == 'failure'
+      && github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.run_attempt == 1
+    uses: GTNewHorizons/GTNH-Actions-Workflows/.github/workflows/trigger-rebuild-with-deps.yml@master
+    secrets: inherit
