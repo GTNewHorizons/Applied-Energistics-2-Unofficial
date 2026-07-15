@@ -55,7 +55,6 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
     private GuiButton applyControlValuesButton;
     private final MEGuiTextField[] controlValueFields = new MEGuiTextField[4];
     private boolean isControlButtonPressed;
-    private boolean isLiteModePressed;
     private final VirtualMESlotSingle slot;
 
     @Reflected
@@ -90,6 +89,7 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
                         194,
                         GuiText.CraftingModeLite.getLocal(),
                         GuiText.CraftingModeLiteDesc.getLocal()));
+        this.liteMode.setState(AEConfig.instance.getUseLiteCraftingMode());
         this.buttonList.add(
                 this.applyControlValuesButton = new GuiButton(
                         0,
@@ -167,8 +167,7 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
             return;
         }
         if (btn == this.liteMode) {
-            this.isLiteModePressed = !this.isLiteModePressed;
-            this.liteMode.setState(this.isLiteModePressed);
+            this.liteMode.setState(AEConfig.instance.toggleUseLiteCraftingMode());
             return;
         }
         if (btn == this.applyControlValuesButton) {
@@ -195,7 +194,7 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
                                 isShiftKeyDown(),
                                 isCtrlKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue(),
-                                isLiteModePressed));
+                                AEConfig.instance.getUseLiteCraftingMode()));
             }
         } catch (final NumberFormatException e) {
             // nope..
