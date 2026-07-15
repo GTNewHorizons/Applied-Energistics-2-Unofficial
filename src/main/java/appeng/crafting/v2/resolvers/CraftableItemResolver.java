@@ -154,7 +154,7 @@ public class CraftableItemResolver implements CraftingRequestResolver {
             this.pattern = serializer.readPattern();
             this.allowSimulation = buffer.readBoolean();
             this.isComplex = buffer.readBoolean();
-            this.matchingOutput = serializer.readStack();
+            this.matchingOutput = serializer.readStackWithSize();
             this.craftingMachine = serializer.readItemStack();
             this.totalCraftsDone = buffer.readLong();
 
@@ -247,7 +247,7 @@ public class CraftableItemResolver implements CraftingRequestResolver {
             serializer.writePattern(pattern);
             buffer.writeBoolean(allowSimulation);
             buffer.writeBoolean(isComplex);
-            serializer.writeStack(matchingOutput);
+            serializer.writeStackWithSize(matchingOutput);
             serializer.writeStack(craftingMachine);
             buffer.writeLong(totalCraftsDone);
             return this.childRequests;

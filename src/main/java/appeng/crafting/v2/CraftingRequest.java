@@ -58,13 +58,13 @@ public class CraftingRequest implements ITreeSerializable {
 
         public UsedResolverEntry(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
             this.parent = (CraftingRequest) parent;
-            this.resolvedStack = serializer.readStack();
+            this.resolvedStack = serializer.readStackWithSize();
             this.task = null; // to be filled by loadChildren
         }
 
         @Override
         public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
-            serializer.writeStack(resolvedStack);
+            serializer.writeStackWithSize(resolvedStack);
             return Collections.singletonList(task);
         }
 
@@ -116,7 +116,7 @@ public class CraftingRequest implements ITreeSerializable {
     @Override
     public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
         final ByteBuf buffer = serializer.getBuffer();
-        serializer.writeStack(stack);
+        serializer.writeStackWithSize(stack);
         serializer.writeEnum(substitutionMode);
         buffer.writeBoolean(allowSimulation);
         buffer.writeLong(remainingToProcess);
@@ -139,7 +139,7 @@ public class CraftingRequest implements ITreeSerializable {
     @SuppressWarnings({ "unused" })
     public CraftingRequest(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
         final ByteBuf buffer = serializer.getBuffer();
-        stack = serializer.readStack();
+        stack = serializer.readStackWithSize();
         parentRequest = null; // this state is not needed on client side
         parentRequests = Collections.emptySet();
         substitutionMode = serializer.readEnum(SubstitutionMode.class);
