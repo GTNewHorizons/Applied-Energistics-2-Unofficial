@@ -85,6 +85,7 @@ dependencies {
 
     //runtimeOnlyNonPublishable('com.github.GTNewHorizons:Backhand:1.8.11:dev')
     //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ForgeMultipart:1.7.10:dev') {transitive = false}
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:MouseTweaks:2.5.2-GTNH:dev')
 }
 
 // deps may transitively add Baubles, so we replace it

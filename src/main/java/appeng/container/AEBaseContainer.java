@@ -510,6 +510,17 @@ public abstract class AEBaseContainer extends Container {
     }
 
     @Override
+    @Nullable
+    public ItemStack slotClick(final int slotId, final int clickedButton, final int mode, final EntityPlayer player) {
+        final ItemStack result = super.slotClick(slotId, clickedButton, mode, player);
+
+        // Shift-click transfers are not predicted on the client. Keep the transaction result identical on both sides
+        // while still executing the full transfer, including Container's retry logic, on the server.
+        return mode == 1 ? null : result;
+    }
+
+    @Override
+    @Nullable
     public ItemStack transferStackInSlot(final EntityPlayer p, final int idx) {
         if (Platform.isClient()) {
             return null;
