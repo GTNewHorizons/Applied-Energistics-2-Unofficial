@@ -79,4 +79,8 @@ public interface ICraftingJob<StackType extends IAEStack<StackType>> {
     default boolean supportsOptimization() {
         return false;
     }
+
+    default String getErrorMessage() {
+        return "";
+    }
 }

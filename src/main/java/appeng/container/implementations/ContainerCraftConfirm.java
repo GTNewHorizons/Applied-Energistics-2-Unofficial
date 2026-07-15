@@ -94,6 +94,9 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
     @GuiSync(10)
     public String serializedItemToCraft = "";
 
+    @GuiSync(11)
+    public String errorMessage = "";
+
     public ContainerCraftConfirm(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
         this.cpuTable = new ContainerCPUTable(this, this::onCPUUpdate, false, this::cpuMatches);
@@ -174,6 +177,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
                     this.result.populatePlan(plan);
 
                     this.setUsedBytes(this.result.getByteTotal());
+                    this.setErrorMessage(this.result.getErrorMessage());
 
                     for (final IAEStack<?> plannedItem : plan) {
 
@@ -457,5 +461,13 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         ByteBuf serialized = Unpooled.buffer();
         Platform.writeStackByte(itemToCraft, serialized);
         this.serializedItemToCraft = serialized.toString(StandardCharsets.ISO_8859_1);
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(final String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }

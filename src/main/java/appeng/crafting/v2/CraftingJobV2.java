@@ -156,6 +156,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
         return byteCost;
     }
 
+    @Override
     public String getErrorMessage() {
         return errorMessage;
     }
