@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import net.minecraft.world.World;
 
@@ -44,16 +43,16 @@ public final class CraftingTreeSerializer {
     private static final Map<Class<?>, IObjectSerializer<?>> objectSerializers = new HashMap<>();
     private static final Map<String, Class<?>> objectSerializerResolvers = new HashMap<>();
 
-    private final Map<Class<?>, Object2IntOpenHashMap<?>> objectsMap = new HashMap<>();
-    private final Map<Class<?>, List<?>> objectsList = new HashMap<>();
+    private final Map<Class<?>, Object2IntOpenHashMap<Object>> objectsMap = new HashMap<>();
+    private final Map<Class<?>, List<Object>> objectsList = new HashMap<>();
 
     private final World world;
     private final boolean reading;
     private final ByteBuf buffer;
-    private final ByteBuf objCheckBuffer;
+    private final ByteBuf objBuffer;
 
     private ArrayList<JobFn> workStack = new ArrayList<>(32);
-    private int estimatedObjBufferSize = 0;
+    private int objectsWritten = 0;
 
     /**
      * Registers a serializable type for the crafting tree.
@@ -118,7 +117,7 @@ public final class CraftingTreeSerializer {
     public CraftingTreeSerializer(final World world) {
         this.buffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
                 .order(ByteOrder.LITTLE_ENDIAN);
-        this.objCheckBuffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
+        this.objBuffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
                 .order(ByteOrder.LITTLE_ENDIAN);
         this.reading = false;
         this.world = world;
@@ -133,7 +132,7 @@ public final class CraftingTreeSerializer {
     public CraftingTreeSerializer(final World world, final ByteBuf toDeserialize) {
         toDeserialize.order(ByteOrder.LITTLE_ENDIAN);
         this.buffer = toDeserialize;
-        this.objCheckBuffer = null;
+        this.objBuffer = null;
         this.reading = true;
         this.world = world;
     }
@@ -200,27 +199,11 @@ public final class CraftingTreeSerializer {
     }
 
     public ByteBuf finalizeSerializer() throws IOException {
-        final ByteBuf objBuffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
+        final ByteBuf finalBuffer = Unpooled
+                .buffer(Integer.BYTES + objBuffer.readableBytes() + getBuffer().readableBytes())
                 .order(ByteOrder.LITTLE_ENDIAN);
 
-        // Write the objects at the beginning
-        objBuffer.writeInt(objectsList.size());
-        for (Entry<Class<?>, List<?>> entry : objectsList.entrySet()) {
-            Class<?> klass = entry.getKey();
-            List<?> list = entry.getValue();
-
-            IObjectSerializer serializer = objectSerializers.get(klass);
-
-            ByteBufUtils.writeUTF8String(objBuffer, serializer.id());
-            objBuffer.writeInt(list.size());
-
-            for (Object obj : list) {
-                serializer.write(objBuffer, obj);
-            }
-        }
-
-        final ByteBuf finalBuffer = Unpooled.buffer(objBuffer.readableBytes() + getBuffer().readableBytes())
-                .order(ByteOrder.LITTLE_ENDIAN);
+        finalBuffer.writeInt(objectsWritten);
         finalBuffer.writeBytes(objBuffer);
         finalBuffer.writeBytes(getBuffer());
 
@@ -229,8 +212,8 @@ public final class CraftingTreeSerializer {
 
     public void initializeSerializer() throws IOException {
         // Populate the serializer with objects
-        int types = getBuffer().readInt();
-        for (int i = 0; i < types; i++) {
+        int objects = getBuffer().readInt();
+        for (int i = 0; i < objects; i++) {
             final String id = ByteBufUtils.readUTF8String(getBuffer());
 
             if (id == null || id.isEmpty()) {
@@ -244,19 +227,8 @@ public final class CraftingTreeSerializer {
                 throw new IllegalArgumentException("No object serializer for id: " + id);
             }
 
-            int amount = getBuffer().readInt();
-            List<Object> list = new ArrayList<>(amount);
-            Object2IntOpenHashMap<Object> map = new Object2IntOpenHashMap<>();
-
-            objectsList.put(klass, list);
-            objectsMap.put(klass, map);
-
-            for (int j = 0; j < amount; j++) {
-                Object obj = serializer.read(getBuffer());
-
-                list.add(obj);
-                map.put(obj, j);
-            }
+            // Skip map because we only use list to read
+            objectsList.computeIfAbsent(klass, k -> new ArrayList<>()).add(serializer.read(getBuffer()));
         }
     }
 
@@ -294,7 +266,6 @@ public final class CraftingTreeSerializer {
         writeStack(AEItemStack.create(pattern.getPattern()));
     }
 
-    @SuppressWarnings("unchecked")
     public ICraftingPatternDetails readPattern() throws IOException {
         IAEItemStack stack = readItemStack();
         if (stack != null && stack.getItem() instanceof ICraftingPatternItem) {
@@ -304,26 +275,24 @@ public final class CraftingTreeSerializer {
     }
 
     public <T> void writeObject(Class<T> klass, T obj) {
-        Object2IntOpenHashMap<T> objectMap = (Object2IntOpenHashMap<T>) objectsMap
-                .computeIfAbsent(klass, k -> new Object2IntOpenHashMap<>());
+        Object2IntOpenHashMap<Object> objectMap = objectsMap.computeIfAbsent(klass, k -> new Object2IntOpenHashMap<>());
         int meta = objectMap.computeIfAbsent(obj, k -> objectMap.size());
-        List<T> objectList = (List<T>) objectsList.computeIfAbsent(klass, k -> new ArrayList<>());
+        List<Object> objectList = objectsList.computeIfAbsent(klass, k -> new ArrayList<>());
         if (meta >= objectList.size()) {
             objectList.add(obj);
             IObjectSerializer serializer = objectSerializers.get(klass);
-            objCheckBuffer.markWriterIndex();
-            serializer.write(objCheckBuffer, obj);
-            estimatedObjBufferSize += objCheckBuffer.readableBytes();
-            objCheckBuffer.resetWriterIndex();
-        } ;
+            ByteBufUtils.writeUTF8String(objBuffer, serializer.id());
+            serializer.write(objBuffer, obj);
+            objectsWritten++;
+        }
         getBuffer().writeInt(meta);
     }
 
     public <T> T readObject(Class<T> klass) {
         int meta = getBuffer().readInt();
-        List<T> objectList = (List<T>) objectsList.get(klass);
+        List<Object> objectList = objectsList.get(klass);
         if (objectList == null) return null;
-        return objectList.get(meta);
+        return (T) objectList.get(meta);
     }
 
     @FunctionalInterface
@@ -414,7 +383,7 @@ public final class CraftingTreeSerializer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (!reading && getBuffer().readableBytes() + estimatedObjBufferSize
+        if (!reading && getBuffer().readableBytes() + objBuffer.readableBytes()
                 > AEConfig.instance.maxCraftingTreeVisualizationSize) {
             // Throw when exceeding max size, the caller will catch the error
             throw new IndexOutOfBoundsException();
