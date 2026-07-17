@@ -32,6 +32,7 @@ import appeng.api.config.ActionItems;
 import appeng.api.config.ItemSubstitution;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
+import appeng.api.parts.IPatternTerminal;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
@@ -78,7 +79,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     protected VirtualMEPatternSlot[] outputSlots;
     private boolean craftingMode;
     @NotNull
-    private IAEItemStack blankPatternView = ContainerPatternTerm.createBlankPattern().setStackSize(0);
+    private IAEItemStack blankPatternView = IPatternTerminal.createBlankPattern().setStackSize(0);
 
     public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te,
             final ContainerPatternTerm containerPatternTerm) {

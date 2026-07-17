@@ -53,6 +53,8 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
     private byte cellRestrictTypes;
     @Nullable
     private IAEStackType<?> type;
+    @Nullable
+    private IAEStackType<?> oldCellType;
 
     public TileCellWorkbench() {
         this.manager.registerSetting(Settings.COPY_MODE, CopyMode.CLEAR_ON_REMOVE);
@@ -154,12 +156,13 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
                     icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
             }
 
-            final IAEStackType<?> oldType = this.type;
-            this.updateStackTypeFromCell();
-            if (this.type != null && this.type != oldType) {
-                for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                    this.config.putAEStackInSlot(x, null);
+            if (this.updateStackTypeFromCell()) {
+                if (this.type != this.oldCellType) {
+                    for (int x = 0; x < this.config.getSizeInventory(); x++) {
+                        this.config.putAEStackInSlot(x, null);
+                    }
                 }
+                this.oldCellType = this.type;
             }
 
             final IAEStackInventory configInventory = this.getCellConfigInventory();
@@ -219,12 +222,14 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
         return this.cacheConfig;
     }
 
-    private void updateStackTypeFromCell() {
+    private boolean updateStackTypeFromCell() {
         final ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
             this.type = wi.getStackType();
+            return true;
         } else {
             this.type = null;
+            return false;
         }
     }
 
