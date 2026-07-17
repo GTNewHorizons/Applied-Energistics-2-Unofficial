@@ -287,6 +287,11 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
     }
 
     @Override
+    public boolean supportsOptimization() {
+        return true;
+    }
+
+    @Override
     public String getErrorMessage() {
         return errorMsg;
     }

@@ -328,7 +328,6 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
     }
 
     public void optimizePatterns() {
-        // only V2 supported
         if (this.result.supportsOptimization() && !this.isSimulation()
                 && getGrid() != null
                 && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()

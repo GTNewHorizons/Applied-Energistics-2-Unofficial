@@ -694,6 +694,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public void setUseLiteCraftingMode(final boolean value) {
         this.useLiteCraftingMode = value;
         this.get("Client", "isLiteCraftingEnabled", false).set(value);
+        this.save();
     }
 
     public boolean toggleUseLiteCraftingMode() {
