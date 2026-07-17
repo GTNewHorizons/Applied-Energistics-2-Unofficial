@@ -1,7 +1,6 @@
 package appeng.crafting.fast;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -96,18 +95,12 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         Queue<IAEStack<?>> loopCandidates = new ArrayDeque<>();
         // Contains anything that has zero in-degree / search head currently
         Queue<IAEStack<?>> toTraverse = new ArrayDeque<>();
-        List<IAEStack<?>> explorationOrder = new ArrayList<>();
         missingIngredients.put(originalRequest.stack, originalRequest.stack.getStackSize());
         toTraverse.add(originalRequest.stack);
         while (!toTraverse.isEmpty() || !loopCandidates.isEmpty()) {
             IAEStack<?> current = toTraverse.poll();
-            boolean usingLoop = false;
             if (current == null) {
-                while (!loopCandidates.isEmpty()) {
-                    current = loopCandidates.poll();
-                    if (result.loopingPatterns.contains(current)) break;
-                }
-                usingLoop = true;
+                current = loopCandidates.poll();
             }
             if (current == null) {
                 continue;
@@ -117,9 +110,6 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
                 continue;
             }
             traversed.add(current);
-            if (!usingLoop) {
-                explorationOrder.add(current);
-            }
             var currentPair = resolved.get(current);
             if (currentPair != null) {
                 // Regardless of whether we actually need the pattern / output, need to expand so that in-degrees
@@ -134,12 +124,6 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
                 }
             }
             exploreItem(current, currentPair);
-        }
-        // This allows better pattern loop resolution, explorationOrder removed patterns so that the result is always
-        // a DAG and this traversal is guaranteed to resolve everything that is not part of a loop.
-        for (IAEStack<?> stack : explorationOrder) {
-            var currentPair = resolved.get(stack);
-            exploreItem(stack, currentPair);
         }
     }
 
