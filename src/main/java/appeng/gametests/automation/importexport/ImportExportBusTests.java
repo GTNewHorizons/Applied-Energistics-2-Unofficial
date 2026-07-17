@@ -63,7 +63,7 @@ public class ImportExportBusTests {
         configureFilter(helper, busIO.exportBus, Blocks.dirt);
         ContinuousInvariant filterRejectsDirt = continuousInvariant(
                 helper,
-                "import bus filter must leave dirt in the source chest",
+                "bus filters must retain source dirt and keep imported cobblestone out of the destination",
                 () -> {
                     assertNetworkStoredAmount(helper, busIO.controller, Blocks.dirt, 0);
                     assertChestStoredAmount(helper, busIO.sourceChest, Blocks.dirt, 32);

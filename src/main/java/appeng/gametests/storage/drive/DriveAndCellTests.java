@@ -1,6 +1,7 @@
 package appeng.gametests.storage.drive;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
+import static appeng.gametests.AEGameTestHelpers.assertItemRemainder;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
@@ -72,13 +73,13 @@ public class DriveAndCellTests {
                     helper.assertNull(
                             simulateInjectIntoGrid(controller, Blocks.cobblestone, 64),
                             "Configured cobblestone should be accepted by the partitioned cell");
-                    assertRemainder(helper, simulateInjectIntoGrid(controller, Blocks.dirt, 64), Blocks.dirt, 64);
+                    assertItemRemainder(helper, simulateInjectIntoGrid(controller, Blocks.dirt, 64), Blocks.dirt, 64);
                 }).thenExecute("inject configured and rejected stacks", () -> {
                     IAEItemStack acceptedRemainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
                     IAEItemStack rejectedRemainder = injectIntoGrid(controller, Blocks.dirt, 64);
 
                     helper.assertNull(acceptedRemainder, "Configured stack should enter the partitioned cell");
-                    assertRemainder(helper, rejectedRemainder, Blocks.dirt, 64);
+                    assertItemRemainder(helper, rejectedRemainder, Blocks.dirt, 64);
                     assertStoredAmount(helper, cell, Blocks.cobblestone, 64);
                     assertStoredAmount(helper, cell, Blocks.dirt, 0);
                 }).thenSucceed();
@@ -137,18 +138,19 @@ public class DriveAndCellTests {
             drive.setPriority(0);
             meChest.setInventorySlotContents(1, highPriorityCell);
             drive.setInventorySlotContents(0, lowPriorityCell);
-        }).thenWaitUntil(
-                "wait for the full high-priority cell to become visible",
-                20,
-                () -> { assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY); })
-                .thenExecute("inject overflow and validate fallback routing", () -> {
-                    IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
+        }).thenWaitUntil("wait for the full high-priority cell to become visible", 20, () -> {
+            assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+            helper.assertNull(
+                    simulateInjectIntoGrid(controller, Blocks.cobblestone, 64),
+                    "Lower-priority drive cell should be ready to accept overflow");
+        }).thenExecute("inject overflow and validate fallback routing", () -> {
+            IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
-                    helper.assertNull(remainder, "Overflow should fit into lower-priority storage");
-                    assertStoredAmount(helper, highPriorityCell, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
-                    assertStoredAmount(helper, lowPriorityCell, Blocks.cobblestone, 64);
-                    assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY + 64);
-                }).thenSucceed();
+            helper.assertNull(remainder, "Overflow should fit into lower-priority storage");
+            assertStoredAmount(helper, highPriorityCell, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+            assertStoredAmount(helper, lowPriorityCell, Blocks.cobblestone, 64);
+            assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY + 64);
+        }).thenSucceed();
     }
 
     private static TileController getController(GameTestHelper helper) {
@@ -163,6 +165,7 @@ public class DriveAndCellTests {
         return tile(helper, TileChest.class, ME_CHEST_LABEL);
     }
 
+    @SuppressWarnings("unchecked")
     private static void partitionCell(GameTestHelper helper, ItemStack cell, Block block) {
         IMEInventoryHandler<IAEItemStack> handler = itemInventory(helper, cell);
         helper.assertTrue(handler instanceof ICellInventoryHandler, "Item cell should expose a configurable inventory");
@@ -171,13 +174,7 @@ public class DriveAndCellTests {
         helper.assertNotNull(cellInventory, "Item cell inventory should expose cell details");
 
         IAEStackInventory config = cellInventory.getConfigAEInventory();
+        helper.assertNotNull(config, "Item cell config inventory should exist");
         config.putAEStackInSlot(0, itemStack(block, 1));
-    }
-
-    private static void assertRemainder(GameTestHelper helper, IAEItemStack remainder, Block block,
-            long expectedAmount) {
-        helper.assertNotNull(remainder, "Rejected stack should be returned as a remainder");
-        helper.assertTrue(remainder.isSameType(new ItemStack(block, 1)), "Rejected remainder item should match");
-        helper.assertEquals(expectedAmount, remainder.getStackSize(), "Rejected remainder amount should match");
     }
 }

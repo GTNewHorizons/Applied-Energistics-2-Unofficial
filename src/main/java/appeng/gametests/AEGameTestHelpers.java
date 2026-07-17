@@ -104,6 +104,20 @@ public final class AEGameTestHelpers {
         return itemMonitor(controller).injectItems(itemStack(block, amount), Actionable.SIMULATE, TEST_SOURCE);
     }
 
+    public static void assertItemRemainder(GameTestHelper helper, IAEItemStack remainder, Block block,
+            long expectedAmount) {
+        helper.assertNotNull(remainder, "Rejected " + describe(block) + " stack should be returned as a remainder");
+        helper.assertTrue(
+                remainder.isSameType(new ItemStack(block, 1)),
+                "Rejected remainder item should be " + describe(block)
+                        + "; actual="
+                        + describe(remainder.getItemStack()));
+        helper.assertEquals(
+                expectedAmount,
+                remainder.getStackSize(),
+                "Rejected remainder amount for " + describe(block) + " should match");
+    }
+
     public static void assertNetworkStoredAmount(GameTestHelper helper, TileController controller, Block block,
             long expectedAmount) {
         long actualAmount = networkStoredAmount(controller, block);
@@ -115,7 +129,7 @@ public final class AEGameTestHelpers {
 
     public static long networkStoredAmount(TileController controller, Block block) {
         IAEItemStack extracted = itemMonitor(controller)
-                .extractItems(itemStack(block, Integer.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
+                .extractItems(itemStack(block, Long.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
         return extracted == null ? 0 : extracted.getStackSize();
     }
 
@@ -130,7 +144,7 @@ public final class AEGameTestHelpers {
 
     public static long networkStoredAmount(IGridNode node, Block block) {
         IAEItemStack extracted = itemMonitor(node)
-                .extractItems(itemStack(block, Integer.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
+                .extractItems(itemStack(block, Long.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
         return extracted == null ? 0 : extracted.getStackSize();
     }
 
@@ -235,7 +249,7 @@ public final class AEGameTestHelpers {
 
     public static long storedAmount(GameTestHelper helper, ItemStack cell, Block block) {
         IAEItemStack extracted = itemInventory(helper, cell)
-                .extractItems(itemStack(block, Integer.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
+                .extractItems(itemStack(block, Long.MAX_VALUE), Actionable.SIMULATE, TEST_SOURCE);
         return extracted == null ? 0 : extracted.getStackSize();
     }
 

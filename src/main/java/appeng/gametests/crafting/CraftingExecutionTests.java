@@ -14,7 +14,9 @@ import static appeng.gametests.AEGameTestHelpers.pos;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -223,6 +225,11 @@ public class CraftingExecutionTests {
     public static void cpuBreakCancelsWithoutDuplication(GameTestHelper helper) {
         CraftingNetwork network = getCraftingNetwork(helper);
         AtomicReference<ICraftingLink> link = new AtomicReference<>();
+        Set<EntityItem> cpuBreakDrops = new HashSet<>();
+        helper.afterTest(() -> {
+            cpuBreakDrops.addAll(craftingCpuDrops(helper));
+            cpuBreakDrops.forEach(EntityItem::setDead);
+        });
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         network.drive.setInventorySlotContents(0, driveCell);
@@ -230,10 +237,11 @@ public class CraftingExecutionTests {
                 helper,
                 "CPU break must not duplicate ingredients or produce processing output",
                 () -> {
+                    cpuBreakDrops.addAll(craftingCpuDrops(helper));
                     long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
-                            + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.cobblestone);
+                            + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
                     long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
-                            + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.stone);
+                            + droppedItemAmount(cpuBreakDrops, Blocks.stone);
                     helper.assertTrue(
                             accountedCobblestone <= 1,
                             "At most one ingredient may exist while CPU break cancellation settles; observed="
@@ -266,12 +274,14 @@ public class CraftingExecutionTests {
                         () -> assertStoredAmount(helper, driveCell, Blocks.cobblestone, 0))
                 .thenExecute("break CPU unit during active processing job", () -> {
                     destroyBlock(helper, CPU_UNIT_LABEL);
+                    cpuBreakDrops.addAll(craftingCpuDrops(helper));
                     cpuBreakDoesNotDuplicateOrProduceOutput.enable();
                 }).thenWaitUntil("wait for CPU-break cancellation and ingredient recovery", 40, () -> {
+                    cpuBreakDrops.addAll(craftingCpuDrops(helper));
                     long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
-                            + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.cobblestone);
+                            + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
                     long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
-                            + droppedItemAmount(helper, CPU_UNIT_LABEL, Blocks.stone);
+                            + droppedItemAmount(cpuBreakDrops, Blocks.stone);
 
                     helper.assertTrue(link.get().isCanceled(), "Crafting link should be canceled when the CPU breaks");
                     helper.assertEquals(
@@ -442,14 +452,28 @@ public class CraftingExecutionTests {
         helper.destroyBlock(pos.x(), pos.y(), pos.z());
     }
 
-    private static long droppedItemAmount(GameTestHelper helper, String centerLabel, Block block) {
-        Coord center = pos(helper, centerLabel);
+    private static List<EntityItem> craftingCpuDrops(GameTestHelper helper) {
+        Coord storage = pos(helper, CPU_STORAGE_LABEL);
+        Coord unit = pos(helper, CPU_UNIT_LABEL);
+
+        // CraftingCPUCluster may spill inventory at the broken tile or any free block adjacent to another CPU tile.
+        return helper.getEntities(
+                EntityItem.class,
+                Math.min(storage.x(), unit.x()) - 1,
+                Math.min(storage.y(), unit.y()) - 1,
+                Math.min(storage.z(), unit.z()) - 1,
+                Math.max(storage.x(), unit.x()) + 1,
+                Math.max(storage.y(), unit.y()) + 1,
+                Math.max(storage.z(), unit.z()) + 1);
+    }
+
+    private static long droppedItemAmount(Collection<EntityItem> drops, Block block) {
         ItemStack expected = new ItemStack(block, 1);
         long amount = 0;
 
-        for (EntityItem drop : helper.getEntities(EntityItem.class, center.x(), center.y(), center.z())) {
+        for (EntityItem drop : drops) {
             ItemStack stack = drop.getEntityItem();
-            if (stack != null && stack.isItemEqual(expected)) {
+            if (!drop.isDead && stack != null && stack.isItemEqual(expected)) {
                 amount += stack.stackSize;
             }
         }

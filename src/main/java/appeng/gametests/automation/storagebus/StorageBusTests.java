@@ -2,6 +2,7 @@ package appeng.gametests.automation.storagebus;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertItemRemainder;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkMonitorStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
@@ -167,7 +168,7 @@ public class StorageBusTests {
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
                 .thenExecute(
                         "configure cobblestone-only storage bus filter",
-                        () -> configureStorageBusFilter(storageBus, Blocks.cobblestone))
+                        () -> configureStorageBusFilter(helper, storageBus, Blocks.cobblestone))
                 .thenWaitUntil("wait for filter to accept cobblestone and reject dirt in simulation", 60, () -> {
                     helper.assertNull(
                             simulateInjectIntoGrid(controller, Blocks.cobblestone, 1),
@@ -202,16 +203,10 @@ public class StorageBusTests {
         return tile(helper, TileDrive.class, DRIVE_LABEL);
     }
 
-    private static void configureStorageBusFilter(PartStorageBus storageBus, Block block) {
+    private static void configureStorageBusFilter(GameTestHelper helper, PartStorageBus storageBus, Block block) {
         IAEStackInventory config = storageBus.getAEInventoryByName(StorageName.CONFIG);
+        helper.assertNotNull(config, "Storage bus config inventory should exist");
         config.putAEStackInSlot(0, itemStack(block, 1));
-    }
-
-    private static void assertItemRemainder(GameTestHelper helper, IAEItemStack remainder, Block block,
-            long expectedAmount) {
-        helper.assertNotNull(remainder, "Rejected stack should be returned as a remainder");
-        helper.assertTrue(remainder.isSameType(new ItemStack(block, 1)), "Rejected remainder item should match");
-        helper.assertEquals(expectedAmount, remainder.getStackSize(), "Rejected remainder amount should match");
     }
 
 }

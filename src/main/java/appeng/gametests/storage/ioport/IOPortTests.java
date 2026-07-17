@@ -65,13 +65,17 @@ public class IOPortTests {
                 .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
                 .thenIdle(1).thenExecuteAtStart("insert empty cell into IO port", () -> {
                     ioport.setInventorySlotContents(0, cell.copy());
-                    helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(0), cell));
-                    helper.assertTrue(ioport.getStackInSlot(6) == null);
+                    helper.assertTrue(
+                            ItemStack.areItemStacksEqual(ioport.getStackInSlot(0), cell),
+                            "Inserted cell should be present in the input slot before the IO port ticks");
+                    helper.assertNull(ioport.getStackInSlot(6), "Output slot should be empty before the IO port ticks");
                 }).thenExecute("assert empty cell reached output in the same tick", () -> {
-                    helper.assertTrue(ioport.getStackInSlot(0) == null);
+                    helper.assertNull(ioport.getStackInSlot(0), "Input slot should be empty after one processing tick");
                     ItemStack expectedCell = cell.copy();
                     expectedCell.setTagCompound(new NBTTagCompound());
-                    helper.assertTrue(ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), expectedCell));
+                    helper.assertTrue(
+                            ItemStack.areItemStacksEqual(ioport.getStackInSlot(6), expectedCell),
+                            "Empty cell should reach the output slot after one processing tick");
                 }).thenSucceed();
     }
 

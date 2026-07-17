@@ -131,7 +131,11 @@ public class P2PTests {
         ContinuousInvariant unpoweredOutputStaysLow = continuousInvariant(
                 helper,
                 "an unpowered redstone P2P input must not produce output power",
-                () -> assertRedstonePower(helper, 0));
+                () -> {
+                    assertCarrierActive(helper, fixture.controller);
+                    assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
+                    assertRedstonePower(helper, 0);
+                });
 
         helper.startSequence().thenWaitUntil("wait for the linked redstone P2P pair to settle low", 60, () -> {
             assertCarrierActive(helper, fixture.controller);
@@ -145,11 +149,11 @@ public class P2PTests {
                     assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
                     assertRedstonePower(helper, 15);
                 }).thenExecute("remove power from the redstone P2P input", () -> setRedstoneInput(helper, 0))
-                .thenWaitUntil(
-                        "wait for the redstone P2P output to return to zero",
-                        40,
-                        () -> assertRedstonePower(helper, 0))
-                .thenExecute("begin restored-low invariant", unpoweredOutputStaysLow::enable).thenIdle(5)
+                .thenWaitUntil("wait for the redstone P2P output to return to zero", 40, () -> {
+                    assertCarrierActive(helper, fixture.controller);
+                    assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
+                    assertRedstonePower(helper, 0);
+                }).thenExecute("begin restored-low invariant", unpoweredOutputStaysLow::enable).thenIdle(5)
                 .thenExecute("finish restored-low observation", unpoweredOutputStaysLow::disable).thenSucceed();
     }
 
@@ -164,6 +168,7 @@ public class P2PTests {
                 helper,
                 "unbound item tunnels must neither transfer nor duplicate the supplied item",
                 () -> {
+                    assertUnboundPairOnCarrier(helper, fixture.controller, input, output);
                     assertInventoryAmount(
                             helper,
                             fixture.destinationChest,
@@ -173,11 +178,12 @@ public class P2PTests {
                     assertInventoryTotal(helper, fixture, Blocks.cobblestone, 1);
                 });
 
-        helper.startSequence().thenWaitUntil("wait for both item tunnels to be active and unbound", 60, () -> {
-            assertCarrierActive(helper, fixture.controller);
-            assertUnbound(helper, input, "input");
-            assertUnbound(helper, output, "output");
-        }).thenExecute("begin unbound-transfer invariant", noUnboundTransfer::enable).thenIdle(40)
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for both item tunnels to be active and unbound",
+                        60,
+                        () -> assertUnboundPairOnCarrier(helper, fixture.controller, input, output))
+                .thenExecute("begin unbound-transfer invariant", noUnboundTransfer::enable).thenIdle(40)
                 .thenExecute("finish unbound-transfer observation", noUnboundTransfer::disable)
                 .thenExecute("assert destination remained untouched for the full observation window", () -> {
                     assertInventoryAmount(
@@ -208,6 +214,27 @@ public class P2PTests {
 
     private static void assertCarrierActive(GameTestHelper helper, TileController controller) {
         assertActive(helper, controller.getProxy(), "P2P carrier controller should be active");
+    }
+
+    private static void assertUnboundPairOnCarrier(GameTestHelper helper, TileController controller, PartP2PItems input,
+            PartP2PItems output) {
+        assertCarrierActive(helper, controller);
+        assertUnbound(helper, input, "input");
+        assertUnbound(helper, output, "output");
+        assertOnCarrierGrid(helper, controller, input, output);
+    }
+
+    private static void assertOnCarrierGrid(GameTestHelper helper, TileController controller, PartP2PTunnel<?> input,
+            PartP2PTunnel<?> output) {
+        IGridNode carrierNode = controller.getProxy().getNode();
+        helper.assertSame(
+                carrierNode.getGrid(),
+                input.getGridNode().getGrid(),
+                "Unbound P2P input should remain on the controller's carrier grid");
+        helper.assertSame(
+                carrierNode.getGrid(),
+                output.getGridNode().getGrid(),
+                "Unbound P2P output should remain on the controller's carrier grid");
     }
 
     private static <T extends PartP2PTunnel> void assertLinkedPair(GameTestHelper helper, T input, T output,

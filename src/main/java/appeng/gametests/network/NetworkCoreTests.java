@@ -105,7 +105,7 @@ public class NetworkCoreTests {
     // A glass cable can carry eight channels, so the ninth device must be left without a channel.
     @GameTest(template = "network_core", timeoutTicks = 100)
     public static void channelLimitDeactivatesOverflowDevice(GameTestHelper helper) {
-        getController(helper);
+        TileController controller = getController(helper);
         installCableLine(helper, CHANNEL_LIMIT_CABLE_LINE);
         List<IPart> devices = new ArrayList<>();
         for (String deviceLabel : CHANNEL_DEVICE_LABELS) {
@@ -114,7 +114,8 @@ public class NetworkCoreTests {
 
         helper.startSequence()
                 .thenWaitUntil("wait for glass cable to allocate eight channels and reject the ninth", 50, () -> {
-                    int activeDevices = countActive(devices);
+                    assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+                    int activeDevices = countActiveOnGrid(helper, controller.getProxy().getNode(), devices);
                     helper.assertEquals(
                             8,
                             activeDevices,
@@ -253,11 +254,16 @@ public class NetworkCoreTests {
         throw new AssertionError("Roles '" + fromRole + "' and '" + toRole + "' must define a direction");
     }
 
-    private static int countActive(List<IPart> parts) {
+    private static int countActiveOnGrid(GameTestHelper helper, IGridNode expectedGridNode, List<IPart> parts) {
         int count = 0;
         for (IPart part : parts) {
             IGridNode node = part.getGridNode();
-            if (node != null && node.isActive()) {
+            helper.assertNotNull(node, "Every channel-limited device should have a grid node");
+            helper.assertSame(
+                    expectedGridNode.getGrid(),
+                    node.getGrid(),
+                    "Every channel-limited device should join the controller grid");
+            if (node.isActive()) {
                 count++;
             }
         }

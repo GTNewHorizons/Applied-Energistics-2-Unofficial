@@ -7,6 +7,7 @@ import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
+import static appeng.gametests.AEGameTestHelpers.part;
 import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
@@ -15,7 +16,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntityChest;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.bsideup.jabel.Desugar;
 import com.google.common.collect.ImmutableCollection;
@@ -28,7 +28,6 @@ import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.parts.IPart;
 import appeng.container.ContainerNull;
 import appeng.core.AppEng;
 import appeng.gametests.AEGameTestHelpers;
@@ -39,7 +38,6 @@ import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.misc.TileInterface;
-import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
 import appeng.util.Platform;
@@ -202,24 +200,11 @@ public class InterfaceTests {
         TileController controller = tile(helper, TileController.class, CONTROLLER_LABEL);
         TileDrive drive = tile(helper, TileDrive.class, DRIVE_LABEL);
         TileInterface blockInterface = tile(helper, TileInterface.class, BLOCK_INTERFACE_LABEL);
-        PartInterface partInterface = getPartInterface(helper);
+        PartInterface partInterface = part(helper, PART_INTERFACE_HOST_LABEL, PartInterface.class);
         TileEntityChest adjacentChest = tile(helper, TileEntityChest.class, ADJACENT_CHEST_LABEL);
         tile(helper, TileMolecularAssembler.class, ASSEMBLER_LABEL);
 
         return new InterfaceNetwork(controller, drive, blockInterface, partInterface, adjacentChest);
-    }
-
-    private static PartInterface getPartInterface(GameTestHelper helper) {
-        TileCableBus host = tile(helper, TileCableBus.class, PART_INTERFACE_HOST_LABEL);
-
-        for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
-            IPart part = host.getPart(side);
-            if (part instanceof PartInterface partInterface) {
-                return partInterface;
-            }
-        }
-
-        throw new AssertionError("Part interface host label should contain a part interface");
     }
 
     private static void assertInterfaceNetworkActive(GameTestHelper helper, InterfaceNetwork network) {
@@ -235,10 +220,13 @@ public class InterfaceTests {
 
     private static void assertInterfaceStoredAmount(GameTestHelper helper, IInterfaceHost interfaceHost, Block block,
             long expectedAmount) {
+        Object blockId = Block.blockRegistry.getNameForObject(block);
         helper.assertEquals(
                 expectedAmount,
                 interfaceStoredAmount(interfaceHost, block),
-                "Interface stocked item amount should match");
+                "Interface storage for " + (blockId == null ? block.getUnlocalizedName() : blockId)
+                        + " should match; host="
+                        + interfaceHost.getClass().getSimpleName());
     }
 
     private static long interfaceStoredAmount(IInterfaceHost interfaceHost, Block block) {
