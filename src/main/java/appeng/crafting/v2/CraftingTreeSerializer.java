@@ -1,8 +1,5 @@
 package appeng.crafting.v2;
 
-import static appeng.util.Platform.readStackByte;
-import static appeng.util.Platform.writeStackByte;
-
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -32,6 +29,7 @@ import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 /**
  * Walks down the tree of resolved crafting operations and (de)serializes them into a flat ByteBuf for network
@@ -41,11 +39,20 @@ public final class CraftingTreeSerializer {
 
     private static final Map<Class<? extends ITreeSerializable>, String> serializableKeys = new HashMap<>();
     private static final Map<String, MethodHandle> serializableConstructors = new HashMap<>();
+
+    private static final Map<Class<?>, IObjectSerializer<?>> objectSerializers = new HashMap<>();
+    private static final Map<String, Class<?>> objectSerializerResolvers = new HashMap<>();
+
+    private final Map<Class<?>, Object2IntOpenHashMap<Object>> objectsMap = new HashMap<>();
+    private final Map<Class<?>, List<Object>> objectsList = new HashMap<>();
+
     private final World world;
     private final boolean reading;
     private final ByteBuf buffer;
+    private final ByteBuf objBuffer;
 
     private ArrayList<JobFn> workStack = new ArrayList<>(32);
+    private int objectsWritten = 0;
 
     /**
      * Registers a serializable type for the crafting tree.
@@ -75,6 +82,19 @@ public final class CraftingTreeSerializer {
         }
     }
 
+    /**
+     * Registers an object serializer for the crafting tree
+     *
+     * @param klass      The object to serialize
+     * @param serializer The object serializer
+     */
+    public static void registerObjectSerializer(Class<?> klass, IObjectSerializer<?> serializer) {
+        final String id = serializer.id();
+        if ((objectSerializerResolvers.put(id, klass) != null) || (objectSerializers.put(klass, serializer) != null)) {
+            throw new IllegalArgumentException("Duplicate IObjectSerializer id: " + id);
+        }
+    }
+
     static {
         // modid:type, using empty modid for ae2 for compactness
         registerSerializable(":j", CraftingJobV2.class);
@@ -86,6 +106,7 @@ public final class CraftingTreeSerializer {
         registerSerializable(":tx", ExtractItemResolver.ExtractItemTask.class);
         registerSerializable(":ts", SimulateMissingItemResolver.ConjureItemTask.class);
         registerSerializable(":tp", IgnoreMissingItemTask.class);
+        registerObjectSerializer(IAEStack.class, new ObjectAEStackSerializer<>());
     }
 
     /**
@@ -95,6 +116,8 @@ public final class CraftingTreeSerializer {
      */
     public CraftingTreeSerializer(final World world) {
         this.buffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
+                .order(ByteOrder.LITTLE_ENDIAN);
+        this.objBuffer = Unpooled.buffer(4096, AEConfig.instance.maxCraftingTreeVisualizationSize)
                 .order(ByteOrder.LITTLE_ENDIAN);
         this.reading = false;
         this.world = world;
@@ -109,6 +132,7 @@ public final class CraftingTreeSerializer {
     public CraftingTreeSerializer(final World world, final ByteBuf toDeserialize) {
         toDeserialize.order(ByteOrder.LITTLE_ENDIAN);
         this.buffer = toDeserialize;
+        this.objBuffer = null;
         this.reading = true;
         this.world = world;
     }
@@ -174,6 +198,40 @@ public final class CraftingTreeSerializer {
         return value;
     }
 
+    public ByteBuf finalizeSerializer() throws IOException {
+        final ByteBuf finalBuffer = Unpooled
+                .buffer(Integer.BYTES + objBuffer.readableBytes() + getBuffer().readableBytes())
+                .order(ByteOrder.LITTLE_ENDIAN);
+
+        finalBuffer.writeInt(objectsWritten);
+        finalBuffer.writeBytes(objBuffer);
+        finalBuffer.writeBytes(getBuffer());
+
+        return finalBuffer;
+    }
+
+    public void initializeSerializer() throws IOException {
+        // Populate the serializer with objects
+        int objects = getBuffer().readInt();
+        for (int i = 0; i < objects; i++) {
+            final String id = ByteBufUtils.readUTF8String(getBuffer());
+
+            if (id == null || id.isEmpty()) {
+                throw new IllegalArgumentException("No object id provided");
+            }
+
+            Class<?> klass = objectSerializerResolvers.get(id);
+            IObjectSerializer serializer = objectSerializers.get(klass);
+
+            if (serializer == null) {
+                throw new IllegalArgumentException("No object serializer for id: " + id);
+            }
+
+            // Skip map because we only use list to read
+            objectsList.computeIfAbsent(klass, k -> new ArrayList<>()).add(serializer.read(getBuffer()));
+        }
+    }
+
     public void writeEnum(Enum<?> value) throws IOException {
         buffer.writeByte(value.ordinal());
     }
@@ -184,28 +242,57 @@ public final class CraftingTreeSerializer {
     }
 
     public void writeStack(IAEStack<?> stack) {
-        writeStackByte(stack, buffer);
+        writeObject(IAEStack.class, stack);
     }
 
     public IAEStack<?> readStack() {
-        return readStackByte(buffer);
+        return readObject(IAEStack.class);
+    }
+
+    public void writeStackWithSize(IAEStack<?> stack) {
+        writeStack(stack);
+        getBuffer().writeLong(stack.getStackSize());
+    }
+
+    public IAEStack<?> readStackWithSize() {
+        return readStack().copy().setStackSize(getBuffer().readLong());
     }
 
     public IAEItemStack readItemStack() {
-        return (IAEItemStack) readStackByte(buffer);
+        return (IAEItemStack) readStack();
     }
 
     public void writePattern(ICraftingPatternDetails pattern) {
         writeStack(AEItemStack.create(pattern.getPattern()));
     }
 
-    @SuppressWarnings("unchecked")
     public ICraftingPatternDetails readPattern() throws IOException {
         IAEItemStack stack = readItemStack();
         if (stack != null && stack.getItem() instanceof ICraftingPatternItem) {
             return ((ICraftingPatternItem) stack.getItem()).getPatternForItem(stack.getItemStack(), world);
         }
         throw new UnsupportedOperationException("Illegal pattern type " + stack);
+    }
+
+    public <T> void writeObject(Class<T> klass, T obj) {
+        Object2IntOpenHashMap<Object> objectMap = objectsMap.computeIfAbsent(klass, k -> new Object2IntOpenHashMap<>());
+        int meta = objectMap.computeIfAbsent(obj, k -> objectMap.size());
+        List<Object> objectList = objectsList.computeIfAbsent(klass, k -> new ArrayList<>());
+        if (meta >= objectList.size()) {
+            objectList.add(obj);
+            IObjectSerializer serializer = objectSerializers.get(klass);
+            ByteBufUtils.writeUTF8String(objBuffer, serializer.id());
+            serializer.write(objBuffer, obj);
+            objectsWritten++;
+        }
+        getBuffer().writeInt(meta);
+    }
+
+    public <T> T readObject(Class<T> klass) {
+        int meta = getBuffer().readInt();
+        List<Object> objectList = objectsList.get(klass);
+        if (objectList == null) return null;
+        return (T) objectList.get(meta);
     }
 
     @FunctionalInterface
@@ -295,6 +382,11 @@ public final class CraftingTreeSerializer {
             job.run();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        if (!reading && getBuffer().readableBytes() + objBuffer.readableBytes()
+                > AEConfig.instance.maxCraftingTreeVisualizationSize) {
+            // Throw when exceeding max size, the caller will catch the error
+            throw new IndexOutOfBoundsException();
         }
     }
 

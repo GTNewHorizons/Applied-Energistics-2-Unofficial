@@ -82,6 +82,11 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
             return null;
         }
         final CraftingTreeSerializer serializer = new CraftingTreeSerializer(world, buffer);
+        try {
+            serializer.initializeSerializer();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         final ITreeSerializable rawJob;
         try {
             rawJob = serializer.readSerializableAndQueueChildren(null);
@@ -126,7 +131,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
                     break;
                 }
             }
-            return serializer.getBuffer().slice();
+            return serializer.finalizeSerializer().slice();
         } catch (Exception e) {
             AELog.error(e, "Could not serialize the crafting job");
             return Unpooled.buffer(0);
