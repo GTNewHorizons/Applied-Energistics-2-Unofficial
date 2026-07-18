@@ -79,6 +79,28 @@ public class IOPortTests {
                 }).thenSucceed();
     }
 
+    // Allows cell insertion only into input slots and extraction only from output slots.
+    @GameTest(template = "ioport", timeoutTicks = 20)
+    public static void sidedInventoryAllowsCellInputAndOutputExtractionOnly(GameTestHelper helper) {
+        TileIOPort ioport = getIOPort(helper);
+        ItemStack cell = cell1k();
+        ItemStack nonCell = new ItemStack(Items.apple);
+        int side = ForgeDirection.UNKNOWN.ordinal();
+
+        helper.assertTrue(ioport.isItemValidForSlot(0, cell), "Storage cells should be valid items");
+        helper.assertFalse(ioport.isItemValidForSlot(0, nonCell), "Non-cell items should be invalid");
+        helper.assertTrue(ioport.canInsertItem(0, cell, side), "Input slots should accept storage cells");
+        helper.assertFalse(ioport.canInsertItem(6, cell, side), "Output slots should not accept storage cells");
+        helper.assertFalse(ioport.canInsertItem(0, nonCell, side), "Input slots should not accept non-cell items");
+        helper.assertFalse(ioport.canExtractItem(0, cell, side), "Input slots should not allow extraction");
+        helper.assertTrue(ioport.canExtractItem(6, cell, side), "Output slots should allow extraction");
+        helper.assertEquals(
+                12,
+                ioport.getAccessibleSlotsBySide(ForgeDirection.UNKNOWN).length,
+                "All 12 slots should be exposed");
+        helper.succeed();
+    }
+
     // Exports items from a filled cell into ME network storage in EMPTY mode.
     @GameTest(template = "ioport", timeoutTicks = 40)
     public static void emptyModeExportsCellContentsToNetwork(GameTestHelper helper) {
