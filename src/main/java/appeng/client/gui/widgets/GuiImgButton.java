@@ -25,6 +25,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
 import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.BooleanOperation;
 import appeng.api.config.CPUSortBy;
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
@@ -1082,6 +1083,32 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.TOGGLE_SHOW_HIDDEN_INTERFACES_OFF,
                     ButtonToolTips.ToggleShowHiddenInterfaces,
                     ButtonToolTips.ToggleShowHiddenInterfacesOffDesc);
+
+            this.registerApp(
+                    154,
+                    Settings.ADVANCED_LEVEL_EMITTER_LOGIC,
+                    BooleanOperation.AND,
+                    ButtonToolTips.AdvancedLevelEmitterLogic,
+                    ButtonToolTips.AdvancedLevelEmitterLogicAnd);
+            this.registerApp(
+                    155,
+                    Settings.ADVANCED_LEVEL_EMITTER_LOGIC,
+                    BooleanOperation.OR,
+                    ButtonToolTips.AdvancedLevelEmitterLogic,
+                    ButtonToolTips.AdvancedLevelEmitterLogicOr);
+
+            this.registerApp(
+                    129,
+                    Settings.ADVANCED_LEVEL_EMITTER_SLOT_ENABLED,
+                    YesNo.YES,
+                    ButtonToolTips.AdvancedLevelEmitterSlotEnabled,
+                    ButtonToolTips.AdvancedLevelEmitterSlotEnabledOn);
+            this.registerApp(
+                    255,
+                    Settings.ADVANCED_LEVEL_EMITTER_SLOT_ENABLED,
+                    YesNo.NO,
+                    ButtonToolTips.AdvancedLevelEmitterSlotEnabled,
+                    ButtonToolTips.AdvancedLevelEmitterSlotEnabledOff);
         }
     }
 
