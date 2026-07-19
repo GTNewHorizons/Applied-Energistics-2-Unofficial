@@ -23,12 +23,12 @@ import appeng.util.calculators.Calculator;
 public class GuiAdvancedLevelEmitter extends AEBaseGui {
 
     private static final int SLOTS = IAdvancedLevelEmitter.SLOT_COUNT;
-    private static final int ROW_HEIGHT = 20;
+    private static final int ROW_HEIGHT = 19;
 
     private static final int TOGGLE_X = 10;
     private static final int TOGGLE_Y = 24;
-    private static final int SLOT_X = 31;
-    private static final int SLOT_Y = 23;
+    private static final int SLOT_X = 32;
+    private static final int SLOT_Y = 24;
     private static final int FIELD_X = 54;
     private static final int FIELD_Y = 26;
     private static final int FIELD_W = 90;
@@ -78,7 +78,7 @@ public class GuiAdvancedLevelEmitter extends AEBaseGui {
                     this.invertButtons[slot] = new GuiImgButton(
                             this.guiLeft + INVERT_X,
                             this.guiTop + INVERT_Y + y,
-                            Settings.REDSTONE_EMITTER,
+                            Settings.ADVANCED_LEVEL_EMITTER_SLOT_INVERT,
                             this.container.isSlotInverted(slot) ? RedstoneMode.LOW_SIGNAL : RedstoneMode.HIGH_SIGNAL));
 
             final MEGuiTextField field = new MEGuiTextField(FIELD_W, FIELD_H) {
