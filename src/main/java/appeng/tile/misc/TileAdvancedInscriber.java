@@ -56,8 +56,9 @@ public class TileAdvancedInscriber extends AENetworkPowerTile
     public static final String NBT_BOTTOM_LOCKED = "bottomLocked";
     public static final String NBT_PENDING_OUTPUT = "output";
 
-    private static final int MAX_PROCESSING_TIME = 100;
-    private static final int BASE_POWER_PER_TICK = 10;
+    public static final int MAX_PROCESSING_TIME = 100;
+    public static final int BASE_POWER_PER_TICK = 10;
+    public static final int BASE_SPEED = 1;
     private static final int[] ACCESSIBLE_SLOTS = { SLOT_TOP, SLOT_MIDDLE, SLOT_BOTTOM, SLOT_OUTPUT };
 
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 4);
@@ -247,7 +248,7 @@ public class TileAdvancedInscriber extends AENetworkPowerTile
         try {
             final IEnergyGrid energyGrid = this.getProxy().getEnergy();
             IEnergySource source = this;
-            final int speedFactor = this.getSpeedFactor();
+            final int speedFactor = BASE_SPEED + this.upgrades.getInstalledUpgrades(Upgrades.SPEED);
             final int powerConsumption = BASE_POWER_PER_TICK * speedFactor;
             final double powerThreshold = powerConsumption - 0.01;
             double extracted = this.extractAEPower(powerConsumption, Actionable.SIMULATE, PowerMultiplier.CONFIG);
@@ -271,10 +272,6 @@ public class TileAdvancedInscriber extends AENetworkPowerTile
         }
 
         this.active = false;
-    }
-
-    private int getSpeedFactor() {
-        return 1 + this.upgrades.getInstalledUpgrades(Upgrades.SPEED);
     }
 
     private boolean tryOutput() {
