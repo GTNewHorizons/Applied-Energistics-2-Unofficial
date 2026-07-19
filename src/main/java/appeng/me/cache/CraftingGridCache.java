@@ -92,6 +92,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingLinkNexus;
 import appeng.crafting.CraftingWatcher;
+import appeng.crafting.fast.CraftingJobFast;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.diagnostics.CraftingDiagnosticSessionId;
@@ -604,19 +605,24 @@ public class CraftingGridCache
     @Override
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
             final IAEItemStack slotItem, final ICraftingCallback cb) {
-        return beginCraftingJob(world, grid, actionSrc, convertStack(slotItem), CraftingMode.STANDARD, cb);
+        return beginCraftingJob(world, grid, actionSrc, convertStack(slotItem), CraftingMode.STANDARD, false, cb);
     }
 
     @Override
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
             final IAEStack<?> stack, final ICraftingCallback cb) {
-        return beginCraftingJob(world, grid, actionSrc, stack, CraftingMode.STANDARD, cb);
+        return beginCraftingJob(world, grid, actionSrc, stack, CraftingMode.STANDARD, false, cb);
     }
 
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
-            final IAEStack<?> stack, final CraftingMode craftingMode, final ICraftingCallback cb) {
+            final IAEStack<?> stack, final CraftingMode craftingMode, final boolean liteMode,
+            final ICraftingCallback cb) {
         if (world == null || grid == null || actionSrc == null || stack == null) {
             throw new IllegalArgumentException("Invalid Crafting Job Request");
+        }
+
+        if (liteMode) {
+            return new CraftingJobFast<>(world, grid, actionSrc, (IAEStack) stack, craftingMode, cb).schedule();
         }
 
         final ICraftingJob job = new CraftingJobV2<>(world, grid, actionSrc, (IAEStack) stack, craftingMode, cb);

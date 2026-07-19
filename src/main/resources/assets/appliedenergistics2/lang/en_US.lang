@@ -755,6 +755,8 @@ gui.tooltips.appliedenergistics2.CraftingModeStandard=Standard Crafting Mode
 gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Starts a craft only if all ingredients are available in the ME System.
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Starts a craft even if ingredients are missing from the ME System.
+gui.appliedenergistics2.CraftingModeLite=Lite Crafting Mode
+gui.appliedenergistics2.CraftingModeLiteDesc=Disable various pattern features in exchange for a much faster calculation.
 
 gui.tooltips.appliedenergistics2.ExtraOptions=Extra Options
 

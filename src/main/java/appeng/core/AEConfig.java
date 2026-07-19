@@ -97,6 +97,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean highlightWhenSomethingStuckInInterface = true;
     public boolean highlightPatternTypeMismatchInGUI = true;
     public int screenColor = 0xFFFFFF;
+    private boolean useLiteCraftingMode = false;
 
     /** Max rows for crafting pins section (1-16). Caps the cycle button options. */
     public int maxCraftingPinRows = 16;
@@ -404,6 +405,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         screenColorProperty.set(this.screenColor);
         this.visualiserWidthDense = (float) this.get("Client", "visualiserWidthDense", 1.0f).getDouble(1.0f);
         this.visualiserWidthNormal = (float) this.get("Client", "visualiserWidthNormal", 1.0f).getDouble(1.0f);
+        this.useLiteCraftingMode = this.get("Client", "isLiteCraftingEnabled", this.useLiteCraftingMode)
+                .getBoolean(this.useLiteCraftingMode);
 
         // Pin options (under Client category)
         Property pMaxCraft = this.get("Client", "maxCraftingPinRows", this.maxCraftingPinRows);
@@ -682,6 +685,23 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
     public int levelByStackAmounts(final int i) {
         return this.levelByStacks[i];
+    }
+
+    public boolean getUseLiteCraftingMode() {
+        return this.useLiteCraftingMode;
+    }
+
+    public void setUseLiteCraftingMode(final boolean value) {
+        this.useLiteCraftingMode = value;
+        this.get("Client", "isLiteCraftingEnabled", false).set(value);
+        this.save();
+    }
+
+    public boolean toggleUseLiteCraftingMode() {
+        this.useLiteCraftingMode = !this.useLiteCraftingMode;
+        this.get("Client", "isLiteCraftingEnabled", false).set(this.useLiteCraftingMode);
+        this.save();
+        return this.useLiteCraftingMode;
     }
 
     public Enum getSetting(final String category, final Class<? extends Enum> class1, final Enum myDefault) {
