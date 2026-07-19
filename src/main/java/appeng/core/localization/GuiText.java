@@ -25,6 +25,7 @@ public enum GuiText implements Localization {
     VibrationChamber,
     SpatialIOPort,
     LevelEmitter,
+    AdvancedLevelEmitter,
     Terminal,
     SpatialChamber,
 
