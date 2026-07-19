@@ -1,14 +1,12 @@
 package appeng.gametests.interfaces;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
-import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -20,6 +18,7 @@ import net.minecraft.tileentity.TileEntityChest;
 import com.github.bsideup.jabel.Desugar;
 import com.google.common.collect.ImmutableCollection;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -30,9 +29,7 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.container.ContainerNull;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
-import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
@@ -61,7 +58,7 @@ public class InterfaceTests {
         InterfaceNetwork network = getInterfaceNetwork(helper);
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 64);
-        network.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
 
         helper.startSequence()
                 .thenWaitUntil(
@@ -73,7 +70,7 @@ public class InterfaceTests {
                         () -> configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT))
                 .thenWaitUntil("wait for interface to stock 32 cobblestone from the drive", 80, () -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
-                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 64 - STOCK_AMOUNT);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 64 - STOCK_AMOUNT);
                 }).thenSucceed();
     }
 
@@ -89,10 +86,11 @@ public class InterfaceTests {
                         () -> assertInterfaceNetworkActive(helper, network))
                 .thenExecute("enable blocking mode, install pattern, and occupy target with dirt", () -> {
                     network.partInterface.getConfigManager().putSetting(Settings.BLOCK, YesNo.YES);
-                    network.partInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(
+                    InventoryHelper.setSlot(
+                            network.partInterface.getInterfaceDuality().getPatterns(),
                             0,
                             encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1));
-                    AEGameTestHelpers.setChestSlot(network.adjacentChest, 0, Blocks.dirt, 1);
+                    helper.setSlot(ADJACENT_CHEST_LABEL, 0, new ItemStack(Blocks.dirt));
                 })
                 .thenWaitUntil(
                         "wait for blocking pattern advertisement",
@@ -105,15 +103,15 @@ public class InterfaceTests {
                     boolean pushed = network.partInterface.pushPattern(details, craftingTable(Blocks.cobblestone, 1));
 
                     helper.assertFalse(pushed, "Blocking interface should not push into a non-empty target");
-                    assertChestStoredAmount(helper, network.adjacentChest, Blocks.dirt, 1);
-                    assertChestStoredAmount(helper, network.adjacentChest, Blocks.cobblestone, 0);
-                }).thenExecute("clear blocking target inventory", () -> clearChest(network.adjacentChest))
+                    helper.assertInventoryCount(ADJACENT_CHEST_LABEL, new ItemStack(Blocks.dirt), 1);
+                    helper.assertInventoryCount(ADJACENT_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+                }).thenExecute("clear blocking target inventory", () -> helper.clearSlot(ADJACENT_CHEST_LABEL, 0))
                 .thenExecute("attempt pattern push into empty target", () -> {
                     ICraftingPatternDetails details = firstPattern(helper, network.controller, Blocks.stone);
                     boolean pushed = network.partInterface.pushPattern(details, craftingTable(Blocks.cobblestone, 1));
 
                     helper.assertTrue(pushed, "Blocking interface should push once the target is empty");
-                    assertChestStoredAmount(helper, network.adjacentChest, Blocks.cobblestone, 1);
+                    helper.assertInventoryCount(ADJACENT_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 1);
                 }).thenSucceed();
     }
 
@@ -129,7 +127,8 @@ public class InterfaceTests {
                         () -> assertInterfaceNetworkActive(helper, network))
                 .thenExecute(
                         "install cobblestone-to-stone processing pattern",
-                        () -> network.blockInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(
+                        () -> InventoryHelper.setSlot(
+                                network.blockInterface.getInterfaceDuality().getPatterns(),
                                 0,
                                 encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1)))
                 .thenWaitUntil(
@@ -148,7 +147,7 @@ public class InterfaceTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 64);
         insertItems(helper, driveCell, Blocks.dirt, 64);
-        network.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
 
         helper.startSequence()
                 .thenWaitUntil(
@@ -161,8 +160,8 @@ public class InterfaceTests {
                 }).thenWaitUntil("wait for both interfaces to reach their 16-item stock targets", 100, () -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, 16);
                     assertInterfaceStoredAmount(helper, network.partInterface, Blocks.dirt, 16);
-                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 48);
-                    assertStoredAmount(helper, driveCell, Blocks.dirt, 48);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 48);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.dirt, 48);
                 }).thenSucceed();
     }
 
@@ -172,13 +171,13 @@ public class InterfaceTests {
         InterfaceNetwork network = getInterfaceNetwork(helper);
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 64);
-        network.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
         ContinuousInvariant configuredStockDoesNotDrainNetwork = continuousInvariant(
                 helper,
                 "already satisfied interface stock must not drain ME storage",
                 () -> {
                     assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
-                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 64);
                 });
 
         helper.startSequence()
@@ -188,8 +187,10 @@ public class InterfaceTests {
                         () -> assertInterfaceNetworkActive(helper, network))
                 .thenExecute("pre-stock interface and enable no-overstock invariant", () -> {
                     configureStock(network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
-                    network.blockInterface.getInterfaceDuality().getStorage()
-                            .setInventorySlotContents(0, new ItemStack(Blocks.cobblestone, STOCK_AMOUNT));
+                    InventoryHelper.setSlot(
+                            network.blockInterface.getInterfaceDuality().getStorage(),
+                            0,
+                            new ItemStack(Blocks.cobblestone, STOCK_AMOUNT));
                     configuredStockDoesNotDrainNetwork.enable();
                 }).thenIdle(30)
                 .thenExecute("finish no-overstock observation window", configuredStockDoesNotDrainNetwork::disable)
@@ -197,14 +198,14 @@ public class InterfaceTests {
     }
 
     private static InterfaceNetwork getInterfaceNetwork(GameTestHelper helper) {
-        TileController controller = tile(helper, TileController.class, CONTROLLER_LABEL);
-        TileDrive drive = tile(helper, TileDrive.class, DRIVE_LABEL);
-        TileInterface blockInterface = tile(helper, TileInterface.class, BLOCK_INTERFACE_LABEL);
+        TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        TileDrive drive = helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
+        TileInterface blockInterface = helper.assertTileEntityPresent(TileInterface.class, BLOCK_INTERFACE_LABEL);
         PartInterface partInterface = part(helper, PART_INTERFACE_HOST_LABEL, PartInterface.class);
-        TileEntityChest adjacentChest = tile(helper, TileEntityChest.class, ADJACENT_CHEST_LABEL);
-        tile(helper, TileMolecularAssembler.class, ASSEMBLER_LABEL);
+        helper.assertTileEntityPresent(TileEntityChest.class, ADJACENT_CHEST_LABEL);
+        helper.assertTileEntityPresent(TileMolecularAssembler.class, ASSEMBLER_LABEL);
 
-        return new InterfaceNetwork(controller, drive, blockInterface, partInterface, adjacentChest);
+        return new InterfaceNetwork(controller, drive, blockInterface, partInterface);
     }
 
     private static void assertInterfaceNetworkActive(GameTestHelper helper, InterfaceNetwork network) {
@@ -215,7 +216,7 @@ public class InterfaceTests {
     }
 
     private static void configureStock(IInterfaceHost interfaceHost, Block block, int amount) {
-        interfaceHost.getInterfaceDuality().getConfig().setInventorySlotContents(0, new ItemStack(block, amount));
+        InventoryHelper.setSlot(interfaceHost.getInterfaceDuality().getConfig(), 0, new ItemStack(block, amount));
     }
 
     private static void assertInterfaceStoredAmount(GameTestHelper helper, IInterfaceHost interfaceHost, Block block,
@@ -230,17 +231,7 @@ public class InterfaceTests {
     }
 
     private static long interfaceStoredAmount(IInterfaceHost interfaceHost, Block block) {
-        long amount = 0;
-        ItemStack expected = new ItemStack(block, 1);
-        DualityInterface duality = interfaceHost.getInterfaceDuality();
-
-        for (ItemStack stack : duality.getStorage()) {
-            if (stack != null && stack.isItemEqual(expected)) {
-                amount += stack.stackSize;
-            }
-        }
-
-        return amount;
+        return InventoryHelper.count(interfaceHost.getInterfaceDuality().getStorage(), new ItemStack(block));
     }
 
     private static ImmutableCollection<ICraftingPatternDetails> craftingOptionsFor(TileController controller,
@@ -290,14 +281,7 @@ public class InterfaceTests {
         return tag;
     }
 
-    private static void clearChest(TileEntityChest chest) {
-        for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
-            chest.setInventorySlotContents(slot, null);
-        }
-        chest.markDirty();
-    }
-
     @Desugar
     private record InterfaceNetwork(TileController controller, TileDrive drive, TileInterface blockInterface,
-            PartInterface partInterface, TileEntityChest adjacentChest) {}
+            PartInterface partInterface) {}
 }
