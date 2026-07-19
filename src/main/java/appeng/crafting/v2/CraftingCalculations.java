@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.Level;
 
+import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.crafting.v2.resolvers.CraftableItemResolver;
 import appeng.crafting.v2.resolvers.CraftingRequestResolver;
@@ -54,6 +55,10 @@ public class CraftingCalculations {
 
     public static long adjustByteCost(CraftingRequest request, long byteCost) {
         return Platform.ceilDiv(byteCost, request.stack.getAmountPerUnit());
+    }
+
+    public static long adjustByteCost(IAEStack<?> stack, long byteCost) {
+        return Platform.ceilDiv(byteCost, stack.getAmountPerUnit());
     }
 
     static {

@@ -194,6 +194,8 @@ public enum GuiText implements Localization {
     Merge,
     Bytes,
     Set,
+    CraftingModeLite,
+    CraftingModeLiteDesc,
 
     CraftingCPU,
     Automatic,

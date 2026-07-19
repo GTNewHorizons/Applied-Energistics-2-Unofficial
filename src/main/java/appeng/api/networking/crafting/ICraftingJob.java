@@ -81,4 +81,12 @@ public interface ICraftingJob<StackType extends IAEStack<StackType>> {
     default MECraftingInventory getStorageAtBeginning() {
         return new MECraftingInventory();
     }
+
+    default boolean supportsOptimization() {
+        return false;
+    }
+
+    default String getErrorMessage() {
+        return "";
+    }
 }
