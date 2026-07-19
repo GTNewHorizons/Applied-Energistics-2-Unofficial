@@ -454,10 +454,11 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         final long BytesUsed = this.ccc.getUsedBytes();
         final String byteUsed = Platform.formatByteDouble(BytesUsed);
         final String bannerText;
-        if (jobTree != null && !jobTree.getErrorMessage().isEmpty()) {
-            if (jobTree.getErrorMessage().equals("java.lang.ArithmeticException: long overflow")) {
+        final String errorMessage = this.ccc.getErrorMessage();
+        if (!errorMessage.isEmpty()) {
+            if (errorMessage.equals("java.lang.ArithmeticException: long overflow")) {
                 bannerText = GuiText.CraftingSizeLimitExceeded.getLocal();
-            } else bannerText = StatCollector.translateToLocal(jobTree.getErrorMessage());
+            } else bannerText = StatCollector.translateToLocal(errorMessage);
         } else if (BytesUsed > 0) {
             bannerText = byteUsed;
         } else {

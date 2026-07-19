@@ -31,6 +31,7 @@ import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketOptimizePatterns;
+import appeng.crafting.fast.CraftingJobFast;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
@@ -56,68 +57,82 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
 
         patterns.clear();
 
-        if (this.result instanceof CraftingJobV2 cj) {
-            // use context to reuse caches
-            CraftingContext context = cj.getContext();
+        // use context to reuse caches
+        CraftingContext context = null;
+        if (result instanceof CraftingJobV2 cj) {
+            context = cj.getContext();
+        } else if (result instanceof CraftingJobFast cj) {
+            context = cj.getContext();
+        }
 
-            // check blacklisted interfaces
-            ItemStackSet blacklistedPatterns = new ItemStackSet();
+        if (context == null) return;
 
-            var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
+        // check blacklisted interfaces
+        ItemStackSet blacklistedPatterns = new ItemStackSet();
 
-            for (Class<? extends IInterfaceViewable> c : supported) {
-                for (IGridNode node : context.meGrid.getMachines(c)) {
-                    IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
-                    if (!machine.allowsPatternOptimization()) {
-                        IInventory patternInv = machine.getPatterns();
+        var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
 
-                        for (int i = 0; i < patternInv.getSizeInventory(); i++) {
-                            ItemStack stack = patternInv.getStackInSlot(i);
-                            if (stack != null) blacklistedPatterns.add(stack);
-                        }
+        for (Class<? extends IInterfaceViewable> c : supported) {
+            for (IGridNode node : context.meGrid.getMachines(c)) {
+                IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
+                if (!machine.allowsPatternOptimization()) {
+                    IInventory patternInv = machine.getPatterns();
+
+                    for (int i = 0; i < patternInv.getSizeInventory(); i++) {
+                        ItemStack stack = patternInv.getStackInSlot(i);
+                        if (stack != null) blacklistedPatterns.add(stack);
                     }
                 }
             }
+        }
 
+        if (this.result instanceof CraftingJobV2 cj) {
             for (CraftingTask resolvedTask : context.getResolvedTasks()) {
                 if (resolvedTask instanceof CraftFromPatternTask cfpt) {
                     if (!blacklistedPatterns.contains(cfpt.pattern.getPattern())) {
-                        patterns.computeIfAbsent(cfpt.request.stack, i -> new Pattern()).addCraftingTask(cfpt);
+                        patterns.computeIfAbsent(cfpt.request.stack, i -> new Pattern())
+                                .addCraftingTask(cfpt.pattern, cfpt.getTotalCraftsDone());
                     }
                 }
             }
-            this.patterns.entrySet().removeIf(entry -> entry.getValue().patternDetails.size() != 1);
-            this.patterns.entrySet().removeIf(entry -> entry.getValue().getPattern().isCraftable());
-
-            try {
-                final PacketMEInventoryUpdate patternsUpdate = new PacketMEInventoryUpdate((byte) 0);
-
-                for (Entry<IAEStack<?>, Pattern> entry : this.patterns.entrySet()) {
-                    IAEStack<?> stack = entry.getKey().copy();
-                    stack.setCountRequestableCrafts(entry.getValue().requestedCrafts);
-                    long perCraft = entry.getValue().getCraftAmountForItem(stack);
-                    long hash = entry.getKey().hashCode();
-                    // max multi is 62, that's 6 bits MAX!!
-                    long multiplier = entry.getValue().getMaxBitMultiplier()
-                            & PacketOptimizePatterns.MULTIPLIER_BIT_MASK;
-                    // lowest bit is sign, the rest bits are magnitude
-                    long highbits = (Math.abs(hash) << 1) | ((hash < 0) ? 1 : 0);
-                    // Then shift it left by 6 bits
-                    highbits = highbits << PacketOptimizePatterns.MULTIPLIER_BITS;
-                    stack.setStackSize(highbits | multiplier);
-                    stack.setCountRequestable(perCraft);
-                    patternsUpdate.appendItem(stack);
+        } else if (this.result instanceof CraftingJobFast<?>cj) {
+            cj.forEachPattern((pattern, count) -> {
+                if (!blacklistedPatterns.contains(pattern.getPattern())) {
+                    patterns.computeIfAbsent(pattern.getCondensedAEOutputs()[0], i -> new Pattern())
+                            .addCraftingTask(pattern, count);
                 }
+            });
+        }
+        this.patterns.entrySet().removeIf(entry -> entry.getValue().patternDetails.size() != 1);
+        this.patterns.entrySet().removeIf(entry -> entry.getValue().getPattern().isCraftable());
 
-                for (final Object player : this.crafters) {
-                    if (player instanceof EntityPlayerMP playerMP) {
-                        NetworkHandler.instance.sendTo(patternsUpdate, playerMP);
-                    }
-                }
+        try {
+            final PacketMEInventoryUpdate patternsUpdate = new PacketMEInventoryUpdate((byte) 0);
 
-            } catch (IOException e) {
-                //
+            for (Entry<IAEStack<?>, Pattern> entry : this.patterns.entrySet()) {
+                IAEStack<?> stack = entry.getKey().copy();
+                stack.setCountRequestableCrafts(entry.getValue().requestedCrafts);
+                long perCraft = entry.getValue().getCraftAmountForItem(stack);
+                long hash = entry.getKey().hashCode();
+                // max multi is 62, that's 6 bits MAX!!
+                long multiplier = entry.getValue().getMaxBitMultiplier() & PacketOptimizePatterns.MULTIPLIER_BIT_MASK;
+                // lowest bit is sign, the rest bits are magnitude
+                long highbits = (Math.abs(hash) << 1) | ((hash < 0) ? 1 : 0);
+                // Then shift it left by 6 bits
+                highbits = highbits << PacketOptimizePatterns.MULTIPLIER_BITS;
+                stack.setStackSize(highbits | multiplier);
+                stack.setCountRequestable(perCraft);
+                patternsUpdate.appendItem(stack);
             }
+
+            for (final Object player : this.crafters) {
+                if (player instanceof EntityPlayerMP playerMP) {
+                    NetworkHandler.instance.sendTo(patternsUpdate, playerMP);
+                }
+            }
+
+        } catch (IOException e) {
+            //
         }
     }
 
@@ -205,9 +220,9 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
         // private long requestedAmount;
         private long requestedCrafts = 0;
 
-        private void addCraftingTask(CraftFromPatternTask task) {
-            patternDetails.add(task.pattern);
-            requestedCrafts += task.getTotalCraftsDone();
+        private void addCraftingTask(ICraftingPatternDetails pattern, long totalCrafts) {
+            patternDetails.add(pattern);
+            requestedCrafts += totalCrafts;
         }
 
         private long getCraftAmountForItem(IAEStack<?> stack) {
