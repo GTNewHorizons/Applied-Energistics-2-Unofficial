@@ -329,7 +329,8 @@ public enum ButtonToolTips implements Localization {
     AdvancedLevelEmitterLogicOr,
     AdvancedLevelEmitterSlotEnabled,
     AdvancedLevelEmitterSlotEnabledOn,
-    AdvancedLevelEmitterSlotEnabledOff;
+    AdvancedLevelEmitterSlotEnabledOff,
+    AdvancedLevelEmitterSlotInvert;
 
     ButtonToolTips() {}
 

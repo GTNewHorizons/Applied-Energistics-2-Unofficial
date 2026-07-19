@@ -1109,6 +1109,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     YesNo.NO,
                     ButtonToolTips.AdvancedLevelEmitterSlotEnabled,
                     ButtonToolTips.AdvancedLevelEmitterSlotEnabledOff);
+
+            this.registerApp(
+                    0,
+                    Settings.ADVANCED_LEVEL_EMITTER_SLOT_INVERT,
+                    RedstoneMode.LOW_SIGNAL,
+                    ButtonToolTips.AdvancedLevelEmitterSlotInvert,
+                    ButtonToolTips.EmitLevelsBelow);
+            this.registerApp(
+                    1,
+                    Settings.ADVANCED_LEVEL_EMITTER_SLOT_INVERT,
+                    RedstoneMode.HIGH_SIGNAL,
+                    ButtonToolTips.AdvancedLevelEmitterSlotInvert,
+                    ButtonToolTips.EmitLevelAbove);
         }
     }
 
