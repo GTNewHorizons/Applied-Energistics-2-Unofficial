@@ -13,7 +13,9 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnewhorizons.horizonqa.api.GameTestAssertException;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -40,8 +42,7 @@ public final class AEGameTestHelpers {
     private AEGameTestHelpers() {}
 
     public static <T extends TileEntity> T tile(GameTestHelper helper, Class<T> type, String label) {
-        Coord pos = pos(helper, label);
-        return helper.assertTileEntityPresent(type, pos.x(), pos.y(), pos.z());
+        return helper.assertTileEntityPresent(type, label);
     }
 
     public static Coord pos(GameTestHelper helper, String label) {
@@ -69,8 +70,7 @@ public final class AEGameTestHelpers {
     }
 
     public static void setRedstoneInput(GameTestHelper helper, String label, int strength) {
-        Coord pos = pos(helper, label);
-        helper.setRedstoneInput(pos.x(), pos.y(), pos.z(), strength);
+        helper.setRedstoneInput(label, strength);
     }
 
     public static void assertActive(GameTestHelper helper, AENetworkProxy proxy, String message) {
@@ -183,13 +183,11 @@ public final class AEGameTestHelpers {
     }
 
     public static void setChestSlot(TileEntityChest chest, int slot, Block block, int amount) {
-        chest.setInventorySlotContents(slot, new ItemStack(block, amount));
-        chest.markDirty();
+        InventoryHelper.setSlot(chest, slot, new ItemStack(block, amount));
     }
 
     public static void clearChestSlot(TileEntityChest chest, int slot) {
-        chest.setInventorySlotContents(slot, null);
-        chest.markDirty();
+        InventoryHelper.clearSlot(chest, slot);
     }
 
     public static void fillChest(TileEntityChest chest, Block block) {
@@ -207,15 +205,7 @@ public final class AEGameTestHelpers {
     }
 
     public static long chestStoredAmount(TileEntityChest chest, Block block) {
-        long amount = 0;
-        ItemStack expectedStack = new ItemStack(block, 1);
-        for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
-            ItemStack stack = chest.getStackInSlot(slot);
-            if (stack != null && stack.isItemEqual(expectedStack)) {
-                amount += stack.stackSize;
-            }
-        }
-        return amount;
+        return InventoryHelper.count(chest, new ItemStack(block));
     }
 
     public static void insertItems(GameTestHelper helper, ItemStack cell, Block block, long amount) {
@@ -303,9 +293,26 @@ public final class AEGameTestHelpers {
 
     public static ContinuousInvariant continuousInvariant(GameTestHelper helper, String description,
             Runnable assertion) {
-        ContinuousInvariant invariant = new ContinuousInvariant(description, assertion);
-        helper.onEachTick(invariant::check);
-        return invariant;
+        TickCallbackHandle callback = helper.onEachTick(() -> checkContinuousInvariant(description, assertion));
+        callback.disable();
+        return new ContinuousInvariant(callback);
+    }
+
+    private static void checkContinuousInvariant(String description, Runnable assertion) {
+        try {
+            assertion.run();
+        } catch (GameTestAssertException failure) {
+            String message = "Continuous invariant '" + description + "' failed: " + failure.getMessage();
+            GameTestAssertException enrichedFailure = failure.hasPosition()
+                    ? new GameTestAssertException(message, failure.getPos())
+                    : new GameTestAssertException(message, failure.getX(), failure.getY(), failure.getZ());
+            enrichedFailure.initCause(failure);
+            throw enrichedFailure;
+        } catch (AssertionError failure) {
+            throw new AssertionError(
+                    "Continuous invariant '" + description + "' failed: " + failure.getMessage(),
+                    failure);
+        }
     }
 
     private static String describe(Block block) {
@@ -333,42 +340,18 @@ public final class AEGameTestHelpers {
 
     public static final class ContinuousInvariant {
 
-        private final String description;
-        private final Runnable assertion;
-        private boolean enabled;
+        private final TickCallbackHandle callback;
 
-        private ContinuousInvariant(String description, Runnable assertion) {
-            this.description = description;
-            this.assertion = assertion;
+        private ContinuousInvariant(TickCallbackHandle callback) {
+            this.callback = callback;
         }
 
         public void enable() {
-            this.enabled = true;
+            this.callback.enable();
         }
 
         public void disable() {
-            this.enabled = false;
-        }
-
-        private void check() {
-            if (!this.enabled) {
-                return;
-            }
-
-            try {
-                this.assertion.run();
-            } catch (GameTestAssertException failure) {
-                String message = "Continuous invariant '" + this.description + "' failed: " + failure.getMessage();
-                GameTestAssertException enrichedFailure = failure.hasPosition()
-                        ? new GameTestAssertException(message, failure.getPos())
-                        : new GameTestAssertException(message, failure.getX(), failure.getY(), failure.getZ());
-                enrichedFailure.initCause(failure);
-                throw enrichedFailure;
-            } catch (AssertionError failure) {
-                throw new AssertionError(
-                        "Continuous invariant '" + this.description + "' failed: " + failure.getMessage(),
-                        failure);
-            }
+            this.callback.disable();
         }
     }
 
