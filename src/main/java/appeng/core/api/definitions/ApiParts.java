@@ -42,6 +42,7 @@ public final class ApiParts implements IParts {
     private final IItemDefinition exportBus;
     private final IItemDefinition iface;
     private final IItemDefinition levelEmitter;
+    private final IItemDefinition advancedLevelEmitter;
     private final IItemDefinition annihilationPlane;
     private final IItemDefinition identityAnnihilationPlane;
     private final IItemDefinition formationPlane;
@@ -94,6 +95,8 @@ public final class ApiParts implements IParts {
         this.exportBus = new DamagedItemDefinition(itemMultiPart.createPart(PartType.ExportBus));
         this.iface = new DamagedItemDefinition(itemMultiPart.createPart(PartType.Interface));
         this.levelEmitter = new DamagedItemDefinition(itemMultiPart.createPart(PartType.LevelEmitter));
+        this.advancedLevelEmitter = new DamagedItemDefinition(
+                itemMultiPart.createPart(PartType.AdvancedLevelEmitter));
         this.annihilationPlane = new DamagedItemDefinition(itemMultiPart.createPart(PartType.AnnihilationPlane));
         this.identityAnnihilationPlane = new DamagedItemDefinition(
                 itemMultiPart.createPart(PartType.IdentityAnnihilationPlane));
@@ -220,6 +223,11 @@ public final class ApiParts implements IParts {
     @Override
     public IItemDefinition levelEmitter() {
         return this.levelEmitter;
+    }
+
+    @Override
+    public IItemDefinition advancedLevelEmitter() {
+        return this.advancedLevelEmitter;
     }
 
     @Override
