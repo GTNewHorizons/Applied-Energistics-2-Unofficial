@@ -51,7 +51,7 @@ public enum AEColor implements Localization {
 
     Blue("gui.appliedenergistics2.Blue", 0x2D29A0, 0x514AFF, 0xDDE6FF, 0x3E3B8E),
 
-    Brown("gui.appliedenergistics2.Brown", 0x724E35, 0xB7967F, 0xE0D2C8, 0x69503),
+    Brown("gui.appliedenergistics2.Brown", 0x724E35, 0xB7967F, 0xE0D2C8, 0x695030),
 
     Green("gui.appliedenergistics2.Green", 0x45A021, 0x60E32E, 0xE3F2E3, 0x4D8D34),
 
