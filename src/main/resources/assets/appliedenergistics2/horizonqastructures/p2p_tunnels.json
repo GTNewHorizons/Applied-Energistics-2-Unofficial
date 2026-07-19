@@ -1,0 +1,38 @@
+{
+  "format_version": 1,
+  "size": [7, 2, 3],
+  "palette": {
+    "A": {"name": "appliedenergistics2:tile.BlockCableBus", "meta": 0, "label": "AE2 Cable and/or Bus"},
+    "B": {"name": "appliedenergistics2:tile.BlockCreativeEnergyCell", "meta": 0, "label": "Creative Energy Cell"},
+    "C": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
+    "D": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
+    "E": {"name": "minecraft:chest", "meta": 3, "label": "Chest"},
+    "F": {"name": "minecraft:hopper", "meta": 5, "label": "Hopper"}
+  },
+  "layers": [
+    [
+      ".......",
+      "FAACAAE",
+      "......."
+    ],
+    [
+      ".......",
+      "EB...D.",
+      "......."
+    ]
+  ],
+  "annotations": {
+    "labels": {
+      "controller": [3, 0, 1],
+      "destination_chest": [6, 0, 1],
+      "input_tunnel_host": [1, 0, 1],
+      "main_network_power": [1, 1, 1],
+      "output_tunnel_host": [5, 0, 1],
+      "redstone_probe": [5, 0, 0],
+      "redstone_source": [1, 0, 0],
+      "remote_storage": [5, 1, 1],
+      "source_chest": [0, 1, 1],
+      "source_inserter": [0, 0, 1]
+    }
+  }
+}
