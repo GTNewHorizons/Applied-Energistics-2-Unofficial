@@ -90,9 +90,9 @@ public class GuiAdvancedLevelEmitter extends AEBaseGui {
             };
             field.x = this.guiLeft + FIELD_X;
             field.y = this.guiTop + FIELD_Y + y;
-            field.setText(Long.toString(this.container.getReportingValue(slot)));
-            this.container.setTextField(slot, field);
             this.amountFields[slot] = field;
+            field.setText(Long.toString(this.container.getReportingValue(slot)), true);
+            this.container.setTextField(slot, field);
 
             this.registerVirtualSlots(
                     new VirtualMEPhantomSlot(
