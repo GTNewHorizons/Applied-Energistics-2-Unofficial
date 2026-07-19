@@ -322,7 +322,14 @@ public enum ButtonToolTips implements Localization {
     WirelessKitBindName,
     WirelessKitBindDesc,
     WirelessKitUnbindName,
-    WirelessKitUnbindDesc;
+    WirelessKitUnbindDesc,
+
+    AdvancedLevelEmitterLogic,
+    AdvancedLevelEmitterLogicAnd,
+    AdvancedLevelEmitterLogicOr,
+    AdvancedLevelEmitterSlotEnabled,
+    AdvancedLevelEmitterSlotEnabledOn,
+    AdvancedLevelEmitterSlotEnabledOff;
 
     ButtonToolTips() {}
 

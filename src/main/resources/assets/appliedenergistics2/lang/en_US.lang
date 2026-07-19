@@ -825,6 +825,13 @@ gui.tooltips.appliedenergistics2.WirelessKitBindDesc=Bind wireless devices in th
 gui.tooltips.appliedenergistics2.WirelessKitUnbindName=Unbind
 gui.tooltips.appliedenergistics2.WirelessKitUnbindDesc=Break connections for wireless devices in the 2nd row
 
+gui.tooltips.appliedenergistics2.AdvancedLevelEmitterLogic=Logic Mode
+gui.tooltips.appliedenergistics2.AdvancedLevelEmitterLogicAnd=Emit when all active slots match
+gui.tooltips.appliedenergistics2.AdvancedLevelEmitterLogicOr=Emit when any active slot matches
+gui.tooltips.appliedenergistics2.AdvancedLevelEmitterSlotEnabled=Slot Status
+gui.tooltips.appliedenergistics2.AdvancedLevelEmitterSlotEnabledOn=Slot is active
+gui.tooltips.appliedenergistics2.AdvancedLevelEmitterSlotEnabledOff=Slot is inactive
+
 gui.tooltips.appliedenergistics2.PinsSection=Pins section
 gui.tooltips.appliedenergistics2.PinsSectionActive=§6LMB§8 - §7Add player row\n§6RMB§8 - §7Remove player row\n§6CTRL + LMB§8 - §7Add crafting row\n§6CTRL + RMB§8 - §7Remove crafting row\n§6SHIFT + RMB§8 - §7Unpin§r
 gui.tooltips.appliedenergistics2.PinsSectionHint=Hold §6ALT§7 for keybinds
