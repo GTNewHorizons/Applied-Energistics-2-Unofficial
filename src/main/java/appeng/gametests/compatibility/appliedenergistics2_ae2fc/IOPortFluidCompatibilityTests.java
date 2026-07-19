@@ -3,7 +3,6 @@ package appeng.gametests.compatibility.appliedenergistics2_ae2fc;
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertStoredFluidAmount;
 import static appeng.gametests.AEGameTestHelpers.insertFluids;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.Fluid;
@@ -27,8 +26,8 @@ public class IOPortFluidCompatibilityTests {
     // AE2FC fluid cells use the real IO port transfer path and the same base transfer budget as item cells.
     @GameTest(template = "ioport", timeoutTicks = 30)
     public static void noUpgradeTransfersTwoHundredFiftySixBucketsOfFluidPerTick(GameTestHelper helper) {
-        TileIOPort ioport = tile(helper, TileIOPort.class, IO_PORT_LABEL);
-        TileDrive drive = tile(helper, TileDrive.class, DRIVE_LABEL);
+        TileIOPort ioport = helper.assertTileEntityPresent(TileIOPort.class, IO_PORT_LABEL);
+        TileDrive drive = helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
         Fluid water = FluidRegistry.WATER;
         helper.assertNotNull(water, "Water fluid should be registered");
         ItemStack sourceCell = fluidCell1k(helper);
@@ -40,8 +39,8 @@ public class IOPortFluidCompatibilityTests {
                         "wait for AE2FC IO port network activation",
                         () -> assertActive(helper, ioport.getProxy(), "IO port network should become active"))
                 .thenIdle(1).thenExecuteAtStart("insert AE2FC source and destination fluid cells", () -> {
-                    drive.setInventorySlotContents(0, driveCell);
-                    ioport.setInventorySlotContents(0, sourceCell);
+                    helper.setSlot(DRIVE_LABEL, 0, driveCell);
+                    helper.setSlot(IO_PORT_LABEL, 0, sourceCell);
                 }).thenExecute("assert the first tick transfers exactly 256,000 mB", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
