@@ -11,6 +11,7 @@ import appeng.api.parts.IAdvancedLevelEmitter;
 import appeng.api.storage.StorageName;
 import appeng.client.gui.IGuiSub;
 import appeng.client.gui.widgets.MEGuiTextField;
+import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
 import appeng.container.interfaces.IContainerSubGui;
 import appeng.container.slot.SlotInaccessible;
@@ -24,7 +25,7 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ContainerAdvancedLevelEmitter extends ContainerUpgradeable implements IContainerSubGui {
+public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IContainerSubGui {
 
     private final IAdvancedLevelEmitter lvlEmitter;
 
@@ -72,26 +73,8 @@ public class ContainerAdvancedLevelEmitter extends ContainerUpgradeable implemen
         // sub gui copy paste
         this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
         this.addSlotToContainer(this.primaryGuiButtonIcon);
-    }
 
-    @Override
-    protected int getHeight() {
-        return 235;
-    }
-
-    @Override
-    protected int getToolboxY() {
-        return 93;
-    }
-
-    @Override
-    public int availableUpgrades() {
-        return 0;
-    }
-
-    @Override
-    protected boolean supportCapacity() {
-        return false;
+        this.bindPlayerInventory(ip, -1, 153);
     }
 
     @SideOnly(Side.CLIENT)
@@ -112,7 +95,7 @@ public class ContainerAdvancedLevelEmitter extends ContainerUpgradeable implemen
             this.logicModeSync.syncFromConfig();
         }
 
-        this.standardDetectAndSendChanges();
+        super.detectAndSendChanges();
     }
 
     public long getReportingValue(final int slot) {
