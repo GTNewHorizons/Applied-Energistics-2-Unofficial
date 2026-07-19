@@ -42,6 +42,7 @@ public class StorageBusTests {
     private static final String STORAGE_BUS_LABEL = "storage_bus";
     private static final String EXTERNAL_CHEST_LABEL = "external_chest";
     private static final String DRIVE_LABEL = "drive";
+    private static final int STORAGE_BUS_REFRESH_TIMEOUT_TICKS = 80;
 
     // Exposes items in the adjacent vanilla chest through the ME item storage monitor.
     @GameTest(template = "storage_bus", timeoutTicks = 100)
@@ -100,10 +101,14 @@ public class StorageBusTests {
                 .thenExecute(
                         "configure storage bus for READ-only access",
                         () -> storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ))
-                .thenWaitUntil("wait for READ mode to reject simulated insertion", 60, () -> {
-                    IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.cobblestone, 64);
-                    assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
-                }).thenExecute("attempt real insertion through READ-only storage bus", () -> {
+                .thenWaitUntil(
+                        "wait for READ mode to reject simulated insertion",
+                        STORAGE_BUS_REFRESH_TIMEOUT_TICKS,
+                        () -> {
+                            IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.cobblestone, 64);
+                            assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
+                        })
+                .thenExecute("attempt real insertion through READ-only storage bus", () -> {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
@@ -169,13 +174,17 @@ public class StorageBusTests {
                 .thenExecute(
                         "configure cobblestone-only storage bus filter",
                         () -> configureStorageBusFilter(helper, storageBus, Blocks.cobblestone))
-                .thenWaitUntil("wait for filter to accept cobblestone and reject dirt in simulation", 60, () -> {
-                    helper.assertNull(
-                            simulateInjectIntoGrid(controller, Blocks.cobblestone, 1),
-                            "Storage bus should accept matching items");
-                    IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.dirt, 16);
-                    assertItemRemainder(helper, remainder, Blocks.dirt, 16);
-                }).thenExecute("inject matching cobblestone and non-matching dirt", () -> {
+                .thenWaitUntil(
+                        "wait for filter to accept cobblestone and reject dirt in simulation",
+                        STORAGE_BUS_REFRESH_TIMEOUT_TICKS,
+                        () -> {
+                            helper.assertNull(
+                                    simulateInjectIntoGrid(controller, Blocks.cobblestone, 1),
+                                    "Storage bus should accept matching items");
+                            IAEItemStack remainder = simulateInjectIntoGrid(controller, Blocks.dirt, 16);
+                            assertItemRemainder(helper, remainder, Blocks.dirt, 16);
+                        })
+                .thenExecute("inject matching cobblestone and non-matching dirt", () -> {
                     IAEItemStack matchingRemainder = injectIntoGrid(controller, Blocks.cobblestone, 16);
                     IAEItemStack nonMatchingRemainder = injectIntoGrid(controller, Blocks.dirt, 16);
 
