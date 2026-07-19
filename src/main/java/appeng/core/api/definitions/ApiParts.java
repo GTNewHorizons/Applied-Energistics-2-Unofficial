@@ -95,8 +95,7 @@ public final class ApiParts implements IParts {
         this.exportBus = new DamagedItemDefinition(itemMultiPart.createPart(PartType.ExportBus));
         this.iface = new DamagedItemDefinition(itemMultiPart.createPart(PartType.Interface));
         this.levelEmitter = new DamagedItemDefinition(itemMultiPart.createPart(PartType.LevelEmitter));
-        this.advancedLevelEmitter = new DamagedItemDefinition(
-                itemMultiPart.createPart(PartType.AdvancedLevelEmitter));
+        this.advancedLevelEmitter = new DamagedItemDefinition(itemMultiPart.createPart(PartType.AdvancedLevelEmitter));
         this.annihilationPlane = new DamagedItemDefinition(itemMultiPart.createPart(PartType.AnnihilationPlane));
         this.identityAnnihilationPlane = new DamagedItemDefinition(
                 itemMultiPart.createPart(PartType.IdentityAnnihilationPlane));

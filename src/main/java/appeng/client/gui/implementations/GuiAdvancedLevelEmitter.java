@@ -111,11 +111,8 @@ public class GuiAdvancedLevelEmitter extends AEBaseGui {
                 8,
                 6,
                 ColorUtils.guiTextColorGray.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.inventory.getLocal(),
-                8,
-                PLAYER_INV_Y - 11,
-                ColorUtils.guiTextColorGray.getColor());
+        this.fontRendererObj
+                .drawString(GuiText.inventory.getLocal(), 8, PLAYER_INV_Y - 11, ColorUtils.guiTextColorGray.getColor());
 
         if (this.logicMode != null) {
             this.logicMode.set(this.container.getLogicMode());

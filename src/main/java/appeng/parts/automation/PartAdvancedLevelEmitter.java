@@ -698,9 +698,9 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
                 continue;
             }
 
-            final boolean slotState = this.slotActive[slot] && (this.slotInverted[slot]
-                    ? this.lastReportedValue[slot] < this.amount[slot]
-                    : this.lastReportedValue[slot] >= this.amount[slot]);
+            final boolean slotState = this.slotActive[slot]
+                    && (this.slotInverted[slot] ? this.lastReportedValue[slot] < this.amount[slot]
+                            : this.lastReportedValue[slot] >= this.amount[slot]);
 
             result[slot] = new LevelItemInfo(
                     stack,

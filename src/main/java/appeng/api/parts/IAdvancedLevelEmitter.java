@@ -8,8 +8,8 @@ import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.data.IAEStack;
 import appeng.tile.inventory.IIAEStackInventory;
 
-public interface IAdvancedLevelEmitter extends IStackWatcherHost, IMEMonitorHandlerReceiver<IAEStack<?>>,
-        IGridTickable, IUpgradeableHost, IIAEStackInventory, ILevelViewable {
+public interface IAdvancedLevelEmitter extends IStackWatcherHost, IMEMonitorHandlerReceiver<IAEStack<?>>, IGridTickable,
+        IUpgradeableHost, IIAEStackInventory, ILevelViewable {
 
     int SLOT_COUNT = 6;
 
