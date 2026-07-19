@@ -6,16 +6,10 @@ import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.part;
-import static appeng.gametests.AEGameTestHelpers.setChestSlot;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.tileentity.TileEntityHopper;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
@@ -55,37 +49,37 @@ public class P2PTests {
     // P1: a real hopper supplies the input tunnel, and conservation is checked on every observed tick.
     @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
     public static void itemP2PMovesItemsWithoutDuplication(GameTestHelper helper) {
-        P2PFixture fixture = getFixture(helper);
+        TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PItems input = inputTunnel(helper, PartP2PItems.class);
         PartP2PItems output = outputTunnel(helper, PartP2PItems.class);
-        setChestSlot(fixture.sourceChest, 0, Blocks.cobblestone, 1);
-        ContinuousInvariant itemConservation = itemConservationInvariant(helper, fixture, 1);
+        helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
+        ContinuousInvariant itemConservation = itemConservationInvariant(helper, 1);
         itemConservation.enable();
 
         helper.startSequence().thenWaitUntil("wait for the item P2P pair to become active and linked", 60, () -> {
-            assertCarrierActive(helper, fixture.controller);
+            assertCarrierActive(helper, controller);
             assertLinkedPair(helper, input, output, ITEM_FREQUENCY);
         }).thenWaitUntil("wait for the supplied item to reach only the destination inventory", 80, () -> {
-            assertInventoryAmount(helper, fixture.sourceChest, Blocks.cobblestone, 0, SOURCE_CHEST_LABEL);
-            assertInventoryAmount(helper, fixture.sourceInserter, Blocks.cobblestone, 0, SOURCE_INSERTER_LABEL);
-            assertInventoryAmount(helper, fixture.destinationChest, Blocks.cobblestone, 1, DESTINATION_CHEST_LABEL);
+            helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+            helper.assertInventoryCount(SOURCE_INSERTER_LABEL, new ItemStack(Blocks.cobblestone), 0);
+            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 1);
         }).thenExecute("finish item-conservation observation", itemConservation::disable).thenSucceed();
     }
 
     // P1: the outer ME connection must expose storage that is physically present only behind the output tunnel.
     @GameTest(template = "p2p_tunnels", timeoutTicks = 180)
     public static void meP2PCarriesRemoteStorageChannel(GameTestHelper helper) {
-        P2PFixture fixture = getFixture(helper);
+        TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PTunnelME input = inputTunnel(helper, PartP2PTunnelME.class);
         PartP2PTunnelME output = outputTunnel(helper, PartP2PTunnelME.class);
-        TileDrive remoteDrive = tile(helper, TileDrive.class, REMOTE_STORAGE_LABEL);
+        helper.assertTileEntityPresent(TileDrive.class, REMOTE_STORAGE_LABEL);
         ItemStack remoteCell = cell1k();
         insertItems(helper, remoteCell, Blocks.cobblestone, 64);
-        remoteDrive.setInventorySlotContents(0, remoteCell);
+        helper.setSlot(REMOTE_STORAGE_LABEL, 0, remoteCell);
 
         helper.startSequence()
                 .thenWaitUntil("wait for the ME P2P pair to create its outer grid connection", 100, () -> {
-                    assertCarrierActive(helper, fixture.controller);
+                    assertCarrierActive(helper, controller);
                     assertLinkedPair(helper, input, output, ME_FREQUENCY);
                     IGridNode inputOuter = input.getExternalFacingNode();
                     IGridNode outputOuter = output.getExternalFacingNode();
@@ -106,7 +100,7 @@ public class P2PTests {
     // P1: all three links are authored in the exported cable-bus NBT; the test performs no binding setup.
     @GameTest(template = "p2p_tunnels", timeoutTicks = 100)
     public static void frequencyPersistsThroughTemplateNbt(GameTestHelper helper) {
-        P2PFixture fixture = getFixture(helper);
+        TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PItems itemInput = inputTunnel(helper, PartP2PItems.class);
         PartP2PItems itemOutput = outputTunnel(helper, PartP2PItems.class);
         PartP2PRedstone redstoneInput = inputTunnel(helper, PartP2PRedstone.class);
@@ -115,7 +109,7 @@ public class P2PTests {
         PartP2PTunnelME meOutput = outputTunnel(helper, PartP2PTunnelME.class);
 
         helper.startSequence().thenWaitUntil("wait for all NBT-authored P2P frequencies to reconnect", 80, () -> {
-            assertCarrierActive(helper, fixture.controller);
+            assertCarrierActive(helper, controller);
             assertLinkedPair(helper, itemInput, itemOutput, ITEM_FREQUENCY);
             assertLinkedPair(helper, redstoneInput, redstoneOutput, REDSTONE_FREQUENCY);
             assertLinkedPair(helper, meInput, meOutput, ME_FREQUENCY);
@@ -125,20 +119,20 @@ public class P2PTests {
     // P2: the output must track both edges of the input signal, including returning to zero.
     @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
     public static void redstoneP2PMirrorsSignal(GameTestHelper helper) {
-        P2PFixture fixture = getFixture(helper);
+        TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PRedstone input = inputTunnel(helper, PartP2PRedstone.class);
         PartP2PRedstone output = outputTunnel(helper, PartP2PRedstone.class);
         ContinuousInvariant unpoweredOutputStaysLow = continuousInvariant(
                 helper,
                 "an unpowered redstone P2P input must not produce output power",
                 () -> {
-                    assertCarrierActive(helper, fixture.controller);
+                    assertCarrierActive(helper, controller);
                     assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
                     assertRedstonePower(helper, 0);
                 });
 
         helper.startSequence().thenWaitUntil("wait for the linked redstone P2P pair to settle low", 60, () -> {
-            assertCarrierActive(helper, fixture.controller);
+            assertCarrierActive(helper, controller);
             assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
             assertRedstonePower(helper, 0);
         }).thenExecute("begin unpowered-output invariant", unpoweredOutputStaysLow::enable).thenIdle(5)
@@ -150,7 +144,7 @@ public class P2PTests {
                     assertRedstonePower(helper, 15);
                 }).thenExecute("remove power from the redstone P2P input", () -> setRedstoneInput(helper, 0))
                 .thenWaitUntil("wait for the redstone P2P output to return to zero", 40, () -> {
-                    assertCarrierActive(helper, fixture.controller);
+                    assertCarrierActive(helper, controller);
                     assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
                     assertRedstonePower(helper, 0);
                 }).thenExecute("begin restored-low invariant", unpoweredOutputStaysLow::enable).thenIdle(5)
@@ -160,48 +154,30 @@ public class P2PTests {
     // P2: after both exported tunnels are explicitly unbound, no destination mutation is allowed for the window.
     @GameTest(template = "p2p_tunnels", timeoutTicks = 120)
     public static void unboundTunnelDoesNotTransfer(GameTestHelper helper) {
-        P2PFixture fixture = getFixture(helper);
+        TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PItems input = (PartP2PItems) inputTunnel(helper, PartP2PItems.class).unbind(null);
         PartP2PItems output = (PartP2PItems) outputTunnel(helper, PartP2PItems.class).unbind(null);
-        setChestSlot(fixture.sourceChest, 0, Blocks.cobblestone, 1);
+        helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
         ContinuousInvariant noUnboundTransfer = continuousInvariant(
                 helper,
                 "unbound item tunnels must neither transfer nor duplicate the supplied item",
                 () -> {
-                    assertUnboundPairOnCarrier(helper, fixture.controller, input, output);
-                    assertInventoryAmount(
-                            helper,
-                            fixture.destinationChest,
-                            Blocks.cobblestone,
-                            0,
-                            DESTINATION_CHEST_LABEL);
-                    assertInventoryTotal(helper, fixture, Blocks.cobblestone, 1);
+                    assertUnboundPairOnCarrier(helper, controller, input, output);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+                    assertInventoryTotal(helper, Blocks.cobblestone, 1);
                 });
 
         helper.startSequence()
                 .thenWaitUntil(
                         "wait for both item tunnels to be active and unbound",
                         60,
-                        () -> assertUnboundPairOnCarrier(helper, fixture.controller, input, output))
+                        () -> assertUnboundPairOnCarrier(helper, controller, input, output))
                 .thenExecute("begin unbound-transfer invariant", noUnboundTransfer::enable).thenIdle(40)
                 .thenExecute("finish unbound-transfer observation", noUnboundTransfer::disable)
                 .thenExecute("assert destination remained untouched for the full observation window", () -> {
-                    assertInventoryAmount(
-                            helper,
-                            fixture.destinationChest,
-                            Blocks.cobblestone,
-                            0,
-                            DESTINATION_CHEST_LABEL);
-                    assertInventoryTotal(helper, fixture, Blocks.cobblestone, 1);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+                    assertInventoryTotal(helper, Blocks.cobblestone, 1);
                 }).thenSucceed();
-    }
-
-    private static P2PFixture getFixture(GameTestHelper helper) {
-        return new P2PFixture(
-                tile(helper, TileController.class, CONTROLLER_LABEL),
-                tile(helper, TileEntityChest.class, SOURCE_CHEST_LABEL),
-                tile(helper, TileEntityHopper.class, SOURCE_INSERTER_LABEL),
-                tile(helper, TileEntityChest.class, DESTINATION_CHEST_LABEL));
     }
 
     private static <T extends PartP2PTunnel> T inputTunnel(GameTestHelper helper, Class<T> type) {
@@ -283,19 +259,18 @@ public class P2PTests {
         helper.assertNull(tunnel.getInput(), "Unbound tunnel should not resolve an input; role=" + role);
     }
 
-    private static ContinuousInvariant itemConservationInvariant(GameTestHelper helper, P2PFixture fixture,
-            long expectedTotal) {
+    private static ContinuousInvariant itemConservationInvariant(GameTestHelper helper, long expectedTotal) {
         return continuousInvariant(
                 helper,
                 "item P2P transport must conserve the supplied stack on every tick",
-                () -> assertInventoryTotal(helper, fixture, Blocks.cobblestone, expectedTotal));
+                () -> assertInventoryTotal(helper, Blocks.cobblestone, expectedTotal));
     }
 
-    private static void assertInventoryTotal(GameTestHelper helper, P2PFixture fixture, Block block,
-            long expectedTotal) {
-        long source = inventoryAmount(fixture.sourceChest, block);
-        long inserter = inventoryAmount(fixture.sourceInserter, block);
-        long destination = inventoryAmount(fixture.destinationChest, block);
+    private static void assertInventoryTotal(GameTestHelper helper, Block block, long expectedTotal) {
+        ItemStack template = new ItemStack(block);
+        long source = helper.countItems(SOURCE_CHEST_LABEL, template);
+        long inserter = helper.countItems(SOURCE_INSERTER_LABEL, template);
+        long destination = helper.countItems(DESTINATION_CHEST_LABEL, template);
         helper.assertEquals(
                 expectedTotal,
                 source + inserter + destination,
@@ -313,26 +288,6 @@ public class P2PTests {
                         + expectedTotal);
     }
 
-    private static void assertInventoryAmount(GameTestHelper helper, IInventory inventory, Block block, long expected,
-            String role) {
-        long actual = inventoryAmount(inventory, block);
-        helper.assertEquals(
-                expected,
-                actual,
-                "Inventory role '" + role + "' should contain the expected " + blockName(block) + " amount");
-    }
-
-    private static long inventoryAmount(IInventory inventory, Block block) {
-        long amount = 0;
-        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (stack != null && stack.getItem() == Item.getItemFromBlock(block)) {
-                amount += stack.stackSize;
-            }
-        }
-        return amount;
-    }
-
     private static boolean hasConnection(IGridNode from, IGridNode to) {
         for (IGridConnection connection : from.getConnections()) {
             if (connection.getOtherSide(from) == to) {
@@ -343,16 +298,12 @@ public class P2PTests {
     }
 
     private static void setRedstoneInput(GameTestHelper helper, int strength) {
-        TestPos source = helper.pos(REDSTONE_SOURCE_LABEL);
-        helper.setRedstoneInput(source.x(), source.y(), source.z(), strength);
+        helper.setRedstoneInput(REDSTONE_SOURCE_LABEL, strength);
     }
 
     private static void assertRedstonePower(GameTestHelper helper, int expectedPower) {
-        TestPos probe = helper.pos(REDSTONE_PROBE_LABEL);
-        int actualPower = helper.getWorld().getStrongestIndirectPower(
-                helper.absolute(probe.x(), probe.y(), probe.z()).x(),
-                helper.absolute(probe.x(), probe.y(), probe.z()).y(),
-                helper.absolute(probe.x(), probe.y(), probe.z()).z());
+        TestPos probe = helper.absolute(REDSTONE_PROBE_LABEL);
+        int actualPower = helper.getWorld().getStrongestIndirectPower(probe.x(), probe.y(), probe.z());
         helper.assertEquals(
                 expectedPower,
                 actualPower,
@@ -384,24 +335,4 @@ public class P2PTests {
         return part.getGridNode() != null && part.getGridNode().isActive();
     }
 
-    private static String blockName(Block block) {
-        Object name = Block.blockRegistry.getNameForObject(block);
-        return name == null ? block.getLocalizedName() : name.toString();
-    }
-
-    private static final class P2PFixture {
-
-        private final TileController controller;
-        private final TileEntityChest sourceChest;
-        private final TileEntityHopper sourceInserter;
-        private final TileEntityChest destinationChest;
-
-        private P2PFixture(TileController controller, TileEntityChest sourceChest, TileEntityHopper sourceInserter,
-                TileEntityChest destinationChest) {
-            this.controller = controller;
-            this.sourceChest = sourceChest;
-            this.sourceInserter = sourceInserter;
-            this.destinationChest = destinationChest;
-        }
-    }
 }
