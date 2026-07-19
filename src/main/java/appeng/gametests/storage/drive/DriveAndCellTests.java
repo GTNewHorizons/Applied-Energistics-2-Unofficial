@@ -10,7 +10,6 @@ import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemInventory;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.simulateInjectIntoGrid;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -49,7 +48,7 @@ public class DriveAndCellTests {
         helper.startSequence().thenWaitUntil("wait for drive network activation", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
-        }).thenExecute("insert prefilled cell into drive", () -> drive.setInventorySlotContents(0, cell))
+        }).thenExecute("insert prefilled cell into drive", () -> helper.setSlot(DRIVE_LABEL, 0, cell))
                 .thenWaitUntil(
                         "wait for prefilled cell contents to become network-visible",
                         20,
@@ -68,7 +67,7 @@ public class DriveAndCellTests {
         helper.startSequence().thenWaitUntil("wait for drive network activation", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
-        }).thenExecute("insert partitioned cell into drive", () -> drive.setInventorySlotContents(0, cell))
+        }).thenExecute("insert partitioned cell into drive", () -> helper.setSlot(DRIVE_LABEL, 0, cell))
                 .thenWaitUntil("wait for partition rules to become network-visible", 20, () -> {
                     helper.assertNull(
                             simulateInjectIntoGrid(controller, Blocks.cobblestone, 64),
@@ -80,8 +79,8 @@ public class DriveAndCellTests {
 
                     helper.assertNull(acceptedRemainder, "Configured stack should enter the partitioned cell");
                     assertItemRemainder(helper, rejectedRemainder, Blocks.dirt, 64);
-                    assertStoredAmount(helper, cell, Blocks.cobblestone, 64);
-                    assertStoredAmount(helper, cell, Blocks.dirt, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.dirt, 0);
                 }).thenSucceed();
     }
 
@@ -101,8 +100,8 @@ public class DriveAndCellTests {
         }).thenExecute("configure priorities and insert storage cells", () -> {
             meChest.setPriority(100);
             drive.setPriority(0);
-            meChest.setInventorySlotContents(1, highPriorityCell);
-            drive.setInventorySlotContents(0, lowPriorityCell);
+            helper.setSlot(ME_CHEST_LABEL, 1, highPriorityCell);
+            helper.setSlot(DRIVE_LABEL, 0, lowPriorityCell);
         }).thenWaitUntil(
                 "wait for prioritized storage to accept the test stack",
                 20,
@@ -113,8 +112,8 @@ public class DriveAndCellTests {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 128);
 
                     helper.assertNull(remainder, "Injected items should fit into available network storage");
-                    assertStoredAmount(helper, highPriorityCell, Blocks.cobblestone, 128);
-                    assertStoredAmount(helper, lowPriorityCell, Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, meChest.getStackInSlot(1), Blocks.cobblestone, 128);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 0);
                     assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 128);
                 }).thenSucceed();
     }
@@ -136,8 +135,8 @@ public class DriveAndCellTests {
         }).thenExecute("configure priorities and insert full and empty cells", () -> {
             meChest.setPriority(100);
             drive.setPriority(0);
-            meChest.setInventorySlotContents(1, highPriorityCell);
-            drive.setInventorySlotContents(0, lowPriorityCell);
+            helper.setSlot(ME_CHEST_LABEL, 1, highPriorityCell);
+            helper.setSlot(DRIVE_LABEL, 0, lowPriorityCell);
         }).thenWaitUntil("wait for the full high-priority cell to become visible", 20, () -> {
             assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
             helper.assertNull(
@@ -147,22 +146,22 @@ public class DriveAndCellTests {
             IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
             helper.assertNull(remainder, "Overflow should fit into lower-priority storage");
-            assertStoredAmount(helper, highPriorityCell, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
-            assertStoredAmount(helper, lowPriorityCell, Blocks.cobblestone, 64);
+            assertStoredAmount(helper, meChest.getStackInSlot(1), Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+            assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 64);
             assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY + 64);
         }).thenSucceed();
     }
 
     private static TileController getController(GameTestHelper helper) {
-        return tile(helper, TileController.class, CONTROLLER_LABEL);
+        return helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {
-        return tile(helper, TileDrive.class, DRIVE_LABEL);
+        return helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
     }
 
     private static TileChest getMEChest(GameTestHelper helper) {
-        return tile(helper, TileChest.class, ME_CHEST_LABEL);
+        return helper.assertTileEntityPresent(TileChest.class, ME_CHEST_LABEL);
     }
 
     @SuppressWarnings("unchecked")
