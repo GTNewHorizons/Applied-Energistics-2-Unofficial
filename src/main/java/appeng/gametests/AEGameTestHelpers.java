@@ -4,6 +4,7 @@ import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import net.minecraft.block.Block;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
@@ -41,6 +42,11 @@ public final class AEGameTestHelpers {
 
     private AEGameTestHelpers() {}
 
+    /**
+     * @deprecated Use directly GameTestHelper#assertTileEntityPresent(Class, String)
+     * @see GameTestHelper#assertTileEntityPresent(Class, String)
+     */
+    @Deprecated
     public static <T extends TileEntity> T tile(GameTestHelper helper, Class<T> type, String label) {
         return helper.assertTileEntityPresent(type, label);
     }
@@ -69,6 +75,11 @@ public final class AEGameTestHelpers {
         throw new AssertionError("Template role '" + label + "' should contain part type " + type.getSimpleName());
     }
 
+    /**
+     * @deprecated Use directly GameTestHelper#setRedstoneInput(String, int)
+     * @see GameTestHelper#setRedstoneInput(String, int)
+     */
+    @Deprecated
     public static void setRedstoneInput(GameTestHelper helper, String label, int strength) {
         helper.setRedstoneInput(label, strength);
     }
@@ -182,10 +193,20 @@ public final class AEGameTestHelpers {
         return storageGrid.getItemInventory();
     }
 
+    /**
+     * @deprecated Use directly InventoryHelper#setSlot(IInventory, int, ItemStack)
+     * @see InventoryHelper#setSlot(IInventory, int, ItemStack)
+     */
+    @Deprecated
     public static void setChestSlot(TileEntityChest chest, int slot, Block block, int amount) {
         InventoryHelper.setSlot(chest, slot, new ItemStack(block, amount));
     }
 
+    /**
+     * @deprecated Use directly InventoryHelper#clearSlot(IInventory, int)
+     * @see InventoryHelper#clearSlot(IInventory, int)
+     */
+    @Deprecated
     public static void clearChestSlot(TileEntityChest chest, int slot) {
         InventoryHelper.clearSlot(chest, slot);
     }
@@ -204,6 +225,11 @@ public final class AEGameTestHelpers {
                 "Chest storage for " + describe(block) + " should match; chest=" + describe(chest));
     }
 
+    /**
+     * @deprecated Use directly InventoryHelper#count(IInventory, ItemStack)
+     * @see InventoryHelper#count(IInventory, ItemStack)
+     */
+    @Deprecated
     public static long chestStoredAmount(TileEntityChest chest, Block block) {
         return InventoryHelper.count(chest, new ItemStack(block));
     }
@@ -291,6 +317,11 @@ public final class AEGameTestHelpers {
         return AEApi.instance().definitions().items().cell64k().maybeStack(1).get();
     }
 
+    /**
+     * @deprecated Use directly GameTestHelper#onEachTick(Runnable) and disable the returned handle initially
+     * @see GameTestHelper#onEachTick(Runnable)
+     */
+    @Deprecated
     public static ContinuousInvariant continuousInvariant(GameTestHelper helper, String description,
             Runnable assertion) {
         TickCallbackHandle callback = helper.onEachTick(() -> checkContinuousInvariant(description, assertion));
