@@ -326,8 +326,8 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
         int column = 0;
 
         for (int slotIndex = 0; slotIndex <= ITEMS_PER_ROW * this.rows; slotIndex++) {
-            final int minX = gridLeft + ITEMSTACK_LEFT_OFFSET + column * SECTION_LENGTH;
-            final int minY = gridTop + ITEMSTACK_TOP_OFFSET + row * SECTION_HEIGHT;
+            final int minX = gridLeft + ITEMSTACK_LEFT_OFFSET + column * (1 + SECTION_LENGTH);
+            final int minY = gridTop + ITEMSTACK_TOP_OFFSET - 4 + row * SECTION_HEIGHT;
 
             if (minX < mouseX && minX + SECTION_LENGTH > mouseX && minY < mouseY && minY + SECTION_HEIGHT > mouseY) {
                 return slotIndex;
