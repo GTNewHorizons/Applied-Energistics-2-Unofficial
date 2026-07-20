@@ -319,7 +319,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         if (fullReset) {
             this.resetCacheLogic = 2;
-        } else {
+        } else if (this.resetCacheLogic == 0) {
+            // A neighbor update must not downgrade a pending configuration-driven full reset.
             this.resetCacheLogic = 1;
         }
 
