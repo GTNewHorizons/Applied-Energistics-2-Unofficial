@@ -1,18 +1,14 @@
 package appeng.gametests.automation.importexport;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
-import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
-import static appeng.gametests.AEGameTestHelpers.fillChest;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
-import static appeng.gametests.AEGameTestHelpers.setChestSlot;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -22,6 +18,7 @@ import net.minecraft.tileentity.TileEntityChest;
 
 import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -30,7 +27,6 @@ import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
 import appeng.api.storage.StorageName;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.parts.automation.PartExportBus;
 import appeng.parts.automation.PartImportBus;
@@ -56,9 +52,9 @@ public class ImportExportBusTests {
     public static void importBusPullsFilteredStackIntoNetwork(GameTestHelper helper) {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();
-        busIO.drive.setInventorySlotContents(0, driveCell);
-        setChestSlot(busIO.sourceChest, 0, Blocks.cobblestone, 32);
-        setChestSlot(busIO.sourceChest, 1, Blocks.dirt, 32);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
+        helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 32));
+        helper.setSlot(SOURCE_CHEST_LABEL, 1, new ItemStack(Blocks.dirt, 32));
         configureFilter(helper, busIO.importBus, Blocks.cobblestone);
         configureFilter(helper, busIO.exportBus, Blocks.dirt);
         ContinuousInvariant filterRejectsDirt = continuousInvariant(
@@ -66,8 +62,8 @@ public class ImportExportBusTests {
                 "bus filters must retain source dirt and keep imported cobblestone out of the destination",
                 () -> {
                     assertNetworkStoredAmount(helper, busIO.controller, Blocks.dirt, 0);
-                    assertChestStoredAmount(helper, busIO.sourceChest, Blocks.dirt, 32);
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 0);
+                    helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.dirt), 32);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
                 });
 
         helper.startSequence()
@@ -75,7 +71,7 @@ public class ImportExportBusTests {
                 .thenExecute("begin filtered-import invariant", filterRejectsDirt::enable)
                 .thenWaitUntil("wait for matching cobblestone import", 300, () -> {
                     assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, 32);
-                    assertChestStoredAmount(helper, busIO.sourceChest, Blocks.cobblestone, 0);
+                    helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
                 }).thenExecute("stop filtered-import invariant", filterRejectsDirt::disable).thenSucceed();
     }
 
@@ -86,14 +82,14 @@ public class ImportExportBusTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         insertItems(helper, driveCell, Blocks.dirt, 1);
-        busIO.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
         configureFilter(helper, busIO.importBus, Blocks.dirt);
         configureFilter(helper, busIO.exportBus, Blocks.cobblestone);
         ContinuousInvariant filterRetainsDirt = continuousInvariant(
                 helper,
                 "export bus filter must retain dirt in ME storage",
                 () -> {
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.dirt, 0);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.dirt), 0);
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.dirt, 1);
                 });
 
@@ -101,7 +97,7 @@ public class ImportExportBusTests {
                 .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))
                 .thenExecute("begin filtered-export invariant", filterRetainsDirt::enable)
                 .thenWaitUntil("wait for matching cobblestone export", 180, () -> {
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 1);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 1);
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, 0);
                 }).thenExecute("stop filtered-export invariant", filterRetainsDirt::disable).thenSucceed();
     }
@@ -112,8 +108,8 @@ public class ImportExportBusTests {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 32);
-        busIO.drive.setInventorySlotContents(0, driveCell);
-        fillChest(busIO.destinationChest, Blocks.dirt);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
+        long destinationCapacity = fillInventory(helper, DESTINATION_CHEST_LABEL, Blocks.dirt);
         configureFilter(helper, busIO.importBus, Blocks.dirt);
         configureFilter(helper, busIO.exportBus, Blocks.cobblestone);
         ContinuousInvariant fullDestinationPreservesNetwork = continuousInvariant(
@@ -121,12 +117,11 @@ public class ImportExportBusTests {
                 "full destination must not void or export network cobblestone",
                 () -> {
                     assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, 32);
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 0);
-                    assertChestStoredAmount(
-                            helper,
-                            busIO.destinationChest,
-                            Blocks.dirt,
-                            busIO.destinationChest.getSizeInventory() * 64L);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+                    helper.assertInventoryCount(
+                            DESTINATION_CHEST_LABEL,
+                            new ItemStack(Blocks.dirt),
+                            destinationCapacity);
                 });
 
         helper.startSequence()
@@ -142,7 +137,7 @@ public class ImportExportBusTests {
     public static void redstoneModesGateBusOperation(GameTestHelper helper) {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();
-        busIO.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
         configureFilter(helper, busIO.importBus, Blocks.dirt);
         configureFilter(helper, busIO.exportBus, Blocks.cobblestone);
         installRedstoneUpgrade(helper, busIO.exportBus);
@@ -154,7 +149,10 @@ public class ImportExportBusTests {
                 "redstone-gated export bus must not move cobblestone",
                 () -> {
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, gatedAmounts[0]);
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, gatedAmounts[1]);
+                    helper.assertInventoryCount(
+                            DESTINATION_CHEST_LABEL,
+                            new ItemStack(Blocks.cobblestone),
+                            gatedAmounts[1]);
                 });
 
         helper.startSequence()
@@ -169,7 +167,7 @@ public class ImportExportBusTests {
                     setRedstoneInput(helper, 15);
                 }).thenWaitUntil("wait for HIGH_SIGNAL export", 90, () -> {
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, 0);
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 1);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 1);
                 }).thenExecute("configure powered LOW_SIGNAL and inject", () -> {
                     configureRedstone(busIO.exportBus, RedstoneMode.LOW_SIGNAL);
                     setRedstoneInput(helper, 15);
@@ -182,7 +180,7 @@ public class ImportExportBusTests {
                     setRedstoneInput(helper, 0);
                 }).thenWaitUntil("wait for LOW_SIGNAL export", 90, () -> {
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, 0);
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 2);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 2);
                 }).thenExecute("configure pulse mode and inject before pulse", () -> {
                     configureRedstone(busIO.exportBus, RedstoneMode.SIGNAL_PULSE);
                     setRedstoneInput(helper, 0);
@@ -195,7 +193,7 @@ public class ImportExportBusTests {
                     setRedstoneInput(helper, 15);
                 }).thenWaitUntil("wait for first pulse export", 40, () -> {
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, 0);
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 3);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 3);
                 }).thenExecute("inject without a new pulse", () -> {
                     injectCobblestone(helper, busIO, 1);
                     gatedAmounts[0] = 1;
@@ -208,35 +206,25 @@ public class ImportExportBusTests {
                     setRedstoneInput(helper, 15);
                 }).thenWaitUntil("wait for second pulse export", 40, () -> {
                     assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, 0);
-                    assertChestStoredAmount(helper, busIO.destinationChest, Blocks.cobblestone, 4);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 4);
                 }).thenSucceed();
     }
 
     private static BusIO getBusIO(GameTestHelper helper) {
         TileController controller = getController(helper);
         TileDrive drive = getDrive(helper);
-        TileEntityChest sourceChest = getSourceChest(helper);
-        TileEntityChest destinationChest = getDestinationChest(helper);
         PartImportBus importBus = getImportBus(helper);
         PartExportBus exportBus = getExportBus(helper);
 
-        return new BusIO(controller, drive, sourceChest, destinationChest, importBus, exportBus);
+        return new BusIO(controller, drive, importBus, exportBus);
     }
 
     private static TileController getController(GameTestHelper helper) {
-        return tile(helper, TileController.class, CONTROLLER_LABEL);
+        return helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {
-        return tile(helper, TileDrive.class, DRIVE_LABEL);
-    }
-
-    private static TileEntityChest getSourceChest(GameTestHelper helper) {
-        return tile(helper, TileEntityChest.class, SOURCE_CHEST_LABEL);
-    }
-
-    private static TileEntityChest getDestinationChest(GameTestHelper helper) {
-        return tile(helper, TileEntityChest.class, DESTINATION_CHEST_LABEL);
+        return helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
     }
 
     private static PartImportBus getImportBus(GameTestHelper helper) {
@@ -275,11 +263,19 @@ public class ImportExportBusTests {
     private static void installUpgrade(GameTestHelper helper, PartUpgradeable bus, ItemStack upgrade, int slot) {
         IInventory upgrades = bus.getInventoryByName("upgrades");
         helper.assertNotNull(upgrades, "Bus upgrade inventory should exist");
-        upgrades.setInventorySlotContents(slot, upgrade);
+        InventoryHelper.setSlot(upgrades, slot, upgrade);
     }
 
     private static void setRedstoneInput(GameTestHelper helper, int strength) {
-        AEGameTestHelpers.setRedstoneInput(helper, REDSTONE_LABEL, strength);
+        helper.setRedstoneInput(REDSTONE_LABEL, strength);
+    }
+
+    private static long fillInventory(GameTestHelper helper, String label, Block block) {
+        TileEntityChest inventory = helper.assertTileEntityPresent(TileEntityChest.class, label);
+        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+            helper.setSlot(label, slot, new ItemStack(block, 64));
+        }
+        return inventory.getSizeInventory() * 64L;
     }
 
     private static void injectCobblestone(GameTestHelper helper, BusIO busIO, long amount) {
@@ -289,8 +285,7 @@ public class ImportExportBusTests {
     }
 
     @Desugar
-    private record BusIO(TileController controller, TileDrive drive, TileEntityChest sourceChest,
-            TileEntityChest destinationChest, PartImportBus importBus, PartExportBus exportBus) {
+    private record BusIO(TileController controller, TileDrive drive, PartImportBus importBus, PartExportBus exportBus) {
 
     }
 }

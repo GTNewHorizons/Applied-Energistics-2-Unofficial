@@ -7,8 +7,6 @@ import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
-import static appeng.gametests.AEGameTestHelpers.pos;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +18,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -29,9 +28,7 @@ import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
-import appeng.gametests.AEGameTestHelpers.Coord;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
@@ -83,7 +80,7 @@ public class NetworkCoreTests {
         installCableLine(helper, FULL_CABLE_LINE);
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 100);
-        drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
 
         helper.startSequence().thenWaitUntil("wait for connected drive contents to become network-visible", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
@@ -186,11 +183,11 @@ public class NetworkCoreTests {
     }
 
     private static TileController getController(GameTestHelper helper) {
-        return tile(helper, TileController.class, CONTROLLER_LABEL);
+        return helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {
-        return tile(helper, TileDrive.class, DRIVE_LABEL);
+        return helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
     }
 
     private static void installCableLine(GameTestHelper helper, String... cableRoles) {
@@ -200,24 +197,16 @@ public class NetworkCoreTests {
     }
 
     private static TileCableBus placeCable(GameTestHelper helper, String label) {
-        return placeCable(helper, pos(helper, label));
-    }
-
-    private static TileCableBus placeCable(GameTestHelper helper, Coord pos) {
         Block cableBusBlock = cableBusBlock();
-        helper.setBlock(pos.x(), pos.y(), pos.z(), cableBusBlock);
-        helper.assertBlockPresent(cableBusBlock, pos.x(), pos.y(), pos.z());
-        TileCableBus cableBus = helper.assertTileEntityPresent(TileCableBus.class, pos.x(), pos.y(), pos.z());
+        helper.setBlock(label, cableBusBlock);
+        helper.assertBlockPresent(cableBusBlock, label);
+        TileCableBus cableBus = helper.assertTileEntityPresent(TileCableBus.class, label);
         addPart(helper, cableBus, cableStack(), ForgeDirection.UNKNOWN);
         return cableBus;
     }
 
     private static IPart placePart(GameTestHelper helper, String label, ForgeDirection side, ItemStack stack) {
-        return placePart(helper, pos(helper, label), side, stack);
-    }
-
-    private static IPart placePart(GameTestHelper helper, Coord pos, ForgeDirection side, ItemStack stack) {
-        TileEntity tile = helper.assertTileEntityPresent(pos.x(), pos.y(), pos.z());
+        TileEntity tile = helper.assertTileEntityPresent(label);
         helper.assertTrue(tile instanceof IPartHost, "Labelled cable position should contain an AE part host");
         IPartHost host = (IPartHost) tile;
         addPart(helper, host, stack, side);
@@ -232,17 +221,16 @@ public class NetworkCoreTests {
     }
 
     private static void removeBlock(GameTestHelper helper, String label) {
-        Coord pos = pos(helper, label);
-        helper.destroyBlock(pos.x(), pos.y(), pos.z());
+        helper.destroyBlock(label);
     }
 
     private static void setRedstoneInput(GameTestHelper helper, int strength) {
-        AEGameTestHelpers.setRedstoneInput(helper, REDSTONE_LABEL, strength);
+        helper.setRedstoneInput(REDSTONE_LABEL, strength);
     }
 
     private static ForgeDirection directionBetween(GameTestHelper helper, String fromRole, String toRole) {
-        Coord from = pos(helper, fromRole);
-        Coord to = pos(helper, toRole);
+        TestPos from = helper.pos(fromRole);
+        TestPos to = helper.pos(toRole);
         int dx = Integer.signum(to.x() - from.x());
         int dy = Integer.signum(to.y() - from.y());
         int dz = Integer.signum(to.z() - from.z());
