@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "size": [6, 1, 1],
+  "palette": {
+    "A": {"name": "appliedenergistics2:tile.BlockCraftingStorage", "meta": 12, "label": "§61k§r Crafting Storage"},
+    "B": {"name": "appliedenergistics2:tile.BlockCraftingUnit", "meta": 12, "label": "Crafting Unit"},
+    "C": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
+    "D": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
+    "E": {"name": "appliedenergistics2:tile.BlockInterface", "meta": 0, "label": "ME Interface"},
+    "F": {"name": "appliedenergistics2:tile.BlockMolecularAssembler", "meta": 0, "label": "Molecular Assembler"}
+  },
+  "layers": [
+    [
+      "CDABEF"
+    ]
+  ],
+  "annotations": {
+    "labels": {
+      "assembler": [5, 0, 0],
+      "controller": [0, 0, 0],
+      "cpu_storage": [2, 0, 0],
+      "cpu_unit": [3, 0, 0],
+      "drive": [1, 0, 0],
+      "interface": [4, 0, 0]
+    }
+  }
+}
