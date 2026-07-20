@@ -69,7 +69,12 @@ import io.netty.buffer.ByteBuf;
  */
 public class TileInscriber extends AENetworkPowerTile implements IGridTickable, IUpgradeableHost, IConfigManagerHost {
 
-    private final int maxProcessingTime = 100;
+    private final int maxProcessingTime = MAX_PROCESSING_TIME;
+
+    public static final int MAX_PROCESSING_TIME = 100;
+    public static final int BASE_POWER_PER_TICK = 10;
+    public static final int BASE_SPEED = 1;
+
     private final int[] top = { 0 };
     private final int[] bottom = { 1 };
     private final int[] sides = { 2, 3 };
@@ -373,8 +378,8 @@ public class TileInscriber extends AENetworkPowerTile implements IGridTickable, 
                 IEnergySource src = this;
 
                 // Base 1, increase by 1 for each card
-                final int speedFactor = 1 + this.upgrades.getInstalledUpgrades(Upgrades.SPEED);
-                final int powerConsumption = 10 * speedFactor;
+                final int speedFactor = BASE_SPEED + this.upgrades.getInstalledUpgrades(Upgrades.SPEED);
+                final int powerConsumption = BASE_POWER_PER_TICK * speedFactor;
                 final double powerThreshold = powerConsumption - 0.01;
                 double powerReq = this.extractAEPower(powerConsumption, Actionable.SIMULATE, PowerMultiplier.CONFIG);
 
