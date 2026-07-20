@@ -70,6 +70,10 @@ public class TileMolecularAssembler extends AENetworkInvTile
 
     private static final int[] SIDES = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
+    // SPEED.length == ACCELERATION_TAX.length
+    public static final int[] SPEED = { 10, 13, 17, 20, 25, 50 };
+    public static final double[] ACCELERATION_TAX = { 1.0, 1.3, 1.7, 2.0, 2.5, 5.0 };
+
     private final InventoryCrafting craftingInv;
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 9 + 2);
     private final IConfigManager settings;
@@ -379,15 +383,11 @@ public class TileMolecularAssembler extends AENetworkInvTile
         }
 
         this.reboot = false;
-        int speed = 10;
-        switch (this.upgrades.getInstalledUpgrades(Upgrades.SPEED)) {
-            case 0 -> this.progress += this.userPower(ticksSinceLastCall, speed = 10, 1.0);
-            case 1 -> this.progress += this.userPower(ticksSinceLastCall, speed = 13, 1.3);
-            case 2 -> this.progress += this.userPower(ticksSinceLastCall, speed = 17, 1.7);
-            case 3 -> this.progress += this.userPower(ticksSinceLastCall, speed = 20, 2.0);
-            case 4 -> this.progress += this.userPower(ticksSinceLastCall, speed = 25, 2.5);
-            case 5 -> this.progress += this.userPower(ticksSinceLastCall, speed = 50, 5.0);
-        }
+
+        final int installedUpgrades = this.upgrades.getInstalledUpgrades(Upgrades.SPEED);
+        if (installedUpgrades > this.upgrades.getSizeInventory()) return TickRateModulation.FASTER;
+        final int speed = SPEED[installedUpgrades];
+        this.progress += this.userPower(ticksSinceLastCall, speed, ACCELERATION_TAX[installedUpgrades]);
 
         if (this.progress >= 100) {
             for (int x = 0; x < this.craftingInv.getSizeInventory(); x++) {

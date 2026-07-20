@@ -1,7 +1,6 @@
 package appeng.gametests.crafting;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
-import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
@@ -10,8 +9,6 @@ import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.networkStoredAmount;
-import static appeng.gametests.AEGameTestHelpers.pos;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -26,17 +23,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntityChest;
 
 import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.InventoryHelper;
+import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -52,7 +49,6 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AppEng;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
-import appeng.gametests.AEGameTestHelpers.Coord;
 import appeng.me.GridAccessException;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
@@ -87,7 +83,7 @@ public class CraftingExecutionTests {
         insertItems(helper, driveCell, TEST_RECIPE_CORNER, 4);
         insertItems(helper, driveCell, TEST_RECIPE_EDGE, 4);
         insertItems(helper, driveCell, TEST_RECIPE_CENTER, 1);
-        network.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
 
         helper.startSequence()
                 .thenWaitUntil(
@@ -114,10 +110,11 @@ public class CraftingExecutionTests {
                             assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CORNER, 0);
                             assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_EDGE, 0);
                             assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CENTER, 0);
-                            assertStoredAmount(helper, driveCell, TEST_RECIPE_OUTPUT, 1);
-                            assertStoredAmount(helper, driveCell, TEST_RECIPE_CORNER, 0);
-                            assertStoredAmount(helper, driveCell, TEST_RECIPE_EDGE, 0);
-                            assertStoredAmount(helper, driveCell, TEST_RECIPE_CENTER, 0);
+                            ItemStack storedCell = network.drive.getStackInSlot(0);
+                            assertStoredAmount(helper, storedCell, TEST_RECIPE_OUTPUT, 1);
+                            assertStoredAmount(helper, storedCell, TEST_RECIPE_CORNER, 0);
+                            assertStoredAmount(helper, storedCell, TEST_RECIPE_EDGE, 0);
+                            assertStoredAmount(helper, storedCell, TEST_RECIPE_CENTER, 0);
                             assertNotRequesting(helper, network.controller, TEST_RECIPE_OUTPUT);
                         })
                 .thenSucceed();
@@ -127,18 +124,15 @@ public class CraftingExecutionTests {
     @GameTest(template = "crafting_cpu", timeoutTicks = 620)
     public static void processingPatternPushesInputsAndAcceptsReturnedOutput(GameTestHelper helper) {
         CraftingNetwork network = getCraftingNetwork(helper);
-        AtomicReference<TileEntityChest> processingTarget = new AtomicReference<>();
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
-        network.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
         helper.startSequence()
                 .thenWaitUntil(
                         "wait for processing-pattern crafting network to activate",
                         100,
                         () -> assertCraftingNetworkActive(helper, network))
-                .thenExecute(
-                        "replace assembler role with processing-output chest",
-                        () -> processingTarget.set(placeProcessingTarget(helper)))
+                .thenExecute("replace assembler role with processing-output chest", () -> placeProcessingTarget(helper))
                 .thenExecute("install locked cobblestone-to-stone processing pattern", () -> {
                     installPattern(
                             network.blockInterface,
@@ -156,21 +150,21 @@ public class CraftingExecutionTests {
                         "submit one stone processing craft",
                         () -> submitCraft(helper, network.controller, Blocks.stone, 1))
                 .thenWaitUntil("wait for interface to push cobblestone and lock pending returned stone", 220, () -> {
-                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 0);
-                    assertChestStoredAmount(helper, processingTarget.get(), Blocks.cobblestone, 1);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 0);
+                    helper.assertInventoryCount(ASSEMBLER_LABEL, new ItemStack(Blocks.cobblestone), 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
                     helper.assertTrue(
                             network.blockInterface.getInterfaceDuality().getCraftingLockedReason()
                                     == LockCraftingMode.LOCK_UNTIL_RESULT,
                             "Interface should wait for the processing result");
                 }).thenExecute("return declared stone output to the ME network", () -> {
-                    clearInventory(processingTarget.get());
+                    helper.clearSlot(ASSEMBLER_LABEL, 0);
                     IAEItemStack remainder = injectIntoGrid(network.controller, Blocks.stone, 1);
                     helper.assertNull(remainder, "Returned processing output should fit into the network");
                 }).thenWaitUntil("wait for returned stone to finish the job and unlock the interface", 160, () -> {
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 0);
-                    assertStoredAmount(helper, driveCell, Blocks.stone, 1);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.stone, 1);
                     helper.assertTrue(
                             network.blockInterface.getInterfaceDuality().getCraftingLockedReason()
                                     == LockCraftingMode.NONE,
@@ -186,7 +180,7 @@ public class CraftingExecutionTests {
         AtomicReference<ICraftingLink> link = new AtomicReference<>();
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
-        network.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
         helper.startSequence()
                 .thenWaitUntil(
                         "wait for cancellation-test crafting network to activate",
@@ -213,7 +207,7 @@ public class CraftingExecutionTests {
                     link.get().cancel();
                     helper.assertTrue(link.get().isCanceled(), "Crafting link should be canceled");
                 }).thenWaitUntil("wait for canceled job to return cobblestone without producing stone", 120, () -> {
-                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 1);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
                     assertNotRequesting(helper, network.controller, Blocks.stone);
@@ -232,7 +226,7 @@ public class CraftingExecutionTests {
         });
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
-        network.drive.setInventorySlotContents(0, driveCell);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
         ContinuousInvariant cpuBreakDoesNotDuplicateOrProduceOutput = continuousInvariant(
                 helper,
                 "CPU break must not duplicate ingredients or produce processing output",
@@ -271,7 +265,7 @@ public class CraftingExecutionTests {
                 .thenWaitUntil(
                         "wait for CPU to take the cobblestone ingredient",
                         100,
-                        () -> assertStoredAmount(helper, driveCell, Blocks.cobblestone, 0))
+                        () -> assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 0))
                 .thenExecute("break CPU unit during active processing job", () -> {
                     destroyBlock(helper, CPU_UNIT_LABEL);
                     cpuBreakDrops.addAll(craftingCpuDrops(helper));
@@ -296,12 +290,14 @@ public class CraftingExecutionTests {
     }
 
     private static CraftingNetwork getCraftingNetwork(GameTestHelper helper) {
-        TileController controller = tile(helper, TileController.class, CONTROLLER_LABEL);
-        TileDrive drive = tile(helper, TileDrive.class, DRIVE_LABEL);
-        TileCraftingStorageTile cpuStorage = tile(helper, TileCraftingStorageTile.class, CPU_STORAGE_LABEL);
-        TileCraftingTile cpuUnit = tile(helper, TileCraftingTile.class, CPU_UNIT_LABEL);
-        TileInterface blockInterface = tile(helper, TileInterface.class, INTERFACE_LABEL);
-        TileMolecularAssembler assembler = tile(helper, TileMolecularAssembler.class, ASSEMBLER_LABEL);
+        TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        TileDrive drive = helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
+        TileCraftingStorageTile cpuStorage = helper
+                .assertTileEntityPresent(TileCraftingStorageTile.class, CPU_STORAGE_LABEL);
+        TileCraftingTile cpuUnit = helper.assertTileEntityPresent(TileCraftingTile.class, CPU_UNIT_LABEL);
+        TileInterface blockInterface = helper.assertTileEntityPresent(TileInterface.class, INTERFACE_LABEL);
+        TileMolecularAssembler assembler = helper
+                .assertTileEntityPresent(TileMolecularAssembler.class, ASSEMBLER_LABEL);
 
         return new CraftingNetwork(controller, drive, cpuStorage, cpuUnit, blockInterface, assembler);
     }
@@ -317,15 +313,13 @@ public class CraftingExecutionTests {
         helper.assertTrue(network.cpuUnit.isFormed(), "CPU unit should form a crafting CPU");
     }
 
-    private static TileEntityChest placeProcessingTarget(GameTestHelper helper) {
-        Coord assemblerPos = pos(helper, ASSEMBLER_LABEL);
-        helper.setBlock(assemblerPos.x(), assemblerPos.y(), assemblerPos.z(), Blocks.chest);
-        return helper
-                .assertTileEntityPresent(TileEntityChest.class, assemblerPos.x(), assemblerPos.y(), assemblerPos.z());
+    private static void placeProcessingTarget(GameTestHelper helper) {
+        helper.setBlock(ASSEMBLER_LABEL, Blocks.chest);
+        helper.assertTileEntityPresent(ASSEMBLER_LABEL);
     }
 
     private static void installPattern(TileInterface blockInterface, ItemStack encodedPattern) {
-        blockInterface.getInterfaceDuality().getPatterns().setInventorySlotContents(0, encodedPattern);
+        InventoryHelper.setSlot(blockInterface.getInterfaceDuality().getPatterns(), 0, encodedPattern);
     }
 
     private static ICraftingLink submitCraft(GameTestHelper helper, TileController controller, Block output,
@@ -440,31 +434,24 @@ public class CraftingExecutionTests {
         return tag;
     }
 
-    private static void clearInventory(IInventory inventory) {
-        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-            inventory.setInventorySlotContents(slot, null);
-        }
-        inventory.markDirty();
-    }
-
     private static void destroyBlock(GameTestHelper helper, String label) {
-        Coord pos = pos(helper, label);
-        helper.destroyBlock(pos.x(), pos.y(), pos.z());
+        helper.destroyBlock(label);
     }
 
     private static List<EntityItem> craftingCpuDrops(GameTestHelper helper) {
-        Coord storage = pos(helper, CPU_STORAGE_LABEL);
-        Coord unit = pos(helper, CPU_UNIT_LABEL);
-
-        // CraftingCPUCluster may spill inventory at the broken tile or any free block adjacent to another CPU tile.
-        return helper.getEntities(
-                EntityItem.class,
+        TestPos storage = helper.pos(CPU_STORAGE_LABEL);
+        TestPos unit = helper.pos(CPU_UNIT_LABEL);
+        TestPos min = new TestPos(
                 Math.min(storage.x(), unit.x()) - 1,
                 Math.min(storage.y(), unit.y()) - 1,
-                Math.min(storage.z(), unit.z()) - 1,
+                Math.min(storage.z(), unit.z()) - 1);
+        TestPos max = new TestPos(
                 Math.max(storage.x(), unit.x()) + 1,
                 Math.max(storage.y(), unit.y()) + 1,
                 Math.max(storage.z(), unit.z()) + 1);
+
+        // CraftingCPUCluster may spill inventory at the broken tile or any free block adjacent to another CPU tile.
+        return helper.getEntities(EntityItem.class, min, max);
     }
 
     private static long droppedItemAmount(Collection<EntityItem> drops, Block block) {

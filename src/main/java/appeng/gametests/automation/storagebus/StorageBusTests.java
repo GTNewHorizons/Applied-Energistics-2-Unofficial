@@ -1,25 +1,20 @@
 package appeng.gametests.automation.storagebus;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
-import static appeng.gametests.AEGameTestHelpers.assertChestStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertItemRemainder;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkMonitorStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
-import static appeng.gametests.AEGameTestHelpers.clearChestSlot;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
-import static appeng.gametests.AEGameTestHelpers.setChestSlot;
 import static appeng.gametests.AEGameTestHelpers.simulateInjectIntoGrid;
-import static appeng.gametests.AEGameTestHelpers.tile;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntityChest;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
@@ -48,9 +43,8 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 100)
     public static void storageBusExposesExternalChestContents(GameTestHelper helper) {
         TileController controller = getController(helper);
-        TileEntityChest chest = getExternalChest(helper);
         PartStorageBus storageBus = getStorageBus(helper);
-        setChestSlot(chest, 0, Blocks.cobblestone, 64);
+        helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 64));
 
         helper.startSequence().thenWaitUntil("wait for storage bus to expose 64 external cobblestone", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
@@ -63,9 +57,8 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 140)
     public static void storageBusReflectsExternalMutation(GameTestHelper helper) {
         TileController controller = getController(helper);
-        TileEntityChest chest = getExternalChest(helper);
         PartStorageBus storageBus = getStorageBus(helper);
-        setChestSlot(chest, 0, Blocks.cobblestone, 16);
+        helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 16));
 
         helper.startSequence().thenWaitUntil("wait for storage bus to expose the initial 16 cobblestone", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
@@ -73,7 +66,7 @@ public class StorageBusTests {
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 16);
         }).thenExecute(
                 "replace external stack with 40 cobblestone",
-                () -> setChestSlot(chest, 0, Blocks.cobblestone, 40))
+                () -> helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 40)))
                 .thenWaitUntil(
                         "wait for storage monitor to refresh to 40 external cobblestone",
                         80,
@@ -85,15 +78,16 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void accessModeReadPreventsInsertion(GameTestHelper helper) {
         TileController controller = getController(helper);
-        TileEntityChest chest = getExternalChest(helper);
         PartStorageBus storageBus = getStorageBus(helper);
-        setChestSlot(chest, 0, Blocks.cobblestone, 1);
+        helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
 
         helper.startSequence().thenWaitUntil("wait for READ-mode test storage bus to become visible", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute("empty the external chest before enabling READ mode", () -> clearChestSlot(chest, 0))
+        }).thenExecute(
+                "empty the external chest before enabling READ mode",
+                () -> helper.clearSlot(EXTERNAL_CHEST_LABEL, 0))
                 .thenWaitUntil(
                         "wait for cleared external chest to disappear from the network monitor",
                         60,
@@ -112,7 +106,7 @@ public class StorageBusTests {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     assertItemRemainder(helper, remainder, Blocks.cobblestone, 64);
-                    assertChestStoredAmount(helper, chest, Blocks.cobblestone, 0);
+                    helper.assertInventoryCount(EXTERNAL_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
                 }).thenSucceed();
     }
 
@@ -120,11 +114,10 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void storageBusPriorityBeatsDriveCell(GameTestHelper helper) {
         TileController controller = getController(helper);
-        TileEntityChest chest = getExternalChest(helper);
         PartStorageBus storageBus = getStorageBus(helper);
         TileDrive drive = getDrive(helper);
         ItemStack driveCell = cell1k();
-        setChestSlot(chest, 0, Blocks.cobblestone, 1);
+        helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         storageBus.setPriority(100);
         drive.setPriority(0);
@@ -134,12 +127,12 @@ public class StorageBusTests {
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute("empty the high-priority external chest", () -> clearChestSlot(chest, 0))
+        }).thenExecute("empty the high-priority external chest", () -> helper.clearSlot(EXTERNAL_CHEST_LABEL, 0))
                 .thenWaitUntil(
                         "wait for the empty external chest to disappear from the storage monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute("insert lower-priority drive cell", () -> drive.setInventorySlotContents(0, driveCell))
+                .thenExecute("insert lower-priority drive cell", () -> helper.setSlot(DRIVE_LABEL, 0, driveCell))
                 .thenWaitUntil(
                         "wait for lower-priority drive contents to become visible",
                         60,
@@ -148,8 +141,8 @@ public class StorageBusTests {
                     IAEItemStack remainder = injectIntoGrid(controller, Blocks.cobblestone, 64);
 
                     helper.assertNull(remainder, "Injected items should fit into available network storage");
-                    assertChestStoredAmount(helper, chest, Blocks.cobblestone, 64);
-                    assertStoredAmount(helper, driveCell, Blocks.cobblestone, 1);
+                    helper.assertInventoryCount(EXTERNAL_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 64);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 1);
                     assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 65);
                 }).thenSucceed();
     }
@@ -158,15 +151,16 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void filteredStorageBusRejectsNonMatchingItems(GameTestHelper helper) {
         TileController controller = getController(helper);
-        TileEntityChest chest = getExternalChest(helper);
         PartStorageBus storageBus = getStorageBus(helper);
-        setChestSlot(chest, 0, Blocks.cobblestone, 1);
+        helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
 
         helper.startSequence().thenWaitUntil("wait for filtered storage bus network to activate", 60, () -> {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 1);
-        }).thenExecute("empty the external chest before configuring its filter", () -> clearChestSlot(chest, 0))
+        }).thenExecute(
+                "empty the external chest before configuring its filter",
+                () -> helper.clearSlot(EXTERNAL_CHEST_LABEL, 0))
                 .thenWaitUntil(
                         "wait for the empty external chest to disappear from the storage monitor",
                         60,
@@ -190,18 +184,14 @@ public class StorageBusTests {
 
                     helper.assertNull(matchingRemainder, "Matching stack should enter the filtered storage bus");
                     assertItemRemainder(helper, nonMatchingRemainder, Blocks.dirt, 16);
-                    assertChestStoredAmount(helper, chest, Blocks.cobblestone, 16);
-                    assertChestStoredAmount(helper, chest, Blocks.dirt, 0);
+                    helper.assertInventoryCount(EXTERNAL_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 16);
+                    helper.assertInventoryCount(EXTERNAL_CHEST_LABEL, new ItemStack(Blocks.dirt), 0);
                     assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 16);
                 }).thenSucceed();
     }
 
     private static TileController getController(GameTestHelper helper) {
-        return tile(helper, TileController.class, CONTROLLER_LABEL);
-    }
-
-    private static TileEntityChest getExternalChest(GameTestHelper helper) {
-        return tile(helper, TileEntityChest.class, EXTERNAL_CHEST_LABEL);
+        return helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
     }
 
     private static PartStorageBus getStorageBus(GameTestHelper helper) {
@@ -209,7 +199,7 @@ public class StorageBusTests {
     }
 
     private static TileDrive getDrive(GameTestHelper helper) {
-        return tile(helper, TileDrive.class, DRIVE_LABEL);
+        return helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
     }
 
     private static void configureStorageBusFilter(GameTestHelper helper, PartStorageBus storageBus, Block block) {
