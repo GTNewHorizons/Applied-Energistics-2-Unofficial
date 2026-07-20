@@ -451,6 +451,11 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
     }
 
     @Override
+    public boolean isOverflow() {
+        return cardVoidOverflow;
+    }
+
+    @Override
     public String getOreFilter() {
         return this.cellType.getOreFilter(this.cellItem);
     }

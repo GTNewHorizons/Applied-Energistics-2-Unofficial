@@ -217,6 +217,21 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                 lines.add(GuiText.Sticky.getLocal());
             }
         }
+
+        boolean distribution = handler.isDistribution();
+        boolean overflow = handler.isOverflow();
+        if (distribution || overflow) {
+            lines.add(GuiText.UpgradesInstalled.getLocal());
+            if (GuiScreen.isShiftKeyDown()) {
+                if (distribution) {
+                    lines.add(" - " + GuiText.Distribution.getLocal());
+                }
+                if (overflow) {
+                    lines.add(" - " + GuiText.Overflow.getLocal());
+                }
+            }
+        }
+
         final CellRestrictionData cellRestrictionData = this.getCellRestrictionData(stack);
         if (cellRestrictionData.restrictionTypes != 0 || cellRestrictionData.restrictionAmount != 0) {
             lines.add(GuiText.Restricted.getLocal());

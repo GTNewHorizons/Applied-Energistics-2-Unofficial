@@ -59,6 +59,7 @@ public abstract class AEBaseInfiniteCell extends AEBaseItem implements IStorageC
 
             }
         }
+        lines.add(GuiText.Overflow.getLocal());
     }
 
     @Override

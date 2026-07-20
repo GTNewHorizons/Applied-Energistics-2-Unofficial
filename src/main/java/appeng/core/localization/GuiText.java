@@ -247,6 +247,8 @@ public enum GuiText implements Localization {
     Filter,
     Sticky,
     Contains,
+    Distribution,
+    Overflow,
 
     // Used in a terminal to indicate that an item is craftable
     SmallFontCraft,
@@ -423,7 +425,9 @@ public enum GuiText implements Localization {
 
     WirelessManagerToolTips,
 
-    HoldCtrlForContents;
+    HoldCtrlForContents,
+
+    UpgradesInstalled;
 
     private final String root;
 
