@@ -221,14 +221,16 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
         boolean distribution = handler.isDistribution();
         boolean overflow = handler.isOverflow();
         if (distribution || overflow) {
-            lines.add(GuiText.UpgradesInstalled.getLocal());
             if (GuiScreen.isShiftKeyDown()) {
+                lines.add(GuiText.UpgradesInstalled.getLocal() + ":");
                 if (distribution) {
                     lines.add(" - " + GuiText.Distribution.getLocal());
                 }
                 if (overflow) {
                     lines.add(" - " + GuiText.Overflow.getLocal());
                 }
+            } else {
+                lines.add(GuiText.UpgradesInstalled.getLocal());
             }
         }
 
