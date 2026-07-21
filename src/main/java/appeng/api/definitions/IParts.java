@@ -56,6 +56,8 @@ public interface IParts {
 
     IItemDefinition levelEmitter();
 
+    IItemDefinition advancedLevelEmitter();
+
     IItemDefinition annihilationPlane();
 
     IItemDefinition identityAnnihilationPlane();

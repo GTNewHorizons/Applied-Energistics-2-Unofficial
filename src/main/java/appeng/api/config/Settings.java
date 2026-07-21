@@ -110,7 +110,11 @@ public enum Settings {
 
     WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO)),
 
-    DIAGNOSTIC_SORT_BY(EnumSet.allOf(DiagnosticSortButton.class));
+    DIAGNOSTIC_SORT_BY(EnumSet.allOf(DiagnosticSortButton.class)),
+
+    ADVANCED_LEVEL_EMITTER_LOGIC(EnumSet.allOf(BooleanOperation.class)),
+    ADVANCED_LEVEL_EMITTER_SLOT_ENABLED(EnumSet.of(YesNo.YES, YesNo.NO)),
+    ADVANCED_LEVEL_EMITTER_SLOT_INVERT(EnumSet.of(RedstoneMode.LOW_SIGNAL, RedstoneMode.HIGH_SIGNAL));
 
     private final EnumSet<? extends Enum<?>> values;
 

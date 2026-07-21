@@ -42,6 +42,7 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.ISecurityGrid;
+import appeng.api.parts.IAdvancedLevelEmitter;
 import appeng.api.parts.ICraftingTerminal;
 import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.parts.ILevelEmitter;
@@ -56,6 +57,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerAdvancedInscriber;
+import appeng.container.implementations.ContainerAdvancedLevelEmitter;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
 import appeng.container.implementations.ContainerBusIO;
 import appeng.container.implementations.ContainerCellRestriction;
@@ -215,6 +217,9 @@ public enum GuiBridge implements IGuiHandler {
     // extends (Container/Gui) + Bus
     GUI_LEVEL_EMITTER(ContainerLevelEmitter.class, ILevelEmitter.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.BUILD),
+
+    GUI_ADVANCED_LEVEL_EMITTER(ContainerAdvancedLevelEmitter.class, IAdvancedLevelEmitter.class,
+            GuiHostType.ITEM_OR_WORLD, SecurityPermissions.BUILD),
 
     GUI_SPATIAL_IO_PORT(ContainerSpatialIOPort.class, TileSpatialIOPort.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),

@@ -31,6 +31,7 @@ public enum CableBusTextures {
     Channels04("MECableSmart04"),
 
     LevelEmitterTorchOn("ItemPart.LevelEmitterOn"),
+    AdvancedLevelEmitterTorchOn("ItemPart.AdvancedLevelEmitterOn"),
     BlockWirelessOn("BlockWirelessOn"),
 
     BlockP2PTunnel2("ItemPart.P2PTunnel2"),
