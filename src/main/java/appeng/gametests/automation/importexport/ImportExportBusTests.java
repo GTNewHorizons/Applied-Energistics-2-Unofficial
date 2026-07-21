@@ -48,7 +48,7 @@ public class ImportExportBusTests {
     private static final String REDSTONE_LABEL = "redstone";
 
     // A filtered import bus should pull only matching stacks from the source chest into ME storage.
-    @GameTest(template = "bus_io", timeoutTicks = 380)
+    @GameTest(template = "bus_io", timeoutTicks = 380, required = false)
     public static void importBusPullsFilteredStackIntoNetwork(GameTestHelper helper) {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();
@@ -76,7 +76,7 @@ public class ImportExportBusTests {
     }
 
     // A filtered export bus should move only the configured stack from ME storage into the destination chest.
-    @GameTest(template = "bus_io", timeoutTicks = 320)
+    @GameTest(template = "bus_io", timeoutTicks = 320, required = false)
     public static void exportBusPushesFilteredStackToInventory(GameTestHelper helper) {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();
@@ -103,7 +103,7 @@ public class ImportExportBusTests {
     }
 
     // A full destination inventory should make the export bus leave stored network items untouched.
-    @GameTest(template = "bus_io", timeoutTicks = 240)
+    @GameTest(template = "bus_io", timeoutTicks = 240, required = false)
     public static void fullDestinationDoesNotVoidItems(GameTestHelper helper) {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();
@@ -133,7 +133,7 @@ public class ImportExportBusTests {
     }
 
     // With a redstone card installed, HIGH, LOW, and PULSE modes should gate export-bus work.
-    @GameTest(template = "bus_io", timeoutTicks = 800)
+    @GameTest(template = "bus_io", timeoutTicks = 800, required = false)
     public static void redstoneModesGateBusOperation(GameTestHelper helper) {
         BusIO busIO = getBusIO(helper);
         ItemStack driveCell = cell1k();

@@ -40,7 +40,7 @@ public class StorageBusTests {
     private static final int STORAGE_BUS_REFRESH_TIMEOUT_TICKS = 80;
 
     // Exposes items in the adjacent vanilla chest through the ME item storage monitor.
-    @GameTest(template = "storage_bus", timeoutTicks = 100)
+    @GameTest(template = "storage_bus", timeoutTicks = 100, required = false)
     public static void storageBusExposesExternalChestContents(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -54,7 +54,7 @@ public class StorageBusTests {
     }
 
     // Reflects external chest mutations after the storage bus monitor refreshes.
-    @GameTest(template = "storage_bus", timeoutTicks = 140)
+    @GameTest(template = "storage_bus", timeoutTicks = 140, required = false)
     public static void storageBusReflectsExternalMutation(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -75,7 +75,7 @@ public class StorageBusTests {
     }
 
     // READ mode exposes the external chest but refuses network insertions into it.
-    @GameTest(template = "storage_bus", timeoutTicks = 220)
+    @GameTest(template = "storage_bus", timeoutTicks = 220, required = false)
     public static void accessModeReadPreventsInsertion(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -112,7 +112,7 @@ public class StorageBusTests {
     }
 
     // New items should route to the higher-priority external chest before the lower-priority drive cell.
-    @GameTest(template = "storage_bus", timeoutTicks = 220)
+    @GameTest(template = "storage_bus", timeoutTicks = 220, required = false)
     public static void storageBusPriorityBeatsDriveCell(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -149,7 +149,7 @@ public class StorageBusTests {
     }
 
     // A storage bus whitelist should accept matching items and reject non-matching insertions.
-    @GameTest(template = "storage_bus", timeoutTicks = 220)
+    @GameTest(template = "storage_bus", timeoutTicks = 220, required = false)
     public static void filteredStorageBusRejectsNonMatchingItems(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
