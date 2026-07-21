@@ -1,14 +1,14 @@
 {
-  "format_version": 1,
+  "format_version": 2,
   "size": [3, 1, 1],
   "palette": {
-    "A": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self Powered Controller"},
-    "B": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
-    "C": {"name": "appliedenergistics2:tile.BlockChest", "meta": 0, "label": "ME Chest"}
+    "A": {"name": "appliedenergistics2:tile.BlockChest", "meta": 0, "label": "ME Chest"},
+    "B": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
+    "C": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"}
   },
   "layers": [
     [
-      "BAC"
+      "CBA"
     ]
   ],
   "annotations": {
