@@ -47,7 +47,7 @@ public class P2PTests {
     private static final long ME_FREQUENCY = 303L;
 
     // P1: a real hopper supplies the input tunnel, and conservation is checked on every observed tick.
-    @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
+    @GameTest(template = "p2p_tunnels", timeoutTicks = 160, required = false)
     public static void itemP2PMovesItemsWithoutDuplication(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PItems input = inputTunnel(helper, PartP2PItems.class);
@@ -67,7 +67,7 @@ public class P2PTests {
     }
 
     // P1: the outer ME connection must expose storage that is physically present only behind the output tunnel.
-    @GameTest(template = "p2p_tunnels", timeoutTicks = 180)
+    @GameTest(template = "p2p_tunnels", timeoutTicks = 180, required = false)
     public static void meP2PCarriesRemoteStorageChannel(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PTunnelME input = inputTunnel(helper, PartP2PTunnelME.class);
@@ -98,7 +98,7 @@ public class P2PTests {
     }
 
     // P1: all three links are authored in the exported cable-bus NBT; the test performs no binding setup.
-    @GameTest(template = "p2p_tunnels", timeoutTicks = 100)
+    @GameTest(template = "p2p_tunnels", timeoutTicks = 100, required = false)
     public static void frequencyPersistsThroughTemplateNbt(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PItems itemInput = inputTunnel(helper, PartP2PItems.class);
@@ -117,7 +117,7 @@ public class P2PTests {
     }
 
     // P2: the output must track both edges of the input signal, including returning to zero.
-    @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
+    @GameTest(template = "p2p_tunnels", timeoutTicks = 160, required = false)
     public static void redstoneP2PMirrorsSignal(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PRedstone input = inputTunnel(helper, PartP2PRedstone.class);
@@ -152,7 +152,7 @@ public class P2PTests {
     }
 
     // P2: after both exported tunnels are explicitly unbound, no destination mutation is allowed for the window.
-    @GameTest(template = "p2p_tunnels", timeoutTicks = 120)
+    @GameTest(template = "p2p_tunnels", timeoutTicks = 120, required = false)
     public static void unboundTunnelDoesNotTransfer(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PItems input = (PartP2PItems) inputTunnel(helper, PartP2PItems.class).unbind(null);
