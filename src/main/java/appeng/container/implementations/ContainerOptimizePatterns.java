@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -37,6 +38,7 @@ import appeng.crafting.v2.CraftingJobV2;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import appeng.me.cache.CraftingGridCache;
+import appeng.parts.misc.PartPatternRepeater;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
 import appeng.util.PatternMultiplierHelper;
 import codechicken.nei.ItemStackMap;
@@ -72,15 +74,17 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
 
         var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
 
-        for (Class<? extends IInterfaceViewable> c : supported) {
-            for (IGridNode node : context.meGrid.getMachines(c)) {
-                IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
-                if (!machine.allowsPatternOptimization()) {
-                    IInventory patternInv = machine.getPatterns();
+        for (final IGrid currentGrid : this.collectReachableGrids(context.meGrid)) {
+            for (Class<? extends IInterfaceViewable> c : supported) {
+                for (IGridNode node : currentGrid.getMachines(c)) {
+                    IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
+                    if (!machine.allowsPatternOptimization()) {
+                        IInventory patternInv = machine.getPatterns();
 
-                    for (int i = 0; i < patternInv.getSizeInventory(); i++) {
-                        ItemStack stack = patternInv.getStackInSlot(i);
-                        if (stack != null) blacklistedPatterns.add(stack);
+                        for (int i = 0; i < patternInv.getSizeInventory(); i++) {
+                            ItemStack stack = patternInv.getStackInSlot(i);
+                            if (stack != null) blacklistedPatterns.add(stack);
+                        }
                     }
                 }
             }
@@ -160,23 +164,25 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
         CraftingGridCache.pauseRebuilds();
         try {
 
-            for (Class<? extends IInterfaceViewable> c : supported) {
-                for (IGridNode node : grid.getMachines(c)) {
-                    IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
-                    if (!machine.allowsPatternOptimization()) continue;
+            for (final IGrid currentGrid : this.collectReachableGrids(grid)) {
+                for (Class<? extends IInterfaceViewable> c : supported) {
+                    for (IGridNode node : currentGrid.getMachines(c)) {
+                        IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
+                        if (!machine.allowsPatternOptimization()) continue;
 
-                    IInventory patternInv = machine.getPatterns();
+                        IInventory patternInv = machine.getPatterns();
 
-                    for (int i = 0; i < patternInv.getSizeInventory(); i++) {
-                        ItemStack stack = patternInv.getStackInSlot(i);
+                        for (int i = 0; i < patternInv.getSizeInventory(); i++) {
+                            ItemStack stack = patternInv.getStackInSlot(i);
 
-                        if (stack != null && !alreadyDone.containsKey(stack)) {
-                            var pair = lookupMap.get(stack);
-                            if (pair == null) continue;
-                            ItemStack sCopy = stack.copy();
-                            pair.getKey().applyModification(sCopy, pair.getValue());
-                            patternInv.setInventorySlotContents(i, sCopy);
-                            alreadyDone.put(stack, true);
+                            if (stack != null && !alreadyDone.containsKey(stack)) {
+                                var pair = lookupMap.get(stack);
+                                if (pair == null) continue;
+                                ItemStack sCopy = stack.copy();
+                                pair.getKey().applyModification(sCopy, pair.getValue());
+                                patternInv.setInventorySlotContents(i, sCopy);
+                                alreadyDone.put(stack, true);
+                            }
                         }
                     }
                 }
@@ -195,6 +201,27 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
         final IActionHost h = ((IActionHost) this.getTarget());
         if (h == null || h.getActionableNode() == null) return null;
         return h.getActionableNode().getGrid();
+    }
+
+    private void fletchRepeaters(final IGrid grid, final Set<IGrid> gridSet) {
+        for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
+            final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+            if (!rep.isProvider() || rep.getPair() == null || !node.isActive() || rep.getPair().isProvider()) continue;
+            final IGridNode n = rep.getPair().getGridNode();
+            if (n == null || !n.isActive()) continue;
+            final IGrid currentGrid = n.getGrid();
+            if (!gridSet.contains(currentGrid)) {
+                gridSet.add(currentGrid);
+                this.fletchRepeaters(currentGrid, gridSet);
+            }
+        }
+    }
+
+    private Set<IGrid> collectReachableGrids(final IGrid grid) {
+        final Set<IGrid> gridSet = new HashSet<>();
+        gridSet.add(grid);
+        this.fletchRepeaters(grid, gridSet);
+        return gridSet;
     }
 
     public void switchToOriginalGUI() {
