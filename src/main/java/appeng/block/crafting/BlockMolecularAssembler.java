@@ -28,8 +28,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockMolecularAssembler extends AEBaseTileBlock {
 
-    private static boolean booleanAlphaPass = false;
-
     public BlockMolecularAssembler() {
         super(Material.iron);
 
@@ -46,7 +44,6 @@ public class BlockMolecularAssembler extends AEBaseTileBlock {
 
     @Override
     public boolean canRenderInPass(final int pass) {
-        setBooleanAlphaPass(pass == 1);
         return pass == 0 || pass == 1;
     }
 
@@ -65,13 +62,5 @@ public class BlockMolecularAssembler extends AEBaseTileBlock {
             return true;
         }
         return super.onBlockActivated(w, x, y, z, p, side, hitX, hitY, hitZ);
-    }
-
-    public static boolean isBooleanAlphaPass() {
-        return booleanAlphaPass;
-    }
-
-    private static void setBooleanAlphaPass(final boolean booleanAlphaPass) {
-        BlockMolecularAssembler.booleanAlphaPass = booleanAlphaPass;
     }
 }
