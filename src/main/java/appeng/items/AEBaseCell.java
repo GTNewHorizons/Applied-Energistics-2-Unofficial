@@ -14,6 +14,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -58,6 +59,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IItemGroup, ICellRestriction {
 
+    public static final String LANG_KEY_DISTRIBUTION = "item.appliedenergistics2.ItemMaterial.CardDistribution.name";
+    public static final String LANG_KEY_VOIDOVERFLOW = "item.appliedenergistics2.ItemMaterial.CardVoidOverflow.name";
     protected MaterialType component;
     protected long totalBytes;
     protected int perType;
@@ -224,10 +227,10 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
             if (GuiScreen.isShiftKeyDown()) {
                 lines.add(GuiText.UpgradesInstalled.getLocal() + ":");
                 if (distribution) {
-                    lines.add(" - " + GuiText.Distribution.getLocal());
+                    lines.add(" - " + StatCollector.translateToLocal(LANG_KEY_DISTRIBUTION));
                 }
                 if (overflow) {
-                    lines.add(" - " + GuiText.Overflow.getLocal());
+                    lines.add(" - " + StatCollector.translateToLocal(LANG_KEY_VOIDOVERFLOW));
                 }
             } else {
                 lines.add(GuiText.UpgradesInstalled.getLocal());
