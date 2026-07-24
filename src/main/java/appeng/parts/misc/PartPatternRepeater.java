@@ -333,7 +333,11 @@ public class PartPatternRepeater extends PartBasicState
 
                 tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
 
-                this.targetCraftingGrid.getEmitableItems().forEach((stack) -> this.emitableCrafting.put(stack, false));
+                this.targetCraftingGrid.getEmitableItems().forEach((stack) -> {
+                    if (!this.targetCraftingGrid.getEmitableMediums(stack).isEmpty()) {
+                        this.emitableCrafting.put(stack, false);
+                    }
+                });
 
                 this.triggerPatternUpdate();
                 this.configureWatchers();
