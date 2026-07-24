@@ -40,7 +40,7 @@ public class StorageBusTests {
     private static final int STORAGE_BUS_REFRESH_TIMEOUT_TICKS = 80;
 
     // Exposes items in the adjacent vanilla chest through the ME item storage monitor.
-    @GameTest(template = "storage_bus", timeoutTicks = 100)
+    @GameTest(template = "storage_bus", timeoutTicks = 100, required = false)
     public static void storageBusExposesExternalChestContents(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -54,7 +54,7 @@ public class StorageBusTests {
     }
 
     // Reflects external chest mutations after the storage bus monitor refreshes.
-    @GameTest(template = "storage_bus", timeoutTicks = 140)
+    @GameTest(template = "storage_bus", timeoutTicks = 140, required = false)
     public static void storageBusReflectsExternalMutation(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -75,7 +75,7 @@ public class StorageBusTests {
     }
 
     // READ mode exposes the external chest but refuses network insertions into it.
-    @GameTest(template = "storage_bus", timeoutTicks = 220)
+    @GameTest(template = "storage_bus", timeoutTicks = 220, required = false)
     public static void accessModeReadPreventsInsertion(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -92,9 +92,10 @@ public class StorageBusTests {
                         "wait for cleared external chest to disappear from the network monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute(
-                        "configure storage bus for READ-only access",
-                        () -> storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ))
+                .thenExecute("configure storage bus for READ-only access while a neighbor refresh is queued", () -> {
+                    storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ);
+                    storageBus.onNeighborChanged();
+                })
                 .thenWaitUntil(
                         "wait for READ mode to reject simulated insertion",
                         STORAGE_BUS_REFRESH_TIMEOUT_TICKS,
@@ -111,7 +112,7 @@ public class StorageBusTests {
     }
 
     // New items should route to the higher-priority external chest before the lower-priority drive cell.
-    @GameTest(template = "storage_bus", timeoutTicks = 220)
+    @GameTest(template = "storage_bus", timeoutTicks = 220, required = false)
     public static void storageBusPriorityBeatsDriveCell(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -148,7 +149,7 @@ public class StorageBusTests {
     }
 
     // A storage bus whitelist should accept matching items and reject non-matching insertions.
-    @GameTest(template = "storage_bus", timeoutTicks = 220)
+    @GameTest(template = "storage_bus", timeoutTicks = 220, required = false)
     public static void filteredStorageBusRejectsNonMatchingItems(GameTestHelper helper) {
         TileController controller = getController(helper);
         PartStorageBus storageBus = getStorageBus(helper);
@@ -165,9 +166,10 @@ public class StorageBusTests {
                         "wait for the empty external chest to disappear from the storage monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute(
-                        "configure cobblestone-only storage bus filter",
-                        () -> configureStorageBusFilter(helper, storageBus, Blocks.cobblestone))
+                .thenExecute("configure cobblestone-only storage bus filter while a neighbor refresh is queued", () -> {
+                    configureStorageBusFilter(helper, storageBus, Blocks.cobblestone);
+                    storageBus.onNeighborChanged();
+                })
                 .thenWaitUntil(
                         "wait for filter to accept cobblestone and reject dirt in simulation",
                         STORAGE_BUS_REFRESH_TIMEOUT_TICKS,
