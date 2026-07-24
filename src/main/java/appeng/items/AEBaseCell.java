@@ -226,11 +226,11 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
         if (distribution || overflow) {
             if (GuiScreen.isShiftKeyDown()) {
                 lines.add(GuiText.UpgradesInstalled.getLocal() + ":");
-                if (distribution) {
-                    lines.add(" - " + StatCollector.translateToLocal(LANG_KEY_DISTRIBUTION));
-                }
-                if (overflow) {
-                    lines.add(" - " + StatCollector.translateToLocal(LANG_KEY_VOIDOVERFLOW));
+                for (int i = 0; i < cellInventory.getUpgradesInventory().getSizeInventory(); i++) {
+                    ItemStack upgrade = cellInventory.getUpgradesInventory().getStackInSlot(i);
+                    if (upgrade.getItem() instanceof IUpgradeModule module) {
+                        lines.add(" - " + upgrade.getDisplayName());
+                    }
                 }
             } else {
                 lines.add(GuiText.UpgradesInstalled.getLocal());
