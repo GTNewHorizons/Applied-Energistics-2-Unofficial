@@ -15,7 +15,6 @@ import static appeng.util.Platform.readAEStackListNBT;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -78,12 +77,14 @@ import appeng.parts.PartBasicState;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 
 public class PartPatternRepeater extends PartBasicState
         implements ICraftingWatcherHost, ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
 
     private final Set<ICraftingPatternDetails> craftingList = new HashSet<>();
-    private final Map<IAEStack<?>, Boolean> emitableCrafting = new HashMap<>();
+    private final Object2BooleanMap<IAEStack<?>> emitableCrafting = new Object2BooleanOpenHashMap<>();
     private IItemList<IAEStack<?>> waitingStacks = AEApi.instance().storage().createAEStackList();
     private CraftingGridCache targetCraftingGrid = null;
     private CraftingGridCache currentCraftingGrid = null;
@@ -459,8 +460,8 @@ public class PartPatternRepeater extends PartBasicState
             addedTypes.add(aes.getStackType());
         }
 
-        for (Entry<IAEStack<?>, Boolean> entry : this.emitableCrafting.entrySet()) {
-            if (entry.getValue()) {
+        for (Object2BooleanMap.Entry<IAEStack<?>> entry : this.emitableCrafting.object2BooleanEntrySet()) {
+            if (entry.getBooleanValue()) {
                 addedTypes.add(entry.getKey().getStackType());
             }
         }
