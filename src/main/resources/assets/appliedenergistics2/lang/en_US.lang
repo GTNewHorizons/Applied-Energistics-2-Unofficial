@@ -480,6 +480,7 @@ gui.appliedenergistics2.CPUOnlyAllowNonPlayer=Only from non-players
 gui.appliedenergistics2.CPUOnlyAllowPlayer=Only from players
 gui.appliedenergistics2.CPUSourcePlayer=Requester
 gui.appliedenergistics2.CPUSourceMachineRequested=Machine-requested
+gui.appliedenergistics2.UpgradesInstalled=Upgrades Installed
 
 gui.appliedenergistics2.NetworkBytesDetails=Network Bytes Details
 gui.appliedenergistics2.Items=Items

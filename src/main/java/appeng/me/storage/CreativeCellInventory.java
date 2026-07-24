@@ -242,4 +242,9 @@ public class CreativeCellInventory<StackType extends IAEStack<StackType>>
     public String getOreFilter() {
         return "";
     }
+
+    @Override
+    public boolean isOverflow() {
+        return true;
+    }
 }

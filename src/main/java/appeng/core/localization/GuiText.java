@@ -423,7 +423,9 @@ public enum GuiText implements Localization {
 
     WirelessManagerToolTips,
 
-    HoldCtrlForContents;
+    HoldCtrlForContents,
+
+    UpgradesInstalled;
 
     private final String root;
 

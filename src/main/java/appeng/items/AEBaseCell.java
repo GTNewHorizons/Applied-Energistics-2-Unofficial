@@ -217,6 +217,24 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                 lines.add(GuiText.Sticky.getLocal());
             }
         }
+
+        List<String> temp = new ArrayList<>();
+        for (int i = 0; i < cellInventory.getUpgradesInventory().getSizeInventory(); i++) {
+            ItemStack upgrade = cellInventory.getUpgradesInventory().getStackInSlot(i);
+            if (upgrade.getItem() instanceof IUpgradeModule module) {
+                temp.add(" - " + upgrade.getDisplayName());
+            }
+        }
+
+        if (!temp.isEmpty()) {
+            if (GuiScreen.isShiftKeyDown()) {
+                lines.add(GuiText.UpgradesInstalled.getLocal() + ":");
+                lines.addAll(temp);
+            } else {
+                lines.add(GuiText.UpgradesInstalled.getLocal());
+            }
+        }
+
         final CellRestrictionData cellRestrictionData = this.getCellRestrictionData(stack);
         if (cellRestrictionData.restrictionTypes != 0 || cellRestrictionData.restrictionAmount != 0) {
             lines.add(GuiText.Restricted.getLocal());
