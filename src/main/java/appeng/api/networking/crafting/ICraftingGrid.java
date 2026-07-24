@@ -49,6 +49,13 @@ public interface ICraftingGrid extends IGridCache {
      */
     ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> getCraftingMultiPatterns();
 
+    /**
+     * @return a collection of all the emitable items in the system
+     */
+    default ImmutableSet<IAEStack<?>> getEmitableItems() {
+        return ImmutableSet.of();
+    }
+
     @Deprecated
     ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> getCraftingPatterns();
 
