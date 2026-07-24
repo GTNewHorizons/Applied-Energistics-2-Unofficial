@@ -14,7 +14,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -59,8 +58,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IItemGroup, ICellRestriction {
 
-    public static final String LANG_KEY_DISTRIBUTION = "item.appliedenergistics2.ItemMaterial.CardDistribution.name";
-    public static final String LANG_KEY_VOIDOVERFLOW = "item.appliedenergistics2.ItemMaterial.CardVoidOverflow.name";
     protected MaterialType component;
     protected long totalBytes;
     protected int perType;
@@ -221,17 +218,18 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
             }
         }
 
-        boolean distribution = handler.isDistribution();
-        boolean overflow = handler.isOverflow();
-        if (distribution || overflow) {
+        List<String> temp = new ArrayList<>();
+        for (int i = 0; i < cellInventory.getUpgradesInventory().getSizeInventory(); i++) {
+            ItemStack upgrade = cellInventory.getUpgradesInventory().getStackInSlot(i);
+            if (upgrade.getItem() instanceof IUpgradeModule module) {
+                temp.add(" - " + upgrade.getDisplayName());
+            }
+        }
+
+        if (!temp.isEmpty()) {
             if (GuiScreen.isShiftKeyDown()) {
                 lines.add(GuiText.UpgradesInstalled.getLocal() + ":");
-                if (distribution) {
-                    lines.add(" - " + StatCollector.translateToLocal(LANG_KEY_DISTRIBUTION));
-                }
-                if (overflow) {
-                    lines.add(" - " + StatCollector.translateToLocal(LANG_KEY_VOIDOVERFLOW));
-                }
+                lines.addAll(temp);
             } else {
                 lines.add(GuiText.UpgradesInstalled.getLocal());
             }
