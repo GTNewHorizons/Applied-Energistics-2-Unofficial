@@ -127,6 +127,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
     public void setReportingValue(final long v) {
         this.reportingValue = v;
+        this.getHost().markForSave();
         if (this.getConfigManager().getSetting(Settings.LEVEL_TYPE) == LevelType.ENERGY_LEVEL) {
             this.configureWatchers();
         } else {
@@ -833,6 +834,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
     @Override
     public void saveAEStackInv() {
+        this.getHost().markForSave();
         this.configureWatchers();
     }
 

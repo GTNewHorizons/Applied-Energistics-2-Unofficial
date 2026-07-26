@@ -62,6 +62,7 @@ public enum AEFeature {
     Channels(Constants.CATEGORY_NETWORK_FEATURES),
 
     LevelEmitter(Constants.CATEGORY_NETWORK_BUSES),
+    AdvancedLevelEmitter(Constants.CATEGORY_NETWORK_BUSES),
     CraftingTerminal(Constants.CATEGORY_NETWORK_BUSES),
     StorageMonitor(Constants.CATEGORY_NETWORK_BUSES),
     P2PTunnel(Constants.CATEGORY_NETWORK_BUSES),
