@@ -74,7 +74,7 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
         this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
         this.addSlotToContainer(this.primaryGuiButtonIcon);
 
-        this.bindPlayerInventory(ip, -1, 153);
+        this.bindPlayerInventory(ip, 0, 153);
     }
 
     @SideOnly(Side.CLIENT)
