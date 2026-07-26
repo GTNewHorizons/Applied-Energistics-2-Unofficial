@@ -98,6 +98,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     @Override
     public void setReportingValue(final int slot, final long v) {
         this.amount[slot] = v;
+        this.getHost().markForSave();
         this.updateState();
     }
 
@@ -109,6 +110,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     @Override
     public void setSlotActive(final int slot, final boolean active) {
         this.slotActive[slot] = active;
+        this.getHost().markForSave();
         this.updateState();
     }
 
@@ -120,6 +122,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     @Override
     public void setSlotInverted(final int slot, final boolean inverted) {
         this.slotInverted[slot] = inverted;
+        this.getHost().markForSave();
         this.updateState();
     }
 
@@ -640,6 +643,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
 
     @Override
     public void saveAEStackInv() {
+        this.getHost().markForSave();
         this.configureWatchers();
     }
 
