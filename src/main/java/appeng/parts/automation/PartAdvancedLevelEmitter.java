@@ -7,11 +7,13 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.jetbrains.annotations.NotNull;
@@ -564,11 +566,13 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
         this.config.readFromNBT(data, "config");
         this.prevState = data.getBoolean("prevState");
 
-        for (int slot = 0; slot < SLOTS; slot++) {
-            this.slotActive[slot] = data.getBoolean("active" + slot);
-            this.slotInverted[slot] = data.getBoolean("inverted" + slot);
-            this.amount[slot] = data.getLong("amount" + slot);
-            this.lastReportedValue[slot] = data.getLong("lastReportedValue" + slot);
+        final NBTTagList list = data.getTagList("slots", NBT.TAG_COMPOUND);
+        for (int slot = 0; slot < Math.min(SLOTS, list.tagCount()); slot++) {
+            final NBTTagCompound tag = list.getCompoundTagAt(slot);
+            this.slotActive[slot] = tag.getBoolean("active");
+            this.slotInverted[slot] = tag.getBoolean("inverted");
+            this.amount[slot] = tag.getLong("amount");
+            this.lastReportedValue[slot] = tag.getLong("lastReportedValue");
         }
     }
 
@@ -578,22 +582,28 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
         this.config.writeToNBT(data, "config");
         data.setBoolean("prevState", this.prevState);
 
+        final NBTTagList list = new NBTTagList();
         for (int slot = 0; slot < SLOTS; slot++) {
-            data.setBoolean("active" + slot, this.slotActive[slot]);
-            data.setBoolean("inverted" + slot, this.slotInverted[slot]);
-            data.setLong("amount" + slot, this.amount[slot]);
-            data.setLong("lastReportedValue" + slot, this.lastReportedValue[slot]);
+            final NBTTagCompound tag = new NBTTagCompound();
+            tag.setBoolean("active", this.slotActive[slot]);
+            tag.setBoolean("inverted", this.slotInverted[slot]);
+            tag.setLong("amount", this.amount[slot]);
+            tag.setLong("lastReportedValue", this.lastReportedValue[slot]);
+            list.appendTag(tag);
         }
+        data.setTag("slots", list);
     }
 
     @Override
     public void uploadSettings(@NotNull final SettingsFrom from, @NotNull final NBTTagCompound compound) {
         super.uploadSettings(from, compound);
 
-        for (int slot = 0; slot < SLOTS; slot++) {
-            this.slotActive[slot] = compound.getBoolean("active" + slot);
-            this.slotInverted[slot] = compound.getBoolean("inverted" + slot);
-            this.amount[slot] = compound.getLong("amount" + slot);
+        final NBTTagList list = compound.getTagList("slots", NBT.TAG_COMPOUND);
+        for (int slot = 0; slot < Math.min(SLOTS, list.tagCount()); slot++) {
+            final NBTTagCompound tag = list.getCompoundTagAt(slot);
+            this.slotActive[slot] = tag.getBoolean("active");
+            this.slotInverted[slot] = tag.getBoolean("inverted");
+            this.amount[slot] = tag.getLong("amount");
         }
 
         this.configureWatchers();
@@ -604,11 +614,15 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     public NBTTagCompound downloadSettings(@NotNull final SettingsFrom from) {
         final NBTTagCompound nbt = super.downloadSettings(from);
 
+        final NBTTagList list = new NBTTagList();
         for (int slot = 0; slot < SLOTS; slot++) {
-            nbt.setBoolean("active" + slot, this.slotActive[slot]);
-            nbt.setBoolean("inverted" + slot, this.slotInverted[slot]);
-            nbt.setLong("amount" + slot, this.amount[slot]);
+            final NBTTagCompound tag = new NBTTagCompound();
+            tag.setBoolean("active", this.slotActive[slot]);
+            tag.setBoolean("inverted", this.slotInverted[slot]);
+            tag.setLong("amount", this.amount[slot]);
+            list.appendTag(tag);
         }
+        nbt.setTag("slots", list);
 
         return nbt;
     }
