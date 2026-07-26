@@ -626,7 +626,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
 
             result[slot] = new LevelItemInfo(
                     stack,
-                    this.lastReportedValue[slot],
+                    this.getReportingValue(slot),
                     -1,
                     slotState ? LevelState.Craft : LevelState.Idle);
         }
