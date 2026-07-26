@@ -13,6 +13,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPinsUpdate;
+import appeng.core.AEConfig;
 
 public class PinsHandler {
 
@@ -58,6 +59,10 @@ public class PinsHandler {
 
     // Adds crafted items only to the crafting pin section (indices 0 to craftingRows*9-1).
     public void addItemsToPins(Iterable<IAEStack<?>> pinsList) {
+        if (AEConfig.instance.craftingRowAsHistory) {
+            addItemsToPinsRolling(pinsList);
+            return;
+        }
         int maxCraftingSlots = craftingPinsRows.getSlotCount();
         if (maxCraftingSlots <= 0) return;
 
@@ -86,6 +91,41 @@ public class PinsHandler {
             pinsInv.setPin(i, itemStack);
             itemStack = null;
         }
+        needUpdate = true;
+        holder.markDirty();
+    }
+
+    private void addItemsToPinsRolling(Iterable<IAEStack<?>> pinsList) {
+        int maxCraftingSlots = craftingPinsRows.getSlotCount();
+        if (maxCraftingSlots <= 0) return;
+
+        for (IAEStack<?> ais : pinsList) {
+            if (ais == null) continue;
+
+            final IAEStack<?> pinStack = ais.copy();
+            pinStack.setStackSize(0);
+
+            // Stop at first empty slot or duplicate, avoid needless shifting.
+            int shiftLimit = -1;
+            for (int i = 0; i < maxCraftingSlots; i++) {
+                final IAEStack<?> current = pinsInv.getPin(i);
+                if (current == null || current.isSameType(pinStack)) {
+                    shiftLimit = i;
+                    break;
+                }
+            }
+
+            // No duplicate and no empty slot found -> section is full, drop the oldest entry.
+            if (shiftLimit < 0) {
+                shiftLimit = maxCraftingSlots - 1;
+            }
+
+            for (int i = shiftLimit; i > 0; i--) {
+                pinsInv.setPin(i, pinsInv.getPin(i - 1));
+            }
+            pinsInv.setPin(0, pinStack);
+        }
+
         needUpdate = true;
         holder.markDirty();
     }
