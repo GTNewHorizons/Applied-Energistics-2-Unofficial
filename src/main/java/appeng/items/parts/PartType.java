@@ -19,6 +19,7 @@ import appeng.api.parts.IPart;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.integration.IntegrationType;
+import appeng.parts.automation.PartAdvancedLevelEmitter;
 import appeng.parts.automation.PartAnnihilationPlane;
 import appeng.parts.automation.PartExportBus;
 import appeng.parts.automation.PartFormationPlane;
@@ -131,6 +132,9 @@ public enum PartType {
 
     LevelEmitter(280, EnumSet.of(AEFeature.LevelEmitter), EnumSet.noneOf(IntegrationType.class),
             PartLevelEmitter.class),
+
+    AdvancedLevelEmitter(281, EnumSet.of(AEFeature.AdvancedLevelEmitter), EnumSet.noneOf(IntegrationType.class),
+            PartAdvancedLevelEmitter.class),
 
     AnnihilationPlane(300, EnumSet.of(AEFeature.AnnihilationPlane), EnumSet.noneOf(IntegrationType.class),
             PartAnnihilationPlane.class),
