@@ -18,6 +18,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
+import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -98,7 +99,7 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
             final int y, final int z, RenderBlocks renderer) {
         final TileMolecularAssembler tma = maBlock.getTileEntity(world, x, y, z);
         final Tessellator tessellator = Tessellator.instance;
-        if (BlockMolecularAssembler.isBooleanAlphaPass()) {
+        if (ForgeHooksClient.getWorldRenderPass() == 1) {
             if (tma.isPowered()) {
                 this.renderBlockBounds(
                         renderer,

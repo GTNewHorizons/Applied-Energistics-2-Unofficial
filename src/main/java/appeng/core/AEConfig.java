@@ -91,6 +91,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int previewLineWidth;
     public boolean preserveSearchBar = true;
     public boolean showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = false;
+    public boolean autoFocusInterfaceTerminalSearch = true;
     public boolean showContainerInteractionTooltips = true;
     public int MEMonitorableSmallSize = 6;
     public int InterfaceTerminalSmallSize = 6;
@@ -390,6 +391,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.preserveSearchBar = this.get("Client", "preserveSearchBar", true).getBoolean(true);
         this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this
                 .get("Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false).getBoolean(false);
+        this.autoFocusInterfaceTerminalSearch = this.get("Client", "autoFocusInterfaceTerminalSearch", true)
+                .getBoolean(true);
         this.showContainerInteractionTooltips = this.get("Client", "showContainerInteractionTooltips", true)
                 .getBoolean(true);
         this.highlightWhenSomethingStuckInInterface = this.get("Client", "highlightWhenSomethingStuckInInterface", true)

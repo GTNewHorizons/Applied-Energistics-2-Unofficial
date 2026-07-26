@@ -1,11 +1,11 @@
 {
-  "format_version": 1,
+  "format_version": 2,
   "size": [3, 1, 2],
   "palette": {
     "A": {"name": "appliedenergistics2:tile.BlockCableBus", "meta": 0, "label": "AE2 Cable and/or Bus"},
     "B": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
     "C": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
-    "D": {"name": "minecraft:chest", "meta": 2, "label": "Chest"}
+    "D": {"name": "minecraft:chest", "meta": 3, "label": "Chest"}
   },
   "layers": [
     [
