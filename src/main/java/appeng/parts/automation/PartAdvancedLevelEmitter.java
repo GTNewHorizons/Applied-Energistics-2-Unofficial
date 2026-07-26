@@ -25,7 +25,6 @@ import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStackWatcher;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -35,9 +34,7 @@ import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
-import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.IConfigManager;
@@ -207,45 +204,16 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     private void configureWatchers() {
         if (this.myWatcher != null) {
             this.myWatcher.clear();
-        }
 
-        try {
-            for (final IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                final IMEMonitor<?> monitor = this.getProxy().getStorage().getMEMonitor(type);
-                if (monitor == null) {
-                    continue;
-                }
-
-                if (this.usesType(type)) {
-                    monitor.addListener(this, this.getProxy().getGrid());
-                } else {
-                    monitor.removeListener(this);
+            for (int slot = 0; slot < SLOTS; slot++) {
+                final IAEStack<?> stack = this.config.getAEStackInSlot(slot);
+                if (stack != null) {
+                    this.myWatcher.add(stack);
                 }
             }
-
-            if (this.myWatcher != null) {
-                for (int slot = 0; slot < SLOTS; slot++) {
-                    final IAEStack<?> stack = this.config.getAEStackInSlot(slot);
-                    if (stack != null) {
-                        this.myWatcher.add(stack);
-                    }
-                }
-            }
-
-            this.updateAllReportingValues();
-        } catch (final GridAccessException e) {
-            // :P
         }
-    }
 
-    private boolean usesType(final IAEStackType<?> type) {
-        for (int slot = 0; slot < SLOTS; slot++) {
-            final IAEStack<?> stack = this.config.getAEStackInSlot(slot);
-            if (stack != null && stack.getStackType() == type) {
-                return true;
-            }
-        }
-        return false;
+        this.updateAllReportingValues();
     }
 
     private void updateAllReportingValues() {
@@ -296,15 +264,6 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     }
 
     @Override
-    public boolean isValid(final Object effectiveGrid) {
-        try {
-            return this.getProxy().getGrid() == effectiveGrid;
-        } catch (final GridAccessException e) {
-            return false;
-        }
-    }
-
-    @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
         return new TickingRequest(
                 AEConfig.instance.levelEmitterDelay / 2,
@@ -323,46 +282,9 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
         if (delayedUpdatesQueued && canDoWork()) {
             delayedUpdatesQueued = false;
             lastWorkingTick = MinecraftServer.getServer().getTickCounter();
-            this.onListUpdate();
+            this.updateAllReportingValues();
         }
         return delayedUpdatesQueued ? TickRateModulation.IDLE : TickRateModulation.SLEEP;
-    }
-
-    @Override
-    public void postChange(final IBaseMonitor<IAEStack<?>> monitor, final Iterable<IAEStack<?>> change,
-            final BaseActionSource actionSource) {
-        if (canDoWork()) {
-            if (delayedUpdatesQueued) {
-                delayedUpdatesQueued = false;
-                try {
-                    this.getProxy().getTick().sleepDevice(this.getProxy().getNode());
-                } catch (final GridAccessException e) {
-                    // :/
-                }
-            }
-            lastWorkingTick = MinecraftServer.getServer().getTickCounter();
-
-            final IAEStackType<?> changedType = ((IMEMonitor) monitor).getStackType();
-            for (int slot = 0; slot < SLOTS; slot++) {
-                final IAEStack<?> myStack = this.config.getAEStackInSlot(slot);
-                if (myStack != null && myStack.getStackType() == changedType) {
-                    this.updateReportingValueForSlot(slot);
-                }
-            }
-            this.updateState();
-        } else if (!delayedUpdatesQueued) {
-            delayedUpdatesQueued = true;
-            try {
-                this.getProxy().getTick().alertDevice(this.getProxy().getNode());
-            } catch (final GridAccessException e) {
-                // :/
-            }
-        }
-    }
-
-    @Override
-    public void onListUpdate() {
-        this.updateAllReportingValues();
     }
 
     @Override
