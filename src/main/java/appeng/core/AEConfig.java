@@ -108,9 +108,9 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean pinCraftingSectionFirst = false;
     /** Which pin section is shown first (derived from pinCraftingSectionFirst). */
     public PinSectionOrder pinSectionOrder = PinSectionOrder.PLAYER_FIRST;
-    /** NEW: crafting row shows recent crafts, not static pins. */
+    /** Crafting row shows recent crafts, not static pins. */
     public boolean craftingRowAsHistory = false;
-    /** NEW: also show crafting-pinned items in main list. */
+    /** Also show crafting-pinned items in main list. */
     public boolean showCraftingPinsItemsInMainView = false;
 
     public boolean debugLogTiming = false;

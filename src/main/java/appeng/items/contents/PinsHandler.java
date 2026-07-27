@@ -10,10 +10,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPinsUpdate;
-import appeng.core.AEConfig;
 
 public class PinsHandler {
 
