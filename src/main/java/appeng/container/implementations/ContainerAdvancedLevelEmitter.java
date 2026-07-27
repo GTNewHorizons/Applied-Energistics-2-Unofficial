@@ -30,7 +30,7 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
     private final IAdvancedLevelEmitter lvlEmitter;
 
     @SideOnly(Side.CLIENT)
-    private final MEGuiTextField[] textFields = new MEGuiTextField[IAdvancedLevelEmitter.SLOT_COUNT];
+    private MEGuiTextField[] textFields;
 
     private final LongSyncHandler[] amountSync = new LongSyncHandler[IAdvancedLevelEmitter.SLOT_COUNT];
     private final BooleanSyncHandler[] activeSync = new BooleanSyncHandler[IAdvancedLevelEmitter.SLOT_COUNT];
@@ -48,7 +48,7 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
             final int slot = i;
 
             this.amountSync[slot] = sync.longSync("amount" + slot).onClientChange((oldValue, newValue) -> {
-                final MEGuiTextField field = this.textFields[slot];
+                final MEGuiTextField field = this.textFields == null ? null : this.textFields[slot];
                 if (field != null) {
                     field.setText(String.valueOf(newValue));
                     field.setCursorPositionEnd();
@@ -79,6 +79,9 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
 
     @SideOnly(Side.CLIENT)
     public void setTextField(final int slot, final MEGuiTextField field) {
+        if (this.textFields == null) {
+            this.textFields = new MEGuiTextField[IAdvancedLevelEmitter.SLOT_COUNT];
+        }
         this.textFields[slot] = field;
     }
 
