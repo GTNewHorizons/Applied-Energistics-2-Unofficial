@@ -300,7 +300,7 @@ public class PartPatternRepeater extends PartBasicState
     public void init() {
         if (this.duringFletchPatterns) return;
         this.unregisterPostPatternChangeListener();
-        this.clearEmitableCrafting();  // Clear before resetting targetCraftingGrid
+        this.clearEmitableCrafting(); // Clear before resetting targetCraftingGrid
         this.craftingList.clear();
         this.targetCraftingGrid = null;
         this.targetNetworkProxy = null;
@@ -542,7 +542,7 @@ public class PartPatternRepeater extends PartBasicState
                 final IGrid grid = this.getProxy().getGrid();
                 final ICraftingGrid cg = grid.getCache(ICraftingGrid.class);
                 boolean isCrafting = cg.isRequesting(what);
-    
+
                 for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
                     final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
                     if (!rep.isProvider() && rep.getPair() != null
@@ -561,10 +561,10 @@ public class PartPatternRepeater extends PartBasicState
         for (final ICraftingMedium medium : this.targetCraftingGrid.getEmitableMediums(what)) {
             if (medium instanceof ILevelEmitter emitter) {
                 emitter.updateEmitableStatus(what);
-            } else if (medium instanceof PartPatternRepeater rep
-                    && !visitedRepeaters.contains(rep.targetCraftingGrid)) {
-                        rep.propagateEmitableStatus(what, visitedRepeaters);
-                    }
+            } else
+                if (medium instanceof PartPatternRepeater rep && !visitedRepeaters.contains(rep.targetCraftingGrid)) {
+                    rep.propagateEmitableStatus(what, visitedRepeaters);
+                }
         }
         this.addInterception();
     }
