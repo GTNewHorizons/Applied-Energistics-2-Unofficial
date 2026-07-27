@@ -300,8 +300,8 @@ public class PartPatternRepeater extends PartBasicState
     public void init() {
         if (this.duringFletchPatterns) return;
         this.unregisterPostPatternChangeListener();
+        this.clearEmitableCrafting();  // Clear before resetting targetCraftingGrid
         this.craftingList.clear();
-        this.emitableCrafting.clear();
         this.targetCraftingGrid = null;
         this.targetNetworkProxy = null;
         this.pairPatternRepeater = null;
@@ -531,39 +531,42 @@ public class PartPatternRepeater extends PartBasicState
     }
 
     private void propagateEmitableStatus(IAEStack<?> what, Set<CraftingGridCache> visitedRepeaters) {
-        if (this.targetCraftingGrid == null || !this.emitableCrafting.containsKey(what)) {
+        if (this.targetCraftingGrid == null) {
             return;
         }
 
         visitedRepeaters.add(this.targetCraftingGrid);
 
-        try {
-            final IGrid grid = this.getProxy().getGrid();
-            final ICraftingGrid cg = grid.getCache(ICraftingGrid.class);
-            boolean isCrafting = cg.isRequesting(what);
-
-            for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
-                final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
-                if (!rep.isProvider() && rep.getPair() != null
-                        && rep.getPair().isProvider()
-                        && rep.getPair().isRequestingEmitable(what)) {
-                    isCrafting = true;
+        if (this.emitableCrafting.containsKey(what)) {
+            try {
+                final IGrid grid = this.getProxy().getGrid();
+                final ICraftingGrid cg = grid.getCache(ICraftingGrid.class);
+                boolean isCrafting = cg.isRequesting(what);
+    
+                for (IGridNode node : grid.getMachines(PartPatternRepeater.class)) {
+                    final PartPatternRepeater rep = (PartPatternRepeater) node.getMachine();
+                    if (!rep.isProvider() && rep.getPair() != null
+                            && rep.getPair().isProvider()
+                            && rep.getPair().isRequestingEmitable(what)) {
+                        isCrafting = true;
+                    }
                 }
-            }
 
-            this.emitableCrafting.put(what, isCrafting);
-            for (final ICraftingMedium medium : this.targetCraftingGrid.getEmitableMediums(what)) {
-                if (medium instanceof ILevelEmitter emitter) {
-                    emitter.updateEmitableStatus(what);
-                } else if (medium instanceof PartPatternRepeater rep
-                        && !visitedRepeaters.contains(rep.targetCraftingGrid)) {
-                            rep.propagateEmitableStatus(what, visitedRepeaters);
-                        }
+                this.emitableCrafting.put(what, isCrafting);
+            } catch (final GridAccessException e) {
+                // :P
             }
-            this.addInterception();
-        } catch (final GridAccessException e) {
-            // :P
         }
+
+        for (final ICraftingMedium medium : this.targetCraftingGrid.getEmitableMediums(what)) {
+            if (medium instanceof ILevelEmitter emitter) {
+                emitter.updateEmitableStatus(what);
+            } else if (medium instanceof PartPatternRepeater rep
+                    && !visitedRepeaters.contains(rep.targetCraftingGrid)) {
+                        rep.propagateEmitableStatus(what, visitedRepeaters);
+                    }
+        }
+        this.addInterception();
     }
 
     public void updateEmitableStatus(IAEStack<?> what) {
@@ -572,6 +575,12 @@ public class PartPatternRepeater extends PartBasicState
 
     public void updateEmitableStatus() {
         this.emitableCrafting.keySet().forEach(this::updateEmitableStatus);
+    }
+
+    private void clearEmitableCrafting() {
+        Set<IAEStack<?>> items = new HashSet<>(this.emitableCrafting.keySet());
+        this.emitableCrafting.clear();
+        items.forEach(this::updateEmitableStatus);
     }
 
     @Override
