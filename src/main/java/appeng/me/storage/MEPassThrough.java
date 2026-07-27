@@ -10,10 +10,6 @@
 
 package appeng.me.storage;
 
-import javax.annotation.Nonnull;
-
-import org.jetbrains.annotations.NotNull;
-
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
@@ -26,6 +22,11 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.NetworkMonitor;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
@@ -76,6 +77,11 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
     @Override
     public T getAvailableItem(@Nonnull T request, int iteration) {
         return this.internal.getAvailableItem(request, iteration);
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
+        return this.internal.getAvailableItems(out, iteration, filter);
     }
 
     @Override
