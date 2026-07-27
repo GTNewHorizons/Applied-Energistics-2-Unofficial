@@ -221,7 +221,7 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
         List<String> temp = new ArrayList<>();
         for (int i = 0; i < cellInventory.getUpgradesInventory().getSizeInventory(); i++) {
             ItemStack upgrade = cellInventory.getUpgradesInventory().getStackInSlot(i);
-            if (upgrade.getItem() instanceof IUpgradeModule module) {
+            if (upgrade != null && upgrade.getItem() instanceof IUpgradeModule module) {
                 temp.add(" - " + upgrade.getDisplayName());
             }
         }
