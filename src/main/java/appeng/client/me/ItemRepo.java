@@ -180,7 +180,6 @@ public class ItemRepo implements IDisplayRepo {
             if (pin != null && pin.isSameType((Object) is)) {
                 pin.reset();
                 pin.add(is);
-                break;
             }
         }
 
