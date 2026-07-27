@@ -10,6 +10,22 @@
 
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
+import java.util.Optional;
+import java.util.function.Predicate;
+
+import javax.annotation.Nonnull;
+
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Upgrades;
@@ -26,19 +42,6 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.tile.inventory.IAEStackInventory;
-import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-
-import javax.annotation.Nonnull;
-import java.util.Optional;
-import java.util.function.Predicate;
-
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 public abstract class CellInventory<StackType extends IAEStack<StackType>> implements ICellInventory<StackType> {
 
@@ -431,10 +434,8 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
     }
 
     @Override
-    public IItemList<StackType> getAvailableItems(
-            IItemList<StackType> out, int iteration,
-            Optional<Predicate<StackType>> filter
-    ) {
+    public IItemList<StackType> getAvailableItems(IItemList<StackType> out, int iteration,
+            Optional<Predicate<StackType>> filter) {
         this.getCellStacks().getAvailableItems(out, iteration, filter);
 
         return out;

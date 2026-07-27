@@ -10,18 +10,18 @@
 
 package appeng.util.item;
 
-import appeng.api.config.FuzzyMode;
-import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IAEStackType;
-import appeng.api.storage.data.IItemList;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+import appeng.api.config.FuzzyMode;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
+import appeng.api.storage.data.IItemList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public final class HashBasedItemList implements IItemList<IAEItemStack> {
 
@@ -138,7 +138,8 @@ public final class HashBasedItemList implements IItemList<IAEItemStack> {
     }
 
     @Override
-    public void getAvailableItems(IItemList<IAEItemStack> out, int iteration, Optional<Predicate<IAEItemStack>> filter) {
+    public void getAvailableItems(IItemList<IAEItemStack> out, int iteration,
+            Optional<Predicate<IAEItemStack>> filter) {
         if (!filter.isPresent()) {
             this.records.forEach(stack -> {
                 if (stack.isMeaningful()) {

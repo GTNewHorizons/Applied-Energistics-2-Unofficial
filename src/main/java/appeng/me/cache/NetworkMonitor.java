@@ -10,6 +10,27 @@
 
 package appeng.me.cache;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.function.Predicate;
+
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
@@ -30,24 +51,6 @@ import appeng.util.IterationCounter;
 import appeng.util.item.LazyItemList;
 import appeng.util.item.NetworkItemList;
 import appeng.util.item.PrioritizedNetworkItemList;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.WeakHashMap;
-import java.util.function.Predicate;
 
 public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 

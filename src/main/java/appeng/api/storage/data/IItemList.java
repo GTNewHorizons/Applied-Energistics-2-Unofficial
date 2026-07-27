@@ -13,13 +13,13 @@
 
 package appeng.api.storage.data;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Represents a list of items in AE.
