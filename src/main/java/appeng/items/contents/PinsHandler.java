@@ -71,7 +71,7 @@ public class PinsHandler {
     // Adds crafted items only to the crafting pin section (indices 0 to craftingRows*9-1).
     public void addItemsToPins(Iterable<IAEStack<?>> pinsList) {
         if (AEConfig.instance.craftingRowAsHistory) {
-            addItemsToPinsRolling(pinsList);
+            CraftingRowHistoryMode(pinsList);
             return;
         }
         int maxCraftingSlots = craftingPinsRows.getSlotCount();
@@ -106,7 +106,7 @@ public class PinsHandler {
         holder.markDirty();
     }
 
-    private void addItemsToPinsRolling(Iterable<IAEStack<?>> pinsList) {
+    private void CraftingRowHistoryMode(Iterable<IAEStack<?>> pinsList) {
         int maxCraftingSlots = craftingPinsRows.getSlotCount();
         if (maxCraftingSlots <= 0) return;
 
