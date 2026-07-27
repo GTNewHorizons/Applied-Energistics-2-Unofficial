@@ -36,10 +36,21 @@ public class PinsHandler {
     }
 
     public void setPin(int idx, IAEStack<?> stack) {
+        final boolean lockCraftingRows = AEConfig.instance.craftingRowAsHistory;
+        final int craftLimit = craftingPinsRows.getSlotCount();
+
+        // Block pin items
+        if (lockCraftingRows && idx < craftLimit) {
+            return;
+        }
+
         if (stack != null) {
             stack = stack.copy();
             stack.setStackSize(0);
             for (int i = 0; i < pinsInv.size(); i++) {
+                // Block swap items
+                if (lockCraftingRows && i < craftLimit) continue;
+
                 if (pinsInv.getPin(i) != null && pinsInv.getPin(i).isSameType(stack)) {
                     // pinsInv.setInventorySlotContents(i, pinsInv.getStackInSlot(idx)); // swap the pin
                     pinsInv.setPin(i, pinsInv.getPin(idx));
