@@ -92,9 +92,10 @@ public class StorageBusTests {
                         "wait for cleared external chest to disappear from the network monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute(
-                        "configure storage bus for READ-only access",
-                        () -> storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ))
+                .thenExecute("configure storage bus for READ-only access while a neighbor refresh is queued", () -> {
+                    storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ);
+                    storageBus.onNeighborChanged();
+                })
                 .thenWaitUntil(
                         "wait for READ mode to reject simulated insertion",
                         STORAGE_BUS_REFRESH_TIMEOUT_TICKS,
@@ -165,9 +166,10 @@ public class StorageBusTests {
                         "wait for the empty external chest to disappear from the storage monitor",
                         60,
                         () -> assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 0))
-                .thenExecute(
-                        "configure cobblestone-only storage bus filter",
-                        () -> configureStorageBusFilter(helper, storageBus, Blocks.cobblestone))
+                .thenExecute("configure cobblestone-only storage bus filter while a neighbor refresh is queued", () -> {
+                    configureStorageBusFilter(helper, storageBus, Blocks.cobblestone);
+                    storageBus.onNeighborChanged();
+                })
                 .thenWaitUntil(
                         "wait for filter to accept cobblestone and reject dirt in simulation",
                         STORAGE_BUS_REFRESH_TIMEOUT_TICKS,

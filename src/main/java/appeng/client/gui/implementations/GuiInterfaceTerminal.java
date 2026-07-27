@@ -283,7 +283,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         searchFieldNames.x = guiLeft + Math.max(32, VIEW_LEFT) + 99;
         searchFieldNames.y = guiTop + 38;
-        searchFieldNames.setFocused(true);
+        searchFieldNames.setFocused(AEConfig.instance.autoFocusInterfaceTerminalSearch);
 
         int offset = guiTop + 8;
         terminalStyleBox.xPosition = guiLeft - 18;
