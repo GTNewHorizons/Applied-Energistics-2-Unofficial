@@ -15,10 +15,8 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
 import java.nio.BufferOverflowException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,7 +32,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
@@ -58,7 +55,6 @@ import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -584,38 +580,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return getMonitor(ITEM_STACK_TYPE);
     }
 
-    private int lastUpdate = 20;
-
     public void updatePins(boolean forceUpdate) {
-        if (pinsHandler == null || !(host instanceof ITerminalPins itp)) return;
-
-        boolean hasCraftingPins = pinsHandler.getCraftingPinsRows() != PinsRows.DISABLED;
-        ++lastUpdate;
-        if (!forceUpdate && lastUpdate <= 20) return;
-        lastUpdate = 0;
-        if (hasCraftingPins) {
-            final ICraftingGrid cc = itp.getGrid().getCache(ICraftingGrid.class);
-            final ImmutableList<ICraftingCPU> cpuList = cc.getCpus().asList();
-
-            List<IAEStack<?>> craftedItems = new ArrayList<>();
-
-            // fetch the first available crafting output
-            for (int i = 0; i < cpuList.size(); i++) {
-                ICraftingCPU cpu = cpuList.get(i);
-                IAEStack<?> output = cpu.getFinalMultiOutput();
-                if (cpu.getCraftingAllowMode() != CraftingAllow.ONLY_NONPLAYER && output != null
-                        && cpu.getCurrentJobSource() instanceof PlayerSource src
-                        && src.player == pinsHandler.getPlayer()) {
-                    if (craftedItems.contains(output)) {
-                        continue; // skip if already added
-                    }
-                    if (cpu.isBusy()) craftedItems.add(0, output.copy());
-                    else craftedItems.add(output.copy());
-                }
-            }
-
-            pinsHandler.addItemsToPins(craftedItems);
-        }
+        if (pinsHandler == null) return;
         pinsHandler.update(forceUpdate);
     }
 
