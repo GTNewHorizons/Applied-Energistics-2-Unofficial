@@ -108,10 +108,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean pinCraftingSectionFirst = false;
     /** Which pin section is shown first (derived from pinCraftingSectionFirst). */
     public PinSectionOrder pinSectionOrder = PinSectionOrder.PLAYER_FIRST;
-    /** Crafting row shows recent crafts, not static pins. */
-    public boolean craftingRowAsHistory = false;
     /** Also show crafting-pinned items in main list. */
-    public boolean showCraftingPinsItemsInMainView = false;
+    public boolean showCraftingPinsItemsInMainView = true;
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
@@ -429,9 +427,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.pinCraftingSectionFirst = pOrder.getBoolean(this.pinCraftingSectionFirst);
         this.pinSectionOrder = this.pinCraftingSectionFirst ? PinSectionOrder.CRAFTING_FIRST
                 : PinSectionOrder.PLAYER_FIRST;
-        Property pCraftingRowAsHistory = this.get("Client", "craftingRowAsHistory", this.craftingRowAsHistory);
-        pCraftingRowAsHistory.comment = "Crafting rows show recently crafted items.";
-        this.craftingRowAsHistory = pCraftingRowAsHistory.getBoolean(this.craftingRowAsHistory);
         Property pShowCraftingPinsItemsInMainView = this
                 .get("Client", "showCraftingPinsItemsInMainView", this.showCraftingPinsItemsInMainView);
         pShowCraftingPinsItemsInMainView.comment = "Show crafting-pinned items in main list too.";
