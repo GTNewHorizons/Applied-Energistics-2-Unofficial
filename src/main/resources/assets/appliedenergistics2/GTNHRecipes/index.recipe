@@ -5,7 +5,7 @@ crash=false
 exceptions=false
 
 # Error on Missing Items ( default is no because AE2 allows you to enable/disable items without modifying recipes. )
-erroronmissing=true
+erroronmissing=false
 
 # Important, keep in this order
 import=aliases.recipe
