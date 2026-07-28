@@ -91,25 +91,24 @@ public class MultiCraftingTracker {
                 return false;
             } else if (craftingJob != null) {
                 try {
-                    ICraftingJob job = null;
                     if (craftingJob.isDone()) {
-                        job = craftingJob.get();
-                    }
+                        final ICraftingJob job = craftingJob.get();
 
-                    if (job != null) {
-                        final ICraftingLink link = cg.submitJob(job, this.owner, null, false, mySrc);
+                        if (job == null) {
+                            // job resolved to null (no crafting path found) - clear the stale future so we don't
+                            // keep retrying the same broken job forever.
+                            this.setJob(x, null);
+                        } else {
+                            final ICraftingLink link = cg.submitJob(job, this.owner, null, false, mySrc);
 
-                        this.setJob(x, null);
+                            this.setJob(x, null);
 
-                        if (link != null) {
-                            this.setLink(x, link);
+                            if (link != null) {
+                                this.setLink(x, link);
 
-                            return true;
+                                return true;
+                            }
                         }
-                    } else if (craftingJob.isDone()) {
-                        // job resolved to null (no crafting path found) - clear the stale future so we don't
-                        // keep retrying the same broken job forever.
-                        this.setJob(x, null);
                     }
                 } catch (final InterruptedException | ExecutionException e) {
                     this.setJob(x, null);
@@ -146,7 +145,7 @@ public class MultiCraftingTracker {
     }
 
     public int getSlot(final ICraftingLink link) {
-        if (this.links != null) {
+        if (link != null && this.links != null) {
             for (int x = 0; x < this.links.length; x++) {
                 if (this.links[x] == link) {
                     return x;
