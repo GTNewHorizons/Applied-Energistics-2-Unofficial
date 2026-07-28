@@ -1,16 +1,13 @@
 package appeng.items.contents;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
-import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPinsUpdate;
@@ -36,29 +33,29 @@ public class PinsHandler {
     }
 
     public void setPin(int idx, IAEStack<?> stack) {
-        final boolean lockCraftingRows = AEConfig.instance.craftingRowAsHistory;
         final int craftLimit = craftingPinsRows.getSlotCount();
 
         // Block pin items
-        if (lockCraftingRows && idx < craftLimit) {
-            return;
+        if (idx < craftLimit) {
+            if (stack != null) {
+                return;
+            }
         }
 
         if (stack != null) {
             stack = stack.copy();
             stack.setStackSize(0);
             for (int i = 0; i < pinsInv.size(); i++) {
+
                 // Block swap items
-                if (lockCraftingRows && i < craftLimit) continue;
+                if (i < craftLimit) continue;
 
                 if (pinsInv.getPin(i) != null && pinsInv.getPin(i).isSameType(stack)) {
-                    // pinsInv.setInventorySlotContents(i, pinsInv.getStackInSlot(idx)); // swap the pin
                     pinsInv.setPin(i, pinsInv.getPin(idx));
                     break;
                 }
             }
         }
-        // pinsInv.setInventorySlotContents(idx, stack); // set the pin
         pinsInv.setPin(idx, stack);
         needUpdate = true;
         holder.markDirty();
@@ -70,43 +67,6 @@ public class PinsHandler {
 
     // Adds crafted items only to the crafting pin section (indices 0 to craftingRows*9-1).
     public void addItemsToPins(Iterable<IAEStack<?>> pinsList) {
-        if (AEConfig.instance.craftingRowAsHistory) {
-            CraftingRowHistoryMode(pinsList);
-            return;
-        }
-        int maxCraftingSlots = craftingPinsRows.getSlotCount();
-        if (maxCraftingSlots <= 0) return;
-
-        Iterator<IAEStack<?>> it = pinsList.iterator();
-
-        final ArrayList<IAEStack<?>> checkCache = new ArrayList<>();
-        for (int i = 0; i < maxCraftingSlots; i++) {
-            IAEStack<?> ais = pinsInv.getPin(i);
-            if (ais != null) checkCache.add(ais);
-        }
-
-        IAEStack<?> itemStack = null;
-        for (int i = 0; i < maxCraftingSlots; i++) {
-            IAEStack<?> AEis;
-            while (itemStack == null && it.hasNext()) {
-                AEis = it.next();
-                if (AEis != null && !checkCache.contains(AEis)) {
-                    itemStack = AEis.copy();
-                    itemStack.setStackSize(0);
-                    break;
-                }
-            }
-
-            if (itemStack == null) break;
-            if (pinsInv.getPin(i) != null) continue;
-            pinsInv.setPin(i, itemStack);
-            itemStack = null;
-        }
-        needUpdate = true;
-        holder.markDirty();
-    }
-
-    private void CraftingRowHistoryMode(Iterable<IAEStack<?>> pinsList) {
         int maxCraftingSlots = craftingPinsRows.getSlotCount();
         if (maxCraftingSlots <= 0) return;
 
@@ -143,6 +103,14 @@ public class PinsHandler {
 
     public void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
         if (craftingPinsRows == craftingRows && playerPinsRows == playerRows) return;
+        final int oldCraftLimit = craftingPinsRows.getSlotCount();
+        final int newCraftLimit = craftingRows.getSlotCount();
+        if (newCraftLimit < oldCraftLimit) {
+            for (int i = newCraftLimit; i < oldCraftLimit; i++) {
+                // Clean new row before add
+                pinsInv.setPin(i, null);
+            }
+        }
         craftingPinsRows = craftingRows;
         playerPinsRows = playerRows;
         holder.setPinsRows(player, craftingRows, playerRows);
