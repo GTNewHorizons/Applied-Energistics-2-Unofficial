@@ -32,12 +32,10 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
-import appeng.api.config.CraftingAllow;
 import appeng.api.config.PinsRows;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.SecurityPermissions;
@@ -51,8 +49,6 @@ import appeng.api.implementations.tiles.IViewCellStorage;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
@@ -589,21 +585,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
     public void setPin(IAEStack<?> is, int idx) {
         if (pinsHandler == null || !(host instanceof ITerminalPins itp)) return;
 
-        if (is == null) {
-            final ICraftingGrid cc = itp.getGrid().getCache(ICraftingGrid.class);
-            final ImmutableSet<ICraftingCPU> cpuSet = cc.getCpus();
-            for (ICraftingCPU cpu : cpuSet) {
-                IAEStack<?> output = cpu.getFinalMultiOutput();
-                if (cpu.getCraftingAllowMode() != CraftingAllow.ONLY_NONPLAYER && output != null
-                        && output.isSameType(getPin(idx))) {
-                    if (!cpu.isBusy()) {
-                        cpu.resetFinalOutput();
-                    } else {
-                        return;
-                    }
-                }
-            }
-        }
         pinsHandler.setPin(idx, is);
         updatePins(true);
     }
