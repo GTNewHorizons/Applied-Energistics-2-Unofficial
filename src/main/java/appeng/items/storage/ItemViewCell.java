@@ -92,8 +92,10 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
                     }
                 }
 
-                if (hasOreFilter && !filter.isEmpty()) {
-                    myMergedList.addNewList(new OreFilteredList(filter), !hasInverter);
+                if (hasOreFilter) {
+                    if (!filter.isEmpty()) {
+                        myMergedList.addNewList(new OreFilteredList(filter), !hasInverter);
+                    }
                 } else {
                     final IItemList priorityList = AEApi.instance().storage().createAEStackList();
 
