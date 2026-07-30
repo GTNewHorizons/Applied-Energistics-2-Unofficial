@@ -91,24 +91,27 @@ public class MultiCraftingTracker {
                 return false;
             } else if (craftingJob != null) {
                 try {
-                    ICraftingJob job = null;
                     if (craftingJob.isDone()) {
-                        job = craftingJob.get();
-                    }
+                        final ICraftingJob job = craftingJob.get();
 
-                    if (job != null) {
-                        final ICraftingLink link = cg.submitJob(job, this.owner, null, false, mySrc);
+                        if (job == null) {
+                            // job resolved to null (no crafting path found) - clear the stale future so we don't
+                            // keep retrying the same broken job forever.
+                            this.setJob(x, null);
+                        } else {
+                            final ICraftingLink link = cg.submitJob(job, this.owner, null, false, mySrc);
 
-                        this.setJob(x, null);
+                            this.setJob(x, null);
 
-                        if (link != null) {
-                            this.setLink(x, link);
+                            if (link != null) {
+                                this.setLink(x, link);
 
-                            return true;
+                                return true;
+                            }
                         }
                     }
                 } catch (final InterruptedException | ExecutionException e) {
-                    // :P
+                    this.setJob(x, null);
                 }
             } else {
                 if (this.getLink(x) == null) {
@@ -141,8 +144,8 @@ public class MultiCraftingTracker {
         }
     }
 
-    int getSlot(final ICraftingLink link) {
-        if (this.links != null) {
+    public int getSlot(final ICraftingLink link) {
+        if (link != null && this.links != null) {
             for (int x = 0; x < this.links.length; x++) {
                 if (this.links[x] == link) {
                     return x;
@@ -153,7 +156,7 @@ public class MultiCraftingTracker {
         return -1;
     }
 
-    void cancel() {
+    public void cancel() {
         if (this.links != null) {
             for (final ICraftingLink l : this.links) {
                 if (l != null) {
@@ -175,7 +178,7 @@ public class MultiCraftingTracker {
         }
     }
 
-    boolean isBusy(final int slot) {
+    public boolean isBusy(final int slot) {
         return this.getLink(slot) != null || this.getJob(slot) != null;
     }
 
