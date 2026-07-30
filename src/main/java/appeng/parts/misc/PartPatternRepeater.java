@@ -340,7 +340,6 @@ public class PartPatternRepeater extends PartBasicState
                 });
 
                 this.triggerPatternUpdate();
-                this.configureWatchers();
                 this.updateEmitableStatus();
 
                 this.duringFletchPatterns = false;
@@ -352,6 +351,8 @@ public class PartPatternRepeater extends PartBasicState
                 this.currentCraftingGrid.addPostPatternChangeListeners(this);
             }
         }
+
+        this.configureWatchers();
     }
 
     private void triggerPatternUpdate() {
@@ -524,9 +525,11 @@ public class PartPatternRepeater extends PartBasicState
     }
 
     private void configureWatchers() {
-        if (this.myCraftingWatcher != null && this.provider) {
+        if (this.myCraftingWatcher != null) {
             this.myCraftingWatcher.clear();
-            this.myCraftingWatcher.addAll(this.emitableCrafting.keySet());
+            if (this.provider) {
+                this.myCraftingWatcher.addAll(this.emitableCrafting.keySet());
+            }
         }
     }
 
