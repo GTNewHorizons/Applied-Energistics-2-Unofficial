@@ -20,6 +20,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.core.AELog;
 import appeng.crafting.CraftBranchFailure;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingCalculations;
@@ -95,12 +96,18 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         Queue<IAEStack<?>> loopCandidates = new ArrayDeque<>();
         // Contains anything that has zero in-degree / search head currently
         Queue<IAEStack<?>> toTraverse = new ArrayDeque<>();
+        if (originalRequest.stack.getStackSize() < 0) {
+            throw new IllegalArgumentException("Request is negative");
+        }
         missingIngredients.put(originalRequest.stack, originalRequest.stack.getStackSize());
         toTraverse.add(originalRequest.stack);
         while (!toTraverse.isEmpty() || !loopCandidates.isEmpty()) {
             IAEStack<?> current = toTraverse.poll();
             if (current == null) {
                 current = loopCandidates.poll();
+                if (current != null) {
+                    AELog.crafting("loop resolve item: {}", current.getDisplayName());
+                }
             }
             if (current == null) {
                 continue;
@@ -136,6 +143,9 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         ICraftingPatternDetails pattern = currentPair.right();
         long patternMultiplier = Platform.ceilDiv(count, currentPair.leftLong());
         for (IAEStack<?> stack : pattern.getCondensedAEInputs()) {
+            if (stack.getStackSize() < 0) {
+                throw new IllegalStateException(String.format("Pattern %s has negative inputs", current.getDisplayName()));
+            }
             addCountToMap(missingIngredients, stack, Math.multiplyExact(stack.getStackSize(), patternMultiplier));
         }
         addCountToMap(tasks, pattern, patternMultiplier);
@@ -180,6 +190,9 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         if (newValue == 0) {
             map.removeLong(key);
             return 0;
+        }
+        if (newValue < 0) {
+            throw new IllegalStateException(String.format("Negative result for %s, this is a bug.", key));
         }
         map.put(key, newValue);
         return newValue;
