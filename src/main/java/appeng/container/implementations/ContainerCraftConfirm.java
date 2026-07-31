@@ -27,6 +27,7 @@ import net.minecraft.world.World;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.CraftingAllow;
+import appeng.api.config.PinsRows;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
@@ -37,6 +38,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
@@ -51,6 +53,7 @@ import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
+import appeng.items.contents.PinsHandler;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
@@ -60,6 +63,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
 
     private Future<ICraftingJob> job;
     protected ICraftingJob result;
+    private final ITerminalHost host;
 
     @GuiSync(0)
     public long bytesUsed;
@@ -99,6 +103,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
 
     public ContainerCraftConfirm(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
+        this.host = te;
         this.cpuTable = new ContainerCPUTable(this, this::onCPUUpdate, false, this::cpuMatches);
     }
 
@@ -322,9 +327,23 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
             this.setAutoStart(false);
             this.setAutoStartAndFollow(false);
             if (g != null) {
+                this.pushCraftedItemToPins();
                 this.switchToOriginalGUI();
             }
         }
+    }
+
+    private void pushCraftedItemToPins() {
+        if (!(this.host instanceof ITerminalPins itp)) return;
+
+        final PinsHandler pinsHandler = itp.getPinsHandler(this.getPlayerInv().player);
+        if (pinsHandler == null || pinsHandler.getCraftingPinsRows() == PinsRows.DISABLED) return;
+
+        final IAEStack<?> craftedItem = this.getItemToCraft();
+        if (craftedItem == null) return;
+
+        pinsHandler.addItemsToPins(java.util.Collections.singletonList(craftedItem));
+        pinsHandler.update(true);
     }
 
     public void optimizePatterns() {
