@@ -32,8 +32,8 @@ import appeng.util.item.AEItemStack;
 import appeng.util.item.ItemList;
 import cpw.mods.fml.common.registry.GameRegistry;
 import ggfab.GGItemList;
-import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
+import gregtech.api.enums.materials.Materials;
 import gregtech.api.util.GTOreDictUnificator;
 import gregtech.common.items.IDMetaTool01;
 import gregtech.common.items.MetaGeneratedTool01;
@@ -49,22 +49,22 @@ public class CraftingV2Tests {
     final ItemStack tinIngot, tinPlate, pigIronIngot, pigIronPlate;
 
     public CraftingV2Tests() {
-        bronzePlate = Materials.Bronze.getPlates(1);
+        bronzePlate = GTOreDictUnificator.get(OrePrefixes.plate, Materials.Bronze, 1);
         bronzeDoublePlate = GTOreDictUnificator.get(OrePrefixes.plateDouble, Materials.Bronze, 1);
-        bronzeIngot = Materials.Bronze.getIngots(1);
+        bronzeIngot = GTOreDictUnificator.get(OrePrefixes.ingot, Materials.Bronze, 1);
         gtHammer = MetaGeneratedTool01.INSTANCE
                 .getToolWithStats(IDMetaTool01.HARDHAMMER.ID, 1, Materials.VanadiumSteel, null, null);
         singleUseGtHammer = GGItemList.SingleUseHardHammer.get(1);
-        ironDust = Materials.Iron.getDust(1);
-        ironIngot = Materials.Iron.getIngots(1);
-        ironPlate = Materials.Iron.getPlates(1);
-        goldDust = Materials.Gold.getDust(1);
-        goldIngot = Materials.Gold.getIngots(1);
-        goldBlock = Materials.Gold.getBlocks(1);
-        tinIngot = Materials.Tin.getIngots(1);
-        tinPlate = Materials.Tin.getPlates(1);
-        pigIronIngot = Materials.PigIron.getIngots(1);
-        pigIronPlate = Materials.PigIron.getPlates(1);
+        ironDust = GTOreDictUnificator.get(OrePrefixes.dust, Materials.Iron, 1);
+        ironIngot = GTOreDictUnificator.get(OrePrefixes.ingot, Materials.Iron, 1);
+        ironPlate = GTOreDictUnificator.get(OrePrefixes.plate, Materials.Iron, 1);
+        goldDust = GTOreDictUnificator.get(OrePrefixes.dust, Materials.Gold, 1);
+        goldIngot = GTOreDictUnificator.get(OrePrefixes.ingot, Materials.Gold, 1);
+        goldBlock = GTOreDictUnificator.get(OrePrefixes.block, Materials.Gold, 1);
+        tinIngot = GTOreDictUnificator.get(OrePrefixes.ingot, Materials.Tin, 1);
+        tinPlate = GTOreDictUnificator.get(OrePrefixes.plate, Materials.Tin, 1);
+        pigIronIngot = GTOreDictUnificator.get(OrePrefixes.ingot, Materials.PigIron, 1);
+        pigIronPlate = GTOreDictUnificator.get(OrePrefixes.plate, Materials.PigIron, 1);
 
         if (!DimensionManager.isDimensionRegistered(256)) {
             DimensionManager.registerProviderType(256, WorldProviderSurface.class, false);
