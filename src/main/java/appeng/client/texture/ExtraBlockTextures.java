@@ -28,6 +28,9 @@ public enum ExtraBlockTextures {
     BlockMEChestItems_Light("BlockMEChestItems_Light"),
     BlockMEChestItems_Dark("BlockMEChestItems_Dark"),
     BlockMEChestItems_Medium("BlockMEChestItems_Medium"),
+    BlockMEChestFluids_Light("BlockMEChestFluids_Light"),
+    BlockMEChestFluids_Dark("BlockMEChestFluids_Dark"),
+    BlockMEChestFluids_Medium("BlockMEChestFluids_Medium"),
 
     BlockControllerPowered("BlockControllerPowered"),
     BlockControllerColumnPowered("BlockControllerColumnPowered"),
