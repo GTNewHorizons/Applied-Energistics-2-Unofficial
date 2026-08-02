@@ -62,6 +62,7 @@ import appeng.core.features.IAEFeature;
 import appeng.core.features.IFeatureHandler;
 import appeng.core.features.registries.P2PTunnelRegistry;
 import appeng.core.features.registries.entries.CreativeCellHandler;
+import appeng.core.features.registries.entries.FluidCellHandler;
 import appeng.core.features.registries.entries.VoidCellHandler;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
@@ -556,6 +557,7 @@ public final class Registration {
         // BasicCellHandler is built into the Registry, so there is no need to register it here.
         registries.cell().addCellHandler(new CreativeCellHandler());
         registries.cell().addCellHandler(new VoidCellHandler());
+        registries.cell().addCellHandler(new FluidCellHandler());
 
         for (final ItemStack ammoStack : api.definitions().materials().matterBall().maybeStack(1).asSet()) {
             final double weight = 32;
