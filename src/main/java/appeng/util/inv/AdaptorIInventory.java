@@ -56,25 +56,13 @@ public class AdaptorIInventory extends InventoryAdaptor {
                 }
 
                 if (boundAmounts > 0) {
-                    if (rv == null) {
-                        rv = is.copy();
-                        filter = rv;
-                        rv.stackSize = boundAmounts;
-                        amount -= boundAmounts;
-                    } else {
-                        rv.stackSize += boundAmounts;
-                        amount -= boundAmounts;
+                    filter = this.i.decrStackSize(x, boundAmounts);
+                    if (filter != null) {
+                        amount -= filter.stackSize;
+                        if (rv == null) rv = filter;
+                        else rv.stackSize += filter.stackSize;
                     }
-
-                    if (is.stackSize == boundAmounts) {
-                        this.i.setInventorySlotContents(x, null);
-                        this.i.markDirty();
-                    } else {
-                        final ItemStack po = is.copy();
-                        po.stackSize -= boundAmounts;
-                        this.i.setInventorySlotContents(x, po);
-                        this.i.markDirty();
-                    }
+                    this.i.markDirty();
                 }
             }
         }
