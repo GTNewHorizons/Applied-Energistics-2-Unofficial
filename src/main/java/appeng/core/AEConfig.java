@@ -108,6 +108,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean pinCraftingSectionFirst = false;
     /** Which pin section is shown first (derived from pinCraftingSectionFirst). */
     public PinSectionOrder pinSectionOrder = PinSectionOrder.PLAYER_FIRST;
+    /** Also show crafting-pinned items in main list. */
+    public boolean showCraftingPinsItemsInMainView = true;
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
@@ -425,6 +427,11 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.pinCraftingSectionFirst = pOrder.getBoolean(this.pinCraftingSectionFirst);
         this.pinSectionOrder = this.pinCraftingSectionFirst ? PinSectionOrder.CRAFTING_FIRST
                 : PinSectionOrder.PLAYER_FIRST;
+        Property pShowCraftingPinsItemsInMainView = this
+                .get("Client", "showCraftingPinsItemsInMainView", this.showCraftingPinsItemsInMainView);
+        pShowCraftingPinsItemsInMainView.comment = "Show crafting-pinned items in main list too.";
+        this.showCraftingPinsItemsInMainView = pShowCraftingPinsItemsInMainView
+                .getBoolean(this.showCraftingPinsItemsInMainView);
 
         // load buttons..
         for (int btnNum = 0; btnNum < 4; btnNum++) {

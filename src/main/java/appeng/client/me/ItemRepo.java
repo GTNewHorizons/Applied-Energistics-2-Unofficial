@@ -75,7 +75,7 @@ public class ItemRepo implements IDisplayRepo {
 
     @Override
     public void setAEPins(IAEStack<?>[] newPins) {
-        IItemList<IAEStack<?>> oldPins = getPinsCache();
+        IItemList<IAEStack<?>> oldPins = getPinsCache(true, true);
         pinsRepo = new IAEStack<?>[newPins.length];
 
         for (int i = 0; i < pinsRepo.length; i++) {
@@ -114,17 +114,22 @@ public class ItemRepo implements IDisplayRepo {
     }
 
     /** Returns only pins in currently visible rows, so items in reduced rows show in main inventory. */
-    private IItemList<IAEStack<?>> getPinsCache() {
+    private IItemList<IAEStack<?>> getPinsCache(boolean includeCrafting, boolean includePlayer) {
         IItemList<IAEStack<?>> oldPins = AEApi.instance().storage().createAEStackList();
 
-        int craftLimit = Math.min(visibleCraftingRows * 9, pinsRepo.length);
-        for (int i = 0; i < craftLimit; i++) {
-            if (pinsRepo[i] != null) oldPins.add(pinsRepo[i]);
+        if (includeCrafting) {
+            int craftLimit = Math.min(visibleCraftingRows * 9, pinsRepo.length);
+            for (int i = 0; i < craftLimit; i++) {
+                if (pinsRepo[i] != null) oldPins.add(pinsRepo[i]);
+            }
         }
-        int playerStart = PinList.PLAYER_OFFSET;
-        int playerLimit = Math.min(playerStart + visiblePlayerRows * 9, pinsRepo.length);
-        for (int i = playerStart; i < playerLimit; i++) {
-            if (pinsRepo[i] != null) oldPins.add(pinsRepo[i]);
+
+        if (includePlayer) {
+            int playerStart = PinList.PLAYER_OFFSET;
+            int playerLimit = Math.min(playerStart + visiblePlayerRows * 9, pinsRepo.length);
+            for (int i = playerStart; i < playerLimit; i++) {
+                if (pinsRepo[i] != null) oldPins.add(pinsRepo[i]);
+            }
         }
 
         return oldPins;
@@ -175,7 +180,6 @@ public class ItemRepo implements IDisplayRepo {
             if (pin != null && pin.isSameType((Object) is)) {
                 pin.reset();
                 pin.add(is);
-                break;
             }
         }
 
@@ -195,7 +199,7 @@ public class ItemRepo implements IDisplayRepo {
 
     @Override
     public void updateView() {
-        IItemList<IAEStack<?>> visiblePins = getPinsCache();
+        IItemList<IAEStack<?>> visiblePins = getPinsCache(!AEConfig.instance.showCraftingPinsItemsInMainView, true);
         if (this.paused) {
             for (int i = this.view.size() - 1; i >= 0; i--) {
                 IAEStack<?> entry = this.view.get(i);
