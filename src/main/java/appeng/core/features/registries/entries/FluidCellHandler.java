@@ -14,7 +14,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
-
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.tiles.IChestOrDrive;
 import appeng.api.storage.ICellHandler;
@@ -31,13 +30,14 @@ import appeng.me.storage.CellInventory;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.util.Platform;
 
-// import ae2fc.common.item.ItemBasicFluidStorageCell;
+import com.glodblock.github.common.item.ItemBasicFluidStorageCell;
+import com.glodblock.github.common.item.ItemMultiFluidStorageCell;
 
 public class FluidCellHandler implements ICellHandler {
 
     @Override
     public boolean isCell(final ItemStack is) {
-        return is != null && is.getItem().toString().contains("FluidStorageCell");
+        return is != null && (is.getItem() instanceof ItemBasicFluidStorageCell || is.getItem() instanceof ItemMultiFluidStorageCell);
     }
 
     @Override
