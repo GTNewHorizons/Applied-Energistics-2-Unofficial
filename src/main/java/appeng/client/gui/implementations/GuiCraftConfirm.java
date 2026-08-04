@@ -674,8 +674,9 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                     hoveredStack = itemStack;
                 }
 
+                GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
                 refStack.drawInGui(this.mc, posX, posY);
-                
+                GL11.glPopAttrib();
 
                 x++;
 
