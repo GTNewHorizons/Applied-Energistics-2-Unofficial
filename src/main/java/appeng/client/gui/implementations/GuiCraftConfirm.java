@@ -529,12 +529,27 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         for (int z = viewStart; z < Math.min(viewEnd, this.filteredVisual.size()); z++) {
             final IAEStack<?> refStack = this.filteredVisual.get(z); // repo.getReferenceItem( z );
             if (refStack != null) {
-                GL11.glPushMatrix();
-                GL11.glScaled(0.5, 0.5, 0.5);
-
                 final IAEStack<?> stored = this.storage.findPrecise(refStack);
                 final IAEStack<?> pendingStack = this.pending.findPrecise(refStack);
                 final IAEStack<?> missingStack = this.missing.findPrecise(refStack);
+
+                final boolean red = missingStack != null && missingStack.getStackSize() > 0;
+                final int posX = x * (1 + sectionLength) + xo + sectionLength - 19;
+                final int posY = y * offY + yo;
+
+                if (red) {
+                    final int startX = x * (1 + sectionLength) + xo;
+                    final int startY = posY - 3;
+                    drawRect(
+                            startX,
+                            startY,
+                            startX + sectionLength,
+                            startY + offY - 1,
+                            ColorUtils.craftConfirmMissingItem.getColor());
+                }
+
+                GL11.glPushMatrix();
+                GL11.glScaled(0.5, 0.5, 0.5);
 
                 int lines = 0;
 
@@ -573,7 +588,6 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                     downY += 5;
                 }
 
-                boolean red = false;
                 if (missingStack != null && missingStack.getStackSize() > 0) {
                     String str = GuiText.Missing.getLocal() + ": "
                             + ReadableNumberConverter.INSTANCE.toWideReadableForm(missingStack.getStackSize());
@@ -590,7 +604,6 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                                         + NumberFormat.getInstance().format(missingStack.getStackSize()));
                     }
 
-                    red = true;
                     downY += 5;
                 }
 
@@ -644,8 +657,6 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 }
 
                 GL11.glPopMatrix();
-                final int posX = x * (1 + sectionLength) + xo + sectionLength - 19;
-                final int posY = y * offY + yo;
 
                 if (this.tooltip == z - viewStart) {
                     dspToolTip = refStack.getDisplayName();
@@ -664,17 +675,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 }
 
                 refStack.drawInGui(this.mc, posX, posY);
-
-                if (red) {
-                    final int startX = x * (1 + sectionLength) + xo;
-                    final int startY = posY - 3;
-                    drawRect(
-                            startX,
-                            startY,
-                            startX + sectionLength,
-                            startY + offY - 1,
-                            ColorUtils.craftConfirmMissingItem.getColor());
-                }
+                
 
                 x++;
 
