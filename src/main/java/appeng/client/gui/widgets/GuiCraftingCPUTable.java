@@ -221,7 +221,7 @@ public class GuiCraftingCPUTable {
                     AEBaseGui.drawRect(
                             x + 1,
                             y + CPU_TABLE_SLOT_HEIGHT - 2,
-                            x + (int) ((CPU_TABLE_SLOT_WIDTH - 1) * craftingPercentage) - 1,
+                            x + 1 + (int) ((CPU_TABLE_SLOT_WIDTH - 3) * craftingPercentage),
                             y + CPU_TABLE_SLOT_HEIGHT - 1,
                             this.calculateGradientColor(craftingPercentage));
                 } else {
