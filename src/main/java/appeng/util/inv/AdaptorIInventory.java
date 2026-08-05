@@ -114,34 +114,12 @@ public class AdaptorIInventory extends InventoryAdaptor {
             final ItemStack is = this.i.getStackInSlot(x);
             if (is != null && this.canRemoveStackFromSlot(x, is)
                     && (filter == null || Platform.isSameItemFuzzy(is, filter, fuzzyMode))) {
-                int newAmount = amount;
-                if (newAmount > is.stackSize) {
-                    newAmount = is.stackSize;
-                }
-                if (destination != null && !destination.canInsert(is)) {
-                    newAmount = 0;
-                }
 
-                ItemStack rv = null;
-                if (newAmount > 0) {
-                    rv = is.copy();
-                    rv.stackSize = newAmount;
+                if (destination != null && !destination.canInsert(is)) continue;
 
-                    if (is.stackSize == rv.stackSize) {
-                        this.i.setInventorySlotContents(x, null);
-                        this.i.markDirty();
-                    } else {
-                        final ItemStack po = is.copy();
-                        po.stackSize -= rv.stackSize;
-                        this.i.setInventorySlotContents(x, po);
-                        this.i.markDirty();
-                    }
-                }
+                ItemStack rv = this.i.decrStackSize(x, amount);
+                if (rv != null && rv.stackSize > 0) return rv;
 
-                if (rv != null) {
-                    // i.markDirty();
-                    return rv;
-                }
             }
         }
         return null;
