@@ -560,8 +560,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public IAEStackType<?>[] getSupportedStackTypes() {
-        return this.isFluidInterface ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
-                : new IAEStackType<?>[] { ITEM_STACK_TYPE };
+        return AEStackTypeRegistry.getSortedTypes().stream()
+                .filter(type -> this.isFluidInterface || type != FLUID_STACK_TYPE).toArray(IAEStackType<?>[]::new);
     }
 
     public AppEngInternalInventory getUpgrades() {
