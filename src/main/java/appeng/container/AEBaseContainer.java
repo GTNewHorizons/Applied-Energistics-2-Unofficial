@@ -38,6 +38,8 @@ import net.minecraft.tileentity.TileEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.cleanroommc.bogosorter.api.IBogoSortAPI;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
@@ -771,6 +773,7 @@ public abstract class AEBaseContainer extends Container {
                 }
 
                 for (final Slot fr : from) {
+                    if (Platform.isBogoLoaded && this.isPinnedByBogoSorter(player, fr)) continue;
                     this.transferStackInSlot(player, fr.slotNumber);
                 }
             }
@@ -1023,6 +1026,11 @@ public abstract class AEBaseContainer extends Container {
                 }
             }
         }
+    }
+
+    @cpw.mods.fml.common.Optional.Method(modid = "bogosorter")
+    private boolean isPinnedByBogoSorter(final EntityPlayer player, final Slot slot) {
+        return IBogoSortAPI.getInstance().isPinned(player, this, slot);
     }
 
     public void swapSlotContents(final int slotA, final int slotB) {
