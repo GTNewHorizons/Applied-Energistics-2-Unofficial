@@ -1,5 +1,8 @@
 package appeng.integration.modules.NEIHelpers;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.Item;
@@ -7,13 +10,19 @@ import net.minecraft.item.ItemStack;
 
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.client.gui.implementations.GuiStorageBus;
+import codechicken.nei.ItemPanels;
 import codechicken.nei.NEIClientConfig;
+import codechicken.nei.bookmark.BookmarkItem;
+import codechicken.nei.bookmark.SortableGroup;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerInputHandler;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import codechicken.nei.recipe.GuiUsageRecipe;
 
 public class NEIInputHandler implements IContainerInputHandler {
+
+    private List<ItemStack> draggedBookmarkGroup;
 
     @Override
     public boolean keyTyped(GuiContainer gui, char keyChar, int keyCode) {
@@ -60,7 +69,14 @@ public class NEIInputHandler implements IContainerInputHandler {
     public void onMouseClicked(GuiContainer gui, int mousex, int mousey, int button) {}
 
     @Override
-    public void onMouseUp(GuiContainer gui, int mousex, int mousey, int button) {}
+    public void onMouseUp(GuiContainer gui, int mousex, int mousey, int button) {
+        if (button != 0) return;
+
+        if (gui instanceof GuiStorageBus storageBus && this.draggedBookmarkGroup != null) {
+            storageBus.handleBookmarkGroupDrop(mousex, mousey, this.draggedBookmarkGroup);
+        }
+        this.draggedBookmarkGroup = null;
+    }
 
     @Override
     public boolean mouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) {
@@ -71,5 +87,11 @@ public class NEIInputHandler implements IContainerInputHandler {
     public void onMouseScrolled(GuiContainer gui, int mousex, int mousey, int scrolled) {}
 
     @Override
-    public void onMouseDragged(GuiContainer gui, int mousex, int mousey, int button, long heldTime) {}
+    public void onMouseDragged(GuiContainer gui, int mousex, int mousey, int button, long heldTime) {
+        final SortableGroup group = ItemPanels.bookmarkPanel.sortableGroup;
+        if (gui instanceof GuiStorageBus && group != null && this.draggedBookmarkGroup == null) {
+            this.draggedBookmarkGroup = group.getBookmarkItems().stream().map(BookmarkItem::getItemStack)
+                    .collect(Collectors.toList());
+        }
+    }
 }
