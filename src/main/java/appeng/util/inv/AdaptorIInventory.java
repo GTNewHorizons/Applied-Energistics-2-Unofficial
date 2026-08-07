@@ -118,6 +118,7 @@ public class AdaptorIInventory extends InventoryAdaptor {
                 if (destination != null && !destination.canInsert(is)) continue;
 
                 ItemStack rv = this.i.decrStackSize(x, amount);
+                this.i.markDirty();
                 if (rv != null && rv.stackSize > 0) return rv;
 
             }
