@@ -116,11 +116,6 @@ public class TileCableBus extends AEBaseTile implements AEMultiTile, ICustomColl
 
     @Override
     public void invalidate() {
-        if (worldObj.isRemote) {
-            if (!Thread.currentThread().getName().equals("Client thread")) {
-                AELog.error(new Throwable(), "invalidate on the wrong thread!");
-            }
-        }
         super.invalidate();
         this.getCableBus().removeFromWorld();
     }
