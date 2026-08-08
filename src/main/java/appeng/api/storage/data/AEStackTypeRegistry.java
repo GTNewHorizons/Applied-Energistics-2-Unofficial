@@ -20,8 +20,6 @@ import it.unimi.dsi.fastutil.objects.Reference2ByteOpenHashMap;
 public class AEStackTypeRegistry {
 
     public static final byte NULL_NETWORK_ID = 0;
-    /** Id of the stack type registered by Thaumic Energistics. */
-    public static final String ESSENTIA_STACK_TYPE_ID = "essentia";
     private static final int MINIMUM_NETWORK_ID = 1;
     private static final Map<String, IAEStackType<?>> registry = new HashMap<>();
     private static final Reference2ByteMap<IAEStackType<?>> typeToNetworkIdMap = new Reference2ByteOpenHashMap<>();

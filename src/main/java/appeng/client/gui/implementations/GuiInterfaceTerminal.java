@@ -10,7 +10,6 @@
 
 package appeng.client.gui.implementations;
 
-import static appeng.api.storage.data.AEStackTypeRegistry.ESSENTIA_STACK_TYPE_ID;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 
 import java.text.BreakIterator;
@@ -1381,8 +1380,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
             final NBTTagCompound entry = tagList.getCompoundTagAt(i);
             if (entry.hasKey("FluidName") && !Arrays.asList(supportedTypes).contains(FLUID_STACK_TYPE)) return true;
             if (entry.hasKey("StackType")) {
-                // Essentia is supplied by Essentia Providers, not by the interface itself
-                if (ESSENTIA_STACK_TYPE_ID.equals(entry.getString("StackType"))) continue;
                 for (IAEStackType<?> type : supportedTypes) {
                     if (entry.getString("StackType").equals(type.getId())) {
                         continue outer;
