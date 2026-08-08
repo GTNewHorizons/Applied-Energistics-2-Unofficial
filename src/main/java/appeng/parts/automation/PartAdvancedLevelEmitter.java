@@ -56,6 +56,10 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     private static final int FLAG_ON = 8;
     private static final int SLOTS = SLOT_COUNT;
 
+    private static final double RED = 255 / 255d;
+    private static final double GREEN = 4 / 255d;
+    private static final double BLUE = 211 / 255d;
+
     private final IAEStackInventory config = new IAEStackInventory(this, SLOTS, StorageName.CONFIG);
 
     private final boolean[] slotActive = new boolean[SLOTS];
@@ -527,7 +531,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
             final double d1 = d.offsetY * 0.45F + (r.nextFloat() - 0.5F) * 0.2D;
             final double d2 = d.offsetZ * 0.45F + (r.nextFloat() - 0.5F) * 0.2D;
 
-            world.spawnParticle("reddust", 0.5 + x + d0, 0.5 + y + d1, 0.5 + z + d2, 0.0D, 0.0D, 0.0D);
+            world.spawnParticle("reddust", 0.5 + x + d0, 0.5 + y + d1, 0.5 + z + d2, RED, GREEN, BLUE);
         }
     }
 
