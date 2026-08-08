@@ -35,6 +35,7 @@ import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.block.networking.BlockCableBus;
+import appeng.core.AELog;
 import appeng.helpers.AEMultiTile;
 import appeng.helpers.ICustomCollision;
 import appeng.hooks.TickHandler;
@@ -49,6 +50,8 @@ import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
 public class TileCableBus extends AEBaseTile implements AEMultiTile, ICustomCollision {
+
+    private final Thread owner = Thread.currentThread();
 
     private CableBusContainer cb = new CableBusContainer(this);
 
@@ -115,6 +118,9 @@ public class TileCableBus extends AEBaseTile implements AEMultiTile, ICustomColl
 
     @Override
     public void invalidate() {
+        if (Thread.currentThread() != this.owner) {
+            AELog.warn(new Throwable(), "Invalidating from wrong thread");
+        }
         super.invalidate();
         this.getCableBus().removeFromWorld();
     }
