@@ -91,6 +91,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int previewLineWidth;
     public boolean preserveSearchBar = true;
     public boolean showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = false;
+    public boolean autoFocusInterfaceTerminalSearch = true;
     public boolean showContainerInteractionTooltips = true;
     public int MEMonitorableSmallSize = 6;
     public int InterfaceTerminalSmallSize = 6;
@@ -107,6 +108,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean pinCraftingSectionFirst = false;
     /** Which pin section is shown first (derived from pinCraftingSectionFirst). */
     public PinSectionOrder pinSectionOrder = PinSectionOrder.PLAYER_FIRST;
+    /** Also show crafting-pinned items in main list. */
+    public boolean showCraftingPinsItemsInMainView = true;
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
@@ -390,6 +393,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.preserveSearchBar = this.get("Client", "preserveSearchBar", true).getBoolean(true);
         this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this
                 .get("Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false).getBoolean(false);
+        this.autoFocusInterfaceTerminalSearch = this.get("Client", "autoFocusInterfaceTerminalSearch", true)
+                .getBoolean(true);
         this.showContainerInteractionTooltips = this.get("Client", "showContainerInteractionTooltips", true)
                 .getBoolean(true);
         this.highlightWhenSomethingStuckInInterface = this.get("Client", "highlightWhenSomethingStuckInInterface", true)
@@ -422,6 +427,11 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.pinCraftingSectionFirst = pOrder.getBoolean(this.pinCraftingSectionFirst);
         this.pinSectionOrder = this.pinCraftingSectionFirst ? PinSectionOrder.CRAFTING_FIRST
                 : PinSectionOrder.PLAYER_FIRST;
+        Property pShowCraftingPinsItemsInMainView = this
+                .get("Client", "showCraftingPinsItemsInMainView", this.showCraftingPinsItemsInMainView);
+        pShowCraftingPinsItemsInMainView.comment = "Show crafting-pinned items in main list too.";
+        this.showCraftingPinsItemsInMainView = pShowCraftingPinsItemsInMainView
+                .getBoolean(this.showCraftingPinsItemsInMainView);
 
         // load buttons..
         for (int btnNum = 0; btnNum < 4; btnNum++) {

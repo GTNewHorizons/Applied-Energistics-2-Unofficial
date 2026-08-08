@@ -1,5 +1,5 @@
 {
-  "format_version": 1,
+  "format_version": 2,
   "size": [6, 1, 1],
   "palette": {
     "A": {"name": "appliedenergistics2:tile.BlockCraftingStorage", "meta": 12, "label": "§61k§r Crafting Storage"},

@@ -1,6 +1,7 @@
 package appeng.crafting.fast;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +21,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.core.AELog;
 import appeng.crafting.CraftBranchFailure;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingCalculations;
@@ -95,12 +97,18 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         Queue<IAEStack<?>> loopCandidates = new ArrayDeque<>();
         // Contains anything that has zero in-degree / search head currently
         Queue<IAEStack<?>> toTraverse = new ArrayDeque<>();
+        if (originalRequest.stack.getStackSize() < 0) {
+            throw new IllegalArgumentException("Request is negative");
+        }
         missingIngredients.put(originalRequest.stack, originalRequest.stack.getStackSize());
         toTraverse.add(originalRequest.stack);
         while (!toTraverse.isEmpty() || !loopCandidates.isEmpty()) {
             IAEStack<?> current = toTraverse.poll();
             if (current == null) {
                 current = loopCandidates.poll();
+                if (current != null) {
+                    AELog.crafting("loop resolve item: {}", current.getDisplayName());
+                }
             }
             if (current == null) {
                 continue;
@@ -125,6 +133,17 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
             }
             exploreItem(current, currentPair);
         }
+        // Final resolution: If the loop item is directly present in the AE network,
+        // it might not extract due to incomplete loop resolution for ordering reasons.
+        // If loop exists, there is no guarantee that item will resolve in the correct
+        // order. It will only extract once and the second time the same item is encountered
+        // it will not even try to extract from AE. This loop ensure this case never happens.
+        // This solves the bug that the crafting plan complete with no apparent missing item
+        // in the crafting plan gui, but the internal missing list is non-empty that it prevent
+        // the player from starting it.
+        for (var stack : new ArrayList<>(missingIngredients.keySet())) {
+            moveMissingByExtract(stack);
+        }
     }
 
     // currentPair is the output-pattern pair, where output contains the pattern output count
@@ -136,6 +155,10 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         ICraftingPatternDetails pattern = currentPair.right();
         long patternMultiplier = Platform.ceilDiv(count, currentPair.leftLong());
         for (IAEStack<?> stack : pattern.getCondensedAEInputs()) {
+            if (stack.getStackSize() < 0) {
+                throw new IllegalStateException(
+                        String.format("Pattern %s has negative inputs", current.getDisplayName()));
+            }
             addCountToMap(missingIngredients, stack, Math.multiplyExact(stack.getStackSize(), patternMultiplier));
         }
         addCountToMap(tasks, pattern, patternMultiplier);
@@ -144,7 +167,7 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         addCountToMap(missingIngredients, current, -count);
     }
 
-    // Returns the remainder count
+    // Returns the remainder count, updates the missingIngredient map directly.
     private long moveMissingByExtract(IAEStack<?> stack) {
         long count = missingIngredients.getLong(stack);
         IAEStack<?> result = context.itemModel.extractItems(stack.copy().setStackSize(count), Actionable.MODULATE);
@@ -180,6 +203,9 @@ public final class CraftingJobFast<StackType extends IAEStack<StackType>> implem
         if (newValue == 0) {
             map.removeLong(key);
             return 0;
+        }
+        if (newValue < 0) {
+            throw new IllegalStateException(String.format("Negative result for %s, this is a bug.", key));
         }
         map.put(key, newValue);
         return newValue;

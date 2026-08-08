@@ -1,0 +1,25 @@
+{
+  "format_version": 2,
+  "size": [4, 1, 2],
+  "palette": {
+    "A": {"name": "appliedenergistics2:tile.BlockCableBus", "meta": 0, "label": "AE2 Cable and/or Bus"},
+    "B": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
+    "C": {"name": "appliedenergistics2:tile.BlockEnergyAcceptor", "meta": 0, "label": "Energy Acceptor"},
+    "D": {"name": "minecraft:chest", "meta": 3, "label": "Chest"}
+  },
+  "layers": [
+    [
+      "..AD",
+      "CAB."
+    ]
+  ],
+  "annotations": {
+    "labels": {
+      "destination_chest": [3, 0, 0],
+      "drive": [2, 0, 1],
+      "energy_acceptor": [0, 0, 1],
+      "export_bus": [2, 0, 0],
+      "power_probe": [1, 0, 1]
+    }
+  }
+}
