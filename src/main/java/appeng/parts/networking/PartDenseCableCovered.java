@@ -12,7 +12,6 @@ package appeng.parts.networking;
 
 import java.util.EnumSet;
 
-import appeng.client.render.BusRenderer;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -37,6 +36,7 @@ import appeng.api.parts.IPartRenderHelper;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.block.AEBaseBlock;
+import appeng.client.render.BusRenderer;
 import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.FlippableIcon;
 import appeng.client.texture.OffsetIcon;
