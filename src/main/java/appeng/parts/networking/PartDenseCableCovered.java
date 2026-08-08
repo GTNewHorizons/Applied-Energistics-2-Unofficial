@@ -237,7 +237,7 @@ public class PartDenseCableCovered extends PartCable {
     @SideOnly(Side.CLIENT)
     private void renderDenseCoveredConnection(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer, final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj()
+        final TileEntity te = renderer.blockAccess
                 .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;

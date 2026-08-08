@@ -192,7 +192,7 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
             for (final ForgeDirection of : this.getConnections()) {
                 if (this.isDense(renderer.blockAccess, of)) {
                     this.renderDenseConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
-                } else if (this.isSmart(of)) {
+                } else if (this.isSmart(renderer.blockAccess, of)) {
                     this.renderSmartConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
                 } else {
                     this.renderCoveredConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
@@ -292,7 +292,7 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
             final RenderBlocks renderer, final int channels, final ForgeDirection of) {
         final Tessellator tessellator = Tessellator.instance;
 
-        final TileEntity te = this.getTile().getWorldObj()
+        final TileEntity te = renderer.blockAccess
                 .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;
@@ -343,8 +343,8 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
         }
     }
 
-    private boolean isSmart(final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+    private boolean isSmart(final IBlockAccess world, final ForgeDirection of) {
+        final TileEntity te = world.getTileEntity(
                 this.getTile().xCoord + of.offsetX,
                 this.getTile().yCoord + of.offsetY,
                 this.getTile().zCoord + of.offsetZ);
