@@ -12,12 +12,14 @@ package appeng.parts.networking;
 
 import java.util.EnumSet;
 
+import appeng.client.render.BusRenderer;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.opengl.GL11;
@@ -65,8 +67,16 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
         return AECableType.DENSE;
     }
 
+    private IBlockAccess getBlockAccess() {
+        final World world = this.getTile().getWorldObj();
+        if (!world.isRemote) return world;
+        final IBlockAccess renderBlockAccess = BusRenderer.INSTANCE.getRenderer().blockAccess;
+        return renderBlockAccess == null ? world : renderBlockAccess;
+    }
+
     @Override
     public void getBoxes(final IPartCollisionHelper bch) {
+        final IBlockAccess blockAccess = this.getBlockAccess();
         final boolean noLadder = !bch.isBBCollision();
         final double min = noLadder ? 3.0 : 4.9;
         final double max = noLadder ? 13.0 : 11.1;
@@ -83,7 +93,7 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
         }
 
         for (final ForgeDirection of : this.getConnections()) {
-            if (this.isDense(this.getTile().getWorldObj(), of)) {
+            if (this.isDense(blockAccess, of)) {
                 switch (of) {
                     case DOWN -> bch.addBox(min, 0.0, min, max, min, max);
                     case EAST -> bch.addBox(max, min, min, 16.0, max, max);

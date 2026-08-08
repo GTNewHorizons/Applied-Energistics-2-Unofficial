@@ -35,6 +35,7 @@ import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.block.networking.BlockCableBus;
+import appeng.core.AELog;
 import appeng.helpers.AEMultiTile;
 import appeng.helpers.ICustomCollision;
 import appeng.hooks.TickHandler;
@@ -115,6 +116,11 @@ public class TileCableBus extends AEBaseTile implements AEMultiTile, ICustomColl
 
     @Override
     public void invalidate() {
+        if (worldObj.isRemote) {
+            if (!Thread.currentThread().getName().equals("Client thread")) {
+                AELog.error(new Throwable(), "invalidate on the wrong thread!");
+            }
+        }
         super.invalidate();
         this.getCableBus().removeFromWorld();
     }
