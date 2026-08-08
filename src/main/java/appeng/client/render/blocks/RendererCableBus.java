@@ -45,7 +45,9 @@ public class RendererCableBus extends BaseBlockRender<BlockCableBus, TileCableBu
             final RenderBlocksWorkaround rbw = BusRenderer.INSTANCE.getRenderer();
             rbw.renderAllFaces = true;
             rbw.overrideBlockTexture = renderer.overrideBlockTexture;
+            rbw.blockAccess = world;
             ((TileCableBus) tile).getCableBus().renderStatic(x, y, z);
+            rbw.blockAccess = null;
             rbw.renderAllFaces = false;
         }
 

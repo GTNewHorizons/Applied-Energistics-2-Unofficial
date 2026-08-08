@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -41,8 +40,6 @@ public class CableRenderHelper {
         if (renderer.overrideBlockTexture != null) {
             busRenderHelper.setPass(0);
         }
-
-        renderer.blockAccess = Minecraft.getMinecraft().theWorld;
 
         for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = cableBusContainer.getPart(s);

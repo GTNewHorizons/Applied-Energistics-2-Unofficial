@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.opengl.GL11;
@@ -82,7 +83,7 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
         }
 
         for (final ForgeDirection of : this.getConnections()) {
-            if (this.isDense(of)) {
+            if (this.isDense(this.getTile().getWorldObj(), of)) {
                 switch (of) {
                     case DOWN -> bch.addBox(min, 0.0, min, max, min, max);
                     case EAST -> bch.addBox(max, min, min, 16.0, max, max);
@@ -172,14 +173,14 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
 
         boolean hasBuses = false;
         for (final ForgeDirection of : this.getConnections()) {
-            if (!this.isDense(of)) {
+            if (!this.isDense(renderer.blockAccess, of)) {
                 hasBuses = true;
             }
         }
 
         if (sides.size() != 2 || !this.nonLinear(sides) || hasBuses) {
             for (final ForgeDirection of : this.getConnections()) {
-                if (this.isDense(of)) {
+                if (this.isDense(renderer.blockAccess, of)) {
                     this.renderDenseConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
                 } else if (this.isSmart(of)) {
                     this.renderSmartConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
@@ -366,8 +367,8 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
         });
     }
 
-    private boolean isDense(final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+    private boolean isDense(final IBlockAccess world, final ForgeDirection of) {
+        final TileEntity te = world.getTileEntity(
                 this.getTile().xCoord + of.offsetX,
                 this.getTile().yCoord + of.offsetY,
                 this.getTile().zCoord + of.offsetZ);
