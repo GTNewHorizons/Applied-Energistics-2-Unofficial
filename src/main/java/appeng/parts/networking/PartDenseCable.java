@@ -292,8 +292,7 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
             final RenderBlocks renderer, final int channels, final ForgeDirection of) {
         final Tessellator tessellator = Tessellator.instance;
 
-        final TileEntity te = renderer.blockAccess
-                .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
+        final TileEntity te = renderer.blockAccess.getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;
         AEColor myColor = this.getCableColor();
