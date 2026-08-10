@@ -121,6 +121,7 @@ public enum MaterialType {
     QESingularity(48, AEFeature.QuantumNetworkBridge, EntitySingularity.class);
     // the last meta is 69
 
+    public static final MaterialType[] VALUES = values();
     private final EnumSet<AEFeature> features;
     // IIcon for the material.
     @SideOnly(Side.CLIENT)
