@@ -74,14 +74,14 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
         if (is.getItemDamage() == 0) {
             lines.add(AEColor.Transparent.toString());
         } else {
-            lines.add(AEColor.values()[is.getItemDamage() - 1].toString());
+            lines.add(AEColor.VALUES[is.getItemDamage() - 1].toString());
         }
     }
 
     @Override
     @SideOnly(Side.CLIENT)
     public void getCheckedSubBlocks(Item item, CreativeTabs tabs, List<ItemStack> itemStacks) {
-        for (int i = 0; i < AEColor.values().length; i++) {
+        for (int i = 0; i < AEColor.VALUES.length; i++) {
             itemStacks.add(new ItemStack(this, 1, i));
         }
     }
@@ -103,7 +103,7 @@ public class BlockWirelessConnector extends AEBaseTileBlock {
         int damage = is.getItemDamage();
         if (damage > 0) {
             if (w.getTileEntity(x, y, z) instanceof TileWirelessBase twc) {
-                twc.recolourBlock(ForgeDirection.UNKNOWN, AEColor.values()[damage - 1], (EntityPlayer) player);
+                twc.recolourBlock(ForgeDirection.UNKNOWN, AEColor.VALUES[damage - 1], (EntityPlayer) player);
                 w.setBlockMetadataWithNotify(x, y, z, 0, 3);
             }
         }
