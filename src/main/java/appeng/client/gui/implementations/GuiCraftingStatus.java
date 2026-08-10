@@ -231,8 +231,9 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
             tooltipText = null;
         }
 
-        this.selectCPU.displayString = truncateCPUButtonText(btnTextText);
-        this.selectCPU.setTootipString(tooltipText);
+        final String displayText = truncateCPUButtonText(btnTextText);
+        this.selectCPU.displayString = displayText;
+        this.selectCPU.setTootipString(displayText.equals(btnTextText) ? null : tooltipText);
     }
 
     private String truncateCPUButtonText(final String text) {
