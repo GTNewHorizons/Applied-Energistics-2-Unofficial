@@ -12,8 +12,10 @@ package appeng.container.implementations;
 
 import java.util.ArrayList;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
@@ -37,6 +39,7 @@ import appeng.container.slot.SlotNormal;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.InventoryAction;
 import appeng.me.cache.CraftingGridCache;
 import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
@@ -197,6 +200,27 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.setAdvancedBlockingMode((AdvancedBlockingMode) cm.getSetting(Settings.ADVANCED_BLOCKING_MODE));
         this.setLockCraftingMode((LockCraftingMode) cm.getSetting(Settings.LOCK_CRAFTING_MODE));
         this.setFuzzyMode((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE));
+    }
+
+    @Override
+    public void doAction(final EntityPlayerMP player, final InventoryAction action, final int slot, final long id) {
+        if (action == InventoryAction.MULTIPLY_PATTERN || action == InventoryAction.DIVIDE_PATTERN) {
+            if (this.isAllowedToMultiplyPatterns && slot >= 0 && slot < this.inventorySlots.size()) {
+                final Slot target = this.getSlot(slot);
+                if (target instanceof OptionalSlotRestrictedInput patternSlot && patternSlot.isEnabled()
+                        && target.inventory == this.myDuality.getPatterns()
+                        && target.getHasStack()) {
+                    final ItemStack copy = target.getStack().copy();
+                    PatternMultiplierHelper
+                            .applyModification(copy, action == InventoryAction.MULTIPLY_PATTERN ? 1 : -1);
+                    target.putStack(copy);
+                    this.standardDetectAndSendChanges();
+                }
+            }
+            return;
+        }
+
+        super.doAction(player, action, slot, id);
     }
 
     public void doublePatterns(int val) {
