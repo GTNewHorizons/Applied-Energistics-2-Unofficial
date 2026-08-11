@@ -204,23 +204,28 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
     @Override
     public void doAction(final EntityPlayerMP player, final InventoryAction action, final int slot, final long id) {
-        if (action == InventoryAction.MULTIPLY_PATTERN || action == InventoryAction.DIVIDE_PATTERN) {
-            if (this.isAllowedToMultiplyPatterns && slot >= 0 && slot < this.inventorySlots.size()) {
-                final Slot target = this.getSlot(slot);
-                if (target instanceof OptionalSlotRestrictedInput patternSlot && patternSlot.isEnabled()
-                        && target.inventory == this.myDuality.getPatterns()
-                        && target.getHasStack()) {
-                    final ItemStack copy = target.getStack().copy();
-                    PatternMultiplierHelper
-                            .applyModification(copy, action == InventoryAction.MULTIPLY_PATTERN ? 1 : -1);
-                    target.putStack(copy);
-                    this.standardDetectAndSendChanges();
-                }
-            }
-            return;
+        switch (action) {
+            case MULTIPLY_PATTERN -> modifyPatternInSlot(slot, 1);
+            case DIVIDE_PATTERN -> modifyPatternInSlot(slot, -1);
+            default -> super.doAction(player, action, slot, id);
         }
+    }
 
-        super.doAction(player, action, slot, id);
+    private void modifyPatternInSlot(final int slot, final int multiplier) {
+        if (!this.isAllowedToMultiplyPatterns || slot < 0 || slot >= this.inventorySlots.size()) return;
+
+        final Slot patternSlot = this.getSlot(slot);
+        if (!(patternSlot instanceof OptionalSlotRestrictedInput optionalSlot) || !optionalSlot.isEnabled()
+                || patternSlot.inventory != this.myDuality.getPatterns())
+            return;
+
+        final ItemStack pattern = patternSlot.getStack();
+        if (pattern == null) return;
+
+        final ItemStack modifiedPattern = pattern.copy();
+        PatternMultiplierHelper.applyModification(modifiedPattern, multiplier);
+        patternSlot.putStack(modifiedPattern);
+        this.standardDetectAndSendChanges();
     }
 
     public void doublePatterns(int val) {
