@@ -392,6 +392,10 @@ public class CraftingGridCache
         return this.inputOnlyPatterns.get(uuid);
     }
 
+    public ImmutableCollection<ICraftingPatternDetails> getInputOnlyPatterns() {
+        return ImmutableList.copyOf(this.inputOnlyPatterns.values());
+    }
+
     protected void updateCPUClusters() {
         this.craftingCPUClusters.clear();
 

@@ -6,32 +6,50 @@ import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
+import static appeng.gametests.AEGameTestHelpers.fluidStack;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
+import static appeng.gametests.AEGameTestHelpers.itemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.FluidRegistry;
 
+import com.google.common.collect.ImmutableCollection;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.crafting.ICraftingGrid;
+import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
+import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
+import appeng.items.misc.ItemTunnelPattern;
+import appeng.me.GridAccessException;
+import appeng.me.cache.CraftingGridCache;
+import appeng.parts.misc.PartPatternRepeater;
+import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
+import appeng.util.Platform;
 
 @GameTestHolder(AppEng.MOD_ID)
 public class NetworkCoreTests {
@@ -124,6 +142,65 @@ public class NetworkCoreTests {
                 }).thenSucceed();
     }
 
+    // A Pattern Repeater should make remote Tunnel Pattern definitions available to local processing patterns.
+    @GameTest(template = "network_core", timeoutTicks = 200)
+    public static void patternRepeaterSharesTunnelPatternDefinitions(GameTestHelper helper) {
+        TileController sourceController = getController(helper);
+        TileController targetController = replaceDriveWithController(helper);
+        placeCable(helper, "cable_1", AEColor.Red);
+        TileInterface sourceInterface = placeInterface(helper, "cable_2");
+
+        UUID tunnelUuid = UUID.randomUUID();
+        ItemStack tunnelPattern = encodedTunnelPattern(tunnelUuid, fluidStack(FluidRegistry.WATER, 1_000));
+        ItemStack tunnelReference = tunnelPattern.copy();
+        tunnelReference.stackSize = 2;
+        ItemStack referencingPattern = encodedProcessingPattern(tunnelReference, Blocks.stone, 1);
+
+        TileCableBus accessorHost = placeCable(helper, "cable_3", AEColor.Red);
+        TileCableBus providerHost = placeCable(helper, "cable_4", AEColor.Blue);
+        for (int cable = 5; cable <= 9; cable++) {
+            placeCable(helper, "cable_" + cable, AEColor.Blue);
+        }
+        TileInterface targetInterface = placeInterface(helper, "cable_10");
+
+        PartPatternRepeater accessor = (PartPatternRepeater) placePart(
+                helper,
+                accessorHost,
+                ForgeDirection.EAST,
+                patternRepeater());
+        PartPatternRepeater provider = (PartPatternRepeater) placePart(
+                helper,
+                providerHost,
+                ForgeDirection.WEST,
+                patternRepeater());
+        setProvider(provider);
+
+        helper.startSequence().thenWaitUntil("wait for isolated Pattern Repeater networks to activate", 80, () -> {
+            assertActive(helper, sourceController.getProxy(), "Source controller grid should become active");
+            assertActive(helper, targetController.getProxy(), "Target controller grid should become active");
+            assertActive(helper, sourceInterface.getProxy(), "Source interface should receive a channel");
+            assertActive(helper, targetInterface.getProxy(), "Target interface should receive a channel");
+            assertActive(helper, accessor, "Pattern Repeater accessor should receive a channel");
+            assertActive(helper, provider, "Pattern Repeater provider should receive a channel");
+            helper.assertTrue(provider.isProvider(), "Target-side Pattern Repeater should be in provider mode");
+            helper.assertSame(provider, accessor.getPair(), "Pattern Repeater accessor should find its provider");
+            helper.assertTrue(
+                    sourceController.getProxy().getNode().getGrid() != targetController.getProxy().getNode().getGrid(),
+                    "Pattern Repeaters should bridge two separate networks");
+        }).thenExecute("install patterns after the repeater's initial snapshot", () -> {
+            // Reproduce the load-order window where the repeater has not registered its change listener yet.
+            craftingCache(sourceController).removePostPatternChangeListeners(accessor);
+            InventoryHelper.setSlot(sourceInterface.getInterfaceDuality().getPatterns(), 0, tunnelPattern);
+            InventoryHelper.setSlot(targetInterface.getInterfaceDuality().getPatterns(), 0, referencingPattern);
+            helper.assertNotNull(
+                    craftingCache(targetController).getInputOnlyPattern(tunnelUuid),
+                    "Target network should receive the Tunnel Pattern definition");
+            ICraftingPatternDetails details = firstPattern(helper, targetController, Blocks.stone);
+            assertFluidInputs(helper, details.getAEInputs());
+            assertFluidInputs(helper, details.getCondensedAEInputs());
+        }).thenSucceed();
+    }
+
     // A toggle bus gates the downstream cable only while redstone is applied.
     @GameTest(template = "network_core", timeoutTicks = 140)
     public static void toggleBusGatesNetworkOnRedstone(GameTestHelper helper) {
@@ -190,6 +267,20 @@ public class NetworkCoreTests {
         return helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
     }
 
+    private static TileController replaceDriveWithController(GameTestHelper helper) {
+        Block controller = AEApi.instance().definitions().blocks().creativeEnergyController().maybeBlock().get();
+        helper.setBlock(DRIVE_LABEL, controller);
+        helper.assertBlockPresent(controller, DRIVE_LABEL);
+        return helper.assertTileEntityPresent(TileController.class, DRIVE_LABEL);
+    }
+
+    private static TileInterface placeInterface(GameTestHelper helper, String label) {
+        Block blockInterface = AEApi.instance().definitions().blocks().iface().maybeBlock().get();
+        helper.setBlock(label, blockInterface);
+        helper.assertBlockPresent(blockInterface, label);
+        return helper.assertTileEntityPresent(TileInterface.class, label);
+    }
+
     private static void installCableLine(GameTestHelper helper, String... cableRoles) {
         for (String cableRole : cableRoles) {
             placeCable(helper, cableRole);
@@ -197,18 +288,25 @@ public class NetworkCoreTests {
     }
 
     private static TileCableBus placeCable(GameTestHelper helper, String label) {
+        return placeCable(helper, label, AEColor.Transparent);
+    }
+
+    private static TileCableBus placeCable(GameTestHelper helper, String label, AEColor color) {
         Block cableBusBlock = cableBusBlock();
         helper.setBlock(label, cableBusBlock);
         helper.assertBlockPresent(cableBusBlock, label);
         TileCableBus cableBus = helper.assertTileEntityPresent(TileCableBus.class, label);
-        addPart(helper, cableBus, cableStack(), ForgeDirection.UNKNOWN);
+        addPart(helper, cableBus, cableStack(color), ForgeDirection.UNKNOWN);
         return cableBus;
     }
 
     private static IPart placePart(GameTestHelper helper, String label, ForgeDirection side, ItemStack stack) {
         TileEntity tile = helper.assertTileEntityPresent(label);
         helper.assertTrue(tile instanceof IPartHost, "Labelled cable position should contain an AE part host");
-        IPartHost host = (IPartHost) tile;
+        return placePart(helper, (IPartHost) tile, side, stack);
+    }
+
+    private static IPart placePart(GameTestHelper helper, IPartHost host, ForgeDirection side, ItemStack stack) {
         addPart(helper, host, stack, side);
         IPart part = host.getPart(side);
         helper.assertNotNull(part, "Placed part should be readable from its host");
@@ -259,7 +357,11 @@ public class NetworkCoreTests {
     }
 
     private static ItemStack cableStack() {
-        return AEApi.instance().definitions().parts().cableGlass().stack(AEColor.Transparent, 1);
+        return cableStack(AEColor.Transparent);
+    }
+
+    private static ItemStack cableStack(AEColor color) {
+        return AEApi.instance().definitions().parts().cableGlass().stack(color, 1);
     }
 
     private static ItemStack terminal() {
@@ -272,6 +374,85 @@ public class NetworkCoreTests {
 
     private static ItemStack toggleBus() {
         return AEApi.instance().definitions().parts().toggleBus().maybeStack(1).get();
+    }
+
+    private static ItemStack patternRepeater() {
+        return AEApi.instance().definitions().parts().patternRepeater().maybeStack(1).get();
+    }
+
+    private static void setProvider(PartPatternRepeater repeater) {
+        NBTTagCompound data = new NBTTagCompound();
+        data.setTag("waitingStacks", new NBTTagList());
+        data.setBoolean("provider", true);
+        repeater.readFromNBT(data);
+        repeater.gridChanged();
+    }
+
+    private static CraftingGridCache craftingCache(TileController controller) {
+        try {
+            ICraftingGrid crafting = controller.getProxy().getCrafting();
+            if (crafting instanceof CraftingGridCache cache) {
+                return cache;
+            }
+            throw new AssertionError("Network crafting cache should use CraftingGridCache");
+        } catch (GridAccessException e) {
+            throw new AssertionError("Network crafting cache should be accessible", e);
+        }
+    }
+
+    private static ICraftingPatternDetails firstPattern(GameTestHelper helper, TileController controller,
+            Block output) {
+        ImmutableCollection<ICraftingPatternDetails> patterns = craftingCache(controller)
+                .getCraftingFor(itemStack(output, 1), null, -1, controller.getWorldObj());
+        helper.assertFalse(patterns.isEmpty(), "Target network should advertise the local processing pattern");
+        return patterns.iterator().next();
+    }
+
+    private static void assertFluidInputs(GameTestHelper helper, IAEStack<?>[] inputs) {
+        helper.assertEquals(1, inputs.length, "Tunnel Pattern should expand to one fluid input");
+        helper.assertTrue(inputs[0] instanceof IAEFluidStack, "Tunnel Pattern should not remain as a raw item input");
+        IAEFluidStack fluid = (IAEFluidStack) inputs[0];
+        helper.assertSame(FluidRegistry.WATER, fluid.getFluid(), "Tunnel Pattern should resolve to water");
+        helper.assertEquals(2_000L, fluid.getStackSize(), "Tunnel Pattern should preserve its input multiplier");
+    }
+
+    private static ItemStack encodedProcessingPattern(ItemStack input, Block output, int outputAmount) {
+        ItemStack encodedPattern = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).get();
+        NBTTagCompound patternTags = new NBTTagCompound();
+        NBTTagList inputs = new NBTTagList();
+        NBTTagList outputs = new NBTTagList();
+
+        patternTags.setBoolean("crafting", false);
+        patternTags.setBoolean("substitute", false);
+        patternTags.setBoolean("beSubstitute", false);
+        inputs.appendTag(itemTag(input));
+        outputs.appendTag(itemTag(new ItemStack(output, outputAmount)));
+        patternTags.setTag("in", inputs);
+        patternTags.setTag("out", outputs);
+        encodedPattern.setTagCompound(patternTags);
+        return encodedPattern;
+    }
+
+    private static ItemStack encodedTunnelPattern(UUID uuid, IAEStack<?> input) {
+        ItemStack encodedPattern = AEApi.instance().definitions().items().encodedTunnelPattern().maybeStack(1).get();
+        NBTTagCompound patternTags = new NBTTagCompound();
+        NBTTagList inputs = new NBTTagList();
+
+        patternTags.setBoolean("crafting", false);
+        patternTags.setBoolean("substitute", false);
+        patternTags.setBoolean("beSubstitute", false);
+        ItemTunnelPattern.writeTunnelUuid(patternTags, uuid);
+        inputs.appendTag(input.toNBTGeneric());
+        patternTags.setTag("in", inputs);
+        patternTags.setTag("out", new NBTTagList());
+        encodedPattern.setTagCompound(patternTags);
+        return encodedPattern;
+    }
+
+    private static NBTTagCompound itemTag(ItemStack item) {
+        NBTTagCompound tag = new NBTTagCompound();
+        Platform.writeItemStackToNBT(item, tag);
+        return tag;
     }
 
     private static Block cableBusBlock() {
