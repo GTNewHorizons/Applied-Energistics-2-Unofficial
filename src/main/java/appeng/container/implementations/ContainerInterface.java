@@ -220,7 +220,15 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
             return;
 
         final ItemStack pattern = patternSlot.getStack();
-        if (pattern == null) return;
+        if (pattern == null || !(pattern.getItem() instanceof ICraftingPatternItem patternItem)) return;
+
+        final ICraftingPatternDetails details = patternItem
+                .getPatternForItem(pattern, this.myDuality.getHost().getTile().getWorldObj());
+        if (details == null || details.isCraftable()) return;
+
+        final int max = multiplier < 0 ? PatternMultiplierHelper.getMaxBitDivider(details)
+                : PatternMultiplierHelper.getMaxBitMultiplier(details);
+        if (max == 0) return;
 
         final ItemStack modifiedPattern = pattern.copy();
         PatternMultiplierHelper.applyModification(modifiedPattern, multiplier);
