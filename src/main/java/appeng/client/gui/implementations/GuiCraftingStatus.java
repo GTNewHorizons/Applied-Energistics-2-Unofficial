@@ -213,14 +213,12 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 
     private void updateCPUButtonText() {
         String btnTextText = GuiText.NoCraftingJobs.getLocal();
-        String tooltipText = null;
 
         final int selectedSerial = this.cpuTable.getContainer().selectedCpuSerial;
         if (selectedSerial >= 0) {
             String selectedCPUName = cpuTable.getSelectedCPUName();
             if (selectedCPUName != null && selectedCPUName.length() > 0) {
                 btnTextText = GuiText.CPUs.getLocal() + ": " + selectedCPUName;
-                tooltipText = btnTextText;
             } else {
                 btnTextText = GuiText.CPUs.getLocal() + ": #" + selectedSerial;
             }
@@ -228,11 +226,10 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 
         if (this.status.getCPUs().isEmpty()) {
             btnTextText = GuiText.NoCraftingJobs.getLocal();
-            tooltipText = null;
         }
 
         this.selectCPU.displayString = truncateCPUButtonText(btnTextText);
-        this.selectCPU.setTootipString(tooltipText);
+        this.selectCPU.setTootipString(btnTextText);
     }
 
     private String truncateCPUButtonText(final String text) {
