@@ -19,6 +19,7 @@ import net.minecraft.tileentity.TileEntityChest;
 import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -46,6 +47,7 @@ public class ImportExportBusTests {
     private static final String IMPORT_BUS_LABEL = "import_bus";
     private static final String EXPORT_BUS_LABEL = "export_bus";
     private static final String REDSTONE_LABEL = "redstone";
+    private static final long CELL_1K_ONE_TYPE_CAPACITY = 8128;
 
     // A filtered import bus should pull only matching stacks from the source chest into ME storage.
     @GameTest(template = "bus_io", timeoutTicks = 380)
@@ -129,6 +131,32 @@ public class ImportExportBusTests {
                 .thenExecute("begin full-destination conservation invariant", fullDestinationPreservesNetwork::enable)
                 .thenIdle(120)
                 .thenExecute("finish full-destination observation window", fullDestinationPreservesNetwork::disable)
+                .thenSucceed();
+    }
+
+    // A full ME network should make the import bus leave the external source inventory untouched.
+    @GameTest(template = "bus_io", timeoutTicks = 240)
+    public static void importBusFullNetworkLeavesSourceUntouched(GameTestHelper helper) {
+        BusIO busIO = getBusIO(helper);
+        ItemStack driveCell = cell1k();
+        insertItems(helper, driveCell, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
+        helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 32));
+        configureFilter(helper, busIO.importBus, Blocks.cobblestone);
+        configureFilter(helper, busIO.exportBus, Blocks.dirt);
+        TickCallbackHandle fullNetworkPreservesSource = helper.onEachTick(() -> {
+            assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+            assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+            helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 32);
+            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+        });
+        fullNetworkPreservesSource.disable();
+
+        helper.startSequence()
+                .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))
+                .thenExecute("begin full-network conservation invariant", fullNetworkPreservesSource::enable)
+                .thenIdle(120)
+                .thenExecute("finish full-network observation window", fullNetworkPreservesSource::disable)
                 .thenSucceed();
     }
 
