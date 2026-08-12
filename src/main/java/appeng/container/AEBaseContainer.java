@@ -98,6 +98,7 @@ import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.InventoryAction;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.materials.ItemMultiMaterial;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.me.Grid;
 import appeng.me.MachineSet;
 import appeng.me.NetworkList;
@@ -1109,6 +1110,28 @@ public abstract class AEBaseContainer extends Container {
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {}
 
     public void onSlotChange(final Slot s) {}
+
+    public void renameTunnelPatternInSlot(final int slotIndex, final IAEStack<?> original, final IAEStack<?> renamed,
+            final EntityPlayerMP player) {
+        if (slotIndex < 0 || slotIndex >= this.inventorySlots.size()
+                || !(original instanceof IAEItemStack originalItem)
+                || !(renamed instanceof IAEItemStack renamedItem)) {
+            return;
+        }
+
+        final Slot slot = this.getSlot(slotIndex);
+        final ItemStack current = slot.getStack();
+        if (slot instanceof SlotFake || !slot.canTakeStack(player)
+                || !ItemTunnelPattern.hasSameTunnelUuid(current, originalItem.getItemStack())
+                || !ItemTunnelPattern.hasSameTunnelUuid(current, renamedItem.getItemStack())) {
+            return;
+        }
+
+        final ItemStack renamedStack = current.copy();
+        renamedStack.setStackDisplayName(renamedItem.getItemStack().getDisplayName());
+        slot.putStack(renamedStack);
+        this.detectAndSendChanges();
+    }
 
     public boolean isValidForSlot(final Slot s, final ItemStack i) {
         return true;

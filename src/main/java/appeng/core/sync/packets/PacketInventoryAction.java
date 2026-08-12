@@ -14,18 +14,24 @@ import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
+import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.ClientHelper;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerOpenContext;
 import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCraftAmount;
+import appeng.container.implementations.ContainerPatternItemRenamer;
+import appeng.container.slot.SlotFake;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.InventoryAction;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
@@ -104,7 +110,33 @@ public class PacketInventoryAction extends AppEngPacket {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
         if (sender.openContainer instanceof AEBaseContainer baseContainer) {
             final PrimaryGui pg = baseContainer.createPrimaryGui();
-            if (this.action == InventoryAction.AUTO_CRAFT) {
+            if (this.action == InventoryAction.RENAME_TUNNEL_PATTERN) {
+                if (this.slot < 0 || this.slot >= baseContainer.inventorySlots.size()) {
+                    return;
+                }
+
+                final Slot targetSlot = baseContainer.getSlot(this.slot);
+                final ItemStack targetStack = targetSlot.getStack();
+                final ContainerOpenContext context = baseContainer.getOpenContext();
+                if (context == null || targetSlot instanceof SlotFake
+                        || !targetSlot.canTakeStack(sender)
+                        || ItemTunnelPattern.getTunnelUuid(targetStack) == null) {
+                    return;
+                }
+
+                Platform.openGUI(
+                        sender,
+                        context.getTile(),
+                        context.getSide(),
+                        GuiBridge.GUI_PATTERN_ITEM_RENAMER,
+                        baseContainer.getTargetSlotIndex());
+
+                if (sender.openContainer instanceof ContainerPatternItemRenamer renamer) {
+                    renamer.setPrimaryGui(pg);
+                    renamer.updateVirtualSlot(StorageName.NONE, this.slot, AEItemStack.create(targetStack));
+                    renamer.detectAndSendChanges();
+                }
+            } else if (this.action == InventoryAction.AUTO_CRAFT) {
                 final ContainerOpenContext context = baseContainer.getOpenContext();
                 if (context != null) {
                     final TileEntity te = context.getTile();

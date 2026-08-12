@@ -30,5 +30,6 @@ public enum InventoryAction {
     FIND_ITEMS,
     LOCATE_ITEM_FLOW,
     MULTIPLY_PATTERN,
-    DIVIDE_PATTERN
+    DIVIDE_PATTERN,
+    RENAME_TUNNEL_PATTERN
 }
