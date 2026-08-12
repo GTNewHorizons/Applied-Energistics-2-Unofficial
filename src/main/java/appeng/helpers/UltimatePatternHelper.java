@@ -17,13 +17,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.AEApi;
-import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.util.ItemSorters;
 import appeng.util.item.AEItemStack;
 
-public class UltimatePatternHelper implements ICraftingPatternDetails, Comparable<UltimatePatternHelper> {
+public class UltimatePatternHelper implements IResolvablePatternDetails, Comparable<UltimatePatternHelper> {
 
     private final ItemStack patternItem;
     private final IAEItemStack pattern;
@@ -36,10 +35,9 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
     private final IAEItemStack[] inputs;
     private final IAEItemStack[] outputs;
 
-    private final IAEStack<?>[] condensedAEInputs;
     private final IAEStack<?>[] condensedAEOutputs;
-    private final IAEStack<?>[] aeInputs;
     private final IAEStack<?>[] aeOutputs;
+    private final PatternInputResolver inputResolver;
     private final boolean inputOnly;
     private final UUID inputOnlyUuid;
 
@@ -105,13 +103,12 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
         condensedInputs = convertToCondensedList(inputs);
         condensedOutputs = convertToCondensedList(outputs);
 
-        aeInputs = in.toArray(new IAEStack<?>[0]);
+        inputResolver = new PatternInputResolver(in.toArray(new IAEStack<?>[0]));
         aeOutputs = out.toArray(new IAEStack<?>[0]);
 
-        condensedAEInputs = convertToCondensedAEList(aeInputs);
         condensedAEOutputs = convertToCondensedAEList(aeOutputs);
 
-        if (condensedAEInputs.length == 0) {
+        if (inputResolver.getCondensedInputs().length == 0) {
             encodedValue.setBoolean("InvalidPattern", true);
             throw new IllegalStateException("No pattern here!");
         }
@@ -144,7 +141,7 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
 
     @Override
     public IAEStack<?>[] getAEInputs() {
-        return aeInputs;
+        return inputResolver.getInputs();
     }
 
     @Override
@@ -154,7 +151,7 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
 
     @Override
     public IAEStack<?>[] getCondensedAEInputs() {
-        return condensedAEInputs;
+        return inputResolver.getCondensedInputs();
     }
 
     @Override
@@ -210,6 +207,21 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
     @Override
     public UUID getInputOnlyUuid() {
         return inputOnlyUuid;
+    }
+
+    @Override
+    public IAEStack<?>[] getEncodedAEInputs() {
+        return inputResolver.getEncodedInputs();
+    }
+
+    @Override
+    public void setResolvedAEInputs(final IAEStack<?>[] inputs) {
+        inputResolver.set(inputs);
+    }
+
+    @Override
+    public void resetResolvedAEInputs() {
+        inputResolver.reset();
     }
 
     @Override

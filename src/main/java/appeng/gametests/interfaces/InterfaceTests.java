@@ -8,6 +8,8 @@ import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
 
+import java.util.UUID;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -27,10 +29,13 @@ import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.container.ContainerNull;
 import appeng.core.AppEng;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.helpers.IInterfaceHost;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
 import appeng.tile.crafting.TileMolecularAssembler;
@@ -138,6 +143,47 @@ public class InterfaceTests {
                                 craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
                                 "Interface pattern output should be craftable"))
                 .thenSucceed();
+    }
+
+    // Pattern details exposed to crafting providers should contain inputs expanded from Tunnel Patterns.
+    @GameTest(template = "interface_network", timeoutTicks = 160)
+    public static void interfacePatternDetailsExposeExpandedTunnelInputs(GameTestHelper helper) {
+        InterfaceNetwork network = getInterfaceNetwork(helper);
+        UUID tunnelUuid = UUID.randomUUID();
+        ItemStack tunnelPattern = encodedTunnelPattern(tunnelUuid, Blocks.cobblestone, 3);
+        ItemStack tunnelReference = tunnelPattern.copy();
+        tunnelReference.stackSize = 2;
+        ItemStack referencingPattern = encodedProcessingPattern(tunnelReference, Blocks.stone, 1);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for tunnel-pattern network to activate",
+                        80,
+                        () -> assertInterfaceNetworkActive(helper, network))
+                .thenExecute("install Tunnel Pattern definition and referencing processing pattern", () -> {
+                    InventoryHelper
+                            .setSlot(network.blockInterface.getInterfaceDuality().getPatterns(), 0, tunnelPattern);
+                    InventoryHelper
+                            .setSlot(network.blockInterface.getInterfaceDuality().getPatterns(), 1, referencingPattern);
+                    InventoryHelper.setSlot(
+                            network.partInterface.getInterfaceDuality().getPatterns(),
+                            0,
+                            referencingPattern.copy());
+                })
+                .thenWaitUntil(
+                        "wait for referencing pattern output to become craftable",
+                        80,
+                        () -> helper.assertFalse(
+                                craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
+                                "Referencing pattern output should be craftable"))
+                .thenExecute("verify the advertised pattern details expose expanded inputs", () -> {
+                    assertExpandedTunnelInputs(
+                            helper,
+                            firstPattern(helper, network.controller, Blocks.stone),
+                            "Crafting cache");
+                    assertProviderPatternInputs(helper, network.blockInterface, "Block interface");
+                    assertProviderPatternInputs(helper, network.partInterface, "Part interface");
+                }).thenSucceed();
     }
 
     // Block and part interfaces should both maintain configured stock in their internal inventories.
@@ -251,6 +297,32 @@ public class InterfaceTests {
         return patterns.iterator().next();
     }
 
+    private static void assertProviderPatternInputs(GameTestHelper helper, IInterfaceHost interfaceHost,
+            String source) {
+        helper.assertNotNull(interfaceHost.getInterfaceDuality().craftingList, source + " should cache its patterns");
+        int processingPatterns = 0;
+        for (ICraftingPatternDetails details : interfaceHost.getInterfaceDuality().craftingList) {
+            if (!details.isInputOnly()) {
+                assertExpandedTunnelInputs(helper, details, source);
+                processingPatterns++;
+            }
+        }
+        helper.assertEquals(1, processingPatterns, source + " should contain one processing pattern");
+    }
+
+    private static void assertExpandedTunnelInputs(GameTestHelper helper, ICraftingPatternDetails details,
+            String source) {
+        IAEStack<?>[] inputs = details.getAEInputs();
+
+        helper.assertEquals(1, inputs.length, source + " Tunnel Pattern should expand to one input");
+        helper.assertTrue(inputs[0] instanceof IAEItemStack, source + " expanded input should be an item stack");
+        IAEItemStack input = (IAEItemStack) inputs[0];
+        helper.assertTrue(
+                Platform.isSameItem(input.getItemStack(), new ItemStack(Blocks.cobblestone)),
+                source + " should expose cobblestone instead of the Tunnel Pattern item");
+        helper.assertEquals(6L, input.getStackSize(), source + " Tunnel Pattern multiplier should be applied");
+    }
+
     private static MEInventoryCrafting craftingTable(Block block, int amount) {
         MEInventoryCrafting table = new MEInventoryCrafting(new ContainerNull(), 1, 1);
         table.setInventorySlotContents(0, itemStack(block, amount));
@@ -258,6 +330,10 @@ public class InterfaceTests {
     }
 
     private static ItemStack encodedProcessingPattern(Block input, int inputAmount, Block output, int outputAmount) {
+        return encodedProcessingPattern(new ItemStack(input, inputAmount), output, outputAmount);
+    }
+
+    private static ItemStack encodedProcessingPattern(ItemStack input, Block output, int outputAmount) {
         ItemStack encodedPattern = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).get();
         NBTTagCompound patternTags = new NBTTagCompound();
         NBTTagList inputs = new NBTTagList();
@@ -266,7 +342,7 @@ public class InterfaceTests {
         patternTags.setBoolean("crafting", false);
         patternTags.setBoolean("substitute", false);
         patternTags.setBoolean("beSubstitute", false);
-        inputs.appendTag(itemTag(input, inputAmount));
+        inputs.appendTag(itemTag(input));
         outputs.appendTag(itemTag(output, outputAmount));
         patternTags.setTag("in", inputs);
         patternTags.setTag("out", outputs);
@@ -275,9 +351,30 @@ public class InterfaceTests {
         return encodedPattern;
     }
 
+    private static ItemStack encodedTunnelPattern(UUID uuid, Block input, int inputAmount) {
+        ItemStack encodedPattern = AEApi.instance().definitions().items().encodedTunnelPattern().maybeStack(1).get();
+        NBTTagCompound patternTags = new NBTTagCompound();
+        NBTTagList inputs = new NBTTagList();
+
+        patternTags.setBoolean("crafting", false);
+        patternTags.setBoolean("substitute", false);
+        patternTags.setBoolean("beSubstitute", false);
+        ItemTunnelPattern.writeTunnelUuid(patternTags, uuid);
+        inputs.appendTag(itemStack(input, inputAmount).toNBTGeneric());
+        patternTags.setTag("in", inputs);
+        patternTags.setTag("out", new NBTTagList());
+        encodedPattern.setTagCompound(patternTags);
+
+        return encodedPattern;
+    }
+
     private static NBTTagCompound itemTag(Block block, int amount) {
+        return itemTag(new ItemStack(block, amount));
+    }
+
+    private static NBTTagCompound itemTag(ItemStack item) {
         NBTTagCompound tag = new NBTTagCompound();
-        Platform.writeItemStackToNBT(new ItemStack(block, amount), tag);
+        Platform.writeItemStackToNBT(item, tag);
         return tag;
     }
 
