@@ -249,7 +249,7 @@ public class PartCable extends AEBasePart implements IPartCable {
                     break;
                 }
             } else if (this.getConnections().contains(dir)) {
-                final TileEntity te = this.getTile().getWorldObj()
+                final TileEntity te = this.getRenderWorld(rh)
                         .getTileEntity(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ);
                 final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
                 final IGridHost gh = te instanceof IGridHost ? (IGridHost) te : null;
@@ -460,8 +460,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     @SideOnly(Side.CLIENT)
     private void renderGlassConnection(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer, final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj()
-                .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
+        final TileEntity te = this.getRenderWorld(rh).getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost gh = te instanceof IGridHost ? (IGridHost) te : null;
 
@@ -511,8 +510,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     @SideOnly(Side.CLIENT)
     void renderCoveredConnection(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer, final int channels, final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj()
-                .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
+        final TileEntity te = this.getRenderWorld(rh).getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;
 
@@ -569,8 +567,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     @SideOnly(Side.CLIENT)
     void renderSmartConnection(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer, final int channels, final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj()
-                .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
+        final TileEntity te = this.getRenderWorld(rh).getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;
         AEColor myColor = this.getCableColor();
