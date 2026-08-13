@@ -980,12 +980,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = Platform.poweredExtraction(
-                        this.getPowerSource(),
-                        monitor,
-                        stackInSlot,
-                        this.getActionSource(),
-                        Actionable.SIMULATE);
+                stackInSlot = monitor.extractItems(stackInSlot, Actionable.SIMULATE, this.getActionSource());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 if (hand.stackSize == 1) {
@@ -1044,12 +1039,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = Platform.poweredExtraction(
-                        this.getPowerSource(),
-                        monitor,
-                        stackInSlot,
-                        this.getActionSource(),
-                        Actionable.SIMULATE);
+                stackInSlot = monitor.extractItems(stackInSlot, Actionable.SIMULATE, this.getActionSource());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 // Set filled item to player hand
