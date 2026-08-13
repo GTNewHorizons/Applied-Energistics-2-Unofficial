@@ -32,13 +32,6 @@ import appeng.util.Platform;
 
 public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWireless> {
 
-    private int centerX = 0;
-    private int centerY = 0;
-    private int centerZ = 0;
-    private BlockWireless blk;
-    private boolean hasChan = false;
-    private boolean hasPower = false;
-
     public RenderBlockWireless() {
         super(false, 20);
     }
@@ -46,13 +39,6 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
     @Override
     public void renderInventory(final BlockWireless blk, final ItemStack is, final RenderBlocks renderer,
             final ItemRenderType type, final Object[] obj) {
-        this.blk = blk;
-        this.centerX = 0;
-        this.centerY = 0;
-        this.centerZ = 0;
-        this.hasChan = false;
-        this.hasPower = false;
-
         final BlockRenderInfo ri = blk.getRendererInstance();
         final Tessellator tess = Tessellator.instance;
 
@@ -102,7 +88,16 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
 
         tess.startDrawingQuads();
         ri.setTemporaryRenderIcon(null);
-        this.renderTorchAtAngle(renderer, ForgeDirection.EAST, ForgeDirection.UP, ForgeDirection.SOUTH);
+        this.renderTorchAtAngle(
+                renderer,
+                blk,
+                false,
+                0,
+                0,
+                0,
+                ForgeDirection.EAST,
+                ForgeDirection.UP,
+                ForgeDirection.SOUTH);
         super.postRenderInWorld(renderer);
         tess.draw();
 
@@ -156,12 +151,11 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
     public boolean renderInWorld(final BlockWireless blk, final IBlockAccess world, final int x, final int y,
             final int z, final RenderBlocks renderer) {
         final TileWireless tw = blk.getTileEntity(world, x, y, z);
-        this.blk = blk;
 
         if (tw != null) {
-            this.hasChan = (tw.getClientFlags() & (TileWireless.POWERED_FLAG | TileWireless.CHANNEL_FLAG))
+            final boolean hasChan = (tw.getClientFlags() & (TileWireless.POWERED_FLAG | TileWireless.CHANNEL_FLAG))
                     == (TileWireless.POWERED_FLAG | TileWireless.CHANNEL_FLAG);
-            this.hasPower = (tw.getClientFlags() & TileWireless.POWERED_FLAG) == TileWireless.POWERED_FLAG;
+            final boolean hasPower = (tw.getClientFlags() & TileWireless.POWERED_FLAG) == TileWireless.POWERED_FLAG;
 
             final BlockRenderInfo ri = blk.getRendererInstance();
 
@@ -193,12 +187,9 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
             this.renderBlockBounds(renderer, 5, 5, 1, 11, 11, 2, fdx, fdy, fdz);
             super.renderInWorld(blk, world, x, y, z, renderer);
 
-            this.centerX = x;
-            this.centerY = y;
-            this.centerZ = z;
             ri.setTemporaryRenderIcon(null);
 
-            this.renderTorchAtAngle(renderer, fdx, fdy, fdz);
+            this.renderTorchAtAngle(renderer, blk, hasChan, x, y, z, fdx, fdy, fdz);
             super.postRenderInWorld(renderer);
 
             ri.setTemporaryRenderIcons(
@@ -251,11 +242,11 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
             this.renderBlockBounds(renderer, 5, 5, 0, 11, 11, 1, fdx, fdy, fdz);
 
             final Tessellator tess = Tessellator.instance;
-            if (this.hasChan) {
+            if (hasChan) {
                 final int l = 14;
                 tess.setBrightness(l << 20 | l << 4);
                 tess.setColorOpaque_I(AEColor.Transparent.blackVariant);
-            } else if (this.hasPower) {
+            } else if (hasPower) {
                 final int l = 9;
                 tess.setBrightness(l << 20 | l << 4);
                 tess.setColorOpaque_I(AEColor.Transparent.whiteVariant);
@@ -290,9 +281,10 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
         return true;
     }
 
-    private void renderTorchAtAngle(final RenderBlocks renderer, final ForgeDirection x, final ForgeDirection y,
+    private void renderTorchAtAngle(final RenderBlocks renderer, final BlockWireless blk, final boolean hasChan,
+            final int centerX, final int centerY, final int centerZ, final ForgeDirection x, final ForgeDirection y,
             final ForgeDirection z) {
-        final IIcon r = (this.hasChan ? CableBusTextures.BlockWirelessOn.getIcon() : this.blk.getIcon(0, 0));
+        final IIcon r = (hasChan ? CableBusTextures.BlockWirelessOn.getIcon() : blk.getIcon(0, 0));
         final IIcon sides = new OffsetIcon(r, 0.0f, -2.0f);
 
         switch (z) {
@@ -331,14 +323,14 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
 
         Tessellator.instance.setColorOpaque_I(0xffffff);
         this.renderBlockBounds(renderer, 0, 7, 1, 16, 9, 16, x, y, z);
-        this.renderFace(this.centerX, this.centerY, this.centerZ, this.blk, sides, renderer, y);
-        this.renderFace(this.centerX, this.centerY, this.centerZ, this.blk, sides, renderer, y.getOpposite());
+        this.renderFace(centerX, centerY, centerZ, blk, sides, renderer, y);
+        this.renderFace(centerX, centerY, centerZ, blk, sides, renderer, y.getOpposite());
 
         this.renderBlockBounds(renderer, 7, 0, 1, 9, 16, 16, x, y, z);
-        this.renderFace(this.centerX, this.centerY, this.centerZ, this.blk, sides, renderer, x);
-        this.renderFace(this.centerX, this.centerY, this.centerZ, this.blk, sides, renderer, x.getOpposite());
+        this.renderFace(centerX, centerY, centerZ, blk, sides, renderer, x);
+        this.renderFace(centerX, centerY, centerZ, blk, sides, renderer, x.getOpposite());
 
         this.renderBlockBounds(renderer, 7, 7, 1, 9, 9, 10.6, x, y, z);
-        this.renderFace(this.centerX, this.centerY, this.centerZ, this.blk, r, renderer, z);
+        this.renderFace(centerX, centerY, centerZ, blk, r, renderer, z);
     }
 }
