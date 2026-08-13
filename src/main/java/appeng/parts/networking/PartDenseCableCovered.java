@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.opengl.GL11;
@@ -79,8 +80,9 @@ public class PartDenseCableCovered extends PartCable {
             }
         }
 
+        final IBlockAccess w = this.getRenderWorld(bch);
         for (final ForgeDirection of : this.getConnections()) {
-            if (this.isDense(of)) {
+            if (this.isDense(w, of)) {
                 switch (of) {
                     case DOWN -> bch.addBox(min, 0.0, min, max, min, max);
                     case EAST -> bch.addBox(max, min, min, 16.0, max, max);
@@ -155,16 +157,18 @@ public class PartDenseCableCovered extends PartCable {
 
         final EnumSet<ForgeDirection> sides = this.getConnections().clone();
 
+        final IBlockAccess w = this.getRenderWorld(rh);
+
         boolean hasBuses = false;
         for (final ForgeDirection of : this.getConnections()) {
-            if (!this.isDense(of)) {
+            if (!this.isDense(w, of)) {
                 hasBuses = true;
             }
         }
 
         if (sides.size() != 2 || !this.nonLinear(sides) || hasBuses) {
             for (final ForgeDirection of : this.getConnections()) {
-                if (this.isDense(of)) {
+                if (this.isDense(w, of)) {
                     this.renderDenseCoveredConnection(x, y, z, rh, renderer, of);
                 } else {
                     this.renderCoveredConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
@@ -226,8 +230,7 @@ public class PartDenseCableCovered extends PartCable {
     @SideOnly(Side.CLIENT)
     private void renderDenseCoveredConnection(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer, final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj()
-                .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
+        final TileEntity te = this.getRenderWorld(rh).getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;
 
@@ -279,8 +282,8 @@ public class PartDenseCableCovered extends PartCable {
         });
     }
 
-    private boolean isDense(final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+    private boolean isDense(final IBlockAccess w, final ForgeDirection of) {
+        final TileEntity te = w.getTileEntity(
                 this.getTile().xCoord + of.offsetX,
                 this.getTile().yCoord + of.offsetY,
                 this.getTile().zCoord + of.offsetZ);

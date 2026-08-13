@@ -18,6 +18,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.base.Function;
@@ -189,6 +190,11 @@ public final class BusRenderHelper implements IPartRenderHelper {
         @Override
         public boolean isBBCollision() {
             return false;
+        }
+
+        @Override
+        public IBlockAccess getBlockAccess() {
+            return BusRenderHelper.this.getBlockAccess();
         }
     }
 
@@ -605,5 +611,10 @@ public final class BusRenderHelper implements IPartRenderHelper {
     @Override
     public ForgeDirection getWorldZ() {
         return this.az;
+    }
+
+    @Override
+    public IBlockAccess getBlockAccess() {
+        return BusRenderer.INSTANCE.getRenderer().blockAccess;
     }
 }
