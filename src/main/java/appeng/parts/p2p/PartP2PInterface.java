@@ -130,6 +130,15 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
             if (!isOutput()) {
                 super.addDrops(drops);
             } else {
+                // Linked outputs alias the input's storage. Once unshared, this storage is local to the output.
+                if (!this.sharedInventory) {
+                    for (final ItemStack is : this.getStorage()) {
+                        if (is != null) {
+                            drops.add(is);
+                        }
+                    }
+                }
+
                 if (this.getWaitingToSend() != null) {
                     for (final IAEStack<?> is : this.getWaitingToSend()) {
                         if (is != null) {

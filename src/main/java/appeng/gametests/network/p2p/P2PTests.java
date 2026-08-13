@@ -247,6 +247,96 @@ public class P2PTests {
                 }).thenSucceed();
     }
 
+    // Once detached from its input, an output owns its local buffer and must return it when removed.
+    @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
+    public static void removingOrphanedInterfaceP2POutputReturnsLocalBuffer(GameTestHelper helper) {
+        PartP2PItems itemInput = inputTunnel(helper, PartP2PItems.class);
+        PartP2PItems itemOutput = outputTunnel(helper, PartP2PItems.class);
+        PartP2PInterface[] tunnels = new PartP2PInterface[2];
+        ItemStack sharedItems = new ItemStack(Blocks.cobblestone, 4);
+        ItemStack localItems = new ItemStack(Blocks.dirt, 8);
+        ItemStack outputUpgrade = AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get();
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for the template P2P pair to become active",
+                        60,
+                        () -> assertLinkedPair(helper, itemInput, itemOutput, ITEM_FREQUENCY))
+                .thenExecute("replace the template pair with Interface P2P tunnels", () -> {
+                    tunnels[0] = replaceWithInterfaceTunnel(helper, itemInput);
+                    tunnels[1] = replaceWithInterfaceTunnel(helper, itemOutput);
+                }).thenWaitUntil("wait for the replacement tunnels to join the carrier network", 20, () -> {
+                    assertActive(helper, tunnels[0], "Replacement Interface P2P input should be active");
+                    assertActive(helper, tunnels[1], "Replacement Interface P2P output should be active");
+                }).thenExecute("bind the Interface P2P pair", () -> {
+                    try {
+                        tunnels[0].getProxy().getP2P().updateFreq(tunnels[0], INTERFACE_FREQUENCY);
+                    } catch (GridAccessException e) {
+                        throw new AssertionError("Interface P2P input should have access to the carrier cache", e);
+                    }
+
+                    ItemStack interfaceTunnel = AEApi.instance().definitions().parts().p2PTunnelMEInterface()
+                            .maybeStack(1).get();
+                    PartP2PTunnel<?> convertedOutput = tunnels[1]
+                            .convertToOutput(null, interfaceTunnel, INTERFACE_FREQUENCY);
+                    helper.assertNotNull(convertedOutput, "Interface P2P output conversion should succeed");
+                    helper.assertTrue(
+                            convertedOutput instanceof PartP2PInterface,
+                            "Converted output should remain an Interface P2P tunnel");
+                    tunnels[1] = (PartP2PInterface) convertedOutput;
+                    InventoryHelper.setSlot(tunnels[1].getInterfaceDuality().getUpgrades(), 0, outputUpgrade.copy());
+                })
+                .thenWaitUntil(
+                        "wait for the Interface P2P pair to become active and linked",
+                        20,
+                        () -> assertLinkedPair(helper, tunnels[0], tunnels[1], INTERFACE_FREQUENCY))
+                .thenExecute(
+                        "insert items into the shared input buffer",
+                        () -> InventoryHelper
+                                .setSlot(tunnels[0].getInterfaceDuality().getStorage(), 0, sharedItems.copy()))
+                .thenExecute("collect the input's wrench drops and remove it", () -> {
+                    List<ItemStack> drops = new ArrayList<>();
+                    tunnels[0].getDrops(drops, true);
+                    tunnels[0].getHost().removePart(tunnels[0].getSide(), false);
+
+                    helper.assertEquals(
+                            4L,
+                            countItems(drops, sharedItems),
+                            "Removing the input must return the shared storage exactly once");
+                    helper.assertEquals(
+                            0L,
+                            countItems(drops, outputUpgrade),
+                            "Removing the input must not return an upgrade owned by an output");
+                }).thenWaitUntil("wait for the output to switch to a local buffer", 20, () -> {
+                    helper.assertTrue(tunnels[1].getInput() == null, "Output should be orphaned after input removal");
+                    helper.assertFalse(
+                            tunnels[1].getInterfaceDuality().sharedInventory,
+                            "Orphaned output should own a local buffer");
+                })
+                .thenExecute(
+                        "insert items into the orphaned output's local buffer",
+                        () -> InventoryHelper
+                                .setSlot(tunnels[1].getInterfaceDuality().getStorage(), 0, localItems.copy()))
+                .thenExecute("collect the orphaned output's wrench drops and remove it", () -> {
+                    List<ItemStack> drops = new ArrayList<>();
+                    tunnels[1].getDrops(drops, true);
+                    tunnels[1].getHost().removePart(tunnels[1].getSide(), false);
+
+                    helper.assertEquals(
+                            8L,
+                            countItems(drops, localItems),
+                            "Removing an orphaned Interface P2P output must return its local buffer");
+                    helper.assertEquals(
+                            1L,
+                            countItems(drops, outputUpgrade),
+                            "Removing an output must return its locally owned upgrades");
+                    helper.assertEquals(
+                            0L,
+                            countItems(drops, sharedItems),
+                            "Removing the output must not return the input-owned shared storage again");
+                }).thenSucceed();
+    }
+
     private static PartP2PInterface replaceWithInterfaceTunnel(GameTestHelper helper, PartP2PTunnel<?> oldTunnel) {
         IPartHost host = oldTunnel.getHost();
         ForgeDirection side = oldTunnel.getSide();
