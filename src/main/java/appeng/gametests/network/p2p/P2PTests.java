@@ -202,7 +202,7 @@ public class P2PTests {
                 .thenWaitUntil(
                         "wait for the template P2P pair to become active",
                         60,
-                        () -> { assertLinkedPair(helper, itemInput, itemOutput, ITEM_FREQUENCY); })
+                        () -> assertLinkedPair(helper, itemInput, itemOutput, ITEM_FREQUENCY))
                 .thenExecute("replace the template pair with Interface P2P tunnels", () -> {
                     tunnels[0] = replaceWithInterfaceTunnel(helper, itemInput);
                     tunnels[1] = replaceWithInterfaceTunnel(helper, itemOutput);
