@@ -813,6 +813,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case DRAIN_SINGLE_CONTAINER -> {
+                if (this.getPowerSource() == null) return;
+
                 ItemStack hand = player.inventory.getItemStack();
                 if (hand == null) return;
 
@@ -828,7 +830,12 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     IAEStack<?> stack = type.getStackFromContainerItem(hand);
                     if (stack == null) return;
 
-                    IAEStack<?> leftover = monitor.injectItems(stack, Actionable.SIMULATE, this.getActionSource());
+                    IAEStack<?> leftover = Platform.poweredInsert(
+                            this.getPowerSource(),
+                            monitor,
+                            stack,
+                            this.getActionSource(),
+                            Actionable.SIMULATE);
                     if (leftover != null && leftover.getStackSize() == stack.getStackSize()) return;
 
                     long amountToInject = leftover == null ? stack.getStackSize()
@@ -841,9 +848,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
                     ItemStack result = simulated.left();
 
-                    final IAEStack<?> modulateLeftover = monitor.injectItems(
+                    final IAEStack<?> modulateLeftover = Platform.poweredInsert(
+                            this.getPowerSource(),
+                            monitor,
                             stack.setStackSize(simulated.rightLong()),
-                            Actionable.MODULATE,
                             this.getActionSource());
 
                     if (modulateLeftover != null) {
@@ -864,6 +872,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
             }
             case DRAIN_CONTAINERS -> {
+                if (this.getPowerSource() == null) return;
+
                 final ItemStack hand = player.inventory.getItemStack();
 
                 final IAEStackType type = getStackTypeForContainer(hand);
@@ -881,7 +891,12 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     final long amountPerItem = toInject.getStackSize();
                     long toInjectAmount = amountPerItem * hand.stackSize;
                     toInject.setStackSize(toInjectAmount);
-                    IAEStack<?> leftover = monitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
+                    IAEStack<?> leftover = Platform.poweredInsert(
+                            this.getPowerSource(),
+                            monitor,
+                            toInject,
+                            this.getActionSource(),
+                            Actionable.SIMULATE);
                     long injected = leftover == null ? toInjectAmount : toInjectAmount - leftover.getStackSize();
                     if (injected <= 0) return;
 
@@ -894,8 +909,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     if (injected == toInjectAmount && hand.stackSize <= cleared.getMaxStackSize()) {
                         toInject.setStackSize(toInjectAmount);
 
-                        IAEStack<?> modulateLeftover = monitor
-                                .injectItems(toInject, Actionable.MODULATE, this.getActionSource());
+                        IAEStack<?> modulateLeftover = Platform
+                                .poweredInsert(this.getPowerSource(), monitor, toInject, this.getActionSource());
                         if (modulateLeftover != null) {
                             if (modulateLeftover.getStackSize() == toInjectAmount) return;
 
@@ -919,14 +934,19 @@ public class ContainerMEMonitorable extends AEBaseContainer
                         int stackSize = hand.stackSize;
                         for (int i = 0; i < stackSize; i++) {
                             toInject.setStackSize(amountPerItem);
-                            leftover = monitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
+                            leftover = Platform.poweredInsert(
+                                    this.getPowerSource(),
+                                    monitor,
+                                    toInject,
+                                    this.getActionSource(),
+                                    Actionable.SIMULATE);
                             injected = leftover == null ? amountPerItem : amountPerItem - leftover.getStackSize();
                             if (injected != amountPerItem) break;
                             toInject.setStackSize(amountPerItem);
                             ItemStack result = cleared.copy();
 
-                            final IAEStack<?> modulateLeftover = monitor
-                                    .injectItems(toInject, Actionable.MODULATE, this.getActionSource());
+                            final IAEStack<?> modulateLeftover = Platform
+                                    .poweredInsert(this.getPowerSource(), monitor, toInject, this.getActionSource());
                             if (modulateLeftover != null) {
                                 if (modulateLeftover.getStackSize() == amountPerItem) continue;
 
@@ -948,6 +968,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case FILL_SINGLE_CONTAINER -> {
+                if (this.getPowerSource() == null) return;
+
                 ItemStack hand = player.inventory.getItemStack();
                 IAEStack<?> stackInSlot = this.getTargetStack();
                 if (hand == null || stackInSlot == null) return;
@@ -958,7 +980,12 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.extractItems(stackInSlot, Actionable.SIMULATE, this.getActionSource());
+                stackInSlot = Platform.poweredExtraction(
+                        this.getPowerSource(),
+                        monitor,
+                        stackInSlot,
+                        this.getActionSource(),
+                        Actionable.SIMULATE);
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 if (hand.stackSize == 1) {
@@ -974,9 +1001,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     long filledAmount = filledPair.rightLong();
                     if (filledContainer == null || filledAmount <= 0) return;
 
-                    final IAEStack<?> modulateResult = monitor.extractItems(
+                    final IAEStack<?> modulateResult = Platform.poweredExtraction(
+                            this.getPowerSource(),
+                            monitor,
                             stackInSlot.copy().setStackSize(filledAmount),
-                            Actionable.MODULATE,
                             this.getActionSource());
 
                     if (modulateResult == null) return;
@@ -1004,6 +1032,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case FILL_CONTAINERS -> {
+                if (this.getPowerSource() == null) return;
+
                 ItemStack hand = player.inventory.getItemStack();
                 IAEStack<?> stackInSlot = this.getTargetStack();
                 if (hand == null || stackInSlot == null) return;
@@ -1014,7 +1044,12 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.extractItems(stackInSlot, Actionable.SIMULATE, this.getActionSource());
+                stackInSlot = Platform.poweredExtraction(
+                        this.getPowerSource(),
+                        monitor,
+                        stackInSlot,
+                        this.getActionSource(),
+                        Actionable.SIMULATE);
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 // Set filled item to player hand
@@ -1031,9 +1066,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     if (fullFilledContainer.getMaxStackSize() >= hand.stackSize
                             && amountPerContainer * hand.stackSize <= stackInSlot.getStackSize()) {
                         // Fill all item in player hand
-                        final IAEStack<?> stackToFill = monitor.extractItems(
+                        final IAEStack<?> stackToFill = Platform.poweredExtraction(
+                                this.getPowerSource(),
+                                monitor,
                                 stackInSlot.copy().setStackSize(amountPerContainer * hand.stackSize),
-                                Actionable.MODULATE,
                                 this.getActionSource());
                         if (stackToFill == null) return;
 
@@ -1085,9 +1121,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
                             if (filledContainer == null || filledAmount <= 0) break;
 
                             long amountBeforeExtract = aes.getStackSize();
-                            final IAEStack<?> modulateResult = monitor.extractItems(
+                            final IAEStack<?> modulateResult = Platform.poweredExtraction(
+                                    this.getPowerSource(),
+                                    monitor,
                                     aes.setStackSize(filledAmount),
-                                    Actionable.MODULATE,
                                     this.getActionSource());
                             aes.setStackSize(amountBeforeExtract - filledAmount);
                             if (modulateResult == null) break;
@@ -1228,8 +1265,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
         long filledAmount = filledPair.rightLong();
         if (filledContainer == null || filledAmount <= 0) return;
 
-        IAEStack<?> modulateResult = monitor
-                .extractItems(stack.copy().setStackSize(filledAmount), Actionable.MODULATE, this.getActionSource());
+        IAEStack<?> modulateResult = Platform.poweredExtraction(
+                this.getPowerSource(),
+                monitor,
+                stack.copy().setStackSize(filledAmount),
+                this.getActionSource());
         if (modulateResult == null) return;
         if (modulateResult.getStackSize() != filledAmount) {
             ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), modulateResult);
@@ -1257,7 +1297,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
         IAEStack<?> stack = type.getStackFromContainerItem(hand);
         if (stack == null) return;
 
-        IAEStack<?> leftover = monitor.injectItems(stack, Actionable.SIMULATE, this.getActionSource());
+        IAEStack<?> leftover = Platform
+                .poweredInsert(this.getPowerSource(), monitor, stack, this.getActionSource(), Actionable.SIMULATE);
         if (leftover != null && leftover.getStackSize() == stack.getStackSize()) return;
 
         long amountToInject = leftover == null ? stack.getStackSize() : stack.getStackSize() - leftover.getStackSize();
@@ -1267,8 +1308,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
         if (simulated.rightLong() == 0 || simulated.left() == null) return;
         ItemStack result = simulated.left();
 
-        final IAEStack<?> modulateLeftover = monitor
-                .injectItems(stack.setStackSize(simulated.rightLong()), Actionable.MODULATE, this.getActionSource());
+        final IAEStack<?> modulateLeftover = Platform.poweredInsert(
+                this.getPowerSource(),
+                monitor,
+                stack.setStackSize(simulated.rightLong()),
+                this.getActionSource());
         if (modulateLeftover != null) {
             if (modulateLeftover.getStackSize() == simulated.rightLong()) return;
 
