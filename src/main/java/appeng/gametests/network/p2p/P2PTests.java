@@ -7,27 +7,36 @@ import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.part;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
+import appeng.api.AEApi;
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.IPart;
+import appeng.api.parts.IPartHost;
 import appeng.core.AppEng;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.me.GridAccessException;
+import appeng.parts.p2p.PartP2PInterface;
 import appeng.parts.p2p.PartP2PItems;
 import appeng.parts.p2p.PartP2PRedstone;
 import appeng.parts.p2p.PartP2PTunnel;
 import appeng.parts.p2p.PartP2PTunnelME;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
+import appeng.util.Platform;
 
 @GameTestHolder(AppEng.MOD_ID)
 public class P2PTests {
@@ -45,6 +54,7 @@ public class P2PTests {
     private static final long ITEM_FREQUENCY = 101L;
     private static final long REDSTONE_FREQUENCY = 202L;
     private static final long ME_FREQUENCY = 303L;
+    private static final long INTERFACE_FREQUENCY = 404L;
 
     // P1: a real hopper supplies the input tunnel, and conservation is checked on every observed tick.
     @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
@@ -178,6 +188,85 @@ public class P2PTests {
                     helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
                     assertInventoryTotal(helper, Blocks.cobblestone, 1);
                 }).thenSucceed();
+    }
+
+    // Wrenching an input must only collect inventory owned by that input; linked outputs remain installed.
+    @GameTest(template = "p2p_tunnels", timeoutTicks = 140)
+    public static void removingInterfaceP2PInputDoesNotDuplicateOutputUpgrades(GameTestHelper helper) {
+        PartP2PItems itemInput = inputTunnel(helper, PartP2PItems.class);
+        PartP2PItems itemOutput = outputTunnel(helper, PartP2PItems.class);
+        PartP2PInterface[] tunnels = new PartP2PInterface[2];
+        ItemStack craftingCard = AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get();
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for the template P2P pair to become active",
+                        60,
+                        () -> assertLinkedPair(helper, itemInput, itemOutput, ITEM_FREQUENCY))
+                .thenExecute("replace the template pair with Interface P2P tunnels", () -> {
+                    tunnels[0] = replaceWithInterfaceTunnel(helper, itemInput);
+                    tunnels[1] = replaceWithInterfaceTunnel(helper, itemOutput);
+                }).thenWaitUntil("wait for the replacement tunnels to join the carrier network", 20, () -> {
+                    assertActive(helper, tunnels[0], "Replacement Interface P2P input should be active");
+                    assertActive(helper, tunnels[1], "Replacement Interface P2P output should be active");
+                }).thenExecute("bind the Interface P2P pair and install an output upgrade", () -> {
+                    try {
+                        tunnels[0].getProxy().getP2P().updateFreq(tunnels[0], INTERFACE_FREQUENCY);
+                    } catch (GridAccessException e) {
+                        throw new AssertionError("Interface P2P input should have access to the carrier cache", e);
+                    }
+
+                    ItemStack interfaceTunnel = AEApi.instance().definitions().parts().p2PTunnelMEInterface()
+                            .maybeStack(1).get();
+                    PartP2PTunnel<?> convertedOutput = tunnels[1]
+                            .convertToOutput(null, interfaceTunnel, INTERFACE_FREQUENCY);
+                    helper.assertNotNull(convertedOutput, "Interface P2P output conversion should succeed");
+                    helper.assertTrue(
+                            convertedOutput instanceof PartP2PInterface,
+                            "Converted output should remain an Interface P2P tunnel");
+                    tunnels[1] = (PartP2PInterface) convertedOutput;
+                    InventoryHelper.setSlot(tunnels[1].getInterfaceDuality().getUpgrades(), 0, craftingCard.copy());
+                })
+                .thenWaitUntil(
+                        "wait for the Interface P2P pair to become active and linked",
+                        20,
+                        () -> assertLinkedPair(helper, tunnels[0], tunnels[1], INTERFACE_FREQUENCY))
+                .thenExecute("collect the input's wrench drops and remove it", () -> {
+                    List<ItemStack> drops = new ArrayList<>();
+                    tunnels[0].getDrops(drops, true);
+                    tunnels[0].getHost().removePart(tunnels[0].getSide(), false);
+
+                    helper.assertEquals(
+                            0L,
+                            countItems(drops, craftingCard),
+                            "Removing an Interface P2P input must not drop an upgrade owned by an output");
+                    helper.assertEquals(
+                            1L,
+                            InventoryHelper.count(tunnels[1].getInterfaceDuality().getUpgrades(), craftingCard),
+                            "The linked output must retain its installed upgrade after the input is removed");
+                }).thenSucceed();
+    }
+
+    private static PartP2PInterface replaceWithInterfaceTunnel(GameTestHelper helper, PartP2PTunnel<?> oldTunnel) {
+        IPartHost host = oldTunnel.getHost();
+        ForgeDirection side = oldTunnel.getSide();
+        ItemStack interfaceTunnel = AEApi.instance().definitions().parts().p2PTunnelMEInterface().maybeStack(1).get();
+        host.removePart(side, true);
+        ForgeDirection placedSide = host.addPart(interfaceTunnel, side, null);
+        helper.assertEquals(side, placedSide, "Interface P2P tunnel should replace the existing tunnel");
+        IPart replacement = host.getPart(side);
+        helper.assertTrue(replacement instanceof PartP2PInterface, "Replacement should be an Interface P2P tunnel");
+        return (PartP2PInterface) replacement;
+    }
+
+    private static long countItems(List<ItemStack> stacks, ItemStack template) {
+        long count = 0;
+        for (ItemStack stack : stacks) {
+            if (Platform.isSameItemPrecise(stack, template)) {
+                count += stack.stackSize;
+            }
+        }
+        return count;
     }
 
     private static <T extends PartP2PTunnel> T inputTunnel(GameTestHelper helper, Class<T> type) {
