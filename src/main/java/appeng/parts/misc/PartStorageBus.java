@@ -99,6 +99,9 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
+    private static final String NBT_FILTER = "filter";
+    private static final String NBT_PREVIOUS_FILTER = "previousFilter";
+
     private final BaseActionSource mySrc;
     private final IAEStackInventory config = new IAEStackInventory(this, 63) {
 
@@ -150,8 +153,10 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
             if (tag.hasKey("config")) {
                 config.readFromNBT(tag, "config");
             }
-            if (tag.hasKey("filter")) {
-                previousOreFilterString = tag.getString("filter");
+            if (tag.hasKey(NBT_PREVIOUS_FILTER, NBT.TAG_STRING)) {
+                previousOreFilterString = tag.getString(NBT_PREVIOUS_FILTER);
+            } else if (tag.hasKey(NBT_FILTER, NBT.TAG_STRING)) {
+                previousOreFilterString = tag.getString(NBT_FILTER);
             }
             if (tag.hasKey("filterCache")) {
                 NBTTagCompound tagCompound = tag.getCompoundTag("filterCache");
@@ -178,7 +183,9 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
             if (!this.config.isEmpty()) this.config.writeToNBT(tag, "config");
             if (this.priority != 0) tag.setInteger("priority", this.priority);
-            if (!this.oreFilterString.isEmpty()) tag.setString("filter", this.oreFilterString);
+            if (!this.previousOreFilterString.isEmpty()) {
+                tag.setString(NBT_FILTER, this.previousOreFilterString);
+            }
 
             final NBTTagCompound tagCompound = new NBTTagCompound();
             writeFilterCache(tagCompound);
@@ -292,7 +299,10 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         super.readFromNBT(data);
         this.config.readFromNBT(data, "config");
         this.priority = data.getInteger("priority");
-        this.oreFilterString = data.getString("filter");
+        this.oreFilterString = data.getString(NBT_FILTER);
+        this.previousOreFilterString = data.hasKey(NBT_PREVIOUS_FILTER, NBT.TAG_STRING)
+                ? data.getString(NBT_PREVIOUS_FILTER)
+                : this.oreFilterString;
         final NBTTagCompound filterCacheTag = data.getCompoundTag("filterCache");
         if (data.hasKey("customName")) this.setCustomName(data.getString("customName"));
         readFilterCache(filterCacheTag);
@@ -303,7 +313,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         super.writeToNBT(data);
         this.config.writeToNBT(data, "config");
         data.setInteger("priority", this.priority);
-        data.setString("filter", this.oreFilterString);
+        data.setString(NBT_FILTER, this.oreFilterString);
+        data.setString(NBT_PREVIOUS_FILTER, this.previousOreFilterString);
         final NBTTagCompound tagCompound = new NBTTagCompound();
         if (this.hasCustomName()) data.setString("customName", this.getCustomName());
         writeFilterCache(tagCompound);

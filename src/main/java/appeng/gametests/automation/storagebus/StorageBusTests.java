@@ -14,14 +14,19 @@ import static appeng.gametests.AEGameTestHelpers.simulateInjectIntoGrid;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
+import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
+import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Settings;
+import appeng.api.parts.PartItemStack;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AppEng;
@@ -192,6 +197,71 @@ public class StorageBusTests {
                 }).thenSucceed();
     }
 
+    // Reloading with the ore filter card installed must preserve the restoration copy used after card reinsertion.
+    @GameTest(template = "storage_bus")
+    public static void oreFilterSurvivesReloadAndCardReinsertion(GameTestHelper helper) {
+        PartStorageBus storageBus = getStorageBus(helper);
+        installOreFilterCard(helper, storageBus);
+        storageBus.setFilter("ingotIron");
+
+        PartStorageBus reloadedStorageBus = reloadStorageBus(storageBus);
+        helper.assertEquals(
+                "ingotIron",
+                reloadedStorageBus.getFilter(),
+                "Reloaded storage bus should retain its active ore filter");
+
+        removeOreFilterCard(helper, reloadedStorageBus);
+        helper.assertEquals(
+                "",
+                reloadedStorageBus.getFilter(),
+                "Removing the ore filter card should temporarily disable its filter");
+        installOreFilterCard(helper, reloadedStorageBus);
+        helper.assertEquals(
+                "ingotIron",
+                reloadedStorageBus.getFilter(),
+                "Reinserting the ore filter card after reload should restore its filter");
+        helper.succeed();
+    }
+
+    // The remembered expression must also survive a save made while the card, and thus the active filter, is absent.
+    @GameTest(template = "storage_bus")
+    public static void oreFilterSurvivesReloadWhileCardIsRemoved(GameTestHelper helper) {
+        PartStorageBus storageBus = getStorageBus(helper);
+        installOreFilterCard(helper, storageBus);
+        storageBus.setFilter("ingotIron");
+        removeOreFilterCard(helper, storageBus);
+
+        PartStorageBus reloadedStorageBus = reloadStorageBus(storageBus);
+        helper.assertEquals(
+                "",
+                reloadedStorageBus.getFilter(),
+                "Reloaded storage bus should keep the filter disabled while its card is absent");
+
+        installOreFilterCard(helper, reloadedStorageBus);
+        helper.assertEquals(
+                "ingotIron",
+                reloadedStorageBus.getFilter(),
+                "Inserting the ore filter card after reload should restore the remembered filter");
+        helper.succeed();
+    }
+
+    // Wrenching a bus while its card is absent must keep the hidden expression on the configured part item.
+    @GameTest(template = "storage_bus")
+    public static void wrenchedStorageBusRemembersOreFilterWithoutCard(GameTestHelper helper) {
+        PartStorageBus storageBus = getStorageBus(helper);
+        installOreFilterCard(helper, storageBus);
+        storageBus.setFilter("ingotIron");
+        removeOreFilterCard(helper, storageBus);
+
+        PartStorageBus replacedStorageBus = new PartStorageBus(storageBus.getItemStack(PartItemStack.Wrench));
+        installOreFilterCard(helper, replacedStorageBus);
+        helper.assertEquals(
+                "ingotIron",
+                replacedStorageBus.getFilter(),
+                "Replaced storage bus should restore the ore filter saved on its configured item");
+        helper.succeed();
+    }
+
     private static TileController getController(GameTestHelper helper) {
         return helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
     }
@@ -208,6 +278,29 @@ public class StorageBusTests {
         IAEStackInventory config = storageBus.getAEInventoryByName(StorageName.CONFIG);
         helper.assertNotNull(config, "Storage bus config inventory should exist");
         config.putAEStackInSlot(0, itemStack(block, 1));
+    }
+
+    private static PartStorageBus reloadStorageBus(PartStorageBus storageBus) {
+        NBTTagCompound data = new NBTTagCompound();
+        storageBus.writeToNBT(data);
+
+        ItemStack partItem = storageBus.getItemStack(PartItemStack.Network);
+        PartStorageBus reloadedStorageBus = new PartStorageBus(partItem);
+        reloadedStorageBus.readFromNBT(data);
+        return reloadedStorageBus;
+    }
+
+    private static void installOreFilterCard(GameTestHelper helper, PartStorageBus storageBus) {
+        IInventory upgrades = storageBus.getInventoryByName("upgrades");
+        helper.assertNotNull(upgrades, "Storage bus upgrade inventory should exist");
+        ItemStack card = AEApi.instance().definitions().materials().cardOreFilter().maybeStack(1).get();
+        InventoryHelper.setSlot(upgrades, 0, card);
+    }
+
+    private static void removeOreFilterCard(GameTestHelper helper, PartStorageBus storageBus) {
+        IInventory upgrades = storageBus.getInventoryByName("upgrades");
+        helper.assertNotNull(upgrades, "Storage bus upgrade inventory should exist");
+        InventoryHelper.clearSlot(upgrades, 0);
     }
 
 }
