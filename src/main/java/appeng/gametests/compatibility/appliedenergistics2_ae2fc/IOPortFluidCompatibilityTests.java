@@ -17,7 +17,7 @@ import appeng.core.AppEng;
 import appeng.tile.storage.TileDrive;
 import appeng.tile.storage.TileIOPort;
 
-@GameTestHolder(AppEng.MOD_ID)
+@GameTestHolder(value = AppEng.MOD_ID, requiredMods = "ae2fc")
 public class IOPortFluidCompatibilityTests {
 
     private static final String IO_PORT_LABEL = "io_port";
