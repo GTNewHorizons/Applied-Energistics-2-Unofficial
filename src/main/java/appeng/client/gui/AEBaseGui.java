@@ -544,7 +544,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 }
             }
 
-            if (holding != null && this.hoveredVirtualSlot != null
+            if ((holding != null || (c == 0 && isShiftKeyDown())) && this.hoveredVirtualSlot != null
                     && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
                 this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
                 this.handleDragVirtualSlot(this.hoveredVirtualSlot, c);

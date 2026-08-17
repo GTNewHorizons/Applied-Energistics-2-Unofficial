@@ -684,6 +684,26 @@ public class GuiMEMonitorable extends AEBaseGui
         else return super.handleVirtualSlotClick(virtualSlot, mouseButton);
     }
 
+    @Override
+    protected void mouseMovedOrUp(final int mouseX, final int mouseY, final int state) {
+        super.mouseMovedOrUp(mouseX, mouseY, state);
+        if (state == 0 && this.getScrollBar() != null) {
+            this.getScrollBar().release();
+        }
+    }
+
+    @Override
+    protected void handleDragVirtualSlot(VirtualMESlot virtualSlot, final int mouseButton) {
+        // Monitorable slots are virtual slots, not Container slots. When the
+        // cursor is empty, MouseTweaks' Shift+LMB extraction drag still needs
+        // to dispatch the same action as an individual Shift+LMB click.
+        if (mouseButton == 0 && isShiftKeyDown() && this.handleMonitorableSlotClick(virtualSlot, mouseButton)) {
+            return;
+        }
+
+        super.handleDragVirtualSlot(virtualSlot, mouseButton);
+    }
+
     private boolean handleMonitorableSlotClick(VirtualMESlot virtualSlot, final int mouseButton) {
         if (!(virtualSlot instanceof VirtualMEMonitorableSlot slot)) return false;
         IAEItemStack slotStack = slot.getAEStack() instanceof IAEItemStack ais ? ais : null;

@@ -157,6 +157,11 @@ public class GuiScrollbar implements IScrollSource {
         }
     }
 
+    /** Clears the drag target after the mouse button is released. */
+    public void release() {
+        this.isLatestClickOnScrollbar = false;
+    }
+
     public void wheel(int delta) {
         delta = Math.max(Math.min(-delta, 1), -1);
         this.currentScroll += delta * this.pageSize;
