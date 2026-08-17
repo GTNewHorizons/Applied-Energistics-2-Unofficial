@@ -7,13 +7,13 @@ dependencies {
 
     compileOnlyApi('com.github.GTNewHorizons:Angelica:2.2.3:dev')
     compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.14:dev') {transitive = false}
-    compileOnly("com.github.GTNewHorizons:Postea:1.2.5:dev")
+    compileOnly("com.github.GTNewHorizons:Postea:1.2.6:dev")
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.29:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.63:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.34:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.11:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.99.99-mu2:dev') {transitive = false}
-    compileOnly('com.ruling_0:MaterialLib:0.2.0-mu:dev') {transitive = false}
+    compileOnly('com.ruling_0:MaterialLib:0.9.0-mu:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ModularUI2:2.3.85-1.7.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.21:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
@@ -39,7 +39,7 @@ dependencies {
     compileOnly('curse.maven:rotarycraft-235596:4721191')
     compileOnly('com.github.GTNewHorizons:Baubles-Expanded:2.2.22-GTNH:dev')
     compileOnly("org.jetbrains:annotations:26.0.2")
-    compileOnly("com.github.GTNewHorizons:Postea:1.2.5:dev")
+    compileOnly("com.github.GTNewHorizons:Postea:1.2.6:dev")
     compileOnly("com.github.GTNewHorizons:InventoryBogoSorter:1.3.45-GTNH:dev")
 
     testImplementation('junit:junit:4.12')
@@ -53,11 +53,11 @@ dependencies {
         exclude module: "Hodgepodge"
         exclude module: "waila"
     }
-    functionalTestImplementation('com.ruling_0:MaterialLib:0.2.0-mu:dev')
+    functionalTestImplementation('com.ruling_0:MaterialLib:0.9.0-mu:dev')
 
     devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.13.0:dev")
 
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.6:dev")
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.31:dev') {transitive = false}
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:DuraDisplay:1.4.4:dev")
 	runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.22-GTNH:dev')
