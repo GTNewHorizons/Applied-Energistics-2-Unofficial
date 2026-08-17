@@ -154,6 +154,7 @@ public class GuiMEMonitorable extends AEBaseGui
     public final boolean hasPinHost;
     private boolean enableShiftPause = true;
     private boolean needsViewUpdate = false;
+    private boolean shiftDragActive = false;
 
     protected VirtualMEPinSlot[] pinSlots = null;
     protected VirtualMEMonitorableSlot[] monitorableSlots = null;
@@ -684,6 +685,36 @@ public class GuiMEMonitorable extends AEBaseGui
         else return super.handleVirtualSlotClick(virtualSlot, mouseButton);
     }
 
+    @Override
+    protected void handleDragVirtualSlot(VirtualMESlot virtualSlot, final int mouseButton) {
+        // Monitorable slots are virtual slots, not Container slots. When the
+        // cursor is empty, MouseTweaks' Shift+LMB extraction drag still needs
+        // to dispatch the same action as an individual Shift+LMB click.
+        if (mouseButton == 0 && isShiftKeyDown() && this.handleMonitorableSlotClick(virtualSlot, mouseButton)) {
+            this.shiftDragActive = true;
+            this.repo.setPaused(true);
+            return;
+        }
+
+        super.handleDragVirtualSlot(virtualSlot, mouseButton);
+    }
+
+    @Override
+    protected void mouseMovedOrUp(final int mouseX, final int mouseY, final int state) {
+        super.mouseMovedOrUp(mouseX, mouseY, state);
+
+        if (state == 0 && this.getScrollBar() != null) {
+            this.getScrollBar().release();
+        }
+
+        // Keep the terminal snapshot until the actual left-button release,
+        // even if the Shift key event arrives first.
+        if (state == 0 && this.shiftDragActive) {
+            this.shiftDragActive = false;
+            this.repo.setPaused(false);
+        }
+    }
+
     private boolean handleMonitorableSlotClick(VirtualMESlot virtualSlot, final int mouseButton) {
         if (!(virtualSlot instanceof VirtualMEMonitorableSlot slot)) return false;
         IAEItemStack slotStack = slot.getAEStack() instanceof IAEItemStack ais ? ais : null;
@@ -1072,7 +1103,20 @@ public class GuiMEMonitorable extends AEBaseGui
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
-        if (this.needsViewUpdate) {
+        // Keyboard events can be missed while MouseTweaks is issuing a
+        // Shift-drag. Reconcile the pause state from the actual input state
+        // before processing network-driven view updates.
+        if (enableShiftPause && isShiftKeyDown() && Mouse.isButtonDown(0)) {
+            this.repo.setPaused(true);
+        } else if (this.repo.isPaused() && !isShiftKeyDown() && !this.shiftDragActive) {
+            this.repo.setPaused(false);
+        }
+
+        // Keep the visible terminal slots stable while Shift-dragging. The
+        // repository is deliberately paused in this state, but rebuilding
+        // the view here would still remove transferred stacks and shift the
+        // remaining slots under MouseTweaks' drag cursor.
+        if (this.needsViewUpdate && !this.repo.isPaused()) {
             this.needsViewUpdate = false;
             this.repo.updateView();
             this.setScrollBar();

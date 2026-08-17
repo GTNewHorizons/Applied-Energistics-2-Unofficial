@@ -157,6 +157,10 @@ public class GuiScrollbar implements IScrollSource {
         }
     }
 
+    public void release() {
+        this.isLatestClickOnScrollbar = false;
+    }
+
     public void wheel(int delta) {
         delta = Math.max(Math.min(-delta, 1), -1);
         this.currentScroll += delta * this.pageSize;
