@@ -243,8 +243,10 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                 case MULTIPLY_PATTERN -> modifyPatternInSlot(inv, id, slot, slotStack, 1);
                 case DIVIDE_PATTERN -> modifyPatternInSlot(inv, id, slot, slotStack, -1);
                 case CREATIVE_DUPLICATE -> {
-                    if (player.capabilities.isCreativeMode) {
-                        playerHand.addItems(handStack);
+                    if (player.capabilities.isCreativeMode && handStack == null && slotStack != null) {
+                        final ItemStack duplicate = slotStack.copy();
+                        duplicate.stackSize = duplicate.getMaxStackSize();
+                        player.inventory.setItemStack(duplicate);
                     }
                 }
                 default -> {
