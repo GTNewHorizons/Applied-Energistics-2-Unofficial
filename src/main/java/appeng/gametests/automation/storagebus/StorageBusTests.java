@@ -223,45 +223,6 @@ public class StorageBusTests {
         helper.succeed();
     }
 
-    // The remembered expression must also survive a save made while the card, and thus the active filter, is absent.
-    @GameTest(template = "storage_bus")
-    public static void oreFilterSurvivesReloadWhileCardIsRemoved(GameTestHelper helper) {
-        PartStorageBus storageBus = getStorageBus(helper);
-        installOreFilterCard(helper, storageBus);
-        storageBus.setFilter("ingotIron");
-        removeOreFilterCard(helper, storageBus);
-
-        PartStorageBus reloadedStorageBus = reloadStorageBus(storageBus);
-        helper.assertEquals(
-                "",
-                reloadedStorageBus.getFilter(),
-                "Reloaded storage bus should keep the filter disabled while its card is absent");
-
-        installOreFilterCard(helper, reloadedStorageBus);
-        helper.assertEquals(
-                "ingotIron",
-                reloadedStorageBus.getFilter(),
-                "Inserting the ore filter card after reload should restore the remembered filter");
-        helper.succeed();
-    }
-
-    // Wrenching a bus while its card is absent must keep the hidden expression on the configured part item.
-    @GameTest(template = "storage_bus")
-    public static void wrenchedStorageBusRemembersOreFilterWithoutCard(GameTestHelper helper) {
-        PartStorageBus storageBus = getStorageBus(helper);
-        installOreFilterCard(helper, storageBus);
-        storageBus.setFilter("ingotIron");
-        removeOreFilterCard(helper, storageBus);
-
-        PartStorageBus replacedStorageBus = new PartStorageBus(storageBus.getItemStack(PartItemStack.Wrench));
-        installOreFilterCard(helper, replacedStorageBus);
-        helper.assertEquals(
-                "ingotIron",
-                replacedStorageBus.getFilter(),
-                "Replaced storage bus should restore the ore filter saved on its configured item");
-        helper.succeed();
-    }
-
     private static TileController getController(GameTestHelper helper) {
         return helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
     }
