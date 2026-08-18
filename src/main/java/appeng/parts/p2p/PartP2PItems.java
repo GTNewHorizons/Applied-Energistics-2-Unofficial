@@ -10,8 +10,11 @@
 
 package appeng.parts.p2p;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -52,6 +55,9 @@ import cpw.mods.fml.relauncher.SideOnly;
 @Interface(iface = "buildcraft.api.transport.IPipeConnection", iname = IntegrationType.BuildCraftTransport)
 public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         implements IPipeConnection, ISidedInventory, IGridTickable {
+
+    private static final ThreadLocal<Set<PartP2PItems>> ACTIVE_INVENTORY_OPERATIONS = ThreadLocal
+            .withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<>()));
 
     private final LinkedList<IInventory> which = new LinkedList<>();
     private int oldSize = 0;
@@ -158,7 +164,13 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         final boolean wasReq = this.requested;
 
         if (this.requested && this.cachedInv != null) {
-            ((WrapperChainedInventory) this.cachedInv).cycleOrder();
+            if (this.beginInventoryOperation()) {
+                try {
+                    ((WrapperChainedInventory) this.cachedInv).cycleOrder();
+                } finally {
+                    this.endInventoryOperation();
+                }
+            }
         }
 
         this.requested = false;
@@ -170,7 +182,7 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         if (!this.isOutput()) {
             this.cachedInv = null;
             final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
+            this.oldSize = this.getSizeInventory();
             if (olderSize != this.oldSize) {
                 this.getHost().notifyNeighbors();
             }
@@ -182,7 +194,7 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         if (!this.isOutput()) {
             this.cachedInv = null;
             final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
+            this.oldSize = this.getSizeInventory();
             if (olderSize != this.oldSize) {
                 this.getHost().notifyNeighbors();
             }
@@ -194,7 +206,7 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         if (!this.isOutput()) {
             this.cachedInv = null;
             final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
+            this.oldSize = this.getSizeInventory();
             if (olderSize != this.oldSize) {
                 this.getHost().notifyNeighbors();
             }
@@ -212,7 +224,7 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         if (!this.isOutput()) {
             this.cachedInv = null;
             final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
+            this.oldSize = this.getSizeInventory();
             if (olderSize != this.oldSize) {
                 this.getHost().notifyNeighbors();
             }
@@ -226,26 +238,59 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     @Override
     public int[] getAccessibleSlotsFromSide(final int var1) {
-        final int[] slots = new int[this.getSizeInventory()];
-        for (int x = 0; x < this.getSizeInventory(); x++) {
-            slots[x] = x;
+        if (!this.beginInventoryOperation()) {
+            return new int[0];
         }
-        return slots;
+
+        try {
+            final int size = this.getDestination().getSizeInventory();
+            final int[] slots = new int[size];
+            for (int x = 0; x < size; x++) {
+                slots[x] = x;
+            }
+            return slots;
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
     public int getSizeInventory() {
-        return this.getDestination().getSizeInventory();
+        if (!this.beginInventoryOperation()) {
+            return 0;
+        }
+
+        try {
+            return this.getDestination().getSizeInventory();
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
     public ItemStack getStackInSlot(final int i) {
-        return this.getDestination().getStackInSlot(i);
+        if (!this.beginInventoryOperation()) {
+            return null;
+        }
+
+        try {
+            return this.getDestination().getStackInSlot(i);
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
     public ItemStack decrStackSize(final int i, final int j) {
-        return this.getDestination().decrStackSize(i, j);
+        if (!this.beginInventoryOperation()) {
+            return null;
+        }
+
+        try {
+            return this.getDestination().decrStackSize(i, j);
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
@@ -255,7 +300,15 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     @Override
     public void setInventorySlotContents(final int i, final ItemStack itemstack) {
-        this.getDestination().setInventorySlotContents(i, itemstack);
+        if (!this.beginInventoryOperation()) {
+            return;
+        }
+
+        try {
+            this.getDestination().setInventorySlotContents(i, itemstack);
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
@@ -270,7 +323,15 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     @Override
     public int getInventoryStackLimit() {
-        return this.getDestination().getInventoryStackLimit();
+        if (!this.beginInventoryOperation()) {
+            return 0;
+        }
+
+        try {
+            return this.getDestination().getInventoryStackLimit();
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
@@ -291,12 +352,28 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     @Override
     public boolean isItemValidForSlot(final int i, final net.minecraft.item.ItemStack itemstack) {
-        return this.getDestination().isItemValidForSlot(i, itemstack);
+        if (!this.beginInventoryOperation()) {
+            return false;
+        }
+
+        try {
+            return this.getDestination().isItemValidForSlot(i, itemstack);
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
     public boolean canInsertItem(final int i, final ItemStack itemstack, final int j) {
-        return this.getDestination().isItemValidForSlot(i, itemstack);
+        if (!this.beginInventoryOperation()) {
+            return false;
+        }
+
+        try {
+            return this.getDestination().isItemValidForSlot(i, itemstack);
+        } finally {
+            this.endInventoryOperation();
+        }
     }
 
     @Override
@@ -306,6 +383,23 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     public float getPowerDrainPerTick() {
         return 2.0f;
+    }
+
+    /**
+     * P2P destinations are lazy inventory wrappers and can lead back to this part after {@link #getOutputInv()} has
+     * returned. Keep the visited marker alive for the complete inventory operation so circular paths behave like empty
+     * inventory ranges instead of recursively delegating until the server stack overflows.
+     */
+    private boolean beginInventoryOperation() {
+        return ACTIVE_INVENTORY_OPERATIONS.get().add(this);
+    }
+
+    private void endInventoryOperation() {
+        final Set<PartP2PItems> activeOperations = ACTIVE_INVENTORY_OPERATIONS.get();
+        activeOperations.remove(this);
+        if (activeOperations.isEmpty()) {
+            ACTIVE_INVENTORY_OPERATIONS.remove();
+        }
     }
 
     @Override
