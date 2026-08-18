@@ -648,16 +648,16 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     }
                 }
                 fuzz = fuzz.copy();
-                fuzz.setStackSize(ingredient.getStackSize());
+                fuzz.setStackSize(Math.min(fuzz.getStackSize(), ingredient.getStackSize()));
                 final IAEItemStack ais = this.inventory.extractItems(fuzz, Actionable.SIMULATE);
 
-                if (ais != null && ais.getStackSize() == ingredient.getStackSize()) {
+                if (ais != null && ais.getStackSize() > 0) {
                     list.add(ais);
-                    return list;
-                } else if (ais != null && patternDetails.isCraftable()) {
                     ingredient = ingredient.copy();
                     ingredient.decStackSize(ais.getStackSize());
-                    list.add(ais);
+                    if (ingredient.getStackSize() <= 0) {
+                        return list;
+                    }
                 }
             }
         } else {
@@ -668,6 +668,16 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             }
         }
         return list;
+    }
+
+    protected static long saturatedMultiply(final long value, final int multiplier) {
+        if (value <= 0 || multiplier <= 0) {
+            return 0;
+        }
+        if (value > Long.MAX_VALUE / multiplier) {
+            return Long.MAX_VALUE;
+        }
+        return value * multiplier;
     }
 
     protected boolean canCraft(final ICraftingPatternDetails details, final List<IAEStack<?>> condensedInputs) {
@@ -861,7 +871,18 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                     // Find a valid craftingInventory for this craft.
                     double sum = 0;
+                    int multiplier = 1;
                     if (craftingInventory == null) {
+                        final int requestedMultiplier = (int) Math
+                                .min(craftingEntry.getValue().value, this.remainingOperations);
+                        if (requestedMultiplier > 1 && medium.canMergePatternPush(details)) {
+                            multiplier = medium.getMaxPatternPushMultiplier(details, requestedMultiplier);
+                            multiplier = Math.max(0, Math.min(multiplier, requestedMultiplier));
+                        }
+                        if (multiplier <= 0) {
+                            continue;
+                        }
+
                         final boolean craftable = details.isCraftable();
                         final List<IAEStack<?>> expandedInputs = craftable ? Arrays.asList(details.getAEInputs())
                                 : getExpandedInputs(details, cc);
@@ -869,17 +890,31 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             throw new IllegalStateException("Input-only pattern expansion failed");
                         }
 
+                        double singleSum = 0;
                         for (final IAEStack<?> anInput : expandedInputs) {
                             if (anInput != null) {
-                                sum += (double) anInput.getStackSize() / anInput.getAmountPerUnit();
+                                singleSum += (double) anInput.getStackSize() / anInput.getAmountPerUnit();
                             }
                         }
                         // upgraded interface uses more power
-                        if (medium instanceof DualityInterface) sum *= Math
+                        if (medium instanceof DualityInterface) singleSum *= Math
                                 .pow(4.0, ((DualityInterface) medium).getInstalledUpgrades(Upgrades.PATTERN_CAPACITY));
 
-                        // check if there is enough power
-                        if (eg.extractAEPower(sum, Actionable.SIMULATE, PowerMultiplier.CONFIG) < sum - 0.01) continue;
+                        // Limit the batch by the available energy in constant time.
+                        if (singleSum > 0.0 && Double.isFinite(singleSum)) {
+                            final double requestedPower = singleSum * multiplier;
+                            final double availablePower = eg
+                                    .extractAEPower(requestedPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+                            if (availablePower < requestedPower - 0.01) {
+                                multiplier = Math.max(
+                                        0,
+                                        Math.min(multiplier, (int) Math.floor((availablePower + 0.01) / singleSum)));
+                            }
+                            sum = singleSum * multiplier;
+                        } else {
+                            sum = 0.0;
+                        }
+                        if (multiplier <= 0) continue;
 
                         craftingInventory = craftable ? new MEInventoryCrafting(new ContainerNull(), 3, 3)
                                 : new MEInventoryCrafting(new ContainerNull(), expandedInputs.size(), 1);
@@ -890,22 +925,42 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             final IAEStack<?> slotInput = expandedInputs.get(x);
                             if (slotInput != null) {
                                 found = false;
-                                for (IAEStack ias : getExtractItems(slotInput, details)) {
-                                    IAEStack tempStack = ias.copy();
-                                    if (craftable && !details.isValidItemForSlot(x, tempStack, this.getWorld()))
+                                final IAEStack<?> requiredInput = slotInput.copy();
+                                requiredInput.setStackSize(saturatedMultiply(slotInput.getStackSize(), multiplier));
+                                IAEStack<?> selectedStack = null;
+                                final List<IAEStack<?>> extractedForSlot = new ArrayList<>();
+                                long remaining = requiredInput.getStackSize();
+                                for (IAEStack ias : getExtractItems(requiredInput, details)) {
+                                    if (craftable && !details.isValidItemForSlot(x, ias, this.getWorld())) {
                                         continue;
-
-                                    final IAEStack<?> aes = this.inventory.extractItems(tempStack, Actionable.MODULATE);
-                                    if (aes != null) {
+                                    }
+                                    if (selectedStack == null) {
+                                        selectedStack = ias.copy();
+                                        selectedStack.setStackSize(0);
+                                    }
+                                    if (!selectedStack.equals(ias)) {
+                                        continue;
+                                    }
+                                    final IAEStack<?> request = ias.copy();
+                                    request.setStackSize(remaining);
+                                    final IAEStack<?> aes = this.inventory
+                                            .extractItems((IAEStack) request, Actionable.MODULATE);
+                                    if (aes == null || aes.getStackSize() <= 0) {
+                                        break;
+                                    }
+                                    extractedForSlot.add(aes);
+                                    remaining -= aes.getStackSize();
+                                    this.postChange(aes, this.machineSrc);
+                                    if (remaining <= 0) {
+                                        selectedStack.setStackSize(requiredInput.getStackSize());
+                                        craftingInventory.setInventorySlotContents(x, selectedStack);
                                         found = true;
-                                        craftingInventory.setInventorySlotContents(x, aes);
-                                        if (!details.canBeSubstitute()
-                                                && aes.getStackSize() == slotInput.getStackSize()) {
-                                            this.postChange(slotInput, this.machineSrc);
-                                            break;
-                                        } else {
-                                            this.postChange(aes, this.machineSrc);
-                                        }
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    for (IAEStack<?> extracted : extractedForSlot) {
+                                        this.inventory.injectItems(extracted, Actionable.MODULATE, this.machineSrc);
                                     }
                                 }
                                 if (!found) {
@@ -922,10 +977,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         }
                     }
 
-                    if (medium.pushPattern(details, craftingInventory)) {
+                    if (medium.pushPattern(details, craftingInventory, multiplier)) {
                         eg.extractAEPower(sum, Actionable.MODULATE, PowerMultiplier.CONFIG);
                         this.somethingChanged = true;
-                        this.remainingOperations--;
+                        this.remainingOperations -= multiplier;
                         pushedPattern = true;
 
                         if (!this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
@@ -939,8 +994,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             didPatternCraft = true;
                             this.markDirty();
 
-                            executedTasks += 1;
-                            craftingEntry.getValue().value--;
+                            executedTasks += multiplier;
+                            craftingEntry.getValue().value -= multiplier;
 
                             if (craftingEntry.getValue().value <= 0) {
                                 this.tasks.remove(details);
@@ -948,11 +1003,11 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 reasonProvider.remove(details);
                                 craftingTaskIterator.remove();
 
-                                this.finalOutput.performFakeCrafting(details);
+                                this.finalOutput.performFakeCrafting(details, multiplier);
 
                                 break doWhileCraftingLoop;
                             } else {
-                                this.finalOutput.performFakeCrafting(details);
+                                this.finalOutput.performFakeCrafting(details, multiplier);
 
                                 if (this.remainingOperations == 0) {
                                     if (mediumListCheck != null) parallelismProvider.put(details, mediumListCheck);
@@ -977,21 +1032,32 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
                         }
 
-                        final CraftingDiagnosticSessionId diagnosticSessionId = craftingEntry.getValue()
-                                .consumeCraftSession();
-                        final long outputObservedAtTick = diagnosticSessionId == null
-                                || !this.isCraftingDiagnosticsEnabled() ? 0L : getServerTick();
+                        final long outputObservedAtTick = !this.isCraftingDiagnosticsEnabled() ? 0L : getServerTick();
+                        final List<CraftingDiagnosticSessionId> diagnosticSessionIds = new ArrayList<>(multiplier);
+                        if (outputObservedAtTick > 0L) {
+                            for (int craft = 0; craft < multiplier; craft++) {
+                                final CraftingDiagnosticSessionId diagnosticSessionId = craftingEntry.getValue()
+                                        .consumeCraftSession();
+                                if (diagnosticSessionId != null) {
+                                    diagnosticSessionIds.add(diagnosticSessionId);
+                                }
+                            }
+                        }
                         // Process output items.
                         for (final IAEStack<?> outputItemStack : details.getCondensedAEOutputs()) {
                             if (outputObservedAtTick > 0L) {
-                                this.diagnostics.recordExpectedOutput(
-                                        outputItemStack,
-                                        outputObservedAtTick,
-                                        diagnosticSessionId);
+                                for (final CraftingDiagnosticSessionId diagnosticSessionId : diagnosticSessionIds) {
+                                    this.diagnostics.recordExpectedOutput(
+                                            outputItemStack,
+                                            outputObservedAtTick,
+                                            diagnosticSessionId);
+                                }
                             }
-                            this.postChange(outputItemStack, this.machineSrc);
-                            this.waitingFor.add(outputItemStack.copy());
-                            this.postCraftingStatusChange(outputItemStack.copy());
+                            final IAEStack<?> expectedOutput = outputItemStack.copy();
+                            expectedOutput.setStackSize(saturatedMultiply(outputItemStack.getStackSize(), multiplier));
+                            this.postChange(expectedOutput, this.machineSrc);
+                            this.waitingFor.add(expectedOutput);
+                            this.postCraftingStatusChange(expectedOutput.copy());
                         }
 
                         if (details.isCraftable()) {
@@ -1002,10 +1068,12 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             for (int x = 0; x < craftingInventory.getSizeInventory(); x++) {
                                 final ItemStack output = Platform.getContainerItem(craftingInventory.getStackInSlot(x));
                                 if (output != null) {
-                                    final IAEItemStack cItem = AEItemStack.create(output);
-                                    this.postChange(cItem, this.machineSrc);
-                                    this.waitingFor.add(cItem);
-                                    this.postCraftingStatusChange(cItem);
+                                    final IAEStack<?> expectedContainerItem = AEItemStack.create(output);
+                                    expectedContainerItem.setStackSize(
+                                            saturatedMultiply(expectedContainerItem.getStackSize(), multiplier));
+                                    this.postChange(expectedContainerItem, this.machineSrc);
+                                    this.waitingFor.add(expectedContainerItem);
+                                    this.postCraftingStatusChange(expectedContainerItem.copy());
                                 }
                             }
                         }
@@ -1014,8 +1082,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         didPatternCraft = true;
                         this.markDirty();
 
-                        executedTasks += 1;
-                        craftingEntry.getValue().value--;
+                        executedTasks += multiplier;
+                        craftingEntry.getValue().value -= multiplier;
                         if (craftingEntry.getValue().value <= 0) {
                             // This craftingEntry is done.
                             break doWhileCraftingLoop;
@@ -2376,10 +2444,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return matches == this.patternOutputs.length;
         }
 
-        public void performFakeCrafting(ICraftingPatternDetails details) {
+        public void performFakeCrafting(final ICraftingPatternDetails details, final int multiplier) {
             for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
                 final IAEStack<?> tempAes = this.outputs.findPrecise(aes);
-                if (tempAes != null) tempAes.decStackSize(aes.getStackSize());
+                if (tempAes != null) tempAes.decStackSize(saturatedMultiply(aes.getStackSize(), multiplier));
             }
 
             if (this.outputs.isEmpty()) {
