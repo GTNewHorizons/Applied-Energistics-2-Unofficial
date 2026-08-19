@@ -338,6 +338,9 @@ public class CraftingGridCache
                 continue;
             }
             for (IAEStack<?> out : details.getAEOutputs()) {
+                if (out == null) {
+                    continue;
+                }
                 out = out.copy();
                 out.reset();
                 out.setCraftable(true);
