@@ -66,8 +66,8 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
             if (!data.hasKey("encryptionKeys") && data.hasKey("encryptionKey")) {
                 final NBTTagCompound keys = new NBTTagCompound();
                 final String key = data.getString("encryptionKey");
-                final String colorKey = AEColor.values()[0].name();
-                final String colorName = AEColor.values()[0].toString();
+                final String colorKey = AEColor.VALUES[0].name();
+                final String colorName = AEColor.VALUES[0].toString();
 
                 keys.setString(colorKey, key);
                 keys.setString(colorKey + "Name", colorName);
@@ -83,9 +83,9 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
         if (data.hasKey("encryptionKeys")) {
             final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
             for (int i = 0; i < 16; i++) {
-                final String key = AEColor.values()[i].name();
+                final String key = AEColor.VALUES[i].name();
                 final String name = keys.hasKey(key + "Name") ? keys.getString(key + "Name")
-                        : AEColor.values()[i].toString();
+                        : AEColor.VALUES[i].toString();
                 keysStatus.put(i, Pair.of(keys.hasKey(key), name));
             }
         }
@@ -103,7 +103,7 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
     private void setCurrent(final byte color) {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
-        ItemStackNBT.of(this.terminal).setString("encryptionKey", keys.getString(AEColor.values()[color].name()));
+        ItemStackNBT.of(this.terminal).setString("encryptionKey", keys.getString(AEColor.VALUES[color].name()));
         this.checkItem(this.getTarget());
         this.getInventoryPlayer().player.closeScreen();
     }
@@ -117,7 +117,7 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
         final NBTTagCompound data = ItemStackNBT.get(this.terminal);
         final NBTTagCompound keys = data.getCompoundTag("encryptionKeys");
 
-        final String key = AEColor.values()[color].name();
+        final String key = AEColor.VALUES[color].name();
         final String encryptionKey = keys.getString(key);
         final String currentEncryptionKey = data.getString("encryptionKey");
 
@@ -125,7 +125,7 @@ public class ContainerWirelessNetworkManager extends AEBaseContainer {
             data.removeTag("encryptionKey");
 
             for (int i = 0; i < 16; i++) {
-                final String tempKey = AEColor.values()[i].name();
+                final String tempKey = AEColor.VALUES[i].name();
                 if (tempKey.equals(key)) continue;
                 if (keys.hasKey(tempKey)) {
                     data.setString("encryptionKey", keys.getString(tempKey));

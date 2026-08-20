@@ -263,7 +263,7 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileSecurity(final ByteBuf data) {
         final AEColor oldColor = this.color;
-        this.color = AEColor.values()[data.readByte()];
+        this.color = AEColor.VALUES[data.readByte()];
         return oldColor != this.color;
     }
 
@@ -311,7 +311,7 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileWirelessConnector(final NBTTagCompound data) {
         if (data.hasKey("Color")) {
-            this.color = AEColor.values()[data.getShort("Color")];
+            this.color = AEColor.VALUES[data.getShort("Color")];
             this.getProxy().setColor(this.color);
         }
 
@@ -411,7 +411,7 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
             }
         }
 
-        AEColor colour = AEColor.values()[i];
+        AEColor colour = AEColor.VALUES[i];
 
         if (this.color == colour) return;
         this.color = colour;

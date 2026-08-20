@@ -170,7 +170,7 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
             helper.setPass(pass);
             rb.renderAllFaces = true;
             rb.overrideBlockTexture = null;
-            this.getCableBus().renderStatic(pos.x, pos.y, pos.z);
+            this.getCableBus().renderStatic(this.tile().getWorldObj(), pos.x, pos.y, pos.z);
             return helper.getItemsRendered() > 0;
         }
         return false;

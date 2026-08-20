@@ -19,13 +19,16 @@ import net.minecraft.tileentity.TileEntityChest;
 import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
+import appeng.api.config.Actionable;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
 import appeng.core.AppEng;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.parts.automation.PartExportBus;
@@ -46,6 +49,7 @@ public class ImportExportBusTests {
     private static final String IMPORT_BUS_LABEL = "import_bus";
     private static final String EXPORT_BUS_LABEL = "export_bus";
     private static final String REDSTONE_LABEL = "redstone";
+    private static final long CELL_1K_ONE_TYPE_CAPACITY = 8128;
 
     // A filtered import bus should pull only matching stacks from the source chest into ME storage.
     @GameTest(template = "bus_io", timeoutTicks = 380)
@@ -129,6 +133,53 @@ public class ImportExportBusTests {
                 .thenExecute("begin full-destination conservation invariant", fullDestinationPreservesNetwork::enable)
                 .thenIdle(120)
                 .thenExecute("finish full-destination observation window", fullDestinationPreservesNetwork::disable)
+                .thenSucceed();
+    }
+
+    // A crafting result can return after the export bus destination has been removed.
+    @GameTest(template = "bus_io", timeoutTicks = 120)
+    public static void missingDestinationRejectsCraftedItems(GameTestHelper helper) {
+        BusIO busIO = getBusIO(helper);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for export bus network activation",
+                        60,
+                        () -> { assertActive(helper, busIO.exportBus, "Export bus should receive a channel"); })
+                .thenExecute("remove export destination", () -> helper.destroyBlock(DESTINATION_CHEST_LABEL))
+                .thenIdle(1)
+                .thenExecute(
+                        "simulate crafted-item delivery",
+                        () -> { assertCraftedItemsRejected(helper, busIO.exportBus, Actionable.SIMULATE); })
+                .thenExecute(
+                        "attempt crafted-item delivery",
+                        () -> { assertCraftedItemsRejected(helper, busIO.exportBus, Actionable.MODULATE); })
+                .thenSucceed();
+    }
+
+    // A full ME network should make the import bus leave the external source inventory untouched.
+    @GameTest(template = "bus_io", timeoutTicks = 240)
+    public static void importBusFullNetworkLeavesSourceUntouched(GameTestHelper helper) {
+        BusIO busIO = getBusIO(helper);
+        ItemStack driveCell = cell1k();
+        insertItems(helper, driveCell, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+        helper.setSlot(DRIVE_LABEL, 0, driveCell);
+        helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 32));
+        configureFilter(helper, busIO.importBus, Blocks.cobblestone);
+        configureFilter(helper, busIO.exportBus, Blocks.dirt);
+        TickCallbackHandle fullNetworkPreservesSource = helper.onEachTick(() -> {
+            assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+            assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+            helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 32);
+            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+        });
+        fullNetworkPreservesSource.disable();
+
+        helper.startSequence()
+                .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))
+                .thenExecute("begin full-network conservation invariant", fullNetworkPreservesSource::enable)
+                .thenIdle(120)
+                .thenExecute("finish full-network observation window", fullNetworkPreservesSource::disable)
                 .thenSucceed();
     }
 
@@ -282,6 +333,14 @@ public class ImportExportBusTests {
         helper.assertNull(
                 injectIntoGrid(busIO.controller, Blocks.cobblestone, amount),
                 "Injected cobblestone should fit into the drive cell");
+    }
+
+    private static void assertCraftedItemsRejected(GameTestHelper helper, PartExportBus exportBus, Actionable mode) {
+        IAEStack<?> items = itemStack(Blocks.cobblestone, 8);
+        IAEStack<?> remainder = exportBus.injectCraftedItems(null, items, mode);
+
+        helper.assertTrue(remainder == items, "Missing destination should reject the entire crafted stack");
+        helper.assertEquals(8L, remainder.getStackSize(), "Rejected crafted stack amount should be unchanged");
     }
 
     @Desugar
