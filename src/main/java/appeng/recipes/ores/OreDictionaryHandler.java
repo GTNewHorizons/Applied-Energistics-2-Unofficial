@@ -71,10 +71,6 @@ public class OreDictionaryHandler {
         }
     }
 
-    public void onLoadComplete() {
-        this.rebakePending = true;
-    }
-
     public void onTick() {
         if (this.rebakePending) {
             this.rebakePending = false;

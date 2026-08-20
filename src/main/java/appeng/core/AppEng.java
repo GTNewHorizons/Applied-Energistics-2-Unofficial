@@ -35,7 +35,6 @@ import appeng.hooks.TickHandler;
 import appeng.integration.IntegrationRegistry;
 import appeng.recipes.CustomRecipeConfig;
 import appeng.recipes.CustomRecipeForgeConfiguration;
-import appeng.recipes.ores.OreDictionaryHandler;
 import appeng.server.AECommand;
 import appeng.services.export.ExportConfig;
 import appeng.services.export.ExportProcess;
@@ -53,7 +52,6 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLInterModComms;
-import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
@@ -222,11 +220,6 @@ public final class AppEng {
         AELog.info("Post Initialization ( ended after " + start.elapsed(TimeUnit.MILLISECONDS) + "ms )");
 
         if (Platform.isPosteaLoaded) new ae2stuffConvertor().run();
-    }
-
-    @EventHandler
-    private void loadComplete(final FMLLoadCompleteEvent event) {
-        OreDictionaryHandler.INSTANCE.onLoadComplete();
     }
 
     @Mod.EventHandler
