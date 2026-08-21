@@ -335,9 +335,6 @@ public class CraftingGridCache
     protected void setPatternsFromCraftingMethods() {
         final Map<IAEStack<?>, Set<ICraftingPatternDetails>> tmpCraft = new HashMap<>();
 
-        for (final IResolvablePatternDetails pattern : this.resolvablePatterns) {
-            pattern.resetResolvedAEInputs();
-        }
         for (final ICraftingPatternDetails details : this.craftingMethods.keySet()) {
             if (details.isInputOnly()) {
                 final UUID uuid = details.getInputOnlyUuid();
@@ -348,12 +345,15 @@ public class CraftingGridCache
         }
 
         for (final IResolvablePatternDetails pattern : this.resolvablePatterns) {
-            if (!pattern.isCraftable() && !pattern.isInputOnly()) {
-                final List<IAEStack<?>> expandedInputs = TunnelPatternExpander
-                        .expandInputs(pattern.getEncodedAEInputs(), this, null);
-                if (expandedInputs != null) {
-                    pattern.setResolvedAEInputs(expandedInputs.toArray(new IAEStack<?>[0]));
-                }
+            final IAEStack<?>[] encodedInputs = pattern.getEncodedAEInputs();
+            if (pattern.isCraftable() || pattern.isInputOnly()
+                    || !TunnelPatternExpander.containsTunnelPattern(encodedInputs)) {
+                continue;
+            }
+            pattern.resetResolvedAEInputs();
+            final List<IAEStack<?>> expandedInputs = TunnelPatternExpander.expandInputs(encodedInputs, this, null);
+            if (expandedInputs != null) {
+                pattern.setResolvedAEInputs(expandedInputs.toArray(new IAEStack<?>[0]));
             }
         }
 
