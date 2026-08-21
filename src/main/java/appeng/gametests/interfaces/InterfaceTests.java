@@ -1,10 +1,12 @@
 package appeng.gametests.interfaces;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
+import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
+import static appeng.gametests.AEGameTestHelpers.itemMonitor;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
 
@@ -25,10 +27,12 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
+import appeng.api.config.Actionable;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.container.ContainerNull;
@@ -54,6 +58,10 @@ public class InterfaceTests {
     private static final String PART_INTERFACE_HOST_LABEL = "part_interface_host";
     private static final String ADJACENT_CHEST_LABEL = "adjacent_chest";
     private static final String ASSEMBLER_LABEL = "assembler";
+    private static final String MAIN_CONTROLLER_LABEL = "main_controller";
+    private static final String SMART_INTERFACE_LABEL = "smart_interface";
+    private static final String NORMAL_INTERFACE_LABEL = "normal_interface";
+    private static final String SUBNET_CONTROLLER_LABEL = "subnet_controller";
 
     private static final int STOCK_AMOUNT = 32;
 
@@ -117,6 +125,58 @@ public class InterfaceTests {
 
                     helper.assertTrue(pushed, "Blocking interface should push once the target is empty");
                     helper.assertInventoryCount(ADJACENT_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 1);
+                }).thenSucceed();
+    }
+
+    // A push from any interface must revoke another interface's smart-blocking recipe allowance.
+    @GameTest(template = "interface_smart_blocking_subnet", timeoutTicks = 240)
+    public static void normalInterfacePushInvalidatesSmartBlockingAllowance(GameTestHelper helper) {
+        SmartBlockingSubnet network = getSmartBlockingSubnet(helper);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for both interface networks to activate",
+                        120,
+                        () -> assertSmartBlockingSubnetActive(helper, network))
+                .thenWaitUntil("wait for both processing patterns to be advertised", 60, () -> {
+                    helper.assertFalse(
+                            craftingOptionsFor(network.mainController, Blocks.stone).isEmpty(),
+                            "Smart interface pattern should be advertised");
+                    helper.assertFalse(
+                            craftingOptionsFor(network.mainController, Blocks.gravel).isEmpty(),
+                            "Normal interface pattern should be advertised");
+                }).thenExecute("prime the smart interface recipe allowance", () -> {
+                    ICraftingPatternDetails smartPattern = firstPattern(helper, network.mainController, Blocks.stone);
+                    boolean pushed = network.smartInterface
+                            .pushPattern(smartPattern, craftingTable(Blocks.cobblestone, 1));
+
+                    helper.assertTrue(pushed, "Smart interface should push its first pattern into an empty subnet");
+                    assertNetworkStoredAmount(helper, network.subnetController, Blocks.cobblestone, 1);
+                }).thenExecute("empty the subnet without changing the smart interface allowance", () -> {
+                    IAEItemStack extracted = itemMonitor(network.subnetController).extractItems(
+                            itemStack(Blocks.cobblestone, 1),
+                            Actionable.MODULATE,
+                            new BaseActionSource());
+
+                    helper.assertNotNull(extracted, "Priming input should be extractable from the subnet");
+                    helper.assertEquals(1L, extracted.getStackSize(), "Exactly one priming input should be extracted");
+                    assertNetworkStoredAmount(helper, network.subnetController, Blocks.cobblestone, 0);
+                }).thenExecute("push a pattern from the normal blocking interface", () -> {
+                    ICraftingPatternDetails normalPattern = firstPattern(helper, network.mainController, Blocks.gravel);
+                    boolean pushed = network.normalInterface.pushPattern(normalPattern, craftingTable(Blocks.dirt, 1));
+
+                    helper.assertTrue(pushed, "Normal blocking interface should push into the empty subnet");
+                    assertNetworkStoredAmount(helper, network.subnetController, Blocks.dirt, 1);
+                }).thenExecute("reject the stale smart-blocking recipe allowance", () -> {
+                    ICraftingPatternDetails smartPattern = firstPattern(helper, network.mainController, Blocks.stone);
+                    boolean pushed = network.smartInterface
+                            .pushPattern(smartPattern, craftingTable(Blocks.cobblestone, 1));
+
+                    helper.assertFalse(
+                            pushed,
+                            "Smart interface should block after the normal interface starts a new subnet batch");
+                    assertNetworkStoredAmount(helper, network.subnetController, Blocks.dirt, 1);
+                    assertNetworkStoredAmount(helper, network.subnetController, Blocks.cobblestone, 0);
                 }).thenSucceed();
     }
 
@@ -254,6 +314,27 @@ public class InterfaceTests {
         return new InterfaceNetwork(controller, drive, blockInterface, partInterface);
     }
 
+    private static SmartBlockingSubnet getSmartBlockingSubnet(GameTestHelper helper) {
+        return new SmartBlockingSubnet(
+                helper.assertTileEntityPresent(TileController.class, MAIN_CONTROLLER_LABEL),
+                helper.assertTileEntityPresent(TileController.class, SUBNET_CONTROLLER_LABEL),
+                helper.assertTileEntityPresent(TileInterface.class, SMART_INTERFACE_LABEL),
+                helper.assertTileEntityPresent(TileInterface.class, NORMAL_INTERFACE_LABEL));
+    }
+
+    private static void assertSmartBlockingSubnetActive(GameTestHelper helper, SmartBlockingSubnet network) {
+        assertActive(helper, network.mainController.getProxy(), "Main controller should become active");
+        assertActive(helper, network.subnetController.getProxy(), "Subnet controller should become active");
+        assertActive(
+                helper,
+                network.smartInterface.getProxy(),
+                "Smart interface should receive a main-network channel");
+        assertActive(
+                helper,
+                network.normalInterface.getProxy(),
+                "Normal interface should receive a main-network channel");
+    }
+
     private static void assertInterfaceNetworkActive(GameTestHelper helper, InterfaceNetwork network) {
         assertActive(helper, network.controller.getProxy(), "Controller grid proxy should become active");
         assertActive(helper, network.drive.getProxy(), "Drive grid proxy should become active");
@@ -381,4 +462,8 @@ public class InterfaceTests {
     @Desugar
     private record InterfaceNetwork(TileController controller, TileDrive drive, TileInterface blockInterface,
             PartInterface partInterface) {}
+
+    @Desugar
+    private record SmartBlockingSubnet(TileController mainController, TileController subnetController,
+            TileInterface smartInterface, TileInterface normalInterface) {}
 }

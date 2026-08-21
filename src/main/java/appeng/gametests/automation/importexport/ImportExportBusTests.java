@@ -24,9 +24,11 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
+import appeng.api.config.Actionable;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
 import appeng.core.AppEng;
 import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.parts.automation.PartExportBus;
@@ -131,6 +133,27 @@ public class ImportExportBusTests {
                 .thenExecute("begin full-destination conservation invariant", fullDestinationPreservesNetwork::enable)
                 .thenIdle(120)
                 .thenExecute("finish full-destination observation window", fullDestinationPreservesNetwork::disable)
+                .thenSucceed();
+    }
+
+    // A crafting result can return after the export bus destination has been removed.
+    @GameTest(template = "bus_io", timeoutTicks = 120)
+    public static void missingDestinationRejectsCraftedItems(GameTestHelper helper) {
+        BusIO busIO = getBusIO(helper);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for export bus network activation",
+                        60,
+                        () -> { assertActive(helper, busIO.exportBus, "Export bus should receive a channel"); })
+                .thenExecute("remove export destination", () -> helper.destroyBlock(DESTINATION_CHEST_LABEL))
+                .thenIdle(1)
+                .thenExecute(
+                        "simulate crafted-item delivery",
+                        () -> { assertCraftedItemsRejected(helper, busIO.exportBus, Actionable.SIMULATE); })
+                .thenExecute(
+                        "attempt crafted-item delivery",
+                        () -> { assertCraftedItemsRejected(helper, busIO.exportBus, Actionable.MODULATE); })
                 .thenSucceed();
     }
 
@@ -310,6 +333,14 @@ public class ImportExportBusTests {
         helper.assertNull(
                 injectIntoGrid(busIO.controller, Blocks.cobblestone, amount),
                 "Injected cobblestone should fit into the drive cell");
+    }
+
+    private static void assertCraftedItemsRejected(GameTestHelper helper, PartExportBus exportBus, Actionable mode) {
+        IAEStack<?> items = itemStack(Blocks.cobblestone, 8);
+        IAEStack<?> remainder = exportBus.injectCraftedItems(null, items, mode);
+
+        helper.assertTrue(remainder == items, "Missing destination should reject the entire crafted stack");
+        helper.assertEquals(8L, remainder.getStackSize(), "Rejected crafted stack amount should be unchanged");
     }
 
     @Desugar
