@@ -187,6 +187,7 @@ public class Platform {
     public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
+    public static final boolean isBogoLoaded = Loader.isModLoaded("bogosorter");
     public static final boolean isPosteaLoaded = Loader.isModLoaded("postea");
     public static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -26,6 +27,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -719,7 +721,12 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     @SideOnly(Side.CLIENT)
     public void renderStatic(final double x, final double y, final double z) {
-        CableRenderHelper.getInstance().renderStatic(this, this.getFacadeContainer());
+        this.renderStatic(Minecraft.getMinecraft().theWorld, x, y, z);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void renderStatic(final IBlockAccess world, final double x, final double y, final double z) {
+        CableRenderHelper.getInstance().renderStatic(this, this.getFacadeContainer(), world);
     }
 
     @SideOnly(Side.CLIENT)

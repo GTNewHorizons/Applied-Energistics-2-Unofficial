@@ -190,8 +190,8 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     this.guiTop + TOP_OFFSET + 8 + (9 * i),
                     8,
                     8,
-                    AEColor.values()[i],
-                    AEColor.values()[i].toString());
+                    AEColor.VALUES[i],
+                    AEColor.VALUES[i].toString());
             this.buttonList.add(this.colorButtons[i]);
         }
 
@@ -202,8 +202,8 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     this.guiTop + TOP_OFFSET + 8 + (9 * (i - 8)),
                     8,
                     8,
-                    AEColor.values()[i],
-                    AEColor.values()[i].toString());
+                    AEColor.VALUES[i],
+                    AEColor.VALUES[i].toString());
             this.buttonList.add(this.colorButtons[i]);
         }
 
@@ -213,8 +213,8 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                 this.guiTop + TOP_OFFSET - 1,
                 8,
                 8,
-                AEColor.values()[16],
-                AEColor.values()[16].toString());
+                AEColor.VALUES[16],
+                AEColor.VALUES[16].toString());
 
         this.buttonList.add(this.colorButtons[16]);
 
@@ -1206,7 +1206,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     new SavedName(
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
                             tag.getString("networkName"),
-                            AEColor.values()[tag.getInteger("color")],
+                            AEColor.VALUES[tag.getInteger("color")],
                             tag.hasKey("color"),
                             tag.getString("colorName")));
         }
@@ -1219,7 +1219,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             savedPins.add(
                     new SavedPin(
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
-                            AEColor.values()[tag.getInteger("color")],
+                            AEColor.VALUES[tag.getInteger("color")],
                             PinType.values()[tag.getInteger("type")],
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("coord")),
                             !tag.hasKey("incCon"),

@@ -68,7 +68,7 @@ public abstract class CellInventoryHandler<StackType extends IAEStack<StackType>
                 setSticky(true);
             }
 
-            if (hasOreFilter && !filter.isEmpty()) {
+            if (hasOreFilter) {
                 setOreFilteredList(filter);
             } else {
                 setPriorityList(hasFuzzy, config, fzMode);

@@ -1,9 +1,7 @@
 package appeng.items.contents;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -35,18 +33,29 @@ public class PinsHandler {
     }
 
     public void setPin(int idx, IAEStack<?> stack) {
+        final int craftLimit = craftingPinsRows.getSlotCount();
+
+        // Block pin items
+        if (idx < craftLimit) {
+            if (stack != null) {
+                return;
+            }
+        }
+
         if (stack != null) {
             stack = stack.copy();
             stack.setStackSize(0);
             for (int i = 0; i < pinsInv.size(); i++) {
+
+                // Block swap items
+                if (i < craftLimit) continue;
+
                 if (pinsInv.getPin(i) != null && pinsInv.getPin(i).isSameType(stack)) {
-                    // pinsInv.setInventorySlotContents(i, pinsInv.getStackInSlot(idx)); // swap the pin
                     pinsInv.setPin(i, pinsInv.getPin(idx));
                     break;
                 }
             }
         }
-        // pinsInv.setInventorySlotContents(idx, stack); // set the pin
         pinsInv.setPin(idx, stack);
         needUpdate = true;
         holder.markDirty();
@@ -61,37 +70,47 @@ public class PinsHandler {
         int maxCraftingSlots = craftingPinsRows.getSlotCount();
         if (maxCraftingSlots <= 0) return;
 
-        Iterator<IAEStack<?>> it = pinsList.iterator();
+        for (IAEStack<?> ais : pinsList) {
+            if (ais == null) continue;
 
-        final ArrayList<IAEStack<?>> checkCache = new ArrayList<>();
-        for (int i = 0; i < maxCraftingSlots; i++) {
-            IAEStack<?> ais = pinsInv.getPin(i);
-            if (ais != null) checkCache.add(ais);
-        }
+            final IAEStack<?> pinStack = ais.copy();
+            pinStack.setStackSize(0);
 
-        IAEStack<?> itemStack = null;
-        for (int i = 0; i < maxCraftingSlots; i++) {
-            IAEStack<?> AEis;
-            while (itemStack == null && it.hasNext()) {
-                AEis = it.next();
-                if (AEis != null && !checkCache.contains(AEis)) {
-                    itemStack = AEis.copy();
-                    itemStack.setStackSize(0);
+            // Stop at first empty slot or duplicate, avoid needless shifting.
+            int shiftLimit = -1;
+            for (int i = 0; i < maxCraftingSlots; i++) {
+                final IAEStack<?> current = pinsInv.getPin(i);
+                if (current == null || current.isSameType(pinStack)) {
+                    shiftLimit = i;
                     break;
                 }
             }
 
-            if (itemStack == null) break;
-            if (pinsInv.getPin(i) != null) continue;
-            pinsInv.setPin(i, itemStack);
-            itemStack = null;
+            // No duplicate and no empty slot found -> section is full, drop the oldest entry.
+            if (shiftLimit < 0) {
+                shiftLimit = maxCraftingSlots - 1;
+            }
+
+            for (int i = shiftLimit; i > 0; i--) {
+                pinsInv.setPin(i, pinsInv.getPin(i - 1));
+            }
+            pinsInv.setPin(0, pinStack);
         }
+
         needUpdate = true;
         holder.markDirty();
     }
 
     public void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
         if (craftingPinsRows == craftingRows && playerPinsRows == playerRows) return;
+        final int oldCraftLimit = craftingPinsRows.getSlotCount();
+        final int newCraftLimit = craftingRows.getSlotCount();
+        if (newCraftLimit < oldCraftLimit) {
+            for (int i = newCraftLimit; i < oldCraftLimit; i++) {
+                // Clean new row before add
+                pinsInv.setPin(i, null);
+            }
+        }
         craftingPinsRows = craftingRows;
         playerPinsRows = playerRows;
         holder.setPinsRows(player, craftingRows, playerRows);

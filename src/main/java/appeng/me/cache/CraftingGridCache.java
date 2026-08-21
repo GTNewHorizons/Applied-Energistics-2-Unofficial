@@ -122,11 +122,11 @@ public class CraftingGridCache
     protected final Map<IGridNode, ICraftingWatcher> craftingWatchers = new HashMap<>();
     protected final IGrid grid;
     protected final Map<ICraftingPatternDetails, List<ICraftingMedium>> craftingMethods = new HashMap<>();
+    protected final Map<IAEStack<?>, List<ICraftingMedium>> emitableMediums = new HashMap<>();
     // Used for fuzzy lookups
     protected final OreListMultiMap<ICraftingPatternDetails> craftableItemSubstitutes = new OreListMultiMap<>();
     protected final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItemsLegacy = new HashMap<>();
     protected final Map<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
-    protected final Set<IAEStack<?>> emitableItems = new HashSet<>();
     protected final Map<UUID, ICraftingPatternDetails> inputOnlyPatterns = new HashMap<>();
     protected final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<>();
     protected final Multimap<IAEStack, CraftingWatcher> interests = HashMultimap.create();
@@ -287,9 +287,9 @@ public class CraftingGridCache
 
         // erase list.
         this.craftingMethods.clear();
+        this.emitableMediums.clear();
         this.craftableItems.clear();
         this.craftableItemSubstitutes.clear();
-        this.emitableItems.clear();
         this.inputOnlyPatterns.clear();
 
         // re-create list..
@@ -320,7 +320,7 @@ public class CraftingGridCache
     public void setMockPatternsFromMethods() {
         this.craftableItems.clear();
         this.craftableItemSubstitutes.clear();
-        this.emitableItems.clear();
+        this.emitableMediums.clear();
         this.inputOnlyPatterns.clear();
         setPatternsFromCraftingMethods();
     }
@@ -423,12 +423,23 @@ public class CraftingGridCache
 
     @Override
     public void setEmitable(final IAEItemStack someItem) {
-        this.emitableItems.add(someItem.copy());
+        setEmitable(null, convertStack(someItem));
     }
 
     @Override
     public void setEmitable(final IAEStack<?> someItem) {
-        this.emitableItems.add(someItem.copy());
+        setEmitable(null, someItem);
+    }
+
+    @Override
+    public void setEmitable(ICraftingMedium medium, final IAEStack<?> someItem) {
+        IAEStack<?> item = someItem.copy();
+        item.reset();
+        item.setCraftable(true);
+        List<ICraftingMedium> mediumList = this.emitableMediums.computeIfAbsent(item, k -> new ArrayList<>());
+        if (medium != null) {
+            mediumList.add(medium);
+        }
     }
 
     @Override
@@ -512,7 +523,7 @@ public class CraftingGridCache
             }
         }
 
-        for (final IAEStack<?> stack : emitableItems) {
+        for (final IAEStack<?> stack : this.emitableMediums.keySet()) {
             if ((outType == null || outType == stack.getStackType())
                     && (predicate == null || predicate.test((IAEStack) stack))) {
                 out.addCrafting((IAEStack) stack);
@@ -535,6 +546,11 @@ public class CraftingGridCache
     @Override
     public ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> getCraftingMultiPatterns() {
         return ImmutableMap.copyOf(this.craftableItems);
+    }
+
+    @Override
+    public ImmutableSet<IAEStack<?>> getEmitableItems() {
+        return ImmutableSet.copyOf(this.emitableMediums.keySet());
     }
 
     @Override
@@ -705,12 +721,12 @@ public class CraftingGridCache
 
     @Override
     public boolean canEmitFor(final IAEStack<?> someItem) {
-        return this.emitableItems.contains(someItem);
+        return this.emitableMediums.containsKey(someItem);
     }
 
     @Override
     public boolean canEmitFor(final IAEItemStack someItem) {
-        return this.emitableItems.contains(convertStack(someItem));
+        return this.emitableMediums.containsKey(convertStack(someItem));
     }
 
     @Override
@@ -737,6 +753,16 @@ public class CraftingGridCache
 
     public List<ICraftingMedium> getMediums(final ICraftingPatternDetails key) {
         List<ICraftingMedium> mediums = this.craftingMethods.get(key);
+
+        if (mediums == null) {
+            mediums = ImmutableList.of();
+        }
+
+        return mediums;
+    }
+
+    public List<ICraftingMedium> getEmitableMediums(final IAEStack<?> key) {
+        List<ICraftingMedium> mediums = this.emitableMediums.get(key);
 
         if (mediums == null) {
             mediums = ImmutableList.of();

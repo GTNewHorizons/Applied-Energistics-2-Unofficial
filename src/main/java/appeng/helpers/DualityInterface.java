@@ -560,8 +560,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public IAEStackType<?>[] getSupportedStackTypes() {
-        return this.isFluidInterface ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
-                : new IAEStackType<?>[] { ITEM_STACK_TYPE };
+        return AEStackTypeRegistry.getSortedTypes().stream()
+                .filter(type -> this.isFluidInterface || type != FLUID_STACK_TYPE).toArray(IAEStackType<?>[]::new);
     }
 
     public AppEngInternalInventory getUpgrades() {
@@ -1743,24 +1743,24 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private void onPushPatternSuccess(TileEntity te, ForgeDirection s, ICraftingPatternDetails pattern) {
         if (this.isSmartBlocking()) {
             this.lastInputHash = pattern.hashCode();
-            if (te instanceof IInterfaceHost oppositeHost) {
-                try {
-                    if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
-                        oppositeHost.getInterfaceDuality().gridProxy.getGrid()
-                                .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
-                    }
-                } catch (GridAccessException e) {
-                    // :P
+        }
+        if (te instanceof IInterfaceHost oppositeHost) {
+            try {
+                if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                    oppositeHost.getInterfaceDuality().gridProxy.getGrid()
+                            .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
                 }
-            } else if (Platform.getPartFromTE(te, s) instanceof IInterfaceHost oppositeHost) {
-                try {
-                    if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
-                        oppositeHost.getInterfaceDuality().gridProxy.getGrid()
-                                .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
-                    }
-                } catch (GridAccessException e) {
-                    // :P
+            } catch (GridAccessException e) {
+                // :P
+            }
+        } else if (Platform.getPartFromTE(te, s) instanceof IInterfaceHost oppositeHost) {
+            try {
+                if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                    oppositeHost.getInterfaceDuality().gridProxy.getGrid()
+                            .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
                 }
+            } catch (GridAccessException e) {
+                // :P
             }
         }
         resetCraftingLock();
