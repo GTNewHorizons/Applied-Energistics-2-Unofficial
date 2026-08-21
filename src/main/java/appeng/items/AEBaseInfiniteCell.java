@@ -60,9 +60,7 @@ public abstract class AEBaseInfiniteCell extends AEBaseItem implements IStorageC
 
             }
         }
-
-        // the upgrade actually isn't installed, but let's keep the tooltip uniform & helpful I guess
-        lines.add(GuiText.UpgradesInstalled.getLocal());
+        lines.add(GuiText.FakeUpgrade.getLocal());
         lines.add(
                 " - " + StatCollector.translateToLocal("item.appliedenergistics2.ItemMaterial.CardVoidOverflow.name"));
     }
