@@ -213,9 +213,11 @@ public class TileIOPort extends AENetworkInvTile
                 ? YesNo.YES
                 : YesNo.NO;
         if (this.lastRedstoneState != currentState) {
-            // When setting this directly instead of using the OR operation, it was found that a one-tick redstone pulse
-            // would turn off this flag before items were transferred.
-            this.pendingRedstonePulse |= currentState == YesNo.YES;
+            if (this.hasAnyCells()) {
+                // This stays on for redstone pulsed mode until works is done or one cell is filled
+                // only set this when we have cells to fill though, otherwise void the pulse
+                this.pendingRedstonePulse |= currentState == YesNo.YES;
+            }
             this.lastRedstoneState = currentState;
             this.updateTask();
         }
@@ -235,8 +237,11 @@ public class TileIOPort extends AENetworkInvTile
         }
 
         final RedstoneMode rs = (RedstoneMode) this.manager.getSetting(Settings.REDSTONE_CONTROLLED);
-        if (rs == RedstoneMode.IGNORE || rs == RedstoneMode.SIGNAL_PULSE) {
+        if (rs == RedstoneMode.IGNORE) {
             return true;
+        }
+        if (rs == RedstoneMode.SIGNAL_PULSE) {
+            return this.pendingRedstonePulse;
         }
         if (rs == RedstoneMode.HIGH_SIGNAL) {
             return this.getRedstoneState();
@@ -270,13 +275,18 @@ public class TileIOPort extends AENetworkInvTile
         this.updateTask();
     }
 
+    private boolean hasAnyCells() {
+        for (int x = 0; x < 6; x++) {
+            if (this.cells.getStackInSlot(x) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean hasWork() {
         if (this.isEnabled()) {
-            for (int x = 0; x < 6; x++) {
-                if (this.cells.getStackInSlot(x) != null) {
-                    return true;
-                }
-            }
+            return hasAnyCells();
         }
 
         return false;
@@ -348,9 +358,6 @@ public class TileIOPort extends AENetworkInvTile
         if (rs == RedstoneMode.SIGNAL_PULSE && !this.pendingRedstonePulse) {
             return TickRateModulation.IDLE;
         }
-        // Turns off pulsed output after this tick, to account for redstone pulses longer than one tick.
-        // This is because updateRedstoneState does not get changed if the signal stays on.
-        this.pendingRedstonePulse = false;
 
         long amountToMove = 256;
 
@@ -428,6 +435,10 @@ public class TileIOPort extends AENetworkInvTile
                                 operationMode,
                                 fullnessMode)) {
                             moveQueue[x] = !this.moveSlot(x) ? 1 : 0;
+
+                            // Keep this latched until we actually fill a cell, no more operations should be performed
+                            this.pendingRedstonePulse = false;
+
                             if (moveQueue[x] == 1) {
                                 return TickRateModulation.IDLE;
                             }
@@ -437,6 +448,11 @@ public class TileIOPort extends AENetworkInvTile
                                 for (int y = x + 1; y < 6; y++) {
                                     if (moveQueue[y] == 1) {
                                         moveQueue[y] = !this.moveSlot(y) ? 1 : 0;
+
+                                        // Keep this latched until we actually fill a cell, no more operations should be
+                                        // performed
+                                        this.pendingRedstonePulse = false;
+
                                         if (moveQueue[y] == 1) {
                                             return TickRateModulation.IDLE;
                                         } else {
