@@ -448,6 +448,11 @@ public class TileIOPort extends AENetworkInvTile
                                 for (int y = x + 1; y < 6; y++) {
                                     if (moveQueue[y] == 1) {
                                         moveQueue[y] = !this.moveSlot(y) ? 1 : 0;
+
+                                        // Keep this latched until we actually fill a cell, no more operations should be
+                                        // performed
+                                        this.pendingRedstonePulse = false;
+
                                         if (moveQueue[y] == 1) {
                                             return TickRateModulation.IDLE;
                                         } else {
