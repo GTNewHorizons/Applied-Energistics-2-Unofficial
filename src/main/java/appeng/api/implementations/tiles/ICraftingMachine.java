@@ -17,19 +17,42 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.util.inv.MEInventoryCrafting;
 
 public interface ICraftingMachine {
 
     /**
-     * inserts a crafting plan, and the necessary items into the crafting machine.
+     * Inserts one crafting plan and its required items into the machine.
      *
-     * @param patternDetails    details of pattern
-     * @param table             crafting table
-     * @param ejectionDirection ejection direction
-     * @return if it was accepted, all or nothing.
+     * @deprecated Implement {@link #pushPattern(ICraftingPatternDetails, MEInventoryCrafting, int, ForgeDirection)}
+     *             instead. This method remains as a compatibility bridge for existing machines.
      */
-    boolean pushPattern(ICraftingPatternDetails patternDetails, InventoryCrafting table,
-            ForgeDirection ejectionDirection);
+    @Deprecated
+    default boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table,
+            final ForgeDirection ejectionDirection) {
+        throw new IllegalStateException(
+                "Crafting machine must override the legacy pushPattern method or the multiplier pushPattern method");
+    }
+
+    /**
+     * Inserts one or more executions of a crafting plan into the machine.
+     *
+     * The table contains the complete inputs for the merged push; stack sizes are already multiplied by the multiplier.
+     * The default implementation only accepts single executions to ensure compatibility.
+     *
+     * @param patternDetails    details of the pattern
+     * @param table             complete input items for the merged push; stack sizes are already multiplied
+     * @param multiplier        number of executions to accept
+     * @param ejectionDirection ejection direction
+     * @return true if the complete push was accepted
+     */
+    default boolean pushPattern(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier, final ForgeDirection ejectionDirection) {
+        if (multiplier != 1) {
+            return false;
+        }
+        return this.pushPattern(patternDetails, table, ejectionDirection);
+    }
 
     /**
      * check if the crafting machine is accepting pushes via pushPattern, if this is false, all calls to push will fail,
