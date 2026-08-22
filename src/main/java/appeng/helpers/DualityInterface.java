@@ -1056,7 +1056,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return isEmpty;
         }
 
-        return false;
+        return tileHasOnlyIgnoredItems(ad);
     }
 
     public void notifyPushedPattern(IInterfaceHost pushingHost) {
