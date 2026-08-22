@@ -515,6 +515,12 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
+    public String getPartName() {
+        return this.getItemStack().getDisplayName();
+    }
+
+    @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
         return new TickingRequest(
                 TickRates.StorageBus.getMin(),
