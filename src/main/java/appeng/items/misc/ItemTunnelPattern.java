@@ -40,4 +40,9 @@ public class ItemTunnelPattern extends ItemEncodedUltimatePattern {
         tag.setBoolean(TAG_TUNNEL, true);
         tag.setString(TAG_TUNNEL_UUID, uuid.toString());
     }
+
+    public static boolean hasSameTunnelUuid(final ItemStack first, final ItemStack second) {
+        final UUID uuid = getTunnelUuid(first);
+        return uuid != null && uuid.equals(getTunnelUuid(second));
+    }
 }

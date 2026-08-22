@@ -242,7 +242,7 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_PATTERN_MULTI(ContainerPatternMulti.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
 
-    GUI_PATTERN_ITEM_RENAMER(ContainerPatternItemRenamer.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
+    GUI_PATTERN_ITEM_RENAMER(ContainerPatternItemRenamer.class, Object.class, GuiHostType.ITEM_OR_WORLD, null),
 
     GUI_CRAFTING_CONFIRM(ContainerCraftConfirm.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),

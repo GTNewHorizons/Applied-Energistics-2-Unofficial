@@ -93,6 +93,7 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.util.Platform;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.VisiblityData;
@@ -412,6 +413,17 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 virtualSlot,
                 btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100 ? keyBindPickBlockAction : btn))
             return;
+
+        if (btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100) {
+            final Slot slot = this.getSlot(xCoord, yCoord);
+            if (slot != null && !(slot instanceof SlotFake)
+                    && slot.canTakeStack(this.mc.thePlayer)
+                    && ItemTunnelPattern.isTunnelPattern(slot.getStack())) {
+                NetworkHandler.instance.sendToServer(
+                        new PacketInventoryAction(InventoryAction.RENAME_TUNNEL_PATTERN, slot.slotNumber, 0));
+                return;
+            }
+        }
 
         if (btn == 1) {
             for (final GuiButton guibutton : this.buttonList) {

@@ -87,6 +87,7 @@ import appeng.helpers.MonitorableAction;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.PinsHandler;
 import appeng.items.misc.ItemMEStackPacket;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.items.storage.ItemViewCell;
 import appeng.me.cache.ItemFlowGridCache;
 import appeng.me.cache.ItemFlowGridCache.FlowRate;
@@ -1201,6 +1202,48 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     }
                 }
             }
+        }
+    }
+
+    public void renameStoredTunnelPattern(final IAEStack<?> original, final IAEStack<?> renamed,
+            final EntityPlayerMP player) {
+        if (!(original instanceof IAEItemStack originalItem) || !(renamed instanceof IAEItemStack renamedItem)
+                || !ItemTunnelPattern.hasSameTunnelUuid(originalItem.getItemStack(), renamedItem.getItemStack())
+                || this.getPowerSource() == null) {
+            return;
+        }
+
+        final IMEMonitor<IAEItemStack> itemMonitor = this.getMonitor(ITEM_STACK_TYPE);
+        if (itemMonitor == null) {
+            return;
+        }
+
+        final IAEItemStack stored = itemMonitor.getAvailableItem(originalItem, fetchNewId());
+        if (stored == null) {
+            return;
+        }
+
+        final IAEItemStack request = stored.copy();
+        request.setStackSize(1);
+        final IAEItemStack extracted = Platform
+                .poweredExtraction(this.getPowerSource(), itemMonitor, request, this.getActionSource());
+        if (extracted == null || extracted.getStackSize() != 1) {
+            return;
+        }
+
+        final ItemStack renamedStack = extracted.getItemStack();
+        renamedStack.setStackDisplayName(renamedItem.getItemStack().getDisplayName());
+        final IAEItemStack renamedPattern = AEItemStack.create(renamedStack);
+        final IAEItemStack leftover = Platform
+                .poweredInsert(this.getPowerSource(), itemMonitor, renamedPattern, this.getActionSource());
+        if (leftover == null) {
+            return;
+        }
+
+        final IAEItemStack restoreLeftover = itemMonitor
+                .injectItems(extracted, Actionable.MODULATE, this.getActionSource());
+        if (restoreLeftover != null) {
+            Platform.handleLeftover(player, restoreLeftover);
         }
     }
 

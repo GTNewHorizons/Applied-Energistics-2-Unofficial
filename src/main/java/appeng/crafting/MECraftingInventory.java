@@ -142,7 +142,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             IItemList list = type.createList();
             this.inventoryMap.put(type, list);
             for (final IAEStack<?> is : target.getMEMonitor(type).getStorageList()) {
-                list.add(is.copy());
+                list.add(is);
             }
         }
 

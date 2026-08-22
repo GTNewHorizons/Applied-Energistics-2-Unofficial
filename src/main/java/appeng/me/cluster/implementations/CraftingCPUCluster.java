@@ -681,11 +681,11 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     protected List<IAEStack<?>> getExpandedCondensedInputs(final ICraftingPatternDetails details,
             final CraftingGridCache cache) {
-        if (details.isCraftable() || cache == null) {
-            return Arrays.asList(details.getCondensedAEInputs());
+        final IAEStack<?>[] condensedInputs = details.getCondensedAEInputs();
+        if (details.isCraftable() || cache == null || !TunnelPatternExpander.containsTunnelPattern(condensedInputs)) {
+            return Arrays.asList(condensedInputs);
         }
-        final List<IAEStack<?>> expanded = TunnelPatternExpander
-                .expandInputs(details.getCondensedAEInputs(), cache, null);
+        final List<IAEStack<?>> expanded = TunnelPatternExpander.expandInputs(condensedInputs, cache, null);
         if (expanded == null) {
             return null;
         }

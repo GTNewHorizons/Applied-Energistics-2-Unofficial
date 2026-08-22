@@ -141,6 +141,8 @@ public enum GuiText implements Localization {
     TunnelPatternInfo2,
     TunnelPatternInfo3,
     TunnelPatternInfo4,
+    TunnelPatternRenameHint,
+    TunnelPatternDetailsHint,
 
     MolecularAssembler,
 
