@@ -801,6 +801,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         int executedTasks = 0;
         while (craftingTaskIterator.hasNext()) {
+            if (this.remainingOperations <= 0) return;
+
             final Entry<ICraftingPatternDetails, TaskProgress> craftingEntry = craftingTaskIterator.next();
 
             if (craftingEntry.getValue().value <= 0) {
