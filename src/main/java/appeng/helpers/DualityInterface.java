@@ -123,6 +123,7 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
+import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
@@ -1041,12 +1042,19 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         && !(isFluidInterface && ad instanceof AdaptorFluidHandler afh && afh.containsFluid());
             }
         }
+        boolean hasOnlyIgnoredItems = tileHasOnlyIgnoredItems(ad);
 
-        if (name.equals("tile.blockWritingTable") && tileHasOnlyIgnoredItems(ad)) return true;
+        if (name.equals("tile.blockWritingTable") && hasOnlyIgnoredItems) return true;
+
+        if (ad instanceof AdaptorConduitBandle conduit) {
+            if (conduit.containsItems()) {
+                return false;
+            }
+        }
 
         if (ad instanceof AdaptorDualityInterface adaptorDualityInterface) {
             boolean isEmpty = adaptorDualityInterface.interfaceHost.getInterfaceDuality().hasConfig
-                    && tileHasOnlyIgnoredItems(ad);
+                    && hasOnlyIgnoredItems;
             if (isEmpty && adaptorDualityInterface.interfaceHost instanceof IFluidHandler fluidHandler) {
                 for (FluidTankInfo info : fluidHandler.getTankInfo(side)) {
                     if (info.fluid != null && info.capacity > 0) return false;
@@ -1056,7 +1064,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return isEmpty;
         }
 
-        return false;
+        return hasOnlyIgnoredItems;
     }
 
     public void notifyPushedPattern(IInterfaceHost pushingHost) {
