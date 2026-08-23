@@ -21,6 +21,8 @@ import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.FuzzyMode;
@@ -76,7 +78,9 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
     public void setFuzzy(final FuzzyMode valueOf) {
         final ICellWorkbenchItem cwi = this.workBench.getCell();
         if (cwi != null) {
-            cwi.setFuzzyMode(this.workBench.getInventoryByName("cell").getStackInSlot(0), valueOf);
+            final ItemStack cell = this.workBench.getInventoryByName("cell").getStackInSlot(0);
+            cwi.setFuzzyMode(cell, valueOf);
+            if (valueOf == FuzzyMode.IGNORE_ALL) ItemStackNBT.removeTag(cell, "FuzzyMode");
         }
     }
 
@@ -180,6 +184,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         for (int x = 0; x < inv.getSizeInventory(); x++) {
             inv.putAEStackInSlot(x, null);
         }
+        this.setFuzzy(FuzzyMode.IGNORE_ALL);
         this.workBench.setCellRestriction(null, new ICellRestriction.CellRestrictionData((byte) 0, 0));
         this.configSync.markDirty();
         this.detectAndSendChanges();
@@ -282,7 +287,11 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         }
 
         @Override
-        public void markDirty() {}
+        public void markDirty() {
+            if (ContainerCellWorkbench.this.getUpgradeable().getInstalledUpgrades(Upgrades.FUZZY) == 0) {
+                ContainerCellWorkbench.this.setFuzzy(FuzzyMode.IGNORE_ALL);
+            }
+        }
 
         @Override
         public boolean isUseableByPlayer(final EntityPlayer entityplayer) {
