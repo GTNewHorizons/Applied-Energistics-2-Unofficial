@@ -165,6 +165,9 @@ public class ContainerNetworkStatus extends AEBaseContainer {
     @GuiSync(36)
     public boolean flowTrackingGloballyEnabled;
 
+    @GuiSync(37)
+    public boolean liteCraftingDefault;
+
     private IGrid network;
     private int delay = 40;
     private boolean isConsume = true;
@@ -220,6 +223,20 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         super.detectAndSendChanges();
     }
 
+    private void refreshLiteCrafingState() {
+        final CraftingGridCache cache = this.getCraftingGridCache();
+        this.liteCraftingDefault = cache != null && cache.getLiteCraftingDefault();
+    }
+
+    public void toggleLiteCraftingMode() {
+        final CraftingGridCache cache = this.getCraftingGridCache();
+        if (cache == null) return;
+
+        cache.setLiteCraftingDefault(!cache.getLiteCraftingDefault());
+        this.refreshLiteCrafingState();
+        super.detectAndSendChanges();
+    }
+
     private ItemFlowGridCache getItemFlowGridCache() {
         if (this.network == null) {
             return null;
@@ -252,6 +269,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             this.delay = 0;
 
             this.refreshDiagnosticsState();
+            this.refreshLiteCrafingState();
             this.refreshFlowTrackingState();
 
             final IEnergyGrid eg = this.network.getCache(IEnergyGrid.class);
