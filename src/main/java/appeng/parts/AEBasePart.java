@@ -28,6 +28,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -551,6 +552,21 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     public void setRenderCache(final ISimplifiedBundle renderCache) {
         this.renderCache.set(renderCache);
+    }
+
+    protected IBlockAccess getRenderWorld(final IPartRenderHelper rh) {
+        final IBlockAccess w = rh.getBlockAccess();
+        return w != null ? w : this.getHostWorld();
+    }
+
+    protected IBlockAccess getRenderWorld(final IPartCollisionHelper bch) {
+        final IBlockAccess w = bch.getBlockAccess();
+        return w != null ? w : this.getHostWorld();
+    }
+
+    private IBlockAccess getHostWorld() {
+        final TileEntity te = this.getTile();
+        return te == null ? null : te.getWorldObj();
     }
 
     private static int getSideIndexFromDirection(ForgeDirection direction) {
