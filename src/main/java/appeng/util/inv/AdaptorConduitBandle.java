@@ -2,6 +2,7 @@ package appeng.util.inv;
 
 import java.util.Iterator;
 
+import appeng.util.iterators.NullIterator;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
@@ -15,6 +16,7 @@ import appeng.util.InventoryAdaptor;
 import crazypants.enderio.conduit.TileConduitBundle;
 import crazypants.enderio.conduit.item.IItemConduit;
 import crazypants.enderio.conduit.liquid.ILiquidConduit;
+import org.jetbrains.annotations.NotNull;
 
 public class AdaptorConduitBandle extends InventoryAdaptor {
 
@@ -122,7 +124,7 @@ public class AdaptorConduitBandle extends InventoryAdaptor {
     }
 
     @Override
-    public Iterator<ItemSlot> iterator() {
-        return null;
+    public @NotNull Iterator<ItemSlot> iterator() {
+        return new NullIterator<>();
     }
 }
