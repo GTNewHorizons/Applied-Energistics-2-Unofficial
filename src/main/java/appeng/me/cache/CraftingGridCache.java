@@ -614,7 +614,14 @@ public class CraftingGridCache
     @Override
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
             final IAEItemStack slotItem, final ICraftingCallback cb) {
-        return beginCraftingJob(world, grid, actionSrc, convertStack(slotItem), CraftingMode.STANDARD, this.liteCraftingDefault, cb);
+        return beginCraftingJob(
+                world,
+                grid,
+                actionSrc,
+                convertStack(slotItem),
+                CraftingMode.STANDARD,
+                this.liteCraftingDefault,
+                cb);
     }
 
     @Override
