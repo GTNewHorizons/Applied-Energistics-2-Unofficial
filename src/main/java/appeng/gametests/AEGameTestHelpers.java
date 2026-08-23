@@ -115,6 +115,10 @@ public final class AEGameTestHelpers {
         return itemMonitor(controller).injectItems(itemStack(block, amount), Actionable.SIMULATE, TEST_SOURCE);
     }
 
+    public static IAEItemStack extractFromGrid(TileController controller, Block block, long amount) {
+        return itemMonitor(controller).extractItems(itemStack(block, amount), Actionable.MODULATE, TEST_SOURCE);
+    }
+
     public static void assertItemRemainder(GameTestHelper helper, IAEItemStack remainder, Block block,
             long expectedAmount) {
         helper.assertNotNull(remainder, "Rejected " + describe(block) + " stack should be returned as a remainder");

@@ -13,6 +13,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEMonitor;
@@ -57,7 +58,6 @@ public class PacketNEIBookmark extends AppEngPacket {
 
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
-        bookmarkItem.stackSize = fitStack(player, bookmarkItem);
         final EntityPlayerMP pmp = (EntityPlayerMP) player;
         final Container con = pmp.openContainer;
 
@@ -66,36 +66,27 @@ public class PacketNEIBookmark extends AppEngPacket {
             if (monitor != null) {
                 final IEnergySource energy = monitorable.getPowerSource();
                 final BaseActionSource actionSource = monitorable.getActionSource();
+                final InventoryAdaptor playerInventory = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
 
                 final AEItemStack request = AEItemStack.create(bookmarkItem);
+                final ItemStack overflow = playerInventory.simulateAdd(bookmarkItem);
+                if (overflow != null) {
+                    request.decStackSize(overflow.stackSize);
+                }
+                if (request.getStackSize() <= 0) return;
+
                 final IAEItemStack out = Platform.poweredExtraction(energy, monitor, request, actionSource);
                 if (out != null) {
-                    final InventoryAdaptor adp = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-                    ItemStack outItem = out.getItemStack();
-                    adp.addItems(outItem);
+                    final ItemStack leftover = playerInventory.addItems(out.getItemStack());
+                    if (leftover != null) {
+                        final IAEItemStack rejected = monitor
+                                .injectItems(AEItemStack.create(leftover), Actionable.MODULATE, actionSource);
+                        if (rejected != null) {
+                            Platform.addToPlayerInvOrDrop(player, rejected.getItemStack());
+                        }
+                    }
                 }
             }
         }
-    }
-
-    private int fitStack(final EntityPlayer player, ItemStack itemStack) {
-        // Check if the bookmark item fits fully or partially into the inventory
-        // itemStack will always be <= maxStackSize because of how the packets are received
-        ItemStack[] inv = player.inventory.mainInventory;
-        int remainingStackSize = itemStack.stackSize; // We want to fit this
-        for (ItemStack slotStack : inv) {
-            if (slotStack == null) { // Empty slot, stack fits completely
-                return itemStack.stackSize;
-            } else if (slotStack.isItemEqual(itemStack)) {
-                remainingStackSize -= itemStack.getMaxStackSize() - slotStack.stackSize;
-                if (remainingStackSize < 0) {
-                    return itemStack.stackSize;
-                }
-            }
-        }
-        if (remainingStackSize == itemStack.getMaxStackSize()) {
-            return 0; // Stack didn't fit at all
-        }
-        return itemStack.stackSize - remainingStackSize;
     }
 }
