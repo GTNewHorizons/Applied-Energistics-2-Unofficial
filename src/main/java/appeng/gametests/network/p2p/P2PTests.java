@@ -62,8 +62,8 @@ public class P2PTests {
         PartP2PItems input = inputTunnel(helper, PartP2PItems.class);
         PartP2PItems output = outputTunnel(helper, PartP2PItems.class);
         helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
-        TickCallbackHandle itemConservation = itemConservationInvariant(helper, 1);
-        itemConservation.enable();
+        TickCallbackHandle itemConservationWatcher = watchItemConservation(helper, 1);
+        itemConservationWatcher.enable();
 
         helper.startSequence().thenWaitUntil("wait for the item P2P pair to become active and linked", 60, () -> {
             assertCarrierActive(helper, controller);
@@ -72,7 +72,7 @@ public class P2PTests {
             helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
             helper.assertInventoryCount(SOURCE_INSERTER_LABEL, new ItemStack(Blocks.cobblestone), 0);
             helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 1);
-        }).thenExecute("finish item-conservation observation", itemConservation::disable).thenSucceed();
+        }).thenExecute("finish item-conservation observation", itemConservationWatcher::disable).thenSucceed();
     }
 
     // P1: the outer ME connection must expose storage that is physically present only behind the output tunnel.
@@ -433,7 +433,7 @@ public class P2PTests {
         helper.assertNull(tunnel.getInput(), "Unbound tunnel should not resolve an input; role=" + role);
     }
 
-    private static TickCallbackHandle itemConservationInvariant(GameTestHelper helper, long expectedTotal) {
+    private static TickCallbackHandle watchItemConservation(GameTestHelper helper, long expectedTotal) {
         TickCallbackHandle callback = helper
                 .onEachTick(() -> assertInventoryTotal(helper, Blocks.cobblestone, expectedTotal));
         callback.disable();
