@@ -182,7 +182,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         }
         this.workBench.setCellRestriction(null, new ICellRestriction.CellRestrictionData((byte) 0, 0));
         this.configSync.markDirty();
-        this.getSyncManager().flushSync();
+        this.detectAndSendChanges();
     }
 
     private FuzzyMode getWorkBenchFuzzyMode() {
@@ -219,7 +219,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         }
 
         this.configSync.markDirty();
-        this.getSyncManager().flushSync();
+        this.detectAndSendChanges();
     }
 
     @Nullable
