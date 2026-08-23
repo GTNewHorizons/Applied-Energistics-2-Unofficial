@@ -4,7 +4,6 @@ import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
-import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
@@ -35,6 +34,7 @@ import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -50,7 +50,6 @@ import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.me.GridAccessException;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
@@ -286,21 +285,19 @@ public class CraftingExecutionTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         helper.setSlot(DRIVE_LABEL, 0, driveCell);
-        ContinuousInvariant cpuBreakDoesNotDuplicateOrProduceOutput = continuousInvariant(
-                helper,
-                "CPU break must not duplicate ingredients or produce processing output",
-                () -> {
-                    cpuBreakDrops.addAll(craftingCpuDrops(helper));
-                    long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
-                            + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
-                    long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
-                            + droppedItemAmount(cpuBreakDrops, Blocks.stone);
-                    helper.assertTrue(
-                            accountedCobblestone <= 1,
-                            "At most one ingredient may exist while CPU break cancellation settles; observed="
-                                    + accountedCobblestone);
-                    helper.assertEquals(0L, accountedStone, "CPU break must never produce the requested output");
-                });
+        TickCallbackHandle cpuBreakDoesNotDuplicateOrProduceOutput = helper.onEachTick(() -> {
+            cpuBreakDrops.addAll(craftingCpuDrops(helper));
+            long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
+                    + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
+            long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
+                    + droppedItemAmount(cpuBreakDrops, Blocks.stone);
+            helper.assertTrue(
+                    accountedCobblestone <= 1,
+                    "At most one ingredient may exist while CPU break cancellation settles; observed="
+                            + accountedCobblestone);
+            helper.assertEquals(0L, accountedStone, "CPU break must never produce the requested output");
+        });
+        cpuBreakDoesNotDuplicateOrProduceOutput.disable();
 
         helper.startSequence()
                 .thenWaitUntil(

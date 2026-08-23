@@ -4,7 +4,6 @@ import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
-import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemMonitor;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
@@ -21,6 +20,7 @@ import com.github.bsideup.jabel.Desugar;
 import com.google.common.collect.ImmutableCollection;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -34,7 +34,6 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.container.ContainerNull;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.helpers.IInterfaceHost;
 import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
@@ -233,13 +232,11 @@ public class InterfaceTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 64);
         helper.setSlot(DRIVE_LABEL, 0, driveCell);
-        ContinuousInvariant configuredStockDoesNotDrainNetwork = continuousInvariant(
-                helper,
-                "already satisfied interface stock must not drain ME storage",
-                () -> {
-                    assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
-                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 64);
-                });
+        TickCallbackHandle configuredStockDoesNotDrainNetwork = helper.onEachTick(() -> {
+            assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
+            assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 64);
+        });
+        configuredStockDoesNotDrainNetwork.disable();
 
         helper.startSequence()
                 .thenWaitUntil(
