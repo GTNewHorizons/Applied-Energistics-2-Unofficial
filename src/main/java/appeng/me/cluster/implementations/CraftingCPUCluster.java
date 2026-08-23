@@ -2344,7 +2344,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 return;
             }
 
-            this.patternOutputs = details.getAEOutputs().clone();
+            this.patternOutputs = details.getCondensedAEOutputs().clone();
 
             for (IAEStack<?> aes : this.patternOutputs) {
                 final IAEStack<?> tempAes = aes.copy();

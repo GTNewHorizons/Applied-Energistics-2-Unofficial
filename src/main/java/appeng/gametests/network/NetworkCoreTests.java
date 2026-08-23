@@ -5,7 +5,6 @@ import static appeng.gametests.AEGameTestHelpers.assertInactive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
-import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 
 import java.util.ArrayList;
@@ -19,6 +18,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -28,7 +28,6 @@ import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
@@ -135,15 +134,13 @@ public class NetworkCoreTests {
         installCableLine(helper, DOWNSTREAM_CABLE_LINE);
         IPart upstreamDevice = placePart(helper, DEVICE_A_LABEL, ForgeDirection.UP, terminal());
         IPart downstreamDevice = placePart(helper, DEVICE_B_LABEL, ForgeDirection.UP, terminal());
-        ContinuousInvariant unpoweredToggleBusGatesDownstream = continuousInvariant(
-                helper,
-                "unpowered toggle bus must keep only the upstream network active",
-                () -> {
-                    assertActive(helper, controller.getProxy(), "Controller side should remain active");
-                    assertActive(helper, upstreamDevice, "Upstream device should remain active");
-                    assertInactive(helper, drive.getProxy(), "Drive should remain gated");
-                    assertInactive(helper, downstreamDevice, "Downstream device should remain gated");
-                });
+        TickCallbackHandle unpoweredToggleBusGatesDownstream = helper.onEachTick(() -> {
+            assertActive(helper, controller.getProxy(), "Controller side should remain active");
+            assertActive(helper, upstreamDevice, "Upstream device should remain active");
+            assertInactive(helper, drive.getProxy(), "Drive should remain gated");
+            assertInactive(helper, downstreamDevice, "Downstream device should remain gated");
+        });
+        unpoweredToggleBusGatesDownstream.disable();
 
         helper.startSequence().thenWaitUntil("wait for initial unpowered toggle-bus state", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller side should boot without redstone");
