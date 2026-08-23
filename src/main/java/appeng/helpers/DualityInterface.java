@@ -30,7 +30,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.OptionalInt;
 
-import appeng.util.inv.AdaptorConduitBandle;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -124,6 +123,7 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
+import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
@@ -1052,7 +1052,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         }
 
-            if (ad instanceof AdaptorDualityInterface adaptorDualityInterface) {
+        if (ad instanceof AdaptorDualityInterface adaptorDualityInterface) {
             boolean isEmpty = adaptorDualityInterface.interfaceHost.getInterfaceDuality().hasConfig
                     && hasOnlyIgnoredItems;
             if (isEmpty && adaptorDualityInterface.interfaceHost instanceof IFluidHandler fluidHandler) {

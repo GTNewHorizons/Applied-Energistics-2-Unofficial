@@ -2,21 +2,22 @@ package appeng.util.inv;
 
 import java.util.Iterator;
 
-import appeng.util.iterators.NullIterator;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
+
+import org.jetbrains.annotations.NotNull;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.util.InventoryAdaptor;
+import appeng.util.iterators.NullIterator;
 import crazypants.enderio.conduit.TileConduitBundle;
 import crazypants.enderio.conduit.item.IItemConduit;
 import crazypants.enderio.conduit.liquid.ILiquidConduit;
-import org.jetbrains.annotations.NotNull;
 
 public class AdaptorConduitBandle extends InventoryAdaptor {
 
