@@ -411,8 +411,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
         if (virtualSlot != null && this.handleVirtualSlotClick(
                 virtualSlot,
-                btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100 ? keyBindPickBlockAction : btn))
+                btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100 ? keyBindPickBlockAction : btn)) {
+            this.draggedVirtualSlots.add(virtualSlot);
             return;
+        }
 
         if (btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100) {
             final Slot slot = this.getSlot(xCoord, yCoord);
@@ -537,6 +539,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
     }
 
+    protected boolean canDragVirtualSlot(VirtualMESlot slot, @Nullable ItemStack holding) {
+        return holding != null;
+    }
+
     private void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
         slot.handleMouseClicked(this.getStackFromHand(), isCtrlKeyDown(), mouseButton);
     }
@@ -556,7 +562,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 }
             }
 
-            if (holding != null && this.hoveredVirtualSlot != null
+            if (this.hoveredVirtualSlot != null && this.canDragVirtualSlot(this.hoveredVirtualSlot, holding)
                     && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
                 this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
                 this.handleDragVirtualSlot(this.hoveredVirtualSlot, c);
