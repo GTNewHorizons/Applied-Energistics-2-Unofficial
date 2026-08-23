@@ -497,7 +497,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             for (int j = -1; j <= 1; j++) {
                 for (int k = -1; k <= 1; k++) {
 
-                    this.lightHashTmp[o] = blk.getMixedBrightnessForBlock(this.blockAccess, x + i, y + j, z + k);
+                    this.lightHashTmp[o] = blk.getMixedBrightnessForBlock(w, x + i, y + j, z + k);
                     o++;
                 }
             }

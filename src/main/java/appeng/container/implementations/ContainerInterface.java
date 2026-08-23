@@ -12,8 +12,10 @@ package appeng.container.implementations;
 
 import java.util.ArrayList;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
@@ -37,6 +39,7 @@ import appeng.container.slot.SlotNormal;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.InventoryAction;
 import appeng.me.cache.CraftingGridCache;
 import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
@@ -197,6 +200,40 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.setAdvancedBlockingMode((AdvancedBlockingMode) cm.getSetting(Settings.ADVANCED_BLOCKING_MODE));
         this.setLockCraftingMode((LockCraftingMode) cm.getSetting(Settings.LOCK_CRAFTING_MODE));
         this.setFuzzyMode((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE));
+    }
+
+    @Override
+    public void doAction(final EntityPlayerMP player, final InventoryAction action, final int slot, final long id) {
+        switch (action) {
+            case MULTIPLY_PATTERN -> modifyPatternInSlot(slot, 1);
+            case DIVIDE_PATTERN -> modifyPatternInSlot(slot, -1);
+            default -> super.doAction(player, action, slot, id);
+        }
+    }
+
+    private void modifyPatternInSlot(final int slot, final int multiplier) {
+        if (!this.isAllowedToMultiplyPatterns || slot < 0 || slot >= this.inventorySlots.size()) return;
+
+        final Slot patternSlot = this.getSlot(slot);
+        if (!(patternSlot instanceof OptionalSlotRestrictedInput optionalSlot) || !optionalSlot.isEnabled()
+                || patternSlot.inventory != this.myDuality.getPatterns())
+            return;
+
+        final ItemStack pattern = patternSlot.getStack();
+        if (pattern == null || !(pattern.getItem() instanceof ICraftingPatternItem patternItem)) return;
+
+        final ICraftingPatternDetails details = patternItem
+                .getPatternForItem(pattern, this.myDuality.getHost().getTile().getWorldObj());
+        if (details == null || details.isCraftable()) return;
+
+        final int max = multiplier < 0 ? PatternMultiplierHelper.getMaxBitDivider(details)
+                : PatternMultiplierHelper.getMaxBitMultiplier(details);
+        if (max == 0) return;
+
+        final ItemStack modifiedPattern = pattern.copy();
+        PatternMultiplierHelper.applyModification(modifiedPattern, multiplier);
+        patternSlot.putStack(modifiedPattern);
+        this.standardDetectAndSendChanges();
     }
 
     public void doublePatterns(int val) {

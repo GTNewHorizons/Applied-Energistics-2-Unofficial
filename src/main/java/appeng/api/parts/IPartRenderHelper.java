@@ -18,6 +18,7 @@ import java.util.EnumSet;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import cpw.mods.fml.relauncher.Side;
@@ -189,4 +190,8 @@ public interface IPartRenderHelper {
      * @param complementOf sides to render
      */
     void setFacesToRender(EnumSet<ForgeDirection> complementOf);
+
+    default IBlockAccess getBlockAccess() {
+        return null;
+    }
 }

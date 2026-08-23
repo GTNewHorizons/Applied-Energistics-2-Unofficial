@@ -47,6 +47,13 @@ public interface ICellInventory<StackType extends IAEStack<StackType>> extends I
     }
 
     /**
+     * @return if it has an Overflow Card
+     */
+    default boolean isOverflow() {
+        return false;
+    }
+
+    /**
      * @return access configured list
      * @deprecated Use {@link ICellInventory#getConfigAEInventory()}
      */

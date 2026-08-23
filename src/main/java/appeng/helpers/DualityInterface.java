@@ -1743,24 +1743,24 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private void onPushPatternSuccess(TileEntity te, ForgeDirection s, ICraftingPatternDetails pattern) {
         if (this.isSmartBlocking()) {
             this.lastInputHash = pattern.hashCode();
-            if (te instanceof IInterfaceHost oppositeHost) {
-                try {
-                    if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
-                        oppositeHost.getInterfaceDuality().gridProxy.getGrid()
-                                .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
-                    }
-                } catch (GridAccessException e) {
-                    // :P
+        }
+        if (te instanceof IInterfaceHost oppositeHost) {
+            try {
+                if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                    oppositeHost.getInterfaceDuality().gridProxy.getGrid()
+                            .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
                 }
-            } else if (Platform.getPartFromTE(te, s) instanceof IInterfaceHost oppositeHost) {
-                try {
-                    if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
-                        oppositeHost.getInterfaceDuality().gridProxy.getGrid()
-                                .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
-                    }
-                } catch (GridAccessException e) {
-                    // :P
+            } catch (GridAccessException e) {
+                // :P
+            }
+        } else if (Platform.getPartFromTE(te, s) instanceof IInterfaceHost oppositeHost) {
+            try {
+                if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                    oppositeHost.getInterfaceDuality().gridProxy.getGrid()
+                            .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
                 }
+            } catch (GridAccessException e) {
+                // :P
             }
         }
         resetCraftingLock();
