@@ -28,6 +28,7 @@ public class OreDictionaryHandler {
     private final List<IOreListener> oreListeners = new ArrayList<>();
 
     private boolean enableRebaking = false;
+    private boolean rebakePending = false;
 
     @SubscribeEvent
     public void onOreDictionaryRegister(final OreDictionary.OreRegisterEvent event) {
@@ -42,7 +43,7 @@ public class OreDictionaryHandler {
         }
 
         if (this.enableRebaking) {
-            this.bakeRecipes();
+            this.rebakePending = true;
         }
     }
 
@@ -67,6 +68,13 @@ public class OreDictionaryHandler {
                     AELog.debug(e);
                 }
             }
+        }
+    }
+
+    public void onTick() {
+        if (this.rebakePending) {
+            this.rebakePending = false;
+            this.bakeRecipes();
         }
     }
 
