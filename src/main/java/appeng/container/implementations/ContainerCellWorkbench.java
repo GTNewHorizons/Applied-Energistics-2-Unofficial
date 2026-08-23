@@ -180,6 +180,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         for (int x = 0; x < inv.getSizeInventory(); x++) {
             inv.putAEStackInSlot(x, null);
         }
+        this.workBench.setCellRestriction(null, new ICellRestriction.CellRestrictionData((byte) 0, 0));
         this.configSync.markDirty();
         this.getSyncManager().flushSync();
     }
