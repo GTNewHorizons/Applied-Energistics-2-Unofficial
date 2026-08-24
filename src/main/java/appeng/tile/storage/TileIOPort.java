@@ -144,6 +144,7 @@ public class TileIOPort extends AENetworkInvTile
         this.cells.writeToNBT(data, "cells");
         this.upgrades.writeToNBT(data, "upgrades");
         data.setInteger("lastRedstoneState", this.lastRedstoneState.ordinal());
+        data.setBoolean("pendingRedstonePulse", pendingRedstonePulse);
         data.setIntArray("moveQueue", moveQueue);
         data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
     }
@@ -155,6 +156,9 @@ public class TileIOPort extends AENetworkInvTile
         this.upgrades.readFromNBT(data, "upgrades");
         if (data.hasKey("lastRedstoneState")) {
             this.lastRedstoneState = YesNo.fromOrdinal(data.getInteger("lastRedstoneState"));
+        }
+        if (data.hasKey("pendingRedstonePulse")) {
+            this.pendingRedstonePulse = data.getBoolean("pendingRedstonePulse");
         }
         if (data.hasKey("moveQueue")) {
             moveQueue = data.getIntArray("moveQueue");
