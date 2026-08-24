@@ -704,6 +704,107 @@ public class IOPortTests {
                 .thenExecute("finish post-pulse invariant window", onePulseMovesOnlyOneCell::disable).thenSucceed();
     }
 
+    // Covers PR1536: a pulse stays latched until exactly one multi-tick cell finishes.
+    @GameTest(template = "ioport", timeoutTicks = 60)
+    public static void redstonePulseModeCompletesExactlyOneMultiTickCell(GameTestHelper helper) {
+        TileIOPort ioport = getIOPort(helper);
+        TileDrive drive = getDrive(helper);
+        ItemStack firstSourceCell = cell1k();
+        ItemStack secondSourceCell = cell1k();
+        ItemStack driveCell = cell1k();
+        insertItems(helper, firstSourceCell, Blocks.cobblestone, 300);
+        insertItems(helper, secondSourceCell, Blocks.cobblestone, 300);
+
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("insert cells and configure pulse mode", () -> {
+                    installRedstoneUpgrade(ioport);
+                    configureRedstone(ioport, RedstoneMode.SIGNAL_PULSE);
+                    helper.setSlot(DRIVE_LABEL, 0, driveCell);
+                    helper.setSlot(IO_PORT_LABEL, 0, firstSourceCell);
+                    helper.setSlot(IO_PORT_LABEL, 1, secondSourceCell);
+                }).thenIdle(5).thenExecute("apply a redstone signal", () -> setRedstoneInput(helper, 15)).thenIdle(1)
+                .thenExecute("assert the first pulse tick transfers one budget", () -> {
+                    helper.assertEquals(
+                            2,
+                            countFilledSlots(ioport, 0, 6),
+                            "A partially processed cell should remain in input");
+                    helper.assertEquals(
+                            0,
+                            countFilledSlots(ioport, 6, 12),
+                            "No cell should reach output before the first cell finishes");
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
+                    assertStoredAmount(helper, ioport.getStackInSlot(1), Blocks.cobblestone, 300);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
+                }).thenIdle(1).thenExecute("assert the pulse finishes exactly one cell", () -> {
+                    helper.assertEquals(
+                            1,
+                            countFilledSlots(ioport, 0, 6),
+                            "One unprocessed cell should remain after the pulse finishes");
+                    helper.assertEquals(
+                            1,
+                            countFilledSlots(ioport, 6, 12),
+                            "The pulse should move exactly one cell to output");
+                    helper.assertNull(ioport.getStackInSlot(0), "The processed cell should leave its input slot");
+                    assertStoredAmount(helper, ioport.getStackInSlot(1), Blocks.cobblestone, 300);
+                    assertStoredAmount(helper, ioport.getStackInSlot(6), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 300);
+                }).thenIdle(5).thenExecute("assert the high signal does not process a second cell", () -> {
+                    helper.assertEquals(
+                            1,
+                            countFilledSlots(ioport, 0, 6),
+                            "A new rising edge should be required to process the second cell");
+                    helper.assertEquals(
+                            1,
+                            countFilledSlots(ioport, 6, 12),
+                            "A sustained signal should not move a second cell");
+                    assertStoredAmount(helper, ioport.getStackInSlot(1), Blocks.cobblestone, 300);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 300);
+                }).thenSucceed();
+    }
+
+    // Covers PR1536: a pending pulse and its partially processed cell survive an NBT reload.
+    @GameTest(template = "ioport", timeoutTicks = 100)
+    public static void pendingRedstonePulsePersistsAcrossReload(GameTestHelper helper) {
+        TileIOPort ioport = getIOPort(helper);
+        TileDrive drive = getDrive(helper);
+        ItemStack sourceCell = cell1k();
+        ItemStack driveCell = cell1k();
+        insertItems(helper, sourceCell, Blocks.cobblestone, 300);
+
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("insert a cell and configure pulse mode", () -> {
+                    installRedstoneUpgrade(ioport);
+                    configureRedstone(ioport, RedstoneMode.SIGNAL_PULSE);
+                    helper.setSlot(DRIVE_LABEL, 0, driveCell);
+                    helper.setSlot(IO_PORT_LABEL, 0, sourceCell);
+                }).thenIdle(5).thenExecute("apply a redstone signal", () -> setRedstoneInput(helper, 15)).thenIdle(1)
+                .thenExecute("reload the IO port after the first transfer tick", () -> {
+                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
+
+                    NBTTagCompound savedState = new NBTTagCompound();
+                    ioport.writeToNBT(savedState);
+                    helper.assertTrue(
+                            savedState.hasKey("pendingRedstonePulse") && savedState.getBoolean("pendingRedstonePulse"),
+                            "The pending pulse should be saved while the cell is still processing");
+
+                    helper.destroyBlock(IO_PORT_LABEL);
+                    Block ioPortBlock = AEApi.instance().definitions().blocks().iOPort().maybeBlock().get();
+                    helper.setBlock(IO_PORT_LABEL, ioPortBlock);
+                    TileIOPort restored = getIOPort(helper);
+                    restored.readFromNBT(savedState);
+                }).thenWaitUntil("wait for the restored pulse to finish the cell", 40, () -> {
+                    TileIOPort restored = getIOPort(helper);
+                    assertIOPortActive(helper, restored);
+                    helper.assertNull(restored.getStackInSlot(0), "The restored cell should leave its input slot");
+                    helper.assertNotNull(restored.getStackInSlot(6), "The restored cell should move to output");
+                    assertStoredAmount(helper, restored.getStackInSlot(6), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 300);
+                }).thenSucceed();
+    }
+
     // A real hopper should reject non-cells, then insert a storage cell for processing.
     @GameTest(template = "ioport", timeoutTicks = 20)
     public static void sidedAutomationRejectsNonCellsAndInsertsStorageCells(GameTestHelper helper) {
