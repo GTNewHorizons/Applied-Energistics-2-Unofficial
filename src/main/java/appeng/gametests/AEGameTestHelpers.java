@@ -3,6 +3,8 @@ package appeng.gametests;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import java.util.List;
+
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -30,6 +32,7 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.me.GridAccessException;
+import appeng.me.cache.GridStorageCache;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
@@ -175,6 +178,23 @@ public final class AEGameTestHelpers {
     public static long networkMonitorStoredAmount(TileController controller, Block block) {
         IAEItemStack stored = itemMonitor(controller).getStorageList().findPrecise(itemStack(block, 1));
         return stored == null ? 0 : stored.getStackSize();
+    }
+
+    /**
+     * Asserts that the storage monitors' incrementally maintained lists still agree with a fresh scan of every storage
+     * handler. Pass to {@link GameTestHelper#onEachTick(Runnable)} to catch the first bad delta rather than whatever
+     * drift has accumulated by the end of the test.
+     */
+    public static void assertNoStorageDrift(GameTestHelper helper, TileController controller) {
+        GridStorageCache cache;
+        try {
+            cache = (GridStorageCache) controller.getProxy().getGrid().getCache(IStorageGrid.class);
+        } catch (GridAccessException e) {
+            return; // grid is down, nothing to verify
+        }
+
+        List<String> drift = cache.findCacheDrift();
+        helper.assertTrue(drift.isEmpty(), "Storage cache drifted from the network: " + drift);
     }
 
     public static IMEMonitor<IAEItemStack> itemMonitor(TileController controller) {

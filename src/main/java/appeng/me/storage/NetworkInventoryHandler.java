@@ -451,20 +451,28 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         return networkItemList;
     }
 
+    /**
+     * Whether any storage in this network exposes another network, e.g. a storage bus pointing at a subnet. Such a
+     * subnet is deduplicated by {@link NetworkItemList} when scanned, but reachable through several storages.
+     */
+    public boolean readsFromOtherNetwork() {
+        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+        final int size = priorityInventory.size();
+        for (int i = 0; i < size; i++) {
+            if (priorityInventory.get(i).getExternalNetworkInventory() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public T getAvailableItem(@Nonnull T request, int iteration) {
         long count = 0;
 
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
-        boolean readsFromOtherNetwork = false;
-        for (int i = 0; i < size; i++) {
-            if (priorityInventory.get(i).getExternalNetworkInventory() != null) {
-                readsFromOtherNetwork = true;
-                break;
-            }
-        }
-        if (readsFromOtherNetwork) {
+        if (this.readsFromOtherNetwork()) {
             final T stack = this
                     .getAvailableItems(getPrimitiveItemList(), iteration, Optional.of(s -> s.isSameType(request)))
                     .findPrecise(request);

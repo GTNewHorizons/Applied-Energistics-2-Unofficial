@@ -4,6 +4,7 @@ import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertItemRemainder;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkMonitorStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertNoStorageDrift;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
@@ -52,6 +53,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 100)
     public static void storageBusExposesExternalChestContents(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 64));
 
@@ -66,6 +68,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 140)
     public static void storageBusReflectsExternalMutation(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 16));
 
@@ -87,6 +90,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void accessModeReadPreventsInsertion(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
 
@@ -124,6 +128,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void storageBusPriorityBeatsDriveCell(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         TileDrive drive = getDrive(helper);
         ItemStack driveCell = cell1k();
@@ -161,6 +166,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void stickyStorageBusReceivesMatchingItemsBeforeHigherPriorityDrive(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         TileDrive drive = getDrive(helper);
         ItemStack driveCell = cell1k();
@@ -195,6 +201,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void stickyStorageBusLetsUnrelatedItemsFallBackToDrive(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         TileDrive drive = getDrive(helper);
         ItemStack driveCell = cell1k();
@@ -229,6 +236,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void filteredStickyStorageBusReceivesConfiguredItemBeforeHigherPriorityDrive(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         TileDrive drive = getDrive(helper);
         ItemStack driveCell = cell1k();
@@ -266,6 +274,7 @@ public class StorageBusTests {
     @GameTest(template = "storage_bus", timeoutTicks = 220)
     public static void filteredStorageBusRejectsNonMatchingItems(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartStorageBus storageBus = getStorageBus(helper);
         helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
 

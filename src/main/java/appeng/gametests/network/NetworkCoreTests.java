@@ -3,6 +3,7 @@ package appeng.gametests.network;
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertInactive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertNoStorageDrift;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
@@ -57,6 +58,7 @@ public class NetworkCoreTests {
     @GameTest(template = "network_core", timeoutTicks = 80)
     public static void networkBootsAndActivatesDevices(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         installCableLine(helper, FULL_CABLE_LINE);
         IPart deviceA = placePart(helper, DEVICE_A_LABEL, ForgeDirection.UP, terminal());
@@ -75,6 +77,7 @@ public class NetworkCoreTests {
     @GameTest(template = "network_core", timeoutTicks = 120)
     public static void splitAndMergePreservesStorageVisibility(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         installCableLine(helper, FULL_CABLE_LINE);
         ItemStack driveCell = cell1k();
@@ -102,6 +105,7 @@ public class NetworkCoreTests {
     @GameTest(template = "network_core", timeoutTicks = 100)
     public static void channelLimitDeactivatesOverflowDevice(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         installCableLine(helper, CHANNEL_LIMIT_CABLE_LINE);
         List<IPart> devices = new ArrayList<>();
         for (String deviceLabel : CHANNEL_DEVICE_LABELS) {
@@ -127,6 +131,7 @@ public class NetworkCoreTests {
     @GameTest(template = "network_core", timeoutTicks = 140)
     public static void toggleBusGatesNetworkOnRedstone(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         installCableLine(helper, UPSTREAM_CABLE_LINE);
         placeCable(helper, TOGGLE_BUS_LABEL);

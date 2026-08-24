@@ -2,6 +2,7 @@ package appeng.gametests.network.p2p;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertNoStorageDrift;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.part;
@@ -59,6 +60,7 @@ public class P2PTests {
     @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
     public static void itemP2PMovesItemsWithoutDuplication(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartP2PItems input = inputTunnel(helper, PartP2PItems.class);
         PartP2PItems output = outputTunnel(helper, PartP2PItems.class);
         helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
@@ -79,6 +81,7 @@ public class P2PTests {
     @GameTest(template = "p2p_tunnels", timeoutTicks = 180)
     public static void meP2PCarriesRemoteStorageChannel(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartP2PTunnelME input = inputTunnel(helper, PartP2PTunnelME.class);
         PartP2PTunnelME output = outputTunnel(helper, PartP2PTunnelME.class);
         helper.assertTileEntityPresent(TileDrive.class, REMOTE_STORAGE_LABEL);
@@ -110,6 +113,7 @@ public class P2PTests {
     @GameTest(template = "p2p_tunnels", timeoutTicks = 100)
     public static void frequencyPersistsThroughTemplateNbt(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartP2PItems itemInput = inputTunnel(helper, PartP2PItems.class);
         PartP2PItems itemOutput = outputTunnel(helper, PartP2PItems.class);
         PartP2PRedstone redstoneInput = inputTunnel(helper, PartP2PRedstone.class);
@@ -129,6 +133,7 @@ public class P2PTests {
     @GameTest(template = "p2p_tunnels", timeoutTicks = 160)
     public static void redstoneP2PMirrorsSignal(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartP2PRedstone input = inputTunnel(helper, PartP2PRedstone.class);
         PartP2PRedstone output = outputTunnel(helper, PartP2PRedstone.class);
         TickCallbackHandle unpoweredOutputStaysLow = helper.onEachTick(() -> {
@@ -162,6 +167,7 @@ public class P2PTests {
     @GameTest(template = "p2p_tunnels", timeoutTicks = 120)
     public static void unboundTunnelDoesNotTransfer(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         PartP2PItems input = (PartP2PItems) inputTunnel(helper, PartP2PItems.class).unbind(null);
         PartP2PItems output = (PartP2PItems) outputTunnel(helper, PartP2PItems.class).unbind(null);
         helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));

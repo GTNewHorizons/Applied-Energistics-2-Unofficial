@@ -308,6 +308,10 @@ public class CraftingGridCache
 
         setPatternsFromCraftingMethods();
 
+        // The craftable set was rebuilt wholesale and removals are never posted, so the monitors' incremental
+        // view cannot be patched from the list below (it only ever adds craftables, never clears them).
+        ((GridStorageCache) this.storageGrid).invalidateMonitors();
+
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
             List<IAEStack<?>> list = new ArrayList<>();
             for (IAEStack<?> craftable : this.craftableItems.keySet()) {

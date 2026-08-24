@@ -16,6 +16,7 @@ import appeng.server.subcommands.Supporters;
 import appeng.server.subcommands.ToggleDebugPathfinding;
 import appeng.server.subcommands.ToggleDebugTiming;
 import appeng.server.subcommands.ToggleFullAccess;
+import appeng.server.subcommands.VerifyStorage;
 
 public enum Commands {
 
@@ -24,7 +25,8 @@ public enum Commands {
     profile(2, new Profile()),
     toggleFullAccess(2, new ToggleFullAccess()),
     toggleDebugPaths(2, new ToggleDebugPathfinding()),
-    toggleDebugTiming(2, new ToggleDebugTiming());
+    toggleDebugTiming(2, new ToggleDebugTiming()),
+    verifyStorage(2, new VerifyStorage());
 
     public final int level;
     public final ISubCommand command;

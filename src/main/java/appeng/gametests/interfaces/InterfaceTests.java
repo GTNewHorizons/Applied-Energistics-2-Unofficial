@@ -2,6 +2,7 @@ package appeng.gametests.interfaces;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertNoStorageDrift;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
@@ -257,6 +258,7 @@ public class InterfaceTests {
 
     private static InterfaceNetwork getInterfaceNetwork(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
         TileInterface blockInterface = helper.assertTileEntityPresent(TileInterface.class, BLOCK_INTERFACE_LABEL);
         PartInterface partInterface = part(helper, PART_INTERFACE_HOST_LABEL, PartInterface.class);

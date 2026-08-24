@@ -45,6 +45,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.me.storage.ItemWatcher;
+import appeng.me.storage.NetworkInventoryHandler;
 import appeng.util.IterationCounter;
 import appeng.util.item.LazyItemList;
 import appeng.util.item.NetworkItemList;
@@ -67,7 +68,15 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     private final Map<IMEMonitorHandlerReceiver, Object> listeners;
 
     private boolean sendEvent = false;
-    private boolean hasChanged = false;
+
+    /** {@link #cachedList} no longer reflects the network and must be rebuilt before it is handed out. */
+    private boolean stale = true;
+
+    /**
+     * Whether {@link #cachedList} can be kept up to date from the change stream in {@link #postChange} instead of
+     * rescanning every storage handler. Decided per rebuild, see {@link #canTrackIncrementally()}.
+     */
+    private boolean incremental = false;
 
     @Nonnegative
     private int localDepthSemaphore = 0;
@@ -165,8 +174,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Nonnull
     @Override
     public IItemList<T> getStorageList() {
-        if (this.hasChanged) {
-            this.hasChanged = false;
+        if (this.stale) {
+            this.stale = false;
             this.cachedList.resetStatus();
             final IItemList<T> ret = this.getAvailableItems(this.cachedList, IterationCounter.fetchNewId());
             if (ret instanceof NetworkItemList) {
@@ -174,10 +183,23 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
                     this.cachedList.add(item);
                 }
             }
-            return this.cachedList;
+            // A scan can post changes of its own (a storage bus doing its first onTick), which marked us stale
+            // again. Rebuild next call rather than hand out a list that already drifted.
+            this.incremental = !this.stale && this.canTrackIncrementally();
         }
 
         return this.cachedList;
+    }
+
+    /**
+     * A subnet reachable through two storage buses is counted once by {@link NetworkItemList} during a scan, but its
+     * change stream arrives once per bus, so applying those deltas would double count. Grids like that keep rebuilding
+     * on change.
+     */
+    private boolean canTrackIncrementally() {
+        final IMEInventoryHandler<T> handler = this.getHandler();
+        return handler instanceof NetworkInventoryHandler
+                && !((NetworkInventoryHandler<T>) handler).readsFromOtherNetwork();
     }
 
     @Override
@@ -271,7 +293,6 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     private void notifyListenersOfChange(final Iterable<IAEStack<?>> diff, final BaseActionSource src) {
-        this.hasChanged = true;
         final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
 
         while (i.hasNext()) {
@@ -290,6 +311,25 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     protected void postChange(final boolean add, final Iterable<IAEStack<?>> changes, final BaseActionSource src) {
+        // Maintain the cached list *above* the re-entrancy guard below: that guard only exists to stop recursive
+        // listener dispatch, but the change itself is real either way, and a delta dropped here would drift the
+        // cache permanently instead of merely skipping a notification.
+        // Removals are never applied incrementally: IAEStack#add ORs isCraftable and can never clear it, so a
+        // negated stack cannot undo a craftable entry. They mark the list stale instead. That only happens when a
+        // cell provider is deactivated, which already coincides with MENetworkCellArrayUpdate.
+        if (this.incremental && add) {
+            // ponytail: a negative delta for an item absent from the list inserts a phantom negative entry rather
+            // than being rejected, and it survives until the next rebuild. Not guarded because it can only happen
+            // if a delta was already lost upstream; add a findPrecise check here if drift shows up in the wild.
+            for (final IAEStack<?> changedItem : changes) {
+                if (changedItem != null) {
+                    this.cachedList.add((T) changedItem);
+                }
+            }
+        } else {
+            this.invalidate();
+        }
+
         if (localDepthSemaphore > 0 || GLOBAL_DEPTH.contains(this)) {
             return;
         }
@@ -345,8 +385,14 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         }
     }
 
+    /** Drops the cached list; the next {@link #getStorageList()} rebuilds it from the storage handlers. */
+    void invalidate() {
+        this.stale = true;
+        this.incremental = false;
+    }
+
     void forceUpdate() {
-        this.hasChanged = true;
+        this.invalidate();
 
         final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
         while (i.hasNext()) {

@@ -64,6 +64,7 @@ import appeng.me.storage.NetworkInventoryHandler;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
 import appeng.util.IterationCounter;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 public class GridStorageCache implements IStorageGrid {
 
@@ -270,6 +271,58 @@ public class GridStorageCache implements IStorageGrid {
         } finally {
             this.setMonitorsLocked(false);
         }
+    }
+
+    /**
+     * Forces every monitor to rebuild its cached list on next access. Needed whenever contents change in a way the
+     * {@link NetworkMonitor#postChange} delta stream cannot express, e.g. craftables disappearing.
+     */
+    public void invalidateMonitors() {
+        for (final NetworkMonitor<?> monitor : this.monitors.values()) {
+            monitor.invalidate();
+        }
+    }
+
+    /**
+     * Compares what the monitors currently believe against a fresh scan of every storage handler, and describes each
+     * entry whose count disagrees. A healthy grid always returns an empty list.
+     * <p>
+     * Read only: the fresh scan goes into a scratch list, so the monitors' own caches are left exactly as they were and
+     * any drift found is still there to investigate.
+     *
+     * @return one human readable line per drifted entry, empty when the cached lists are correct
+     */
+    public List<String> findCacheDrift() {
+        final List<String> drift = new LinkedList<>();
+
+        for (final Map.Entry<IAEStackType<?>, NetworkMonitor<?>> entry : this.monitors.entrySet()) {
+            final NetworkMonitor<?> monitor = entry.getValue();
+
+            final Object2LongOpenHashMap<IAEStack<?>> cached = tally(monitor.getStorageList());
+            final Object2LongOpenHashMap<IAEStack<?>> actual = tally(
+                    monitor.getAvailableItems(entry.getKey().createList(), IterationCounter.fetchNewId()));
+
+            final Set<IAEStack<?>> keys = new HashSet<>(cached.keySet());
+            keys.addAll(actual.keySet());
+
+            for (final IAEStack<?> key : keys) {
+                final long was = cached.getLong(key);
+                final long is = actual.getLong(key);
+                if (was != is) {
+                    drift.add(String.format("%s cached=%d actual=%d", key.getDisplayName(), was, is));
+                }
+            }
+        }
+
+        return drift;
+    }
+
+    private static Object2LongOpenHashMap<IAEStack<?>> tally(final IItemList<?> list) {
+        final Object2LongOpenHashMap<IAEStack<?>> out = new Object2LongOpenHashMap<>();
+        for (final IAEStack<?> stack : list) {
+            out.addTo(stack, stack.getStackSize());
+        }
+        return out;
     }
 
     private void setMonitorsLocked(final boolean locked) {

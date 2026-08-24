@@ -2,6 +2,7 @@ package appeng.gametests.automation.importexport;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertNoStorageDrift;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
@@ -247,6 +248,7 @@ public class ImportExportBusTests {
 
     private static BusIO getBusIO(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         PartImportBus importBus = getImportBus(helper);
         PartExportBus exportBus = getExportBus(helper);

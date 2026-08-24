@@ -1222,6 +1222,9 @@ commands.ae2.ProfilerFailedDim=No such dimension
 commands.ae2.ToggleFullAccess=Toggles OP full AE access, ignoring security terminal settings
 commands.ae2.ToggleDebugTiming=Toggle debug tick manager logging
 commands.ae2.ToggleDebugPathfinding=Toggle pathfinding debug logging
+commands.ae2.VerifyStorage=Compares the storage monitor caches against a fresh scan. Pass <x y z [dimension]> for a tile in the grid
+commands.ae2.VerifyStorageClean=Storage caches agree with the network. Drifted/total entries:
+commands.ae2.VerifyStorageDrift=STORAGE CACHE DRIFT DETECTED. Drifted/total entries:
 
 # Achievements
 achievement.ae2.Compass=Meteorite Hunter

@@ -2,13 +2,16 @@ package appeng.gametests.storage.drive;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertItemRemainder;
+import static appeng.gametests.AEGameTestHelpers.assertNetworkMonitorStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
+import static appeng.gametests.AEGameTestHelpers.assertNoStorageDrift;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.extractFromGrid;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemInventory;
+import static appeng.gametests.AEGameTestHelpers.itemMonitor;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.simulateInjectIntoGrid;
 
@@ -41,10 +44,35 @@ public class DriveAndCellTests {
     private static final String ME_CHEST_LABEL = "me_chest";
     private static final long CELL_1K_ONE_TYPE_CAPACITY = 8128;
 
+    // NetworkMonitor keeps its storage list as a materialized view maintained from the change stream instead of
+    // rescanning every handler. Priming the view before the mutations is what makes this meaningful: it forces
+    // the injects and extracts below to go through the incremental path rather than a rebuild.
+    @GameTest(template = "drive_cells", timeoutTicks = 100)
+    public static void monitorCacheTracksInjectAndExtract(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
+        TileDrive drive = getDrive(helper);
+
+        helper.startSequence().thenWaitUntil("wait for drive network activation", 40, () -> {
+            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+            assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
+        }).thenExecute("insert an empty cell into the drive", () -> helper.setSlot(DRIVE_LABEL, 0, cell1k()))
+                .thenIdle(2)
+                .thenExecute("prime the monitor's cached list", () -> itemMonitor(controller).getStorageList())
+                .thenExecute("inject 100 cobblestone", () -> injectIntoGrid(controller, Blocks.cobblestone, 100))
+                .thenExecute("extract 30 cobblestone", () -> extractFromGrid(controller, Blocks.cobblestone, 30))
+                .thenExecute("inject 5 more cobblestone", () -> injectIntoGrid(controller, Blocks.cobblestone, 5))
+                .thenExecute("cached list must agree with the storage handlers", () -> {
+                    assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 75);
+                    assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 75);
+                }).thenSucceed();
+    }
+
     // A prefilled cell in a drive should be visible through the storage grid.
     @GameTest(template = "drive_cells", timeoutTicks = 80)
     public static void driveExposesInsertedCellContents(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         ItemStack cell = cell1k();
         insertItems(helper, cell, Blocks.cobblestone, 100);
@@ -64,6 +92,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void partitionedCellRejectsUnconfiguredItem(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         ItemStack cell = cell1k();
         partitionCell(helper, cell, Blocks.cobblestone);
@@ -92,6 +121,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void higherPriorityCellReceivesNewItemsFirst(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack highPriorityCell = cell1k();
@@ -126,6 +156,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void fullHighPriorityFallsBackToLowerPriority(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack highPriorityCell = cell1k();
@@ -160,6 +191,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void stickyCellReceivesMatchingItemsBeforeHigherPriorityCell(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack stickyCell = cell1k();
@@ -196,6 +228,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void partitionedStickyCellReceivesConfiguredItemBeforeHigherPriorityCell(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack stickyCell = cell1k();
@@ -232,6 +265,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void stickyCellLetsUnrelatedItemsFallBackToNormalCell(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack stickyCell = cell1k();
@@ -268,6 +302,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void stickyCellPreventsMatchingOverflowFromFallingBack(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack stickyCell = cell1k();
@@ -301,6 +336,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void fullStickyCellPreventsMatchingItemsFromFallingBack(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack stickyCell = cell1k();
@@ -341,6 +377,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void matchingStickyCellsAreFilledBeforeNormalCell(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack firstStickyCell = cell1k();
@@ -382,6 +419,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void higherPriorityStickyCellReceivesMatchingItemsFirst(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack lowPriorityStickyCell = cell1k();
@@ -420,6 +458,7 @@ public class DriveAndCellTests {
     @GameTest(template = "drive_cells", timeoutTicks = 100)
     public static void extractionDrainsNormalCellBeforeStickyCell(GameTestHelper helper) {
         TileController controller = getController(helper);
+        helper.onEachTick(() -> assertNoStorageDrift(helper, controller));
         TileDrive drive = getDrive(helper);
         TileChest meChest = getMEChest(helper);
         ItemStack stickyCell = cell1k();
