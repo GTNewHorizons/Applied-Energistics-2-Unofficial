@@ -2004,7 +2004,9 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 } else {
                     if (craftingProvider instanceof DualityInterface di) {
                         rawName = di.getRawTermName();
-                        suffix = di.getAdjacentNameSuffix();
+                        final IChatComponent suffixComponent = di.getAdjacentNameSuffix();
+                        // This name is already translated server-side, so the suffix is flattened here as well.
+                        suffix = suffixComponent == null ? null : suffixComponent.getUnformattedText();
                     } else if (craftingProvider instanceof IInterfaceViewable iv) {
                         rawName = iv.getName();
                         suffix = null;

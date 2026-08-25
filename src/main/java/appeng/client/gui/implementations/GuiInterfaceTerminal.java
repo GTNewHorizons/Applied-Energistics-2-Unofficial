@@ -1188,12 +1188,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
     }
 
     /**
-     * Resolves a suffix that was serialized as an {@link IChatComponent}, so that it is localized with the client's
-     * language rather than the server's. See {@link appeng.api.interfaces.IInterfaceNameProvider} for the contract.
-     * Plain text and anything that fails to deserialize are returned unchanged.
+     * Turns the serialized {@link IChatComponent} suffix back into text, so that it is localized with the client's
+     * language rather than the server's. A suffix that fails to deserialize is shown as raw text.
      */
     private static String resolveSuffix(String suffix) {
-        if (suffix.charAt(0) != '{') return suffix;
         try {
             final IChatComponent component = IChatComponent.Serializer.func_150699_a(suffix);
             return component != null ? component.getUnformattedText() : suffix;

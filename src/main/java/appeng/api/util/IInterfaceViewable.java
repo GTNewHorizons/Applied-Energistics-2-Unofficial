@@ -5,6 +5,7 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IChatComponent;
 
 import appeng.api.networking.IGridHost;
 import appeng.api.storage.data.IAEStackType;
@@ -58,10 +59,11 @@ public interface IInterfaceViewable extends IGridHost {
     }
 
     /**
-     * Returns the optional suffix to append after the name has been translated on the client. May be null if there is
-     * no suffix.
+     * Returns the optional suffix to append after the name has been translated on the client, or null if there is no
+     * suffix. Returned as a component so that it is localized with the client's language rather than the server's, see
+     * {@link appeng.api.interfaces.IInterfaceNameProvider} for the details.
      */
-    default String getNameSuffix() {
+    default IChatComponent getNameSuffix() {
         return null;
     }
 
