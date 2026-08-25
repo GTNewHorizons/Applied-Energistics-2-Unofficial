@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -36,6 +38,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -97,6 +100,7 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.registry.GameRegistry;
 
 /**
  * Interface Terminal GUI <br/>
@@ -113,6 +117,9 @@ import cpw.mods.fml.common.Loader;
  */
 public class GuiInterfaceTerminal extends AEBaseGui
         implements IDropToFillTextField, IGuiTooltipHandler, IInterfaceTerminalPostUpdate, IGuiSub {
+
+    /** Matches {i:modid:item:meta}, {ip:modid:item:meta} and {t:lang.key} name suffix tokens. */
+    private static final Pattern SUFFIX_TOKEN = Pattern.compile("\\{(?:(ip?):([^{}]+)|t:([^{}]+))\\}");
 
     public static final int HEADER_HEIGHT = 52;
     public static final int INV_HEIGHT = 98;
@@ -1181,9 +1188,60 @@ public class GuiInterfaceTerminal extends AEBaseGui
             }
         }
         if (suffix != null && !suffix.isEmpty()) {
-            return translatedName + suffix;
+            return translatedName + resolveSuffixTokens(suffix);
         }
         return translatedName;
+    }
+
+    /**
+     * Resolves the localization tokens documented in {@link appeng.api.interfaces.IInterfaceNameProvider} into
+     * client-side display names. Text outside of tokens is left untouched, and tokens that cannot be resolved are kept
+     * as raw text.
+     */
+    private static String resolveSuffixTokens(String suffix) {
+        if (suffix.indexOf('{') < 0) return suffix;
+        Matcher matcher = SUFFIX_TOKEN.matcher(suffix);
+        StringBuffer out = new StringBuffer(suffix.length());
+        while (matcher.find()) {
+            String replacement = resolveSuffixToken(matcher.group(1), matcher.group(2), matcher.group(3));
+            matcher.appendReplacement(
+                    out,
+                    Matcher.quoteReplacement(replacement != null ? replacement : matcher.group()));
+        }
+        matcher.appendTail(out);
+        return out.toString();
+    }
+
+    /**
+     * @return the resolved token text, or null if the token cannot be resolved.
+     */
+    private static String resolveSuffixToken(String type, String body, String langKey) {
+        if (langKey != null) {
+            return StatCollector.canTranslate(langKey) ? StatCollector.translateToLocal(langKey) : null;
+        }
+        int metaSep = body.lastIndexOf(':');
+        int modSep = body.indexOf(':');
+        if (modSep < 0 || modSep == metaSep) return null;
+        final Item item = GameRegistry.findItem(body.substring(0, modSep), body.substring(modSep + 1, metaSep));
+        if (item == null) return null;
+        final int meta;
+        try {
+            meta = Integer.parseInt(body.substring(metaSep + 1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        String name;
+        try {
+            name = new ItemStack(item, 1, meta).getDisplayName();
+        } catch (Exception e) {
+            return null;
+        }
+        if (name == null || name.isEmpty()) return null;
+        if ("ip".equals(type) && name.endsWith(")")) {
+            int open = name.lastIndexOf('(');
+            if (open >= 0) return name.substring(open + 1, name.length() - 1);
+        }
+        return name;
     }
 
     private void parsePacketCmd(PacketInterfaceTerminalUpdate.PacketEntry cmd) {
