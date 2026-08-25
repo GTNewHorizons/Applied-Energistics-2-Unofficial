@@ -4,7 +4,6 @@ import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
-import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.injectIntoGrid;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
@@ -23,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
@@ -34,6 +34,7 @@ import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -45,14 +46,15 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingJob;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.me.GridAccessException;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
@@ -73,6 +75,7 @@ public class CraftingExecutionTests {
     private static final Block TEST_RECIPE_EDGE = Blocks.obsidian;
     private static final Block TEST_RECIPE_CENTER = Blocks.diamond_block;
     private static final Block TEST_RECIPE_OUTPUT = Blocks.sponge;
+    private static final int TEST_RECIPE_OUTPUT_AMOUNT = 2;
 
     // A scoped real crafting recipe should execute through the CPU, interface, molecular assembler, and ME storage.
     @GameTest(template = "crafting_cpu", timeoutTicks = 520)
@@ -103,21 +106,76 @@ public class CraftingExecutionTests {
                         "submit one scoped shaped-recipe craft",
                         () -> submitCraft(helper, network.controller, TEST_RECIPE_OUTPUT, 1))
                 .thenWaitUntil(
-                        "wait for real assembler craft to consume the nine supplied blocks and store one sponge",
+                        "wait for real assembler craft to consume the nine supplied blocks and store "
+                                + TEST_RECIPE_OUTPUT_AMOUNT
+                                + " sponge blocks",
                         260,
                         () -> {
-                            assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_OUTPUT, 1);
+                            assertNetworkStoredAmount(
+                                    helper,
+                                    network.controller,
+                                    TEST_RECIPE_OUTPUT,
+                                    TEST_RECIPE_OUTPUT_AMOUNT);
                             assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CORNER, 0);
                             assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_EDGE, 0);
                             assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CENTER, 0);
                             ItemStack storedCell = network.drive.getStackInSlot(0);
-                            assertStoredAmount(helper, storedCell, TEST_RECIPE_OUTPUT, 1);
+                            assertStoredAmount(helper, storedCell, TEST_RECIPE_OUTPUT, TEST_RECIPE_OUTPUT_AMOUNT);
                             assertStoredAmount(helper, storedCell, TEST_RECIPE_CORNER, 0);
                             assertStoredAmount(helper, storedCell, TEST_RECIPE_EDGE, 0);
                             assertStoredAmount(helper, storedCell, TEST_RECIPE_CENTER, 0);
                             assertNotRequesting(helper, network.controller, TEST_RECIPE_OUTPUT);
                         })
                 .thenSucceed();
+    }
+
+    // Crafting inventories must receive requested output before matching sticky storage claims any excess.
+    @GameTest(template = "crafting_cpu", timeoutTicks = 520)
+    public static void stickyStorageDoesNotInterceptCraftingResults(GameTestHelper helper) {
+        registerScopedCraftingRecipe(helper);
+        CraftingNetwork network = getCraftingNetwork(helper);
+        ItemStack stickyOutputCell = cell1k();
+        ItemStack ingredientCell = cell1k();
+        configureStickyCell(helper, stickyOutputCell, TEST_RECIPE_OUTPUT);
+        insertItems(helper, ingredientCell, TEST_RECIPE_CORNER, 4);
+        insertItems(helper, ingredientCell, TEST_RECIPE_EDGE, 4);
+        insertItems(helper, ingredientCell, TEST_RECIPE_CENTER, 1);
+        helper.setSlot(DRIVE_LABEL, 0, stickyOutputCell);
+        helper.setSlot(DRIVE_LABEL, 1, ingredientCell);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for sticky crafting test network to activate",
+                        100,
+                        () -> assertCraftingNetworkActive(helper, network))
+                .thenExecute(
+                        "install " + TEST_RECIPE_OUTPUT_AMOUNT + "-output scoped shaped-recipe pattern",
+                        () -> installPattern(network.blockInterface, encodedScopedCraftingPattern()))
+                .thenWaitUntil(
+                        "wait for " + TEST_RECIPE_OUTPUT_AMOUNT + "-output scoped shaped-recipe pattern advertisement",
+                        80,
+                        () -> helper.assertFalse(
+                                craftingOptionsFor(network.controller, TEST_RECIPE_OUTPUT).isEmpty(),
+                                TEST_RECIPE_OUTPUT_AMOUNT + "-output scoped shaped-recipe should be advertised"))
+                .thenExecute(
+                        "submit one requested scoped shaped-recipe output",
+                        () -> submitCraft(helper, network.controller, TEST_RECIPE_OUTPUT, 1))
+                .thenWaitUntil("wait for crafting result and excess to reach sticky storage", 260, () -> {
+                    assertNetworkStoredAmount(
+                            helper,
+                            network.controller,
+                            TEST_RECIPE_OUTPUT,
+                            TEST_RECIPE_OUTPUT_AMOUNT);
+                    assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CORNER, 0);
+                    assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_EDGE, 0);
+                    assertNetworkStoredAmount(helper, network.controller, TEST_RECIPE_CENTER, 0);
+                    assertStoredAmount(
+                            helper,
+                            network.drive.getStackInSlot(0),
+                            TEST_RECIPE_OUTPUT,
+                            TEST_RECIPE_OUTPUT_AMOUNT);
+                    assertNotRequesting(helper, network.controller, TEST_RECIPE_OUTPUT);
+                }).thenSucceed();
     }
 
     // A processing pattern should push inputs out, wait for the declared output, then complete once it returns.
@@ -227,21 +285,19 @@ public class CraftingExecutionTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         helper.setSlot(DRIVE_LABEL, 0, driveCell);
-        ContinuousInvariant cpuBreakDoesNotDuplicateOrProduceOutput = continuousInvariant(
-                helper,
-                "CPU break must not duplicate ingredients or produce processing output",
-                () -> {
-                    cpuBreakDrops.addAll(craftingCpuDrops(helper));
-                    long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
-                            + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
-                    long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
-                            + droppedItemAmount(cpuBreakDrops, Blocks.stone);
-                    helper.assertTrue(
-                            accountedCobblestone <= 1,
-                            "At most one ingredient may exist while CPU break cancellation settles; observed="
-                                    + accountedCobblestone);
-                    helper.assertEquals(0L, accountedStone, "CPU break must never produce the requested output");
-                });
+        TickCallbackHandle cpuBreakDoesNotDuplicateOrProduceOutput = helper.onEachTick(() -> {
+            cpuBreakDrops.addAll(craftingCpuDrops(helper));
+            long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
+                    + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
+            long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
+                    + droppedItemAmount(cpuBreakDrops, Blocks.stone);
+            helper.assertTrue(
+                    accountedCobblestone <= 1,
+                    "At most one ingredient may exist while CPU break cancellation settles; observed="
+                            + accountedCobblestone);
+            helper.assertEquals(0L, accountedStone, "CPU break must never produce the requested output");
+        });
+        cpuBreakDoesNotDuplicateOrProduceOutput.disable();
 
         helper.startSequence()
                 .thenWaitUntil(
@@ -384,7 +440,7 @@ public class CraftingExecutionTests {
         inputs.appendTag(itemTag(TEST_RECIPE_CORNER, 1));
         inputs.appendTag(itemTag(TEST_RECIPE_EDGE, 1));
         inputs.appendTag(itemTag(TEST_RECIPE_CORNER, 1));
-        outputs.appendTag(itemTag(TEST_RECIPE_OUTPUT, 1));
+        outputs.appendTag(itemTag(TEST_RECIPE_OUTPUT, TEST_RECIPE_OUTPUT_AMOUNT));
         patternTags.setTag("in", inputs);
         patternTags.setTag("out", outputs);
         encodedPattern.setTagCompound(patternTags);
@@ -397,13 +453,26 @@ public class CraftingExecutionTests {
                 new ItemStack(TEST_RECIPE_CORNER), new ItemStack(TEST_RECIPE_EDGE), new ItemStack(TEST_RECIPE_CENTER),
                 new ItemStack(TEST_RECIPE_EDGE), new ItemStack(TEST_RECIPE_CORNER), new ItemStack(TEST_RECIPE_EDGE),
                 new ItemStack(TEST_RECIPE_CORNER) };
-        IRecipe recipe = new ShapedRecipes(3, 3, inputs, new ItemStack(TEST_RECIPE_OUTPUT));
+        IRecipe recipe = new ShapedRecipes(3, 3, inputs, new ItemStack(TEST_RECIPE_OUTPUT, TEST_RECIPE_OUTPUT_AMOUNT));
         ScopedCraftingRecipe scopedRecipe = new ScopedCraftingRecipe(
                 CraftingManager.getInstance().getRecipeList(),
                 recipe);
 
         helper.afterTest(scopedRecipe::remove);
         scopedRecipe.register();
+    }
+
+    private static void configureStickyCell(GameTestHelper helper, ItemStack cell, Block partition) {
+        helper.assertTrue(cell.getItem() instanceof ICellWorkbenchItem, "Item cell should expose workbench settings");
+        ICellWorkbenchItem cellItem = (ICellWorkbenchItem) cell.getItem();
+        IInventory upgrades = cellItem.getUpgradesInventory(cell);
+        helper.assertNotNull(upgrades, "Item cell upgrade inventory should exist");
+        InventoryHelper
+                .setSlot(upgrades, 0, AEApi.instance().definitions().materials().cardSticky().maybeStack(1).get());
+
+        IAEStackInventory config = cellItem.getConfigAEInventory(cell);
+        helper.assertNotNull(config, "Item cell config inventory should exist");
+        config.putAEStackInSlot(0, itemStack(partition, 1));
     }
 
     private static ItemStack encodedProcessingPattern(Block input, int inputAmount, Block output, int outputAmount) {

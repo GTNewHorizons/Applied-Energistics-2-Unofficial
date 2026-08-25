@@ -148,6 +148,9 @@ public class CraftingGridCache
     public static final String DIAGNOSTICS_ENABLED_KEY = "CraftingDiagnosticsEnabled";
     public static final String DIAGNOSTICS_SESSION_COUNTER_KEY = "CraftingDiagnosticsSessionCounter";
 
+    protected boolean liteCraftingDefault = false;
+    public static final String LITE_CRAFTING_DEFAULT_KEY = "LiteCraftingDefault";
+
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
     }
@@ -234,6 +237,7 @@ public class CraftingGridCache
         destinationStorage.dataObject().removeTag(DIAGNOSTICS_KEY);
         destinationStorage.dataObject().removeTag(DIAGNOSTICS_ENABLED_KEY);
         destinationStorage.dataObject().removeTag(DIAGNOSTICS_SESSION_COUNTER_KEY);
+        destinationStorage.dataObject().removeTag(LITE_CRAFTING_DEFAULT_KEY);
     }
 
     @Override
@@ -254,6 +258,10 @@ public class CraftingGridCache
         this.readDiagnosticsFromNBT(
                 data.getTagList(DIAGNOSTICS_KEY, Constants.NBT.TAG_COMPOUND),
                 !this.diagnostics.isEmpty());
+
+        if (data.hasKey(LITE_CRAFTING_DEFAULT_KEY)) {
+            this.liteCraftingDefault = this.liteCraftingDefault || data.getBoolean(LITE_CRAFTING_DEFAULT_KEY);
+        }
     }
 
     @Override
@@ -261,6 +269,7 @@ public class CraftingGridCache
         destinationStorage.dataObject().setBoolean(DIAGNOSTICS_ENABLED_KEY, this.diagnosticsEnabled);
         destinationStorage.dataObject().setTag(DIAGNOSTICS_KEY, this.writeDiagnosticsToNBT());
         destinationStorage.dataObject().setLong(DIAGNOSTICS_SESSION_COUNTER_KEY, this.diagnostics.getSessionCounter());
+        destinationStorage.dataObject().setBoolean(LITE_CRAFTING_DEFAULT_KEY, this.liteCraftingDefault);
     }
 
     public static void pauseRebuilds() {
@@ -337,7 +346,7 @@ public class CraftingGridCache
                 }
                 continue;
             }
-            for (IAEStack<?> out : details.getAEOutputs()) {
+            for (IAEStack<?> out : details.getCondensedAEOutputs()) {
                 out = out.copy();
                 out.reset();
                 out.setCraftable(true);
@@ -605,13 +614,20 @@ public class CraftingGridCache
     @Override
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
             final IAEItemStack slotItem, final ICraftingCallback cb) {
-        return beginCraftingJob(world, grid, actionSrc, convertStack(slotItem), CraftingMode.STANDARD, false, cb);
+        return beginCraftingJob(
+                world,
+                grid,
+                actionSrc,
+                convertStack(slotItem),
+                CraftingMode.STANDARD,
+                this.liteCraftingDefault,
+                cb);
     }
 
     @Override
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
             final IAEStack<?> stack, final ICraftingCallback cb) {
-        return beginCraftingJob(world, grid, actionSrc, stack, CraftingMode.STANDARD, false, cb);
+        return beginCraftingJob(world, grid, actionSrc, stack, CraftingMode.STANDARD, this.liteCraftingDefault, cb);
     }
 
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
@@ -845,6 +861,17 @@ public class CraftingGridCache
     protected void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
         this.diagnostics.readFromNBT(list, merge);
         this.diagnosticsRevision = this.diagnostics.getRevision();
+    }
+
+    public boolean getLiteCraftingDefault() {
+        return this.liteCraftingDefault;
+    }
+
+    public void setLiteCraftingDefault(final boolean enabled) {
+        if (this.liteCraftingDefault == enabled) {
+            return;
+        }
+        this.liteCraftingDefault = enabled;
     }
 
     public static class ActiveCpuIterator implements Iterator<ICraftingCPU> {

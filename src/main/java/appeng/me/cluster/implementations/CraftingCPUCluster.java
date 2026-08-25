@@ -801,6 +801,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         int executedTasks = 0;
         while (craftingTaskIterator.hasNext()) {
+            if (this.remainingOperations <= 0) return;
+
             final Entry<ICraftingPatternDetails, TaskProgress> craftingEntry = craftingTaskIterator.next();
 
             if (craftingEntry.getValue().value <= 0) {
@@ -2342,7 +2344,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 return;
             }
 
-            this.patternOutputs = details.getAEOutputs().clone();
+            this.patternOutputs = details.getCondensedAEOutputs().clone();
 
             for (IAEStack<?> aes : this.patternOutputs) {
                 final IAEStack<?> tempAes = aes.copy();
