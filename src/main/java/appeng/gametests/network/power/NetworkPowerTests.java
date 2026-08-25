@@ -94,7 +94,7 @@ public class NetworkPowerTests {
     }
 
     private static TickCallbackHandle watchForPrematureExport(GameTestHelper helper, NetworkFixture network) {
-        return helper.onEachTick(() -> {
+        return helper.onEachTick("unpowered network does not export", () -> {
             if (!energyGrid(helper, network).isNetworkPowered()) {
                 helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
             }
@@ -102,7 +102,7 @@ public class NetworkPowerTests {
     }
 
     private static TickCallbackHandle watchCobblestoneConservation(GameTestHelper helper, NetworkFixture network) {
-        return helper.onEachTick(() -> {
+        return helper.onEachTick("cobblestone is conserved during export", () -> {
             long networkAmount = storedAmount(helper, network.drive().getStackInSlot(0), Blocks.cobblestone);
             long destinationAmount = helper.countItems(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone));
             helper.assertEquals(

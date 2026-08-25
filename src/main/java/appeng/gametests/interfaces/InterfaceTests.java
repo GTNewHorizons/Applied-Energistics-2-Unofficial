@@ -232,11 +232,11 @@ public class InterfaceTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 64);
         helper.setSlot(DRIVE_LABEL, 0, driveCell);
-        TickCallbackHandle configuredStockDoesNotDrainNetwork = helper.onEachTick(() -> {
-            assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
-            assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 64);
-        });
-        configuredStockDoesNotDrainNetwork.disable();
+        TickCallbackHandle configuredStockDoesNotDrainNetwork = helper
+                .onEachTickDisabled("configured stock does not drain network", () -> {
+                    assertInterfaceStoredAmount(helper, network.blockInterface, Blocks.cobblestone, STOCK_AMOUNT);
+                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 64);
+                });
 
         helper.startSequence()
                 .thenWaitUntil(
