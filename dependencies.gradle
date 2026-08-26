@@ -53,7 +53,7 @@ dependencies {
         exclude module: "waila"
     }
 
-    devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.99.26.8.25.16.16:dev")
+    devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.14.0:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.5:dev")
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.31:dev') {transitive = false}
