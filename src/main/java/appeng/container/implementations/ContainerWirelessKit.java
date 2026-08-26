@@ -456,7 +456,7 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                     if (w.getTileEntity(network.x, network.y, network.z) instanceof IGridHost gh) {
                         if (subCommand.includeConnectors) {
                             for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                    .getMachines(TileWirelessBase.class)) {
+                                    .getMachines(TileWirelessConnector.class)) {
                                 TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
                                 if (!wc.isLinked()) {
                                     if (isColor && wc.getColor() != subCommand.color) continue;
