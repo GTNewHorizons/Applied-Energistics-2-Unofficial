@@ -42,6 +42,11 @@ public class TileWirelessConnector extends TileWirelessBase {
     }
 
     @Override
+    protected int getActiveConnectionCount() {
+        return connection == null ? 0 : 1;
+    }
+
+    @Override
     public List<TileWirelessBase> getConnectedTiles() {
         return target == null ? ImmutableList.of() : ImmutableList.of(target);
     }

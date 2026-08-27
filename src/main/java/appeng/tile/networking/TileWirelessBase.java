@@ -57,6 +57,8 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
 
     protected abstract void removeActiveConnection(TileWirelessBase other);
 
+    protected abstract int getActiveConnectionCount();
+
     public abstract List<TileWirelessBase> getConnectedTiles();
 
     public List<DimensionalCoord> getConnectedCoords() {
@@ -290,8 +292,12 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
 
     @TileEvent(TileEventType.TICK)
     public void onTick() {
-        if (!Platform.isServer() || this.linkedTargets.isEmpty()) return;
+        if (!Platform.isServer() || !shouldRestoreConnections(getActiveConnectionCount())) return;
         this.tryRestoreConnection(ImmutableList.copyOf(this.linkedTargets));
+    }
+
+    boolean shouldRestoreConnections(int activeConnectionCount) {
+        return activeConnectionCount < this.linkedTargets.size();
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
