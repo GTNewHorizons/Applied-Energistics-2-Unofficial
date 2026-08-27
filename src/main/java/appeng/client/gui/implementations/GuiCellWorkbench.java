@@ -14,6 +14,7 @@ import java.io.IOException;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 
@@ -241,6 +242,27 @@ public class GuiCellWorkbench extends GuiUpgradeable {
                 super.actionPerformed(btn);
             }
         } catch (final IOException ignored) {}
+    }
+
+    public boolean handleBookmarkGroupDrop(int mouseX, int mouseY, Iterable<ItemStack> stacks) {
+        final int x = mouseX - this.guiLeft + 1;
+        final int y = mouseY - this.guiTop + 1;
+        this.handleButtonVisibility();
+
+        int slotIndex = -1;
+        for (VirtualMEPhantomSlot slot : this.configSlots) {
+            if (slot.isHovered(x, y)) {
+                slotIndex = slot.getSlotIndex();
+                break;
+            }
+        }
+        if (slotIndex < 0) return false;
+
+        for (ItemStack stack : stacks) {
+            if (slotIndex >= this.configSlots.length || this.configSlots[slotIndex].isHidden()) break;
+            this.configSlots[slotIndex++].handleMouseClicked(stack, false, 0);
+        }
+        return true;
     }
 
     private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
