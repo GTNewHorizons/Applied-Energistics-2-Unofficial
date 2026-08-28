@@ -59,12 +59,11 @@ public class ImportExportBusTests {
         helper.setSlot(SOURCE_CHEST_LABEL, 1, new ItemStack(Blocks.dirt, 32));
         configureFilter(helper, busIO.importBus, Blocks.cobblestone);
         configureFilter(helper, busIO.exportBus, Blocks.dirt);
-        TickCallbackHandle filterRejectsDirt = helper.onEachTick(() -> {
+        TickCallbackHandle filterRejectsDirt = helper.onEachTickDisabled("import filter rejects dirt", () -> {
             assertNetworkStoredAmount(helper, busIO.controller, Blocks.dirt, 0);
             helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.dirt), 32);
             helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
         });
-        filterRejectsDirt.disable();
 
         helper.startSequence()
                 .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))
@@ -85,11 +84,10 @@ public class ImportExportBusTests {
         helper.setSlot(DRIVE_LABEL, 0, driveCell);
         configureFilter(helper, busIO.importBus, Blocks.dirt);
         configureFilter(helper, busIO.exportBus, Blocks.cobblestone);
-        TickCallbackHandle filterRetainsDirt = helper.onEachTick(() -> {
+        TickCallbackHandle filterRetainsDirt = helper.onEachTickDisabled("export filter retains dirt", () -> {
             helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.dirt), 0);
             assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.dirt, 1);
         });
-        filterRetainsDirt.disable();
 
         helper.startSequence()
                 .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))
@@ -110,12 +108,15 @@ public class ImportExportBusTests {
         long destinationCapacity = fillInventory(helper, DESTINATION_CHEST_LABEL, Blocks.dirt);
         configureFilter(helper, busIO.importBus, Blocks.dirt);
         configureFilter(helper, busIO.exportBus, Blocks.cobblestone);
-        TickCallbackHandle fullDestinationPreservesNetwork = helper.onEachTick(() -> {
-            assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, 32);
-            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
-            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.dirt), destinationCapacity);
-        });
-        fullDestinationPreservesNetwork.disable();
+        TickCallbackHandle fullDestinationPreservesNetwork = helper
+                .onEachTickDisabled("full destination preserves network contents", () -> {
+                    assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, 32);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+                    helper.assertInventoryCount(
+                            DESTINATION_CHEST_LABEL,
+                            new ItemStack(Blocks.dirt),
+                            destinationCapacity);
+                });
 
         helper.startSequence()
                 .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))
@@ -156,13 +157,17 @@ public class ImportExportBusTests {
         helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 32));
         configureFilter(helper, busIO.importBus, Blocks.cobblestone);
         configureFilter(helper, busIO.exportBus, Blocks.dirt);
-        TickCallbackHandle fullNetworkPreservesSource = helper.onEachTick(() -> {
-            assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
-            assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
-            helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 32);
-            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
-        });
-        fullNetworkPreservesSource.disable();
+        TickCallbackHandle fullNetworkPreservesSource = helper
+                .onEachTickDisabled("full network preserves source inventory", () -> {
+                    assertNetworkStoredAmount(helper, busIO.controller, Blocks.cobblestone, CELL_1K_ONE_TYPE_CAPACITY);
+                    assertStoredAmount(
+                            helper,
+                            busIO.drive.getStackInSlot(0),
+                            Blocks.cobblestone,
+                            CELL_1K_ONE_TYPE_CAPACITY);
+                    helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 32);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+                });
 
         helper.startSequence()
                 .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))
@@ -184,11 +189,14 @@ public class ImportExportBusTests {
         configureRedstone(busIO.exportBus, RedstoneMode.HIGH_SIGNAL);
         setRedstoneInput(helper, 0);
         long[] gatedAmounts = { 0, 0 };
-        TickCallbackHandle gatedBusDoesNotMoveItems = helper.onEachTick(() -> {
-            assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, gatedAmounts[0]);
-            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), gatedAmounts[1]);
-        });
-        gatedBusDoesNotMoveItems.disable();
+        TickCallbackHandle gatedBusDoesNotMoveItems = helper
+                .onEachTickDisabled("redstone-gated export bus does not move items", () -> {
+                    assertStoredAmount(helper, busIO.drive.getStackInSlot(0), Blocks.cobblestone, gatedAmounts[0]);
+                    helper.assertInventoryCount(
+                            DESTINATION_CHEST_LABEL,
+                            new ItemStack(Blocks.cobblestone),
+                            gatedAmounts[1]);
+                });
 
         helper.startSequence()
                 .thenWaitUntil("wait for bus network activation", 60, () -> assertBusIOActive(helper, busIO))

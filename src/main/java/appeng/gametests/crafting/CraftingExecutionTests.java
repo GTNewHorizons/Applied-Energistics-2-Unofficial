@@ -285,19 +285,19 @@ public class CraftingExecutionTests {
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 1);
         helper.setSlot(DRIVE_LABEL, 0, driveCell);
-        TickCallbackHandle cpuBreakDoesNotDuplicateOrProduceOutput = helper.onEachTick(() -> {
-            cpuBreakDrops.addAll(craftingCpuDrops(helper));
-            long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
-                    + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
-            long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
-                    + droppedItemAmount(cpuBreakDrops, Blocks.stone);
-            helper.assertTrue(
-                    accountedCobblestone <= 1,
-                    "At most one ingredient may exist while CPU break cancellation settles; observed="
-                            + accountedCobblestone);
-            helper.assertEquals(0L, accountedStone, "CPU break must never produce the requested output");
-        });
-        cpuBreakDoesNotDuplicateOrProduceOutput.disable();
+        TickCallbackHandle cpuBreakDoesNotDuplicateOrProduceOutput = helper
+                .onEachTickDisabled("CPU break does not duplicate ingredients or produce output", () -> {
+                    cpuBreakDrops.addAll(craftingCpuDrops(helper));
+                    long accountedCobblestone = networkStoredAmount(network.controller, Blocks.cobblestone)
+                            + droppedItemAmount(cpuBreakDrops, Blocks.cobblestone);
+                    long accountedStone = networkStoredAmount(network.controller, Blocks.stone)
+                            + droppedItemAmount(cpuBreakDrops, Blocks.stone);
+                    helper.assertTrue(
+                            accountedCobblestone <= 1,
+                            "At most one ingredient may exist while CPU break cancellation settles; observed="
+                                    + accountedCobblestone);
+                    helper.assertEquals(0L, accountedStone, "CPU break must never produce the requested output");
+                });
 
         helper.startSequence()
                 .thenWaitUntil(

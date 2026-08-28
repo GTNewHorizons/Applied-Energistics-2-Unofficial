@@ -321,18 +321,6 @@ public final class AEGameTestHelpers {
         return AEApi.instance().definitions().items().cell64k().maybeStack(1).get();
     }
 
-    /**
-     * @deprecated Use directly GameTestHelper#onEachTick(Runnable) and disable the returned handle initially
-     * @see GameTestHelper#onEachTick(Runnable)
-     */
-    @Deprecated
-    public static ContinuousInvariant continuousInvariant(GameTestHelper helper, String description,
-            Runnable assertion) {
-        TickCallbackHandle callback = helper.onEachTick(() -> checkContinuousInvariant(description, assertion));
-        callback.disable();
-        return new ContinuousInvariant(callback);
-    }
-
     private static void checkContinuousInvariant(String description, Runnable assertion) {
         try {
             assertion.run();
