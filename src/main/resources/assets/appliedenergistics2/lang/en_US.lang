@@ -1198,7 +1198,7 @@ item.appliedenergistics2.WirelessMessages.SuperBound=§aNetwork at %s §awas add
 item.appliedenergistics2.WirelessMessages.SuperBoundFailed=§cNetwork is already in the list
 item.appliedenergistics2.WirelessMessages.SuperClear=Shift + Ctrl + R-click to clear current tool mode
 item.appliedenergistics2.WirelessMessages.SuperNetworkList=Network list:
-item.appliedenergistics2.WirelessMessages.Network=Network %sat %s
+item.appliedenergistics2.WirelessMessages.SuperNetwork=Network %sat %s
 item.appliedenergistics2.WirelessMessages.SuperNetworkListEmpty=The network list is empty
 
 item.appliedenergistics2.WirelessMessages.rowBindSuccess=§aSuccessfully connected %s §ato %s
