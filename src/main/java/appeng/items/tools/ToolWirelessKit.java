@@ -209,23 +209,23 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
                 else {
                     lines.add(WirelessMessages.SuperNetworkList.getLocal());
                     final NBTTagList tagNames = stash.getTagList(WireLessToolHelper.NbtSuperNames, NBT.TAG_COMPOUND);
-                    for (int i = 0; i < tagNames.tagCount(); i++) {
-                        final NBTTagCompound tagName = tagNames.getCompoundTagAt(i);
-                        final DimensionalCoord netCoord = DimensionalCoord.readFromNBT(tagName);
+                    for (final DimensionalCoord network : dcl) {
                         String customName = "";
 
-                        if (tagName.hasKey("networkName")) {
-                            for (final DimensionalCoord dc : dcl) {
-                                if (dc.equals(netCoord)) {
-                                    customName = tagName.getString("networkName");
-                                    break;
-                                }
-                            }
+                        // the position sits under "network", and colour entries carry a colour name instead
+                        for (int i = 0; i < tagNames.tagCount(); i++) {
+                            final NBTTagCompound tagName = tagNames.getCompoundTagAt(i);
+                            if (!tagName.hasKey("networkName")) continue;
+                            if (!network.equals(DimensionalCoord.readFromNBT(tagName.getCompoundTag("network"))))
+                                continue;
+
+                            customName = tagName.getString("networkName");
+                            break;
                         }
 
                         lines.add(
                                 WirelessMessages.SuperNetwork
-                                        .getLocal(customName + " ", netCoord.getGuiTextShortNoDim()));
+                                        .getLocal(customName + " ", network.getGuiTextShortNoDim()));
                     }
                 }
             }
