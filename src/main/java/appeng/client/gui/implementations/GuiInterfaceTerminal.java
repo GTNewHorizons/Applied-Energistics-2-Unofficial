@@ -40,6 +40,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -1181,9 +1182,22 @@ public class GuiInterfaceTerminal extends AEBaseGui
             }
         }
         if (suffix != null && !suffix.isEmpty()) {
-            return translatedName + suffix;
+            return translatedName + resolveSuffix(suffix);
         }
         return translatedName;
+    }
+
+    /**
+     * Turns the serialized {@link IChatComponent} suffix back into text, so that it is localized with the client's
+     * language rather than the server's. A suffix that fails to deserialize is shown as raw text.
+     */
+    private static String resolveSuffix(String suffix) {
+        try {
+            final IChatComponent component = IChatComponent.Serializer.func_150699_a(suffix);
+            return component != null ? component.getUnformattedText() : suffix;
+        } catch (Exception e) {
+            return suffix;
+        }
     }
 
     private void parsePacketCmd(PacketInterfaceTerminalUpdate.PacketEntry cmd) {

@@ -40,6 +40,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -1663,11 +1664,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public String getTermName() {
         final String baseName = getRawTermName();
-        final String suffix = getAdjacentNameSuffix();
+        final IChatComponent suffix = getAdjacentNameSuffix();
         if (suffix == null) {
             return baseName;
         }
-        return baseName + suffix;
+        return baseName + suffix.getUnformattedText();
     }
 
     /**
@@ -1685,7 +1686,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     /**
      * Returns the suffix to append after translation, or null if none.
      */
-    public String getAdjacentNameSuffix() {
+    public IChatComponent getAdjacentNameSuffix() {
         if (((ICustomNameObject) this.iHost).hasCustomName()) return null;
         final TileEntity hostTile = this.iHost.getTileEntity();
         if (hostTile == null || hostTile.getWorldObj() == null) return null;
@@ -1704,7 +1705,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
             }
             if (directedTile instanceof IInterfaceNameProvider provider) {
-                final String suffix = provider.getInterfaceNameSuffix();
+                final IChatComponent suffix = provider.getInterfaceNameSuffix();
                 if (suffix != null) return suffix;
             }
         }
