@@ -34,11 +34,6 @@ public class TileWirelessHub extends TileWirelessBase {
     }
 
     @Override
-    protected int getActiveConnectionCount() {
-        return connections.size();
-    }
-
-    @Override
     public List<TileWirelessBase> getConnectedTiles() {
         final List<TileWirelessBase> tiles = new ArrayList<>();
         for (ActiveConnection connection : connections.values()) {

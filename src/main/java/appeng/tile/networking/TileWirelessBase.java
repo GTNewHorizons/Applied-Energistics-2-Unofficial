@@ -30,6 +30,9 @@ import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.ticking.IGridTickable;
+import appeng.api.networking.ticking.TickRateModulation;
+import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
@@ -39,10 +42,9 @@ import appeng.me.helpers.AENetworkProxy;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
-import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
-public abstract class TileWirelessBase extends AENetworkTile implements IColorableTile {
+public abstract class TileWirelessBase extends AENetworkTile implements IColorableTile, IGridTickable {
 
     TileWirelessBase(int maxConnections) {
         this.maxConnections = maxConnections;
@@ -56,8 +58,6 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     protected abstract void addActiveConnection(TileWirelessBase other, IGridConnection connection);
 
     protected abstract void removeActiveConnection(TileWirelessBase other);
-
-    protected abstract int getActiveConnectionCount();
 
     public abstract List<TileWirelessBase> getConnectedTiles();
 
@@ -290,14 +290,31 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
         return null;
     }
 
-    @TileEvent(TileEventType.TICK)
-    public void onTick() {
-        if (!Platform.isServer() || !shouldRestoreConnections(getActiveConnectionCount())) return;
+    @Override
+    public void onReady() {
+        super.onReady();
         this.tryRestoreConnection(ImmutableList.copyOf(this.linkedTargets));
     }
 
-    boolean shouldRestoreConnections(int activeConnectionCount) {
-        return activeConnectionCount < this.linkedTargets.size();
+    @Override
+    public TickingRequest getTickingRequest(IGridNode node) {
+        // Only wireless connector needs ticking, as hub doesn't persist link nbt
+        // and would not link to connector during onReady if it's not present in its nbt.
+        // Hub does not need ticking since connector will connect to the hub during onReady
+        // when it loads.
+        if (isHub()) return null;
+        if (this.linkedTargets.size() == this.getConnectedTiles().size()) return null;
+        return new TickingRequest(1, 20, false, false);
+    }
+
+    @Override
+    public TickRateModulation tickingRequest(IGridNode node, int TicksSinceLastCall) {
+        this.tryRestoreConnection(ImmutableList.copyOf(this.linkedTargets));
+        if (this.linkedTargets.size() == this.getConnectedTiles().size()) {
+            return TickRateModulation.SLEEP;
+        } else {
+            return TickRateModulation.SLOWER;
+        }
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
