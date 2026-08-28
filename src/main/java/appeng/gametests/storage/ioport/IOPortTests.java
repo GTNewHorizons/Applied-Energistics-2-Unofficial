@@ -11,6 +11,8 @@ import static appeng.gametests.AEGameTestHelpers.itemInventory;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.storedAmount;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import net.minecraft.block.Block;
@@ -22,12 +24,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntityHopper;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizons.horizonqa.api.GameTestArguments;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
 import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
+import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
 import appeng.api.AEApi;
 import appeng.api.config.FullnessMode;
@@ -528,76 +532,48 @@ public class IOPortTests {
                 .thenSucceed();
     }
 
-    // Transfers 256 item units per tick without upgrades.
+    // Applies the expected per-tick transfer budget for each Speed upgrade count.
     @GameTest(template = "ioport", timeoutTicks = 30)
-    public static void noUpgradeTransfersTwoHundredFiftySixItemsPerTick(GameTestHelper helper) {
+    @MethodSource("transferBudgets")
+    public static void speedUpgradeTransferBudget(GameTestHelper helper, int speedUpgrades, int sourceAmount,
+            int expectedTransfer) {
         TileIOPort ioport = getIOPort(helper);
         TileDrive drive = getDrive(helper);
+        ItemStack speedUpgrade = AEApi.instance().definitions().materials().cardSpeed().maybeStack(1).get();
+        for (int slot = 0; slot < speedUpgrades; slot++) {
+            installUpgrade(ioport, speedUpgrade.copy(), slot);
+        }
+        helper.assertEquals(
+                speedUpgrades,
+                ioport.getInstalledUpgrades(Upgrades.SPEED),
+                "Expected Speed upgrades should be installed");
         ItemStack sourceCell = cell1k();
         ItemStack driveCell = cell1k();
-        insertItems(helper, sourceCell, Blocks.cobblestone, 300);
+        insertItems(helper, sourceCell, Blocks.cobblestone, sourceAmount);
 
         helper.startSequence()
                 .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
                 .thenIdle(1).thenExecuteAtStart("insert test cells into the IO port network", () -> {
                     helper.setSlot(DRIVE_LABEL, 0, driveCell);
                     helper.setSlot(IO_PORT_LABEL, 0, sourceCell);
-                }).thenExecute("assert the first tick transfers exactly 256 items", () -> {
+                }).thenExecute("assert the first-tick transfer budget", () -> {
                     helper.assertNotNull(
                             ioport.getStackInSlot(0),
                             "Cell should remain in input after exhausting transfer budget");
-                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 44);
-                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 256);
+                    assertStoredAmount(
+                            helper,
+                            ioport.getStackInSlot(0),
+                            Blocks.cobblestone,
+                            sourceAmount - expectedTransfer);
+                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, expectedTransfer);
                 }).thenSucceed();
     }
 
-    // Transfers 512 item units per tick with one Speed upgrade.
-    @GameTest(template = "ioport", timeoutTicks = 30)
-    public static void speedUpgradeTransfersFiveHundredTwelveItemsPerTick(GameTestHelper helper) {
-        TileIOPort ioport = getIOPort(helper);
-        TileDrive drive = getDrive(helper);
-        installUpgrade(ioport, AEApi.instance().definitions().materials().cardSpeed().maybeStack(1).get(), 0);
-        ItemStack sourceCell = cell1k();
-        ItemStack driveCell = cell1k();
-        insertItems(helper, sourceCell, Blocks.cobblestone, 600);
-
-        helper.startSequence()
-                .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
-                .thenIdle(1).thenExecuteAtStart("insert test cells into the IO port network", () -> {
-                    helper.setSlot(DRIVE_LABEL, 0, driveCell);
-                    helper.setSlot(IO_PORT_LABEL, 0, sourceCell);
-                }).thenExecute("assert the first tick transfers exactly 512 items", () -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Cell with remaining contents should stay in input after speed transfer");
-                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 88);
-                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 512);
-                }).thenSucceed();
-    }
-
-    // Transfers 2048 item units per tick with all three Speed upgrade slots filled.
-    @GameTest(template = "ioport", timeoutTicks = 30)
-    public static void maxSpeedUpgradesApplyExpectedBudget(GameTestHelper helper) {
-        TileIOPort ioport = getIOPort(helper);
-        TileDrive drive = getDrive(helper);
-        installSpeedUpgrades(ioport);
-        helper.assertEquals(3, ioport.getInstalledUpgrades(Upgrades.SPEED), "All Speed upgrades should be installed");
-        ItemStack sourceCell = cell1k();
-        ItemStack driveCell = cell1k();
-        insertItems(helper, sourceCell, Blocks.cobblestone, 3000);
-
-        helper.startSequence()
-                .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
-                .thenIdle(1).thenExecuteAtStart("insert test cells into the IO port network", () -> {
-                    helper.setSlot(DRIVE_LABEL, 0, driveCell);
-                    helper.setSlot(IO_PORT_LABEL, 0, sourceCell);
-                }).thenExecute("assert the first tick transfers exactly 2048 items", () -> {
-                    helper.assertNotNull(
-                            ioport.getStackInSlot(0),
-                            "Cell with remaining contents should stay in input after max-speed transfer");
-                    assertStoredAmount(helper, ioport.getStackInSlot(0), Blocks.cobblestone, 952);
-                    assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 2048);
-                }).thenSucceed();
+    public static List<GameTestArguments> transferBudgets() {
+        return Arrays.asList(
+                GameTestArguments.named("no-upgrade", 0, 300, 256),
+                GameTestArguments.named("one-upgrade", 1, 600, 512),
+                GameTestArguments.named("three-upgrades", 3, 3000, 2048));
     }
 
     // Runs in HIGH_SIGNAL mode only after redstone power is applied.
@@ -926,13 +902,6 @@ public class IOPortTests {
 
     private static void installRedstoneUpgrade(TileIOPort ioport) {
         installUpgrade(ioport, AEApi.instance().definitions().materials().cardRedstone().maybeStack(1).get(), 0);
-    }
-
-    private static void installSpeedUpgrades(TileIOPort ioport) {
-        ItemStack speedUpgrade = AEApi.instance().definitions().materials().cardSpeed().maybeStack(1).get();
-        for (int slot = 0; slot < 3; slot++) {
-            installUpgrade(ioport, speedUpgrade.copy(), slot);
-        }
     }
 
     private static void installUpgrade(TileIOPort ioport, ItemStack upgrade, int slot) {
