@@ -89,6 +89,11 @@ public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> 
     }
 
     @Override
+    public boolean hasWriteAccess() {
+        return target.hasWriteAccess();
+    }
+
+    @Override
     public @Nullable IAEStackType<T> getStackType() {
         return target.getStackType();
     }
