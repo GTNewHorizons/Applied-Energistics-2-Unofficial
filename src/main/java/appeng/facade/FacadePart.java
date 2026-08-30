@@ -170,7 +170,7 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                                 instance.setRenderColor(color);
                                 rbw.renderStandardBlock(instance.getBlock(), x, y, z);
                                 instance.setRenderColor(0xffffff);
-                                this.prevLight = rbw.getLightingCache();
+                                this.prevLight = rbw.getLightingCache(this.prevLight);
                             }
 
                             rbw.setCalculations(false);

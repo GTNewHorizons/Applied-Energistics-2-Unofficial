@@ -37,7 +37,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     private boolean isFacade = false;
     private boolean useTextures = true;
     private float opacity = 1.0f;
-    private LightingCache lightState = new LightingCache();
+    private final LightingCache lightState = new LightingCache();
 
     public static final boolean fixedBottomFaceUV = (boolean) Launch.blackboard
             .getOrDefault("hodgepodge.FixesConfig.fixBottomFaceUV", Boolean.FALSE);
@@ -507,11 +507,13 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     }
 
     public void populate(final ISimplifiedBundle sim) {
-        this.lightState = new LightingCache((LightingCache) sim);
+        this.lightState.copyFrom((LightingCache) sim);
     }
 
-    public ISimplifiedBundle getLightingCache() {
-        return new LightingCache(this.lightState);
+    public ISimplifiedBundle getLightingCache(final ISimplifiedBundle sim) {
+        final LightingCache cache = sim == null ? new LightingCache() : (LightingCache) sim;
+        cache.copyFrom(this.lightState);
+        return cache;
     }
 
     Set<ForgeDirection> getFaces() {
@@ -591,40 +593,6 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         public int bZNeg;
         public int lightHash;
 
-        public LightingCache(final LightingCache secondCSrc) {
-            this.rXPos = secondCSrc.rXPos;
-            this.rXNeg = secondCSrc.rXNeg;
-            this.rYPos = secondCSrc.rYPos;
-            this.rYNeg = secondCSrc.rYNeg;
-            this.rZPos = secondCSrc.rZPos;
-            this.rZNeg = secondCSrc.rZNeg;
-
-            this.isAO = secondCSrc.isAO;
-
-            this.bXPos = secondCSrc.bXPos;
-            this.bXNeg = secondCSrc.bXNeg;
-            this.bYPos = secondCSrc.bYPos;
-            this.bYNeg = secondCSrc.bYNeg;
-            this.bZPos = secondCSrc.bZPos;
-            this.bZNeg = secondCSrc.bZNeg;
-
-            this.aoXPos = secondCSrc.aoXPos.clone();
-            this.aoXNeg = secondCSrc.aoXNeg.clone();
-            this.aoYPos = secondCSrc.aoYPos.clone();
-            this.aoYNeg = secondCSrc.aoYNeg.clone();
-            this.aoZPos = secondCSrc.aoZPos.clone();
-            this.aoZNeg = secondCSrc.aoZNeg.clone();
-
-            this.foXPos = secondCSrc.foXPos.clone();
-            this.foXNeg = secondCSrc.foXNeg.clone();
-            this.foYPos = secondCSrc.foYPos.clone();
-            this.foYNeg = secondCSrc.foYNeg.clone();
-            this.foZPos = secondCSrc.foZPos.clone();
-            this.foZNeg = secondCSrc.foZNeg.clone();
-
-            this.lightHash = secondCSrc.lightHash;
-        }
-
         public LightingCache() {
             this.rXPos = null;
             this.rXNeg = null;
@@ -657,6 +625,40 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             this.foZNeg = new float[12];
 
             this.lightHash = 0;
+        }
+
+        public void copyFrom(final LightingCache source) {
+            this.rXPos = source.rXPos;
+            this.rXNeg = source.rXNeg;
+            this.rYPos = source.rYPos;
+            this.rYNeg = source.rYNeg;
+            this.rZPos = source.rZPos;
+            this.rZNeg = source.rZNeg;
+
+            this.isAO = source.isAO;
+
+            this.bXPos = source.bXPos;
+            this.bXNeg = source.bXNeg;
+            this.bYPos = source.bYPos;
+            this.bYNeg = source.bYNeg;
+            this.bZPos = source.bZPos;
+            this.bZNeg = source.bZNeg;
+
+            System.arraycopy(source.aoXPos, 0, this.aoXPos, 0, this.aoXPos.length);
+            System.arraycopy(source.aoXNeg, 0, this.aoXNeg, 0, this.aoXNeg.length);
+            System.arraycopy(source.aoYPos, 0, this.aoYPos, 0, this.aoYPos.length);
+            System.arraycopy(source.aoYNeg, 0, this.aoYNeg, 0, this.aoYNeg.length);
+            System.arraycopy(source.aoZPos, 0, this.aoZPos, 0, this.aoZPos.length);
+            System.arraycopy(source.aoZNeg, 0, this.aoZNeg, 0, this.aoZNeg.length);
+
+            System.arraycopy(source.foXPos, 0, this.foXPos, 0, this.foXPos.length);
+            System.arraycopy(source.foXNeg, 0, this.foXNeg, 0, this.foXNeg.length);
+            System.arraycopy(source.foYPos, 0, this.foYPos, 0, this.foYPos.length);
+            System.arraycopy(source.foYNeg, 0, this.foYNeg, 0, this.foYNeg.length);
+            System.arraycopy(source.foZPos, 0, this.foZPos, 0, this.foZPos.length);
+            System.arraycopy(source.foZNeg, 0, this.foZNeg, 0, this.foZNeg.length);
+
+            this.lightHash = source.lightHash;
         }
     }
 }

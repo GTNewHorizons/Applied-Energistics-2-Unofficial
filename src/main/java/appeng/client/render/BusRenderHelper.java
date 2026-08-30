@@ -302,7 +302,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
             rbw.setCalculations(false);
             rbw.setUseTextures(false);
 
-            return rbw.getLightingCache();
+            return rbw.getLightingCache(sim);
         }
     }
 
