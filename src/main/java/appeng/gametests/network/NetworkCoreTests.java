@@ -134,13 +134,13 @@ public class NetworkCoreTests {
         installCableLine(helper, DOWNSTREAM_CABLE_LINE);
         IPart upstreamDevice = placePart(helper, DEVICE_A_LABEL, ForgeDirection.UP, terminal());
         IPart downstreamDevice = placePart(helper, DEVICE_B_LABEL, ForgeDirection.UP, terminal());
-        TickCallbackHandle unpoweredToggleBusGatesDownstream = helper.onEachTick(() -> {
-            assertActive(helper, controller.getProxy(), "Controller side should remain active");
-            assertActive(helper, upstreamDevice, "Upstream device should remain active");
-            assertInactive(helper, drive.getProxy(), "Drive should remain gated");
-            assertInactive(helper, downstreamDevice, "Downstream device should remain gated");
-        });
-        unpoweredToggleBusGatesDownstream.disable();
+        TickCallbackHandle unpoweredToggleBusGatesDownstream = helper
+                .onEachTickDisabled("unpowered toggle bus gates downstream", () -> {
+                    assertActive(helper, controller.getProxy(), "Controller side should remain active");
+                    assertActive(helper, upstreamDevice, "Upstream device should remain active");
+                    assertInactive(helper, drive.getProxy(), "Drive should remain gated");
+                    assertInactive(helper, downstreamDevice, "Downstream device should remain gated");
+                });
 
         helper.startSequence().thenWaitUntil("wait for initial unpowered toggle-bus state", 40, () -> {
             assertActive(helper, controller.getProxy(), "Controller side should boot without redstone");
