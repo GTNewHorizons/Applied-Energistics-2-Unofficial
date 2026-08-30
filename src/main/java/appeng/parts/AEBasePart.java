@@ -179,7 +179,12 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     @Override
     public void setCustomName(String name) {
-        this.getItemStack().setStackDisplayName(name);
+        // An empty name has to clear the display tag, otherwise hasDisplayName() keeps reporting a name
+        if (name == null || name.isEmpty()) {
+            this.getItemStack().func_135074_t();
+        } else {
+            this.getItemStack().setStackDisplayName(name);
+        }
     }
 
     @Override
