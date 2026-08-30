@@ -52,6 +52,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
     private final BaseBlockRender<AEBaseBlock, AEBaseTile> bbr;
     private final Optional<Block> maybeBlock;
     private final Optional<AEBaseBlock> maybeBaseBlock;
+    private final IIcon[] textureScratch = new IIcon[6];
     private int renderingForPass;
     private int currentPass;
     private int itemsRendered;
@@ -332,7 +333,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
     @Override
     public void setTexture(final IIcon down, final IIcon up, final IIcon north, final IIcon south, final IIcon west,
             final IIcon east) {
-        final IIcon[] list = new IIcon[6];
+        final IIcon[] list = this.textureScratch;
 
         list[0] = down;
         list[1] = up;
