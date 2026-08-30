@@ -56,7 +56,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     public IIcon getBlockIcon(final Block block, final IBlockAccess world, final int x, final int y, final int z,
             final int side) {
         if (block == this.resolvedTextureBlock && this.resolvedTextures != null) {
-            final IIcon icon = this.resolvedTextures.get(ForgeDirection.getOrientation(side));
+            final IIcon icon = this.resolvedTextures.getRenderIcon(ForgeDirection.getOrientation(side));
             if (icon != null) {
                 return icon;
             }

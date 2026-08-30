@@ -34,6 +34,7 @@ import appeng.block.AEBaseBlock;
 import appeng.block.networking.BlockCableBus;
 import appeng.client.texture.FlippableIcon;
 import appeng.client.texture.MissingIcon;
+import appeng.client.texture.TmpFlippableIcon;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.tile.AEBaseTile;
@@ -619,8 +620,9 @@ public final class BusRenderHelper implements IPartRenderHelper {
                 break;
         }
 
+        final IIcon renderIcon = ico instanceof TmpFlippableIcon tmp ? tmp.getRenderIcon() : ico;
         for (final AEBaseBlock block : this.maybeBaseBlock.asSet()) {
-            this.bbr.renderFace(x, y, z, block, ico, renderer, face);
+            this.bbr.renderFace(x, y, z, block, renderIcon, renderer, face);
         }
     }
 

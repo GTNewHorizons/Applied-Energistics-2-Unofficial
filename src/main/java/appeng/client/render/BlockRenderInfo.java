@@ -60,6 +60,11 @@ public class BlockRenderInfo {
             };
         }
 
+        public IIcon getRenderIcon(final ForgeDirection dir) {
+            final FlippableIcon icon = this.get(dir);
+            return icon instanceof TmpFlippableIcon tmp ? tmp.getRenderIcon() : icon;
+        }
+
         private boolean isValid() {
             return this.topIcon != null && this.bottomIcon != null
                     && this.southIcon != null
