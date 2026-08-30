@@ -38,6 +38,8 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     private boolean useTextures = true;
     private float opacity = 1.0f;
     private final LightingCache lightState = new LightingCache();
+    private Block resolvedTextureBlock;
+    private BlockRenderInfo.TextureSet resolvedTextures;
 
     public static final boolean fixedBottomFaceUV = (boolean) Launch.blackboard
             .getOrDefault("hodgepodge.FixesConfig.fixBottomFaceUV", Boolean.FALSE);
@@ -48,6 +50,31 @@ public class RenderBlocksWorkaround extends RenderBlocks {
 
     private int getCurrentBrightness(Tessellator tessellator) {
         return tessellator.brightness;
+    }
+
+    @Override
+    public IIcon getBlockIcon(final Block block, final IBlockAccess world, final int x, final int y, final int z,
+            final int side) {
+        if (block == this.resolvedTextureBlock && this.resolvedTextures != null) {
+            final IIcon icon = this.resolvedTextures.get(ForgeDirection.getOrientation(side));
+            if (icon != null) {
+                return icon;
+            }
+        }
+        return super.getBlockIcon(block, world, x, y, z, side);
+    }
+
+    Block getResolvedTextureBlock() {
+        return this.resolvedTextureBlock;
+    }
+
+    BlockRenderInfo.TextureSet getResolvedTextures() {
+        return this.resolvedTextures;
+    }
+
+    void setResolvedTextures(final Block block, final BlockRenderInfo.TextureSet textures) {
+        this.resolvedTextureBlock = block;
+        this.resolvedTextures = textures;
     }
 
     void setTexture(final IIcon ico) {

@@ -443,27 +443,29 @@ public final class BusRenderHelper implements IPartRenderHelper {
             final AEBaseBlock block = (AEBaseBlock) multiPart;
 
             final BlockRenderInfo info = block.getRendererInstance();
-            final ForgeDirection forward = BusRenderHelper.instances.get().az;
-            final ForgeDirection up = BusRenderHelper.instances.get().ay;
+            final BusRenderHelper helper = BusRenderHelper.instances.get();
+            final ForgeDirection forward = helper.az;
+            final ForgeDirection up = helper.ay;
             boolean isTemp = false;
             if (!info.isValid() && !info.hasTemporaryRenderIcons()) {
                 final FlippableIcon i = new FlippableIcon(new MissingIcon(this));
                 info.setTemporaryRenderIcon(i);
                 isTemp = true;
             }
-            renderer.uvRotateBottom = info.getTexture(ForgeDirection.DOWN)
+            final BlockRenderInfo.TextureSet textures = info.resolveTextures();
+            renderer.uvRotateBottom = textures.get(ForgeDirection.DOWN)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.DOWN, forward, up));
-            renderer.uvRotateTop = info.getTexture(ForgeDirection.UP)
+            renderer.uvRotateTop = textures.get(ForgeDirection.UP)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.UP, forward, up));
 
-            renderer.uvRotateEast = info.getTexture(ForgeDirection.EAST)
+            renderer.uvRotateEast = textures.get(ForgeDirection.EAST)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.EAST, forward, up));
-            renderer.uvRotateWest = info.getTexture(ForgeDirection.WEST)
+            renderer.uvRotateWest = textures.get(ForgeDirection.WEST)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.WEST, forward, up));
 
-            renderer.uvRotateNorth = info.getTexture(ForgeDirection.NORTH)
+            renderer.uvRotateNorth = textures.get(ForgeDirection.NORTH)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.NORTH, forward, up));
-            renderer.uvRotateSouth = info.getTexture(ForgeDirection.SOUTH)
+            renderer.uvRotateSouth = textures.get(ForgeDirection.SOUTH)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.SOUTH, forward, up));
 
             this.bbr.renderBlockBounds(
@@ -478,9 +480,12 @@ public final class BusRenderHelper implements IPartRenderHelper {
                     this.ay,
                     this.az);
 
-            renderer.renderStandardBlock(block, x, y, z);
-            if (isTemp) {
-                info.setTemporaryRenderIcon(null);
+            try {
+                this.renderStandardBlock(block, x, y, z, renderer, textures);
+            } finally {
+                if (isTemp) {
+                    info.setTemporaryRenderIcon(null);
+                }
             }
         }
     }
@@ -520,7 +525,27 @@ public final class BusRenderHelper implements IPartRenderHelper {
         }
 
         for (final Block block : this.maybeBlock.asSet()) {
+            final BlockRenderInfo.TextureSet textures = block instanceof AEBaseBlock baseBlock
+                    ? baseBlock.getRendererInstance().resolveTextures()
+                    : null;
+            this.renderStandardBlock(block, x, y, z, renderer, textures);
+        }
+    }
+
+    private void renderStandardBlock(final Block block, final int x, final int y, final int z,
+            final RenderBlocks renderer, final BlockRenderInfo.TextureSet textures) {
+        if (!(renderer instanceof RenderBlocksWorkaround workaround) || textures == null) {
             renderer.renderStandardBlock(block, x, y, z);
+            return;
+        }
+
+        final Block previousBlock = workaround.getResolvedTextureBlock();
+        final BlockRenderInfo.TextureSet previousTextures = workaround.getResolvedTextures();
+        workaround.setResolvedTextures(block, textures);
+        try {
+            renderer.renderStandardBlock(block, x, y, z);
+        } finally {
+            workaround.setResolvedTextures(previousBlock, previousTextures);
         }
     }
 

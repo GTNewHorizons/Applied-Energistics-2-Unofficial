@@ -41,6 +41,7 @@ import appeng.api.util.AEColor;
 import appeng.api.util.AEColoredItemDefinition;
 import appeng.api.util.IReadOnlyCollection;
 import appeng.block.AEBaseBlock;
+import appeng.client.render.BlockRenderInfo;
 import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.FlippableIcon;
 import appeng.client.texture.TextureUtils;
@@ -774,42 +775,13 @@ public class PartCable extends AEBasePart implements IPartCable {
                 (float) renderer.renderMaxX * 16.0f,
                 (float) renderer.renderMaxY * 16.0f,
                 (float) renderer.renderMaxZ * 16.0f);
-        rh.renderFace(
-                x,
-                y,
-                z,
-                blk.getRendererInstance().getTexture(ForgeDirection.WEST),
-                ForgeDirection.WEST,
-                renderer);
-        rh.renderFace(
-                x,
-                y,
-                z,
-                blk.getRendererInstance().getTexture(ForgeDirection.EAST),
-                ForgeDirection.EAST,
-                renderer);
-        rh.renderFace(
-                x,
-                y,
-                z,
-                blk.getRendererInstance().getTexture(ForgeDirection.NORTH),
-                ForgeDirection.NORTH,
-                renderer);
-        rh.renderFace(
-                x,
-                y,
-                z,
-                blk.getRendererInstance().getTexture(ForgeDirection.SOUTH),
-                ForgeDirection.SOUTH,
-                renderer);
-        rh.renderFace(
-                x,
-                y,
-                z,
-                blk.getRendererInstance().getTexture(ForgeDirection.DOWN),
-                ForgeDirection.DOWN,
-                renderer);
-        rh.renderFace(x, y, z, blk.getRendererInstance().getTexture(ForgeDirection.UP), ForgeDirection.UP, renderer);
+        final BlockRenderInfo.TextureSet textures = blk.getRendererInstance().resolveTextures();
+        rh.renderFace(x, y, z, textures.get(ForgeDirection.WEST), ForgeDirection.WEST, renderer);
+        rh.renderFace(x, y, z, textures.get(ForgeDirection.EAST), ForgeDirection.EAST, renderer);
+        rh.renderFace(x, y, z, textures.get(ForgeDirection.NORTH), ForgeDirection.NORTH, renderer);
+        rh.renderFace(x, y, z, textures.get(ForgeDirection.SOUTH), ForgeDirection.SOUTH, renderer);
+        rh.renderFace(x, y, z, textures.get(ForgeDirection.DOWN), ForgeDirection.DOWN, renderer);
+        rh.renderFace(x, y, z, textures.get(ForgeDirection.UP), ForgeDirection.UP, renderer);
     }
 
     int[] getChannelsOnSide() {

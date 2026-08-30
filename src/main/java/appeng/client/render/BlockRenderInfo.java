@@ -22,24 +22,74 @@ public class BlockRenderInfo {
 
     private final BaseBlockRender<? extends AEBaseBlock, ? extends AEBaseTile> rendererInstance;
 
-    private static class ThreadState {
+    public static class TextureSet {
+
+        private FlippableIcon topIcon;
+        private FlippableIcon bottomIcon;
+        private FlippableIcon southIcon;
+        private FlippableIcon northIcon;
+        private FlippableIcon eastIcon;
+        private FlippableIcon westIcon;
+
+        private TextureSet() {}
+
+        private TextureSet(final FlippableIcon bottom, final FlippableIcon top, final FlippableIcon north,
+                final FlippableIcon south, final FlippableIcon east, final FlippableIcon west) {
+            this.update(bottom, top, north, south, east, west);
+        }
+
+        private void update(final FlippableIcon bottom, final FlippableIcon top, final FlippableIcon north,
+                final FlippableIcon south, final FlippableIcon east, final FlippableIcon west) {
+            this.topIcon = top;
+            this.bottomIcon = bottom;
+            this.southIcon = south;
+            this.northIcon = north;
+            this.eastIcon = east;
+            this.westIcon = west;
+        }
+
+        public FlippableIcon get(final ForgeDirection dir) {
+            return switch (dir) {
+                case DOWN -> this.bottomIcon;
+                case UP -> this.topIcon;
+                case NORTH -> this.northIcon;
+                case SOUTH -> this.southIcon;
+                case EAST -> this.eastIcon;
+                case WEST -> this.westIcon;
+                default -> this.topIcon;
+            };
+        }
+
+        private boolean isValid() {
+            return this.topIcon != null && this.bottomIcon != null
+                    && this.southIcon != null
+                    && this.northIcon != null
+                    && this.eastIcon != null
+                    && this.westIcon != null;
+        }
+    }
+
+    private static class ThreadState extends TextureSet {
 
         private boolean useTmp = false;
-        private final TmpFlippableIcon tmpTopIcon = new TmpFlippableIcon();
-        private final TmpFlippableIcon tmpBottomIcon = new TmpFlippableIcon();
-        private final TmpFlippableIcon tmpSouthIcon = new TmpFlippableIcon();
-        private final TmpFlippableIcon tmpNorthIcon = new TmpFlippableIcon();
-        private final TmpFlippableIcon tmpEastIcon = new TmpFlippableIcon();
-        private final TmpFlippableIcon tmpWestIcon = new TmpFlippableIcon();
+
+        private ThreadState() {
+            super(
+                    new TmpFlippableIcon(),
+                    new TmpFlippableIcon(),
+                    new TmpFlippableIcon(),
+                    new TmpFlippableIcon(),
+                    new TmpFlippableIcon(),
+                    new TmpFlippableIcon());
+        }
+
+        private void setOriginal(final ForgeDirection direction, final IIcon icon) {
+            ((TmpFlippableIcon) this.get(direction)).setOriginal(icon);
+        }
     }
 
     private final ThreadLocal<ThreadState> threadState = ThreadLocal.withInitial(ThreadState::new);
-    private FlippableIcon topIcon = null;
-    private FlippableIcon bottomIcon = null;
-    private FlippableIcon southIcon = null;
-    private FlippableIcon northIcon = null;
-    private FlippableIcon eastIcon = null;
-    private FlippableIcon westIcon = null;
+    private final TextureSet textures = new TextureSet();
 
     public BlockRenderInfo(final BaseBlockRender<? extends AEBaseBlock, ? extends AEBaseTile> inst) {
         this.rendererInstance = inst;
@@ -47,12 +97,7 @@ public class BlockRenderInfo {
 
     public void updateIcons(final FlippableIcon bottom, final FlippableIcon top, final FlippableIcon north,
             final FlippableIcon south, final FlippableIcon east, final FlippableIcon west) {
-        this.topIcon = top;
-        this.bottomIcon = bottom;
-        this.southIcon = south;
-        this.northIcon = north;
-        this.eastIcon = east;
-        this.westIcon = west;
+        this.textures.update(bottom, top, north, south, east, west);
     }
 
     public void setTemporaryRenderIcon(final IIcon icon) {
@@ -61,24 +106,22 @@ public class BlockRenderInfo {
             state.useTmp = false;
         } else {
             state.useTmp = true;
-            state.tmpTopIcon.setOriginal(icon);
-            state.tmpBottomIcon.setOriginal(icon);
-            state.tmpSouthIcon.setOriginal(icon);
-            state.tmpNorthIcon.setOriginal(icon);
-            state.tmpEastIcon.setOriginal(icon);
-            state.tmpWestIcon.setOriginal(icon);
+            for (final ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+                state.setOriginal(direction, icon);
+            }
         }
     }
 
     public void setTemporaryRenderIcons(final IIcon nTopIcon, final IIcon nBottomIcon, final IIcon nSouthIcon,
             final IIcon nNorthIcon, final IIcon nEastIcon, final IIcon nWestIcon) {
         final ThreadState state = this.threadState.get();
-        state.tmpTopIcon.setOriginal(nTopIcon == null ? this.getTexture(ForgeDirection.UP) : nTopIcon);
-        state.tmpBottomIcon.setOriginal(nBottomIcon == null ? this.getTexture(ForgeDirection.DOWN) : nBottomIcon);
-        state.tmpSouthIcon.setOriginal(nSouthIcon == null ? this.getTexture(ForgeDirection.SOUTH) : nSouthIcon);
-        state.tmpNorthIcon.setOriginal(nNorthIcon == null ? this.getTexture(ForgeDirection.NORTH) : nNorthIcon);
-        state.tmpEastIcon.setOriginal(nEastIcon == null ? this.getTexture(ForgeDirection.EAST) : nEastIcon);
-        state.tmpWestIcon.setOriginal(nWestIcon == null ? this.getTexture(ForgeDirection.WEST) : nWestIcon);
+        final TextureSet current = state.useTmp ? state : this.textures;
+        state.setOriginal(ForgeDirection.UP, nTopIcon == null ? current.get(ForgeDirection.UP) : nTopIcon);
+        state.setOriginal(ForgeDirection.DOWN, nBottomIcon == null ? current.get(ForgeDirection.DOWN) : nBottomIcon);
+        state.setOriginal(ForgeDirection.SOUTH, nSouthIcon == null ? current.get(ForgeDirection.SOUTH) : nSouthIcon);
+        state.setOriginal(ForgeDirection.NORTH, nNorthIcon == null ? current.get(ForgeDirection.NORTH) : nNorthIcon);
+        state.setOriginal(ForgeDirection.EAST, nEastIcon == null ? current.get(ForgeDirection.EAST) : nEastIcon);
+        state.setOriginal(ForgeDirection.WEST, nWestIcon == null ? current.get(ForgeDirection.WEST) : nWestIcon);
         state.useTmp = true;
     }
 
@@ -87,62 +130,16 @@ public class BlockRenderInfo {
     }
 
     public FlippableIcon getTexture(final ForgeDirection dir) {
+        return this.resolveTextures().get(dir);
+    }
+
+    public TextureSet resolveTextures() {
         final ThreadState state = this.threadState.get();
-        if (state.useTmp) {
-            switch (dir) {
-                case DOWN -> {
-                    return state.tmpBottomIcon;
-                }
-                case UP -> {
-                    return state.tmpTopIcon;
-                }
-                case NORTH -> {
-                    return state.tmpNorthIcon;
-                }
-                case SOUTH -> {
-                    return state.tmpSouthIcon;
-                }
-                case EAST -> {
-                    return state.tmpEastIcon;
-                }
-                case WEST -> {
-                    return state.tmpWestIcon;
-                }
-                default -> {}
-            }
-        }
-
-        switch (dir) {
-            case DOWN -> {
-                return this.bottomIcon;
-            }
-            case UP -> {
-                return this.topIcon;
-            }
-            case NORTH -> {
-                return this.northIcon;
-            }
-            case SOUTH -> {
-                return this.southIcon;
-            }
-            case EAST -> {
-                return this.eastIcon;
-            }
-            case WEST -> {
-                return this.westIcon;
-            }
-            default -> {}
-        }
-
-        return this.topIcon;
+        return state.useTmp ? state : this.textures;
     }
 
     boolean isValid() {
-        return this.topIcon != null && this.bottomIcon != null
-                && this.southIcon != null
-                && this.northIcon != null
-                && this.eastIcon != null
-                && this.westIcon != null;
+        return this.textures.isValid();
     }
 
     public BaseBlockRender getRendererInstance() {
