@@ -32,9 +32,9 @@ import appeng.api.parts.IPartRenderHelper;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.block.AEBaseBlock;
+import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.FlippableIcon;
 import appeng.client.texture.OffsetIcon;
-import appeng.client.texture.TaughtIcon;
 import appeng.helpers.Reflected;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
@@ -100,7 +100,7 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
         OffsetIcon ch1 = new OffsetIcon(this.getChannelTex(4, false).getIcon(), offU, offV);
         OffsetIcon ch2 = new OffsetIcon(this.getChannelTex(4, true).getIcon(), offU, offV);
 
-        for (final ForgeDirection side : EnumSet.of(ForgeDirection.UP, ForgeDirection.DOWN)) {
+        for (final ForgeDirection side : Y_AXIS_DIRECTIONS) {
             rh.setBounds(5.0f, 5.0f, 2.0f, 11.0f, 11.0f, 14.0f);
             rh.renderInventoryFace(main, side, renderer);
             rh.renderInventoryFace(ch1, side, renderer);
@@ -113,7 +113,7 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
         ch1 = new OffsetIcon(this.getChannelTex(4, false).getIcon(), offU, offV);
         ch2 = new OffsetIcon(this.getChannelTex(4, true).getIcon(), offU, offV);
 
-        for (final ForgeDirection side : EnumSet.of(ForgeDirection.EAST, ForgeDirection.WEST)) {
+        for (final ForgeDirection side : X_AXIS_DIRECTIONS) {
             rh.setBounds(5.0f, 5.0f, 2.0f, 11.0f, 11.0f, 14.0f);
             rh.renderInventoryFace(main, side, renderer);
             rh.renderInventoryFace(ch1, side, renderer);
@@ -124,7 +124,7 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
         ch1 = new OffsetIcon(this.getChannelTex(4, false).getIcon(), 0, 0);
         ch2 = new OffsetIcon(this.getChannelTex(4, true).getIcon(), 0, 0);
 
-        for (final ForgeDirection side : EnumSet.of(ForgeDirection.SOUTH, ForgeDirection.NORTH)) {
+        for (final ForgeDirection side : Z_AXIS_DIRECTIONS) {
             rh.setBounds(5.0f, 5.0f, 2.0f, 11.0f, 11.0f, 14.0f);
             rh.renderInventoryFace(main, side, renderer);
             rh.renderInventoryFace(ch1, side, renderer);
@@ -146,18 +146,16 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
         this.setRenderCache(rh.useSimplifiedRendering(x, y, z, this, this.getRenderCache()));
         rh.setTexture(this.getTexture(this.getCableColor()));
 
-        final EnumSet<ForgeDirection> sides = this.getConnections().clone();
+        final EnumSet<ForgeDirection> connections = this.getConnections();
 
         boolean hasBuses = false;
         final IPartHost ph = this.getHost();
         final Tessellator tess = Tessellator.instance;
-        for (final ForgeDirection of : EnumSet.complementOf(this.getConnections())) {
+        for (final ForgeDirection of : ForgeDirection.VALID_DIRECTIONS) {
+            if (connections.contains(of)) continue;
             final IPart bp = ph.getPart(of);
             if (bp instanceof IGridHost) {
-                if (of != ForgeDirection.UNKNOWN) {
-                    sides.add(of);
-                    hasBuses = true;
-                }
+                hasBuses = true;
 
                 final int len = bp.cableConnectionRenderTo();
                 if (len < 8) {
@@ -175,12 +173,10 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
                     rh.renderBlock(x, y, z, renderer);
 
                     this.setSmartConnectionRotations(of, renderer);
-                    final IIcon firstIcon = new TaughtIcon(
-                            this.getChannelTex(this.getChannelsOnSide()[of.ordinal()], false).getIcon(),
-                            -0.2f);
-                    final IIcon secondIcon = new TaughtIcon(
-                            this.getChannelTex(this.getChannelsOnSide()[of.ordinal()], true).getIcon(),
-                            -0.2f);
+                    final IIcon firstIcon = this.getChannelTex(this.getChannelsOnSide()[of.ordinal()], false)
+                            .getTaughtIcon();
+                    final IIcon secondIcon = this.getChannelTex(this.getChannelsOnSide()[of.ordinal()], true)
+                            .getTaughtIcon();
 
                     if (of == ForgeDirection.EAST || of == ForgeDirection.WEST) {
                         final AEBaseBlock blk = (AEBaseBlock) rh.getBlock();
@@ -204,9 +200,11 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
             }
         }
 
-        if (sides.size() != 2 || !this.nonLinear(sides) || hasBuses) {
-            for (final ForgeDirection of : this.getConnections()) {
-                this.renderSmartConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
+        if (connections.size() != 2 || !this.nonLinear(connections) || hasBuses) {
+            for (final ForgeDirection of : ForgeDirection.VALID_DIRECTIONS) {
+                if (connections.contains(of)) {
+                    this.renderSmartConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
+                }
             }
 
             rh.setTexture(this.getCoveredTexture(this.getCableColor()));
@@ -215,20 +213,24 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
         } else {
             ForgeDirection selectedSide = ForgeDirection.UNKNOWN;
 
-            for (final ForgeDirection of : this.getConnections()) {
-                selectedSide = of;
-                break;
+            for (final ForgeDirection of : ForgeDirection.VALID_DIRECTIONS) {
+                if (connections.contains(of)) {
+                    selectedSide = of;
+                    break;
+                }
             }
 
             final int channels = this.getChannelsOnSide()[selectedSide.ordinal()];
             final IIcon def = this.getTexture(this.getCableColor());
             final IIcon off = new OffsetIcon(def, 0, -12);
 
-            final IIcon firstTaughtIcon = new TaughtIcon(this.getChannelTex(channels, false).getIcon(), -0.2f);
-            final IIcon firstOffsetIcon = new OffsetIcon(firstTaughtIcon, 0, -12);
+            final CableBusTextures firstTexture = this.getChannelTex(channels, false);
+            final IIcon firstTaughtIcon = firstTexture.getTaughtIcon();
+            final IIcon firstOffsetIcon = firstTexture.getTaughtOffsetIcon();
 
-            final IIcon secondTaughtIcon = new TaughtIcon(this.getChannelTex(channels, true).getIcon(), -0.2f);
-            final IIcon secondOffsetIcon = new OffsetIcon(secondTaughtIcon, 0, -12);
+            final CableBusTextures secondTexture = this.getChannelTex(channels, true);
+            final IIcon secondTaughtIcon = secondTexture.getTaughtIcon();
+            final IIcon secondOffsetIcon = secondTexture.getTaughtOffsetIcon();
 
             switch (selectedSide) {
                 case DOWN, UP -> {
@@ -273,12 +275,8 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
                     renderer.setRenderBounds(0, 5 / 16.0, 5 / 16.0, 16 / 16.0, 11 / 16.0, 11 / 16.0);
                     rh.renderBlockCurrentBounds(x, y, z, renderer);
                     tess.setBrightness(15 << 20 | 15 << 4);
-                    FlippableIcon fpA = new FlippableIcon(firstTaughtIcon);
-                    FlippableIcon fpB = new FlippableIcon(secondTaughtIcon);
-                    fpA = new FlippableIcon(firstTaughtIcon);
-                    fpB = new FlippableIcon(secondTaughtIcon);
-                    fpA.setFlip(true, false);
-                    fpB.setFlip(true, false);
+                    final IIcon fpA = firstTexture.getFlippedTaughtIcon();
+                    final IIcon fpB = secondTexture.getFlippedTaughtIcon();
                     tess.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(
                             firstOffsetIcon,
