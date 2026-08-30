@@ -57,14 +57,14 @@ public final class AEGameTestHelpers {
     }
 
     public static IPart part(GameTestHelper helper, String label, ForgeDirection side) {
-        TileCableBus cableBus = tile(helper, TileCableBus.class, label);
+        TileCableBus cableBus = helper.assertTileEntityPresent(TileCableBus.class, label);
         IPart part = cableBus.getPart(side);
         helper.assertNotNull(part, "Placed part should be readable from its host");
         return part;
     }
 
     public static <T extends IPart> T part(GameTestHelper helper, String label, Class<T> type) {
-        TileCableBus cableBus = tile(helper, TileCableBus.class, label);
+        TileCableBus cableBus = helper.assertTileEntityPresent(TileCableBus.class, label);
         for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
             IPart candidate = cableBus.getPart(side);
             if (type.isInstance(candidate)) {
@@ -113,6 +113,10 @@ public final class AEGameTestHelpers {
 
     public static IAEItemStack simulateInjectIntoGrid(TileController controller, Block block, long amount) {
         return itemMonitor(controller).injectItems(itemStack(block, amount), Actionable.SIMULATE, TEST_SOURCE);
+    }
+
+    public static IAEItemStack extractFromGrid(TileController controller, Block block, long amount) {
+        return itemMonitor(controller).extractItems(itemStack(block, amount), Actionable.MODULATE, TEST_SOURCE);
     }
 
     public static void assertItemRemainder(GameTestHelper helper, IAEItemStack remainder, Block block,
@@ -213,7 +217,7 @@ public final class AEGameTestHelpers {
 
     public static void fillChest(TileEntityChest chest, Block block) {
         for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
-            setChestSlot(chest, slot, block, 64);
+            InventoryHelper.setSlot(chest, slot, new ItemStack(block, 64));
         }
     }
 
@@ -221,7 +225,7 @@ public final class AEGameTestHelpers {
             long expectedAmount) {
         helper.assertEquals(
                 expectedAmount,
-                chestStoredAmount(chest, block),
+                InventoryHelper.count(chest, new ItemStack(block)),
                 "Chest storage for " + describe(block) + " should match; chest=" + describe(chest));
     }
 
@@ -315,18 +319,6 @@ public final class AEGameTestHelpers {
 
     public static ItemStack cell64k() {
         return AEApi.instance().definitions().items().cell64k().maybeStack(1).get();
-    }
-
-    /**
-     * @deprecated Use directly GameTestHelper#onEachTick(Runnable) and disable the returned handle initially
-     * @see GameTestHelper#onEachTick(Runnable)
-     */
-    @Deprecated
-    public static ContinuousInvariant continuousInvariant(GameTestHelper helper, String description,
-            Runnable assertion) {
-        TickCallbackHandle callback = helper.onEachTick(() -> checkContinuousInvariant(description, assertion));
-        callback.disable();
-        return new ContinuousInvariant(callback);
     }
 
     private static void checkContinuousInvariant(String description, Runnable assertion) {
