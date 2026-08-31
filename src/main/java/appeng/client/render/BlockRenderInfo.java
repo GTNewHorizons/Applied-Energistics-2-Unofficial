@@ -74,7 +74,7 @@ public class BlockRenderInfo {
         }
     }
 
-    private static class ThreadState extends TextureSet {
+    static class ThreadState extends TextureSet {
 
         private boolean useTmp = false;
 
@@ -106,7 +106,10 @@ public class BlockRenderInfo {
     }
 
     public void setTemporaryRenderIcon(final IIcon icon) {
-        final ThreadState state = this.threadState.get();
+        this.setTemporaryRenderIcon(this.threadState.get(), icon);
+    }
+
+    void setTemporaryRenderIcon(final ThreadState state, final IIcon icon) {
         if (icon == null) {
             state.useTmp = false;
         } else {
@@ -119,7 +122,18 @@ public class BlockRenderInfo {
 
     public void setTemporaryRenderIcons(final IIcon nTopIcon, final IIcon nBottomIcon, final IIcon nSouthIcon,
             final IIcon nNorthIcon, final IIcon nEastIcon, final IIcon nWestIcon) {
-        final ThreadState state = this.threadState.get();
+        this.setTemporaryRenderIcons(
+                this.threadState.get(),
+                nTopIcon,
+                nBottomIcon,
+                nSouthIcon,
+                nNorthIcon,
+                nEastIcon,
+                nWestIcon);
+    }
+
+    void setTemporaryRenderIcons(final ThreadState state, final IIcon nTopIcon, final IIcon nBottomIcon,
+            final IIcon nSouthIcon, final IIcon nNorthIcon, final IIcon nEastIcon, final IIcon nWestIcon) {
         final TextureSet current = state.useTmp ? state : this.textures;
         state.setOriginal(ForgeDirection.UP, nTopIcon == null ? current.get(ForgeDirection.UP) : nTopIcon);
         state.setOriginal(ForgeDirection.DOWN, nBottomIcon == null ? current.get(ForgeDirection.DOWN) : nBottomIcon);
@@ -131,7 +145,11 @@ public class BlockRenderInfo {
     }
 
     public boolean hasTemporaryRenderIcons() {
-        return this.threadState.get().useTmp;
+        return this.hasTemporaryRenderIcons(this.threadState.get());
+    }
+
+    boolean hasTemporaryRenderIcons(final ThreadState state) {
+        return state.useTmp;
     }
 
     public FlippableIcon getTexture(final ForgeDirection dir) {
@@ -139,8 +157,15 @@ public class BlockRenderInfo {
     }
 
     public TextureSet resolveTextures() {
-        final ThreadState state = this.threadState.get();
+        return this.resolveTextures(this.threadState.get());
+    }
+
+    TextureSet resolveTextures(final ThreadState state) {
         return state.useTmp ? state : this.textures;
+    }
+
+    ThreadState getThreadState() {
+        return this.threadState.get();
     }
 
     boolean isValid() {

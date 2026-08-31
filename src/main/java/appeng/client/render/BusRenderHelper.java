@@ -44,7 +44,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class BusRenderHelper implements IPartRenderHelper {
 
-    public static final ThreadLocal<BusRenderHelper> instances = ThreadLocal.withInitial(BusRenderHelper::new);
+    public static final ThreadLocal<BusRenderHelper> instances = ThreadLocal
+            .withInitial(() -> new BusRenderHelper(BusRenderer.INSTANCE.getRenderer()));
 
     private static final int HEX_WHITE = 0xffffff;
 
@@ -55,6 +56,10 @@ public final class BusRenderHelper implements IPartRenderHelper {
     private final Optional<AEBaseBlock> maybeBaseBlock;
     private final IIcon[] textureScratch = new IIcon[6];
     private final int[] textureRotation = new int[6];
+    @Nullable
+    private final RenderBlocksWorkaround renderer;
+    private BlockRenderInfo cachedRenderInfo;
+    private BlockRenderInfo.ThreadState cachedRenderState;
     private int renderingForPass;
     private int currentPass;
     private int itemsRendered;
@@ -70,9 +75,14 @@ public final class BusRenderHelper implements IPartRenderHelper {
     private int color;
 
     public BusRenderHelper() {
+        this(null);
+    }
+
+    private BusRenderHelper(@Nullable final RenderBlocksWorkaround renderer) {
         this.bbc = new BoundBoxCalculator();
         this.noAlphaPass = !AEConfig.instance.isFeatureEnabled(AEFeature.AlphaPass);
         this.bbr = new BaseBlockRender<>();
+        this.renderer = renderer;
         this.renderingForPass = 0;
         this.currentPass = 0;
         this.itemsRendered = 0;
@@ -231,7 +241,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
 
     @Override
     public void normalRendering() {
-        final RenderBlocksWorkaround rbw = BusRenderer.INSTANCE.getRenderer();
+        final RenderBlocksWorkaround rbw = this.getRenderer();
         rbw.setCalculations(true);
         rbw.setUseTextures(true);
         rbw.enableAO = false;
@@ -240,7 +250,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
     @Override
     public ISimplifiedBundle useSimplifiedRendering(final int x, final int y, final int z, final IBoxProvider p,
             final ISimplifiedBundle sim) {
-        final RenderBlocksWorkaround rbw = BusRenderer.INSTANCE.getRenderer();
+        final RenderBlocksWorkaround rbw = this.getRenderer();
 
         if (sim != null && this.maybeBlock.isPresent()
                 && rbw.similarLighting(this.maybeBlock.get(), rbw.blockAccess, x, y, z, sim)) {
@@ -330,7 +340,8 @@ public final class BusRenderHelper implements IPartRenderHelper {
     @Override
     public void setTexture(final IIcon ico) {
         for (final AEBaseBlock baseBlock : this.maybeBaseBlock.asSet()) {
-            baseBlock.getRendererInstance().setTemporaryRenderIcon(ico);
+            final BlockRenderInfo info = baseBlock.getRendererInstance();
+            info.setTemporaryRenderIcon(this.getRenderState(info), ico);
         }
     }
 
@@ -353,7 +364,9 @@ public final class BusRenderHelper implements IPartRenderHelper {
         list[5] = east;
 
         for (final AEBaseBlock baseBlock : this.maybeBaseBlock.asSet()) {
-            baseBlock.getRendererInstance().setTemporaryRenderIcons(
+            final BlockRenderInfo info = baseBlock.getRendererInstance();
+            info.setTemporaryRenderIcons(
+                    this.getRenderState(info),
                     list[rotation[ForgeDirection.UP.ordinal()]],
                     list[rotation[ForgeDirection.DOWN.ordinal()]],
                     list[rotation[ForgeDirection.SOUTH.ordinal()]],
@@ -446,15 +459,16 @@ public final class BusRenderHelper implements IPartRenderHelper {
             final AEBaseBlock block = (AEBaseBlock) multiPart;
 
             final BlockRenderInfo info = block.getRendererInstance();
+            final BlockRenderInfo.ThreadState state = this.getRenderState(info);
             final ForgeDirection forward = this.az;
             final ForgeDirection up = this.ay;
             boolean isTemp = false;
-            if (!info.isValid() && !info.hasTemporaryRenderIcons()) {
+            if (!info.isValid() && !info.hasTemporaryRenderIcons(state)) {
                 final FlippableIcon i = new FlippableIcon(new MissingIcon(this));
-                info.setTemporaryRenderIcon(i);
+                info.setTemporaryRenderIcon(state, i);
                 isTemp = true;
             }
-            final BlockRenderInfo.TextureSet textures = info.resolveTextures();
+            final BlockRenderInfo.TextureSet textures = info.resolveTextures(state);
             renderer.uvRotateBottom = textures.get(ForgeDirection.DOWN)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.DOWN, forward, up));
             renderer.uvRotateTop = textures.get(ForgeDirection.UP)
@@ -486,7 +500,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
                 this.renderStandardBlock(block, x, y, z, renderer, textures);
             } finally {
                 if (isTemp) {
-                    info.setTemporaryRenderIcon(null);
+                    info.setTemporaryRenderIcon(state, null);
                 }
             }
         }
@@ -517,7 +531,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
 
     @Override
     public void setFacesToRender(final EnumSet<ForgeDirection> faces) {
-        BusRenderer.INSTANCE.getRenderer().setRenderFaces(faces);
+        this.getRenderer().setRenderFaces(faces);
     }
 
     @Override
@@ -527,9 +541,13 @@ public final class BusRenderHelper implements IPartRenderHelper {
         }
 
         for (final Block block : this.maybeBlock.asSet()) {
-            final BlockRenderInfo.TextureSet textures = block instanceof AEBaseBlock baseBlock
-                    ? baseBlock.getRendererInstance().resolveTextures()
-                    : null;
+            final BlockRenderInfo.TextureSet textures;
+            if (block instanceof AEBaseBlock baseBlock) {
+                final BlockRenderInfo info = baseBlock.getRendererInstance();
+                textures = info.resolveTextures(this.getRenderState(info));
+            } else {
+                textures = null;
+            }
             this.renderStandardBlock(block, x, y, z, renderer, textures);
         }
     }
@@ -648,6 +666,21 @@ public final class BusRenderHelper implements IPartRenderHelper {
 
     @Override
     public IBlockAccess getBlockAccess() {
-        return BusRenderer.INSTANCE.getRenderer().blockAccess;
+        return this.getRenderer().blockAccess;
+    }
+
+    private RenderBlocksWorkaround getRenderer() {
+        return this.renderer == null ? BusRenderer.INSTANCE.getRenderer() : this.renderer;
+    }
+
+    private BlockRenderInfo.ThreadState getRenderState(final BlockRenderInfo info) {
+        if (this.renderer == null) {
+            return info.getThreadState();
+        }
+        if (this.cachedRenderInfo != info) {
+            this.cachedRenderInfo = info;
+            this.cachedRenderState = info.getThreadState();
+        }
+        return this.cachedRenderState;
     }
 }
