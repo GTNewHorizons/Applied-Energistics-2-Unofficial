@@ -170,6 +170,7 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
                             continue;
                         }
                     }
+                    rh.setFacesToRender(renderFacesExcept(of.getOpposite()));
                     rh.renderBlock(x, y, z, renderer);
 
                     this.setSmartConnectionRotations(of, renderer);
@@ -194,6 +195,7 @@ public class PartCableSmart extends PartCable implements IUsedChannelProvider {
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
                     renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
+                    rh.setFacesToRender(ALL_RENDER_FACES);
 
                     rh.setTexture(this.getTexture(this.getCableColor()));
                 }

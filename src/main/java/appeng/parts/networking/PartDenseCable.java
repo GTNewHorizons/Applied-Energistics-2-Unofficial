@@ -316,7 +316,6 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
 
         rh.renderBlock(x, y, z, renderer);
 
-        rh.setFacesToRender(ALL_RENDER_FACES);
         final boolean isGlass = false;
         if (!isGlass) {
             this.setSmartConnectionRotations(of, renderer);
@@ -335,6 +334,7 @@ public class PartDenseCable extends PartCable implements IUsedChannelProvider {
 
             renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
         }
+        rh.setFacesToRender(ALL_RENDER_FACES);
     }
 
     private boolean isSmart(final IBlockAccess w, final ForgeDirection of) {

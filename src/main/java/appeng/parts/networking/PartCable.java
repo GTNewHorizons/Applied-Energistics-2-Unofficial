@@ -517,6 +517,7 @@ public class PartCable extends AEBasePart implements IPartCable {
             rh.setTexture(this.getTexture(this.getCableColor()));
         }
 
+        rh.setFacesToRender(renderFacesExceptAxis(of));
         switch (of) {
             case DOWN -> rh.setBounds(6, 0, 6, 10, 6, 10);
             case EAST -> rh.setBounds(10, 6, 6, 16, 10, 10);
@@ -573,6 +574,7 @@ public class PartCable extends AEBasePart implements IPartCable {
                         rh.setTexture(this.getCoveredTexture(this.getCableColor()));
                     }
 
+        rh.setFacesToRender(renderFacesExceptAxis(of));
         switch (of) {
             case DOWN -> rh.setBounds(6, 0, 6, 10, 5, 10);
             case EAST -> rh.setBounds(11, 6, 6, 16, 10, 10);
@@ -654,6 +656,7 @@ public class PartCable extends AEBasePart implements IPartCable {
                         rh.setTexture(this.getSmartTexture(this.getCableColor()));
                     }
 
+        rh.setFacesToRender(renderFacesExceptAxis(of));
         switch (of) {
             case DOWN -> rh.setBounds(6, 0, 6, 10, 5, 10);
             case EAST -> rh.setBounds(11, 6, 6, 16, 10, 10);
@@ -667,7 +670,6 @@ public class PartCable extends AEBasePart implements IPartCable {
         }
 
         rh.renderBlock(x, y, z, renderer);
-        rh.setFacesToRender(ALL_RENDER_FACES);
 
         if (!isGlass) {
             this.setSmartConnectionRotations(of, renderer);
@@ -686,6 +688,7 @@ public class PartCable extends AEBasePart implements IPartCable {
 
             renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
         }
+        rh.setFacesToRender(ALL_RENDER_FACES);
     }
 
     IIcon getSmartTexture(final AEColor c) {

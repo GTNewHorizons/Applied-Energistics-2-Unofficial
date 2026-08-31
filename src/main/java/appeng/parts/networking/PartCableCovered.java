@@ -151,7 +151,9 @@ public class PartCableCovered extends PartCable {
                             continue;
                         }
                     }
+                    rh.setFacesToRender(renderFacesExcept(of.getOpposite()));
                     rh.renderBlock(x, y, z, renderer);
+                    rh.setFacesToRender(ALL_RENDER_FACES);
                 }
             }
         }
