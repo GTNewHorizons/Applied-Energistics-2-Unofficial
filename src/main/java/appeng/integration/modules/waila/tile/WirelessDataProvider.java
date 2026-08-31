@@ -2,6 +2,7 @@ package appeng.integration.modules.waila.tile;
 
 import static appeng.helpers.WireLessToolHelper.getConnectMode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -16,46 +17,53 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.render.NetworkVisualiserRender;
 import appeng.core.localization.WailaText;
+import appeng.helpers.IWirelessLink;
 import appeng.helpers.WireLessToolHelper;
+import appeng.helpers.WirelessAnchor;
 import appeng.integration.modules.waila.BaseWailaDataProvider;
 import appeng.items.tools.ToolWirelessKit;
-import appeng.tile.networking.TileWirelessBase;
 import appeng.util.Platform;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 
 public class WirelessDataProvider extends BaseWailaDataProvider {
 
+    private static List<DimensionalCoord> coordsOf(final List<WirelessAnchor> anchors) {
+        final List<DimensionalCoord> coords = new ArrayList<>(anchors.size());
+        for (final WirelessAnchor anchor : anchors) coords.add(anchor.getCoord());
+        return coords;
+    }
+
     @Override
     public List<String> getWailaBody(final ItemStack itemStack, final List<String> currentToolTip,
             final IWailaDataAccessor accessor, final IWailaConfigHandler config) {
 
         final TileEntity te = accessor.getTileEntity();
-        if (!(te instanceof TileWirelessBase wl)) {
+        if (!(te instanceof IWirelessLink wl)) {
             return currentToolTip;
         }
 
         NBTTagCompound tag = accessor.getNBTData();
 
         if (tag.hasKey("connected")) {
-            List<DimensionalCoord> locList = DimensionalCoord.readAsListFromNBT(tag.getCompoundTag("LocList"));
-            NetworkVisualiserRender.doWirelessRender(locList);
+            List<WirelessAnchor> locList = WirelessAnchor.readAsListFromNBT(tag.getCompoundTag("LocList"));
+            NetworkVisualiserRender.doWirelessRender(coordsOf(locList));
 
             switch (locList.size()) {
                 case 0:
                     currentToolTip.add(WailaText.wireless_notconnected.getLocal());
                     break;
                 case 1: {
-                    DimensionalCoord dc = locList.get(0);
-                    currentToolTip.add(WailaText.wireless_connected.getLocal(dc.getGuiTextShortNoDim()));
+                    WirelessAnchor anchor = locList.get(0);
+                    currentToolTip.add(WailaText.wireless_connected.getLocal(anchor.getGuiTextShortNoDim()));
                     break;
                 }
                 default: {
                     if (tag.getBoolean("isSneaking")) {
                         currentToolTip.add(WailaText.wireless_connected_detailsTitle.getLocal());
-                        for (DimensionalCoord dc : locList) {
+                        for (WirelessAnchor anchor : locList) {
                             currentToolTip
-                                    .add(WailaText.wireless_connected_details.getLocal(dc.getGuiTextShortNoDim()));
+                                    .add(WailaText.wireless_connected_details.getLocal(anchor.getGuiTextShortNoDim()));
                         }
                         return currentToolTip; // just list connected wireless devices
                     }
@@ -85,7 +93,7 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
     @Override
     public NBTTagCompound getNBTData(final EntityPlayerMP player, final TileEntity te, final NBTTagCompound tag,
             final World world, final int x, final int y, final int z) {
-        if (!(te instanceof TileWirelessBase wc)) return tag;
+        if (!(te instanceof IWirelessLink wc)) return tag;
 
         if (wc.isLinked()) {
             tag.setBoolean("connected", true);
@@ -93,7 +101,7 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
             tag.setDouble("power", wc.getPowerUsage());
             if (wc.isLinked()) {
                 NBTTagCompound locList = new NBTTagCompound();
-                DimensionalCoord.writeListToNBT(locList, wc.getConnectedCoords());
+                WirelessAnchor.writeListToNBT(locList, wc.getConnectedAnchors());
                 tag.setTag("LocList", locList);
             }
             tag.setBoolean("isSneaking", player.isSneaking());

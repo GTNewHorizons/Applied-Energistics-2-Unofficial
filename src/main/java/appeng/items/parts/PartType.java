@@ -39,6 +39,10 @@ import appeng.parts.networking.PartCreativeEnergy;
 import appeng.parts.networking.PartDenseCable;
 import appeng.parts.networking.PartDenseCableCovered;
 import appeng.parts.networking.PartQuartzFiber;
+import appeng.parts.networking.PartWirelessConnector;
+import appeng.parts.networking.PartWirelessConnectorOuter;
+import appeng.parts.networking.PartWirelessHub;
+import appeng.parts.networking.PartWirelessHubOuter;
 import appeng.parts.p2p.PartP2PGT5Power;
 import appeng.parts.p2p.PartP2PIC2Power;
 import appeng.parts.p2p.PartP2PInterface;
@@ -208,6 +212,17 @@ public enum PartType {
 
     PatternTerminalEx(500, EnumSet.of(AEFeature.Patterns), EnumSet.noneOf(IntegrationType.class),
             PartPatternTerminalEx.class),
+
+    WirelessConnectorFixture(540, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartWirelessConnector.class),
+
+    WirelessHubFixture(541, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartWirelessHub.class),
+
+    WirelessConnectorFixtureOuter(542, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartWirelessConnectorOuter.class),
+
+    WirelessHubFixtureOuter(543, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartWirelessHubOuter.class),
 
     PartCreativeEnergy(690, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
             PartCreativeEnergy.class),

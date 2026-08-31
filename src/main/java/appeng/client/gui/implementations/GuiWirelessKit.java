@@ -23,9 +23,9 @@ import appeng.api.AEApi;
 import appeng.api.config.Settings;
 import appeng.api.config.WirelessToolGroupBy;
 import appeng.api.config.YesNo;
+import appeng.api.definitions.IParts;
 import appeng.api.events.GuiScrollEvent;
 import appeng.api.util.AEColor;
-import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.api.util.NamedDimensionalCoord;
@@ -46,6 +46,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketWirelessToolCommand;
 import appeng.helpers.WireLessToolHelper;
+import appeng.helpers.WirelessAnchor;
 import appeng.helpers.WirelessKitCommand;
 import appeng.helpers.WirelessKitCommand.PinType;
 import appeng.helpers.WirelessKitCommand.SubCommand;
@@ -169,7 +170,25 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
         }
         final ItemStack is = AEApi.instance().definitions().blocks().wirelessHub().maybeStack(1).orNull();
         list.add(is);
+
+        final IParts parts = AEApi.instance().definitions().parts();
+        list.add(parts.wirelessConnectorFixture().maybeStack(1).orNull());
+        list.add(parts.wirelessHubFixture().maybeStack(1).orNull());
+        list.add(parts.wirelessConnectorFixtureOuter().maybeStack(1).orNull());
+        list.add(parts.wirelessHubFixtureOuter().maybeStack(1).orNull());
+
         return list;
+    }
+
+    private static final int HUB_ICON_OFFSET = 17;
+    private static final int FIXTURE_ICON_BASE = 34;
+
+    private ItemStack iconFor(final WirelessToolDataObject data) {
+        if (!data.cord.isBlockForm()) {
+            return icons.get(FIXTURE_ICON_BASE + (data.external ? 2 : 0) + (data.isHub ? 1 : 0));
+        }
+
+        return icons.get(data.isHub ? data.color.ordinal() + HUB_ICON_OFFSET : data.color.ordinal());
     }
 
     private void setScrollBar() {
@@ -581,7 +600,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             drawItem(
                     (int) Math.round(xo / 0.7666) + 1,
                     yo * (int) Math.round(offY / 0.7666) + TOP_OFFSET + 9,
-                    icons.get(data.isHub ? data.color.ordinal() + 17 : data.color.ordinal()));
+                    iconFor(data));
             GL11.glPopMatrix();
 
             drawTextBox(mouseX, mouseY);
@@ -675,14 +694,16 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             this.isPinned = isPinned;
 
             if (includeConnectors && !data.isHub) {
-                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
+                this.cordList.add(
+                        new NamedDimensionalCoord(data.cord.getCoord(), data.customName + data.cord.getSideSuffix()));
                 this.channels = data.channels;
                 this.slots = 1;
                 this.usedSlots = 1 - data.slots;
             }
 
             if (includeHubs && data.isHub) {
-                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
+                this.cordList.add(
+                        new NamedDimensionalCoord(data.cord.getCoord(), data.customName + data.cord.getSideSuffix()));
                 this.channels = data.channels;
                 this.slots = 32;
                 this.usedSlots = 32 - data.slots;
@@ -693,14 +714,16 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             this.wsList.add(data);
 
             if (includeConnectors && !data.isHub) {
-                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
+                this.cordList.add(
+                        new NamedDimensionalCoord(data.cord.getCoord(), data.customName + data.cord.getSideSuffix()));
                 this.channels += data.channels;
                 this.slots += 1;
                 this.usedSlots += 1 - data.slots;
             }
 
             if (includeHubs && data.isHub) {
-                this.cordList.add(new NamedDimensionalCoord(data.cord, data.customName));
+                this.cordList.add(
+                        new NamedDimensionalCoord(data.cord.getCoord(), data.customName + data.cord.getSideSuffix()));
                 this.channels += data.channels;
                 this.slots += 32;
                 this.usedSlots += 32 - data.slots;
@@ -715,14 +738,16 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
 
             for (WirelessToolDataObject s : wsList) {
                 if (includeConnectors && !s.isHub) {
-                    this.cordList.add(new NamedDimensionalCoord(s.cord, s.customName));
+                    this.cordList
+                            .add(new NamedDimensionalCoord(s.cord.getCoord(), s.customName + s.cord.getSideSuffix()));
                     this.channels += s.channels;
                     this.slots += 1;
                     this.usedSlots += 1 - s.slots;
                 }
 
                 if (includeHubs && s.isHub) {
-                    this.cordList.add(new NamedDimensionalCoord(s.cord, s.customName));
+                    this.cordList
+                            .add(new NamedDimensionalCoord(s.cord.getCoord(), s.customName + s.cord.getSideSuffix()));
                     this.channels += s.channels;
                     this.slots += 32;
                     this.usedSlots += 32 - s.slots;
@@ -999,10 +1024,14 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                 if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
                     final Map<NamedDimensionalCoord, String[]> messages = new HashMap<>();
                     messages.put(
-                            new NamedDimensionalCoord(this.data.cord, this.data.customName),
+                            new NamedDimensionalCoord(
+                                    this.data.cord.getCoord(),
+                                    this.data.customName + this.data.cord.getSideSuffix()),
                             this.getHighlightKeys());
                     if (!this.data.targets.isEmpty()) messages.put(
-                            new NamedDimensionalCoord(this.data.targets.get(0), this.data.customName),
+                            new NamedDimensionalCoord(
+                                    this.data.targets.get(0).getCoord(),
+                                    this.data.customName + this.data.targets.get(0).getSideSuffix()),
                             this.getHighlightKeys());
                     BlockPosHighlighter.highlightNamedBlocks(
                             mc.thePlayer,
@@ -1132,13 +1161,13 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
 
     private static class SavedName {
 
-        final DimensionalCoord network;
+        final WirelessAnchor network;
         final String name;
         final AEColor color;
         final boolean byColor;
         final String colorName;
 
-        SavedName(DimensionalCoord network, String name, AEColor color, boolean byColor, String colorName) {
+        SavedName(WirelessAnchor network, String name, AEColor color, boolean byColor, String colorName) {
             this.network = network;
             this.name = name;
             this.color = color;
@@ -1149,15 +1178,15 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
 
     private static class SavedPin {
 
-        final DimensionalCoord network;
+        final WirelessAnchor network;
         final AEColor color;
         final PinType type;
-        final DimensionalCoord coord;
+        final WirelessAnchor coord;
         final boolean includeConnectors;
         final boolean includeHubs;
 
-        SavedPin(DimensionalCoord network, AEColor color, PinType type, DimensionalCoord coord,
-                boolean includeConnectors, boolean includeHubs) {
+        SavedPin(WirelessAnchor network, AEColor color, PinType type, WirelessAnchor coord, boolean includeConnectors,
+                boolean includeHubs) {
             this.network = network;
             this.color = color;
             this.type = type;
@@ -1167,7 +1196,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
         }
     }
 
-    private GroupUnit getNetworkUnitFormResolver(ArrayList<GroupUnit> list, DimensionalCoord network, AEColor color,
+    private GroupUnit getNetworkUnitFormResolver(ArrayList<GroupUnit> list, WirelessAnchor network, AEColor color,
             boolean isPin) {
         for (GroupUnit gu : list) {
             if (gu.data.network.equals(network) && gu.isPinned == isPin) {
@@ -1204,7 +1233,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             final NBTTagCompound tag = names.getCompoundTagAt(i);
             savedNames.add(
                     new SavedName(
-                            DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
+                            WirelessAnchor.readFromNBT(tag.getCompoundTag("network")),
                             tag.getString("networkName"),
                             AEColor.VALUES[tag.getInteger("color")],
                             tag.hasKey("color"),
@@ -1218,10 +1247,10 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             final NBTTagCompound tag = pins.getCompoundTagAt(i);
             savedPins.add(
                     new SavedPin(
-                            DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
+                            WirelessAnchor.readFromNBT(tag.getCompoundTag("network")),
                             AEColor.VALUES[tag.getInteger("color")],
                             PinType.values()[tag.getInteger("type")],
-                            DimensionalCoord.readFromNBT(tag.getCompoundTag("coord")),
+                            WirelessAnchor.readFromNBT(tag.getCompoundTag("coord")),
                             !tag.hasKey("incCon"),
                             !tag.hasKey("incHub")));
         }

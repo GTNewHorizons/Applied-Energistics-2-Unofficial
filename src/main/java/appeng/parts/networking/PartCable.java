@@ -342,6 +342,11 @@ public class PartCable extends AEBasePart implements IPartCable {
                     if (part.getGridNode() != null) {
                         final IReadOnlyCollection<IGridConnection> set = part.getGridNode().getConnections();
                         for (final IGridConnection gc : set) {
+                            // a part may own connections this cable is not an endpoint of (a wireless fixture's
+                            // link), and getOtherSide would throw on those; direction cannot tell them apart since
+                            // part connections all use ForgeDirection.UNKNOWN
+                            if (gc.getOtherSide(part.getGridNode()) != n) continue;
+
                             final int usedChannels = gc.getUsedChannels();
                             if (this.getProxy().getNode().hasFlag(GridFlags.DENSE_CAPACITY)
                                     && gc.getOtherSide(this.getProxy().getNode()).hasFlag(GridFlags.DENSE_CAPACITY)) {

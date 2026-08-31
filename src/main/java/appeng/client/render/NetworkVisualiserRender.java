@@ -15,20 +15,22 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.Settings;
+import appeng.api.parts.IPartHost;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
 import appeng.core.localization.ColorUtils;
+import appeng.helpers.IWirelessLink;
 import appeng.items.tools.ToolNetworkVisualiser;
 import appeng.items.tools.ToolNetworkVisualiser.VLink;
 import appeng.items.tools.ToolNetworkVisualiser.VLinkFlags;
 import appeng.items.tools.ToolNetworkVisualiser.VNode;
 import appeng.items.tools.ToolNetworkVisualiser.VNodeFlags;
 import appeng.items.tools.ToolNetworkVisualiser.VisualisationModes;
-import appeng.tile.networking.TileWirelessBase;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class NetworkVisualiserRender {
@@ -85,6 +87,18 @@ public class NetworkVisualiserRender {
         wirelessConnections.addAll(dcl);
         renderWireless = true;
         expTime = System.currentTimeMillis() + 100;
+    }
+
+    private static boolean hostsWirelessLink(final TileEntity te) {
+        if (te instanceof IWirelessLink) return true;
+
+        if (te instanceof IPartHost host) {
+            for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+                if (host.getPart(side) instanceof IWirelessLink) return true;
+            }
+        }
+
+        return false;
     }
 
     @SubscribeEvent
@@ -146,7 +160,7 @@ public class NetworkVisualiserRender {
 
         TileEntity te = mc.theWorld.getTileEntity(pos.x, pos.y, pos.z);
 
-        if (!(te instanceof TileWirelessBase) || wirelessConnections.isEmpty()) return;
+        if (!hostsWirelessLink(te) || wirelessConnections.isEmpty()) return;
 
         GL11.glPushMatrix();
         GL11.glTranslated(-viewX, -viewY, -viewZ);
