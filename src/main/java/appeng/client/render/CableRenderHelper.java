@@ -53,7 +53,7 @@ public class CableRenderHelper {
         for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = cableBusContainer.getPart(s);
             if (part != null) {
-                this.setSide(s);
+                this.setSide(busRenderHelper, s);
                 renderer.renderAllFaces = true;
 
                 renderer.flipTexture = false;
@@ -76,7 +76,7 @@ public class CableRenderHelper {
             for (final ForgeDirection s : FORGE_DIRECTIONS) {
                 final IPart part = cableBusContainer.getPart(s);
                 if (part != null) {
-                    this.setSide(s);
+                    this.setSide(busRenderHelper, s);
                     final BusCollisionHelper bch = new BusCollisionHelper(
                             boxes,
                             busRenderHelper.getWorldX(),
@@ -133,7 +133,7 @@ public class CableRenderHelper {
                     renderer.flipTexture = false;
                     renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
 
-                    this.setSide(s);
+                    this.setSide(busRenderHelper, s);
                     fPart.renderStatic(
                             te.xCoord,
                             te.yCoord,
@@ -154,8 +154,7 @@ public class CableRenderHelper {
         renderer.blockAccess = null;
     }
 
-    private void setSide(final ForgeDirection s) {
-        final BusRenderHelper busRenderHelper = BusRenderHelper.instances.get();
+    private void setSide(final BusRenderHelper busRenderHelper, final ForgeDirection s) {
         final ForgeDirection ax;
         final ForgeDirection ay;
         final ForgeDirection az;
@@ -210,49 +209,7 @@ public class CableRenderHelper {
             final IPart part = cableBusContainer.getPart(s);
 
             if (part != null) {
-                final ForgeDirection ax;
-                final ForgeDirection ay;
-                final ForgeDirection az;
-
-                switch (s) {
-                    case DOWN -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.NORTH;
-                        az = ForgeDirection.DOWN;
-                    }
-                    case UP -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.SOUTH;
-                        az = ForgeDirection.UP;
-                    }
-                    case EAST -> {
-                        ax = ForgeDirection.SOUTH;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.EAST;
-                    }
-                    case WEST -> {
-                        ax = ForgeDirection.NORTH;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.WEST;
-                    }
-                    case NORTH -> {
-                        ax = ForgeDirection.WEST;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.NORTH;
-                    }
-                    case SOUTH -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.SOUTH;
-                    }
-                    default -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.SOUTH;
-                    }
-                }
-
-                busRenderHelper.setOrientation(ax, ay, az);
+                this.setSide(busRenderHelper, s);
                 part.renderDynamic(x, y, z, busRenderHelper, renderer);
             }
         }
