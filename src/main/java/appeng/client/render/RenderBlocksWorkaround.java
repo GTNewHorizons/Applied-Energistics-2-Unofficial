@@ -10,7 +10,6 @@
 
 package appeng.client.render;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -30,7 +29,13 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class RenderBlocksWorkaround extends RenderBlocks {
 
-    private final int[] lightHashTmp = new int[27];
+    private int lightingHashCacheDepth;
+    private Block lightingHashCacheBlock;
+    private IBlockAccess lightingHashCacheWorld;
+    private int lightingHashCacheX;
+    private int lightingHashCacheY;
+    private int lightingHashCacheZ;
+    private int lightingHashCacheValue;
     private boolean calculations = true;
     private EnumSet<ForgeDirection> renderFaces = EnumSet.allOf(ForgeDirection.class);
     private EnumSet<ForgeDirection> faces = EnumSet.allOf(ForgeDirection.class);
@@ -517,20 +522,50 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         return ((LightingCache) sim).lightHash == lh;
     }
 
+    void beginLightingHashCache() {
+        this.lightingHashCacheDepth++;
+        this.clearLightingHashCache();
+    }
+
+    void endLightingHashCache() {
+        this.clearLightingHashCache();
+        this.lightingHashCacheDepth--;
+    }
+
+    private void clearLightingHashCache() {
+        this.lightingHashCacheBlock = null;
+        this.lightingHashCacheWorld = null;
+    }
+
     private int getLightingHash(final Block blk, final IBlockAccess w, final int x, final int y, final int z) {
-        int o = 0;
+        if (this.lightingHashCacheDepth > 0 && this.lightingHashCacheBlock == blk
+                && this.lightingHashCacheWorld == w
+                && this.lightingHashCacheX == x
+                && this.lightingHashCacheY == y
+                && this.lightingHashCacheZ == z) {
+            return this.lightingHashCacheValue;
+        }
+
+        int hash = 1;
 
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 for (int k = -1; k <= 1; k++) {
-
-                    this.lightHashTmp[o] = blk.getMixedBrightnessForBlock(w, x + i, y + j, z + k);
-                    o++;
+                    hash = 31 * hash + blk.getMixedBrightnessForBlock(w, x + i, y + j, z + k);
                 }
             }
         }
 
-        return Arrays.hashCode(this.lightHashTmp);
+        if (this.lightingHashCacheDepth > 0) {
+            this.lightingHashCacheBlock = blk;
+            this.lightingHashCacheWorld = w;
+            this.lightingHashCacheX = x;
+            this.lightingHashCacheY = y;
+            this.lightingHashCacheZ = z;
+            this.lightingHashCacheValue = hash;
+        }
+
+        return hash;
     }
 
     public void populate(final ISimplifiedBundle sim) {
