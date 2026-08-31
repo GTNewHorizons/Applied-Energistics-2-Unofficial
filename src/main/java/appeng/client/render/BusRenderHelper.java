@@ -595,7 +595,6 @@ public final class BusRenderHelper implements IPartRenderHelper {
             return;
         }
 
-        this.prepareBounds(renderer);
         switch (face) {
             case DOWN:
                 face = this.ay.getOpposite();
@@ -621,6 +620,11 @@ public final class BusRenderHelper implements IPartRenderHelper {
                 break;
         }
 
+        if (renderer instanceof RenderBlocksWorkaround rbw && !rbw.shouldRenderFace(face)) {
+            return;
+        }
+
+        this.prepareBounds(renderer);
         final IIcon renderIcon = ico instanceof TmpFlippableIcon tmp ? tmp.getRenderIcon() : ico;
         for (final AEBaseBlock block : this.maybeBaseBlock.asSet()) {
             this.bbr.renderFace(x, y, z, block, renderIcon, renderer, face);

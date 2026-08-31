@@ -99,28 +99,41 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     // spotless:off
     private boolean renderStandardBlockNoCalculations(final Block b, final int x, final int y, final int z) {
         final Tessellator tessellator = Tessellator.instance;
-        tessellator.setBrightness(this.lightState.bXPos);
-        this.restoreAO(this.lightState.aoXPos, this.lightState.foXPos);
-        this.renderFaceXPos(b, x, y, z, this.isUseTextures() ? this.lightState.rXPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.EAST.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.EAST)) {
+            tessellator.setBrightness(this.lightState.bXPos);
+            this.restoreAO(this.lightState.aoXPos, this.lightState.foXPos);
+            this.renderFaceXPos(b, x, y, z, this.isUseTextures() ? this.lightState.rXPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.EAST.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bXNeg);
-        this.restoreAO(this.lightState.aoXNeg, this.lightState.foXNeg);
-        this.renderFaceXNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rXNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.WEST.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.WEST)) {
+            tessellator.setBrightness(this.lightState.bXNeg);
+            this.restoreAO(this.lightState.aoXNeg, this.lightState.foXNeg);
+            this.renderFaceXNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rXNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.WEST.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bYPos);
-        this.restoreAO(this.lightState.aoYPos, this.lightState.foYPos);
-        this.renderFaceYPos(b, x, y, z, this.isUseTextures() ? this.lightState.rYPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.UP.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.UP)) {
+            tessellator.setBrightness(this.lightState.bYPos);
+            this.restoreAO(this.lightState.aoYPos, this.lightState.foYPos);
+            this.renderFaceYPos(b, x, y, z, this.isUseTextures() ? this.lightState.rYPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.UP.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bYNeg);
-        this.restoreAO(this.lightState.aoYNeg, this.lightState.foYNeg);
-        this.renderFaceYNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rYNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.DOWN.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.DOWN)) {
+            tessellator.setBrightness(this.lightState.bYNeg);
+            this.restoreAO(this.lightState.aoYNeg, this.lightState.foYNeg);
+            this.renderFaceYNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rYNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.DOWN.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bZPos);
-        this.restoreAO(this.lightState.aoZPos, this.lightState.foZPos);this.renderFaceZPos(b, x, y, z, this.isUseTextures() ? this.lightState.rZPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.SOUTH.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.SOUTH)) {
+            tessellator.setBrightness(this.lightState.bZPos);
+            this.restoreAO(this.lightState.aoZPos, this.lightState.foZPos);
+            this.renderFaceZPos(b, x, y, z, this.isUseTextures() ? this.lightState.rZPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.SOUTH.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bZNeg);
-        this.restoreAO(this.lightState.aoZNeg, this.lightState.foZNeg);
-        this.renderFaceZNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rZNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.NORTH.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.NORTH)) {
+            tessellator.setBrightness(this.lightState.bZNeg);
+            this.restoreAO(this.lightState.aoZNeg, this.lightState.foZNeg);
+            this.renderFaceZNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rZNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.NORTH.ordinal()));
+        }
 
         return true;
     }
@@ -580,6 +593,10 @@ public class RenderBlocksWorkaround extends RenderBlocks {
 
     Set<ForgeDirection> getFaces() {
         return this.faces;
+    }
+
+    boolean shouldRenderFace(final ForgeDirection face) {
+        return this.faces.contains(face) && this.renderFaces.contains(face);
     }
 
     public void setFaces(final EnumSet<ForgeDirection> faces) {
