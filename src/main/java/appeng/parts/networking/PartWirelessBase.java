@@ -190,7 +190,7 @@ public abstract class PartWirelessBase extends AEBasePart implements IWirelessLi
     @SideOnly(Side.CLIENT)
     private IIcon getIcon() {
         final WirelessTextures tex = WirelessTextures.values()[this.textureBase + this.getColor().ordinal()];
-        return this.linked ? tex.getOnIcon() : tex.getOffIcon();
+        return this.linked ? tex.getFixtureOnIcon() : tex.getFixtureOffIcon();
     }
 
     @SideOnly(Side.CLIENT)
