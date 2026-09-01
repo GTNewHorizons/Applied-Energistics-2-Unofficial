@@ -361,7 +361,6 @@ public class PartPlacement {
             final IItems items = AEApi.instance().definitions().items();
 
             boolean supportedItem = items.memoryCard().isSameAs(held);
-            supportedItem |= items.colorApplicator().isSameAs(held);
 
             if (event.entityPlayer.isSneaking() && held != null && supportedItem) {
                 event.setCanceled(true);
