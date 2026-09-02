@@ -153,6 +153,9 @@ public class BlockRenderInfo {
     }
 
     public FlippableIcon getTexture(final ForgeDirection dir) {
+        if (dir == ForgeDirection.UNKNOWN) {
+            return this.textures.get(dir);
+        }
         return this.resolveTextures().get(dir);
     }
 

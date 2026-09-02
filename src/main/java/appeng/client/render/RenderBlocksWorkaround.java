@@ -60,7 +60,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     @Override
     public IIcon getBlockIcon(final Block block, final IBlockAccess world, final int x, final int y, final int z,
             final int side) {
-        if (block == this.resolvedTextureBlock && this.resolvedTextures != null) {
+        if (side >= 0 && side < ForgeDirection.VALID_DIRECTIONS.length
+                && block == this.resolvedTextureBlock
+                && this.resolvedTextures != null) {
             final IIcon icon = this.resolvedTextures.getRenderIcon(ForgeDirection.getOrientation(side));
             if (icon != null) {
                 return icon;
