@@ -635,7 +635,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         this.opacity = opacity;
     }
 
-    private EnumSet<ForgeDirection> getRenderFaces() {
+    EnumSet<ForgeDirection> getRenderFaces() {
         return this.renderFaces;
     }
 

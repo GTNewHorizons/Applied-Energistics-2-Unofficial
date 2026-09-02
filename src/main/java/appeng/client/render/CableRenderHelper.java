@@ -49,6 +49,7 @@ public class CableRenderHelper {
         }
 
         final IBlockAccess previousBlockAccess = renderer.blockAccess;
+        final EnumSet<ForgeDirection> previousRenderFaces = renderer.getRenderFaces();
         renderer.beginLightingHashCache();
         try {
             renderer.blockAccess = world;
@@ -156,6 +157,7 @@ public class CableRenderHelper {
             }
         } finally {
             renderer.blockAccess = previousBlockAccess;
+            renderer.setRenderFaces(previousRenderFaces);
             renderer.endLightingHashCache();
         }
     }
