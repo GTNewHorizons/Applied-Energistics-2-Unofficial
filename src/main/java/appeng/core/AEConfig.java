@@ -149,6 +149,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
     public int maxRecursiveDepth = 100;
     public int maxMachineChecks = 10000;
+    public int normalCableChannelCapacity = 8;
+    public int denseCableChannelCapacity = 32;
     public boolean enableItemFlowTracking = true;
     public int itemFlowTrackingWindowMinutes = 2;
 
@@ -379,6 +381,30 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                     .get("craftingCPU", "craftingCalculationTimePerTick", this.craftingCalculationTimePerTick)
                     .getInt(this.craftingCalculationTimePerTick);
         }
+
+        final Property pNormalCableChannels = this.get(
+                "Channels",
+                "normalCableChannelCapacity",
+                this.normalCableChannelCapacity,
+                "Number of channels a normal (non-dense) cable can carry. Default: 8. Min: 1. Max: 64",
+                1,
+                64);
+        final int clampedNormalCableChannelCapacity = Math
+                .max(1, Math.min(pNormalCableChannels.getInt(this.normalCableChannelCapacity), 64));
+        pNormalCableChannels.set(clampedNormalCableChannelCapacity);
+        this.normalCableChannelCapacity = clampedNormalCableChannelCapacity;
+
+        final Property pDenseCableChannels = this.get(
+                "Channels",
+                "denseCableChannelCapacity",
+                this.denseCableChannelCapacity,
+                "Number of channels a dense cable can carry. Default: 32. Min: 1. Max: 256",
+                1,
+                256);
+        final int clampedDenseCableChannelCapacity = Math
+                .max(1, Math.min(pDenseCableChannels.getInt(this.denseCableChannelCapacity), 256));
+        pDenseCableChannels.set(clampedDenseCableChannelCapacity);
+        this.denseCableChannelCapacity = clampedDenseCableChannelCapacity;
 
         this.updatable = true;
     }
