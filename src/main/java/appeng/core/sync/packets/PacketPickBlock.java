@@ -11,15 +11,20 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
+import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.container.implementations.ContainerCraftAmount;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.AppEngPacket;
+import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
+import appeng.util.Platform;
 import appeng.util.PlayerInventoryUtil;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
@@ -126,7 +131,13 @@ public class PacketPickBlock extends AppEngPacket {
             sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
             return;
         }
-        var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
+        var wirelessGrid = getWirelessGrid(wirelessTerminal);
+        if (wirelessGrid == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
+            return;
+        }
+
+        var wirelessInventory = getWirelessItemInventory(wirelessGrid);
         if (wirelessInventory == null) {
             movePickBlockItemStack(sender, pickBlockSlot);
             return;
@@ -138,6 +149,11 @@ public class PacketPickBlock extends AppEngPacket {
         IAEItemStack targetAeItemStack = AEApi.instance().storage().createItemStack(targetItemStack);
         if (targetAeItemStack == null) {
             movePickBlockItemStack(sender, pickBlockSlot);
+            return;
+        }
+
+        if (wirelessInventory.getStorageList().findPrecise(targetAeItemStack) == null
+                && openCraftAmountGui(sender, wirelessTerminal, targetAeItemStack, wirelessGrid)) {
             return;
         }
 
@@ -168,8 +184,7 @@ public class PacketPickBlock extends AppEngPacket {
         movePickBlockItemStack(sender, pickBlockSlot);
     }
 
-    private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(EntityPlayer player,
-            ItemStack wirelessTerminal) {
+    private IGrid getWirelessGrid(ItemStack wirelessTerminal) {
         if (wirelessTerminal == null) {
             return null;
         }
@@ -204,12 +219,49 @@ public class PacketPickBlock extends AppEngPacket {
             return null;
         }
 
+        return wirelessGrid;
+    }
+
+    private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(IGrid wirelessGrid) {
         IStorageGrid wirelessGridCache = wirelessGrid.getCache(IStorageGrid.class);
         if (wirelessGridCache == null) {
             return null;
         }
 
         return wirelessGridCache.getItemInventory();
+    }
+
+    private boolean openCraftAmountGui(EntityPlayerMP player, ItemStack wirelessTerminal, IAEItemStack itemToCraft,
+            IGrid wirelessGrid) {
+        ICraftingGrid craftingGrid = wirelessGrid.getCache(ICraftingGrid.class);
+        if (craftingGrid == null || craftingGrid.getCraftingFor(itemToCraft, null, -1, player.worldObj).isEmpty()) {
+            return false;
+        }
+
+        int terminalSlot = getInventorySlot(player, wirelessTerminal);
+        if (terminalSlot < 0) {
+            return false;
+        }
+
+        Platform.openGUI(player, null, null, GuiBridge.GUI_CRAFTING_AMOUNT, terminalSlot);
+        if (!(player.openContainer instanceof ContainerCraftAmount craftAmount)) {
+            return false;
+        }
+
+        craftAmount.setItemToCraft(itemToCraft);
+        craftAmount.setInitialCraftAmount(1);
+        craftAmount.detectAndSendChanges();
+        return true;
+    }
+
+    private int getInventorySlot(EntityPlayerMP player, ItemStack item) {
+        for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
+            if (player.inventory.mainInventory[slot] == item) {
+                return slot;
+            }
+        }
+
+        return -1;
     }
 
     /**
