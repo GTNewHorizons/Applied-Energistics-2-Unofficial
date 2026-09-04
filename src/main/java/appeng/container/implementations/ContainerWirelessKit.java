@@ -339,7 +339,7 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                                 if (!WireLessToolHelper
                                         .securityCheck(tw, new PlayerSource(this.getPlayerInv().player, null)))
                                     continue;
-                                if (subCommand.coord != null)
+                                if (command.color != null)
                                     tw.recolourBlock(ForgeDirection.UNKNOWN, command.color, this.getPlayerInv().player);
                                 else tw.madChameleonRecolor();
                             }
@@ -358,7 +358,7 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                                     continue;
 
                                 if (isColor) if (sd.color != subCommand.color) continue;
-                                if (subCommand.color != null) {
+                                if (command.color != null) {
                                     tw.recolourBlock(ForgeDirection.UNKNOWN, command.color, this.getPlayerInv().player);
                                 } else {
                                     tw.madChameleonRecolor();
@@ -456,7 +456,7 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                     if (w.getTileEntity(network.x, network.y, network.z) instanceof IGridHost gh) {
                         if (subCommand.includeConnectors) {
                             for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                    .getMachines(TileWirelessBase.class)) {
+                                    .getMachines(TileWirelessConnector.class)) {
                                 TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
                                 if (!wc.isLinked()) {
                                     if (isColor && wc.getColor() != subCommand.color) continue;

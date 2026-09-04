@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.client.gui.implementations.GuiCellWorkbench;
 import appeng.client.gui.implementations.GuiStorageBus;
 import codechicken.nei.ItemPanels;
 import codechicken.nei.NEIClientConfig;
@@ -72,8 +73,12 @@ public class NEIInputHandler implements IContainerInputHandler {
     public void onMouseUp(GuiContainer gui, int mousex, int mousey, int button) {
         if (button != 0) return;
 
-        if (gui instanceof GuiStorageBus storageBus && this.draggedBookmarkGroup != null) {
-            storageBus.handleBookmarkGroupDrop(mousex, mousey, this.draggedBookmarkGroup);
+        if (this.draggedBookmarkGroup != null) {
+            if (gui instanceof GuiStorageBus storageBus) {
+                storageBus.handleBookmarkGroupDrop(mousex, mousey, this.draggedBookmarkGroup);
+            } else if (gui instanceof GuiCellWorkbench cellWorkbench) {
+                cellWorkbench.handleBookmarkGroupDrop(mousex, mousey, this.draggedBookmarkGroup);
+            }
         }
         this.draggedBookmarkGroup = null;
     }
@@ -89,7 +94,8 @@ public class NEIInputHandler implements IContainerInputHandler {
     @Override
     public void onMouseDragged(GuiContainer gui, int mousex, int mousey, int button, long heldTime) {
         final SortableGroup group = ItemPanels.bookmarkPanel.sortableGroup;
-        if (gui instanceof GuiStorageBus && group != null && this.draggedBookmarkGroup == null) {
+        if ((gui instanceof GuiStorageBus || gui instanceof GuiCellWorkbench) && group != null
+                && this.draggedBookmarkGroup == null) {
             this.draggedBookmarkGroup = group.getBookmarkItems().stream().map(BookmarkItem::getItemStack)
                     .collect(Collectors.toList());
         }
