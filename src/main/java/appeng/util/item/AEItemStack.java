@@ -287,10 +287,10 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
                         } else if (mode == FuzzyMode.PERCENT_99) {
                             return (a.getItemDamageForDisplay() > 1) == (b.getItemDamageForDisplay() > 1);
                         } else {
-                            final float percentDamageOfA = 1.0f
-                                    - (float) a.getItemDamageForDisplay() / (float) a.getMaxDamage();
-                            final float percentDamageOfB = 1.0f
-                                    - (float) b.getItemDamageForDisplay() / (float) b.getMaxDamage();
+                            final float percentDamageOfA = (float) a.getItemDamageForDisplay()
+                                    / (float) a.getMaxDamage();
+                            final float percentDamageOfB = (float) b.getItemDamageForDisplay()
+                                    / (float) b.getMaxDamage();
 
                             return (percentDamageOfA > mode.breakPoint) == (percentDamageOfB > mode.breakPoint);
                         }
@@ -327,10 +327,10 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
                         } else if (mode == FuzzyMode.PERCENT_99) {
                             return (a.getItemDamageForDisplay() > 1) == (o.getItemDamageForDisplay() > 1);
                         } else {
-                            final float percentDamageOfA = 1.0f
-                                    - (float) a.getItemDamageForDisplay() / (float) a.getMaxDamage();
-                            final float percentDamageOfB = 1.0f
-                                    - (float) o.getItemDamageForDisplay() / (float) o.getMaxDamage();
+                            final float percentDamageOfA = (float) a.getItemDamageForDisplay()
+                                    / (float) a.getMaxDamage();
+                            final float percentDamageOfB = (float) o.getItemDamageForDisplay()
+                                    / (float) o.getMaxDamage();
 
                             return (percentDamageOfA > mode.breakPoint) == (percentDamageOfB > mode.breakPoint);
                         }
