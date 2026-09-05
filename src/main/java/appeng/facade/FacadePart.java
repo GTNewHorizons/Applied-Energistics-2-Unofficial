@@ -54,7 +54,6 @@ public class FacadePart implements IFacadePart, IBoxProvider {
     private final ForgeDirection side;
     private int thickness = 2;
 
-    @SideOnly(Side.CLIENT)
     private final ThreadLocal<ISimplifiedBundle> prevLight = new ThreadLocal<>();
 
     public FacadePart(final ItemStack facade, final ForgeDirection side) {
