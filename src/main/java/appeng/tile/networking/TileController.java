@@ -12,10 +12,12 @@ package appeng.tile.networking;
 
 import java.util.EnumSet;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.Actionable;
@@ -222,6 +224,12 @@ public class TileController extends AENetworkPowerTile implements IColorableTile
 
     public boolean isColorCompatible(final TileController other) {
         return other != null && this.paintedColor.matches(other.paintedColor);
+    }
+
+    @Override
+    public boolean shouldRefresh(final Block oldBlock, final Block newBlock, final int oldMeta, final int newMeta,
+            final World world, final int x, final int y, final int z) {
+        return oldBlock != newBlock;
     }
 
     /**
