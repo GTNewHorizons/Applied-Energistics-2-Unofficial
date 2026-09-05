@@ -64,7 +64,7 @@ public class GuiColorSelect extends GuiScreen {
         AEColor activeColor;
 
         if (held != null && held.getItem() instanceof ToolColorApplicator applicator) {
-            availableColors = applicator.getAvailableColorsCount(held);
+            availableColors = applicator.getAvailableColorsCount(held, this.player.capabilities.isCreativeMode);
             activeColor = applicator.getActiveColor(held);
         } else {
             availableColors = Collections.emptyMap();
