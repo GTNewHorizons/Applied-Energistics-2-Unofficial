@@ -71,6 +71,30 @@ public class NetworkCoreTests {
                 }).thenSucceed();
     }
 
+    @GameTest(template = "network_core", timeoutTicks = 20)
+    public static void coloredControllersStayDisconnected(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        Block controllerBlock = AEApi.instance().definitions().blocks().controller().maybeBlock().get();
+        helper.setBlock("cable_1", controllerBlock);
+        TileController other = helper.assertTileEntityPresent(TileController.class, "cable_1");
+        helper.assertTrue(
+                controller.recolourBlock(ForgeDirection.EAST, AEColor.Red, null),
+                "Controller should accept paint");
+        helper.assertTrue(
+                other.recolourBlock(ForgeDirection.WEST, AEColor.Blue, null),
+                "Controller should accept paint");
+        helper.assertFalse(
+                controller.isColorCompatible(other),
+                "Different-colored controllers should not share connected textures");
+        helper.onEachTick(
+                "different colors stay on separate grids",
+                () -> helper.assertNotSame(
+                        controller.getProxy().getNode().getGrid(),
+                        other.getProxy().getNode().getGrid(),
+                        "Different-colored controllers should not connect"));
+        helper.succeedAtTimeout();
+    }
+
     // Splits the drive off the controller, then reconnects it without losing stored cell contents.
     @GameTest(template = "network_core", timeoutTicks = 120)
     public static void splitAndMergePreservesStorageVisibility(GameTestHelper helper) {

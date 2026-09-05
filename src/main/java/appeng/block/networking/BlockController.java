@@ -14,8 +14,11 @@ import java.util.EnumSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
+import appeng.api.util.AEColor;
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockController;
 import appeng.client.texture.ExtraBlockTextures;
@@ -25,6 +28,11 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockController extends AEBaseTileBlock {
+
+    private static final int COLORED_TEXTURE_COUNT = 4;
+
+    @SideOnly(Side.CLIENT)
+    private IIcon[][] coloredTextures;
 
     public BlockController() {
         super(Material.iron);
@@ -45,6 +53,30 @@ public class BlockController extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     protected RenderBlockController getRenderer() {
         return new RenderBlockController();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void registerBlockIcons(final IIconRegister iconRegistry) {
+        super.registerBlockIcons(iconRegistry);
+        this.coloredTextures = new IIcon[COLORED_TEXTURE_COUNT][AEColor.VALUES.length];
+
+        for (final AEColor color : AEColor.VALID_COLORS) {
+            this.coloredTextures[0][color.ordinal()] = iconRegistry
+                    .registerIcon(this.getTextureName() + "_" + color.name());
+            for (int id = 0; id < COLORED_TEXTURE_COUNT - 1; id++) {
+                this.coloredTextures[id + 1][color.ordinal()] = iconRegistry.registerIcon(
+                        "appliedenergistics2:" + this.getRenderTexture(id).getName() + "_" + color.name());
+            }
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    public IIcon getRenderTexture(final int id, final AEColor color) {
+        if (color != AEColor.Transparent && id >= -1 && id < COLORED_TEXTURE_COUNT - 1) {
+            return this.coloredTextures[id + 1][color.ordinal()];
+        }
+        return id < 0 ? null : this.getRenderTexture(id).getIcon();
     }
 
     public ExtraBlockTextures getRenderTexture(int id) {
