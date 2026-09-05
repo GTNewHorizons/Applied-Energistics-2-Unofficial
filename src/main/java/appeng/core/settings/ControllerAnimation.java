@@ -38,8 +38,7 @@ public enum ControllerAnimation {
             case BREATHING -> pulse(time, 1) * 0.65;
             case SOFT_INTERFERENCE -> 0.8 * pulse(x + y - time * 0.6, 2) * pulse(x - y + time * 0.4, 2);
             case SINGULARITY -> 0.8 * pulse(
-                    Math.hypot(x - 0.5, y - 0.5) * 2
-                            + Math.atan2(y - 0.5, x - 0.5) / (2 * Math.PI) * 3 - time,
+                    Math.hypot(x - 0.5, y - 0.5) * 2 + Math.atan2(y - 0.5, x - 0.5) / (2 * Math.PI) * 3 - time,
                     4);
             case CIRCUIT_TRACE -> pulse(x + y - time, 4);
         };

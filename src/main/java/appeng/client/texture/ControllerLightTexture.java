@@ -91,8 +91,7 @@ public class ControllerLightTexture extends TextureAtlasSprite {
             for (int y = 0; y < size; y++) {
                 for (int x = 0; x < size; x++) {
                     final double distanceToCenter = Math.hypot(x - (size - 1) / 2.0, y - (size - 1) / 2.0);
-                    if (distances[y][x] == -1 && mask.getRGB(x, y) >>> 24 != 0
-                            && distanceToCenter < closestToCenter) {
+                    if (distances[y][x] == -1 && mask.getRGB(x, y) >>> 24 != 0 && distanceToCenter < closestToCenter) {
                         seed = y * size + x;
                         closestToCenter = distanceToCenter;
                     }
@@ -110,8 +109,12 @@ public class ControllerLightTexture extends TextureAtlasSprite {
                     for (int dx = -1; dx <= 1; dx++) {
                         final int nextX = x + dx;
                         final int nextY = y + dy;
-                        if ((dx != 0 || dy != 0) && nextX >= 0 && nextX < size && nextY >= 0 && nextY < size
-                                && distances[nextY][nextX] == -1 && mask.getRGB(nextX, nextY) >>> 24 != 0) {
+                        if ((dx != 0 || dy != 0) && nextX >= 0
+                                && nextX < size
+                                && nextY >= 0
+                                && nextY < size
+                                && distances[nextY][nextX] == -1
+                                && mask.getRGB(nextX, nextY) >>> 24 != 0) {
                             distances[nextY][nextX] = distances[y][x] + 1;
                             directions[nextY][nextX] = distances[y][x] == 0
                                     ? ((nextX * 31 + nextY * 17 & 1) == 0 ? -1 : 1)
