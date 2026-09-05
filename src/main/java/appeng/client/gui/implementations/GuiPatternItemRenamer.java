@@ -5,7 +5,6 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.GuiSub;
@@ -23,11 +22,12 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
     private final ContainerPatternValueAmount container;
     private final MEGuiTextField textField;
 
-    public GuiPatternItemRenamer(InventoryPlayer ip, ITerminalHost p) {
+    public GuiPatternItemRenamer(InventoryPlayer ip, Object p) {
         super(new ContainerPatternValueAmount(ip, p));
         this.container = (ContainerPatternValueAmount) this.inventorySlots;
         xSize = 256;
         textField = new MEGuiTextField(231, 12);
+        textField.setMaxStringLength(64);
     }
 
     @Override

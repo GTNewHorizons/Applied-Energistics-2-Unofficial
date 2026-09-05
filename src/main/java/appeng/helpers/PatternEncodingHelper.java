@@ -104,6 +104,9 @@ public class PatternEncodingHelper {
             IMEMonitor<IAEItemStack> itemMonitor, BaseActionSource actionSource, String auther, World world) {
         IInventory pattern = terminal.getInventoryByName("pattern");
         ItemStack output = pattern.getStackInSlot(1);
+        final String customName = ItemTunnelPattern.isTunnelPattern(output) && output.hasDisplayName()
+                ? output.getDisplayName()
+                : null;
 
         final IAEStack<?>[] in = getInputs(terminal);
         final IAEStack<?>[] out = getOutputs(terminal, world);
@@ -188,6 +191,9 @@ public class PatternEncodingHelper {
         encodedValue.setString("author", auther);
 
         output.setTagCompound(encodedValue);
+        if (customName != null && ItemTunnelPattern.isTunnelPattern(output)) {
+            output.setStackDisplayName(customName);
+        }
         pattern.setInventorySlotContents(1, output);
         for (final PatternEncodeListener listener : ImmutableList.copyOf(terminal.getPatternEncodeListeners())) {
             listener.onEncoded(terminal, output);

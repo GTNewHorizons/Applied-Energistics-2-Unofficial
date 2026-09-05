@@ -4,11 +4,14 @@ import static appeng.util.Platform.readStackByte;
 import static appeng.util.Platform.writeStackByte;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
 import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
+import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerPatternItemRenamer;
 import appeng.container.interfaces.IVirtualSlotSource;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -51,6 +54,24 @@ public class PacketPatternValueSet extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (player.openContainer instanceof AEBaseContainer bc) {
+            if (bc instanceof ContainerPatternItemRenamer renamer && renamer.isTunnelPatternRename()) {
+                final IAEStack<?> original = renamer.getAEStack();
+                final PrimaryGui pGui = renamer.getPrimaryGui();
+                if (original == null || this.aes == null || pGui == null) {
+                    return;
+                }
+
+                final int targetSlot = renamer.getSlotIndex();
+                pGui.open(player);
+                if (targetSlot == ContainerPatternItemRenamer.NETWORK_PATTERN_SLOT
+                        && player.openContainer instanceof ContainerMEMonitorable monitorable) {
+                    monitorable.renameStoredTunnelPattern(original, this.aes, (EntityPlayerMP) player);
+                } else if (targetSlot >= 0 && player.openContainer instanceof AEBaseContainer primaryContainer) {
+                    primaryContainer.renameTunnelPatternInSlot(targetSlot, original, this.aes, (EntityPlayerMP) player);
+                }
+                return;
+            }
+
             if (this.slotIndex >= UPDATE_ONLY_OFFSET) {
                 this.slotIndex -= UPDATE_ONLY_OFFSET;
             } else {

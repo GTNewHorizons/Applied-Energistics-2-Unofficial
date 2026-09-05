@@ -289,6 +289,11 @@ public class PartPatternRepeater extends PartBasicState
             for (final ICraftingPatternDetails details : this.craftingList) {
                 craftingTracker.addCraftingOption(this, details);
             }
+            if (this.targetCraftingGrid != null) {
+                for (final ICraftingPatternDetails details : this.targetCraftingGrid.getInputOnlyPatterns()) {
+                    craftingTracker.addCraftingOption(this, details);
+                }
+            }
             for (final IAEStack<?> item : this.emitableCrafting.keySet()) {
                 craftingTracker.setEmitable(this, item);
             }

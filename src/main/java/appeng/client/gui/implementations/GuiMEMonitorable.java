@@ -99,6 +99,7 @@ import appeng.helpers.MonitorableAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.items.storage.ItemViewCell;
 import appeng.me.cache.ItemFlowGridCache.FlowRate;
 import appeng.util.AEStackTypeFilter;
@@ -776,8 +777,11 @@ public class GuiMEMonitorable extends AEBaseGui
                 return true;
             }
             case keyBindPickBlockAction -> {
-                if (slot.getAEStack() != null && slot.getAEStack().isCraftable()) {
-                    this.sendAction(MonitorableAction.AUTO_CRAFT, slot.getAEStack(), -1);
+                if (slotStack != null && ItemTunnelPattern.getTunnelUuid(slotStack.getItemStack()) != null) {
+                    this.sendAction(MonitorableAction.RENAME_TUNNEL_PATTERN, slotStack, -1);
+                    return true;
+                } else if (slotStack != null && slotStack.isCraftable()) {
+                    this.sendAction(MonitorableAction.AUTO_CRAFT, slotStack, -1);
                     return true;
                 } else if (player.capabilities.isCreativeMode) {
                     this.sendAction(MonitorableAction.CREATIVE_DUPLICATE, slotStack, -1);

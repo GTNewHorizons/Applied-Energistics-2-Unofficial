@@ -4,14 +4,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.container.ContainerOpenContext;
 import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerPatternItemRenamer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.MonitorableAction;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -43,6 +47,38 @@ public class PacketMonitorableAction extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (!(player.openContainer instanceof ContainerMEMonitorable container)) return;
+
+        if (action == MonitorableAction.RENAME_TUNNEL_PATTERN) {
+            if (!(container.getTargetStack() instanceof IAEItemStack target)
+                    || ItemTunnelPattern.getTunnelUuid(target.getItemStack()) == null) {
+                return;
+            }
+
+            final PrimaryGui pGui = container.createPrimaryGui();
+            final ContainerOpenContext context = container.getOpenContext();
+            if (context != null) {
+                final TileEntity te = context.getTile();
+
+                Platform.openGUI(
+                        player,
+                        te,
+                        context.getSide(),
+                        GuiBridge.GUI_PATTERN_ITEM_RENAMER,
+                        container.getTargetSlotIndex());
+
+                if (player.openContainer instanceof ContainerPatternItemRenamer renamer) {
+                    final IAEItemStack singlePattern = target.copy();
+                    singlePattern.setStackSize(1);
+                    renamer.setPrimaryGui(pGui);
+                    renamer.updateVirtualSlot(
+                            StorageName.NONE,
+                            ContainerPatternItemRenamer.NETWORK_PATTERN_SLOT,
+                            singlePattern);
+                    renamer.detectAndSendChanges();
+                }
+            }
+            return;
+        }
 
         if (action == MonitorableAction.AUTO_CRAFT) {
             final PrimaryGui pGui = container.createPrimaryGui();
