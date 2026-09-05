@@ -21,6 +21,10 @@ public class TmpFlippableIcon extends FlippableIcon {
         super(NULL_ICON);
     }
 
+    public IIcon getRenderIcon() {
+        return this.isFlipU() || this.isFlipV() ? this : this.getOriginal();
+    }
+
     @Override
     public void setOriginal(IIcon i) {
         this.setFlip(false, false);
