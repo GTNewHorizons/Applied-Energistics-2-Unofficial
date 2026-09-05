@@ -191,6 +191,9 @@ public enum CableBusTextures {
 
     private final String name;
     public IIcon IIcon;
+    private volatile IIcon taughtIcon;
+    private volatile IIcon taughtOffsetIcon;
+    private volatile IIcon flippedTaughtIcon;
 
     CableBusTextures(final String name) {
         this.name = name;
@@ -213,7 +216,39 @@ public enum CableBusTextures {
         return this.IIcon;
     }
 
+    public IIcon getTaughtIcon() {
+        IIcon icon = this.taughtIcon;
+        if (icon == null) {
+            icon = new TaughtIcon(this.IIcon, -0.2f);
+            this.taughtIcon = icon;
+        }
+        return icon;
+    }
+
+    public IIcon getTaughtOffsetIcon() {
+        IIcon icon = this.taughtOffsetIcon;
+        if (icon == null) {
+            icon = new OffsetIcon(this.getTaughtIcon(), 0, -12);
+            this.taughtOffsetIcon = icon;
+        }
+        return icon;
+    }
+
+    public IIcon getFlippedTaughtIcon() {
+        IIcon icon = this.flippedTaughtIcon;
+        if (icon == null) {
+            final FlippableIcon flippedIcon = new FlippableIcon(this.getTaughtIcon());
+            flippedIcon.setFlip(true, false);
+            icon = flippedIcon;
+            this.flippedTaughtIcon = icon;
+        }
+        return icon;
+    }
+
     public void registerIcon(final TextureMap map) {
         this.IIcon = map.registerIcon("appliedenergistics2:" + this.name);
+        this.taughtIcon = null;
+        this.taughtOffsetIcon = null;
+        this.flippedTaughtIcon = null;
     }
 }

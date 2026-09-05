@@ -56,7 +56,7 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
 
     private final CraftingCPUCalculator calc = new CraftingCPUCalculator(this);
 
-    private ISimplifiedBundle lightCache;
+    private final ThreadLocal<ISimplifiedBundle> lightCache = new ThreadLocal<>();
 
     private NBTTagCompound previousState = null;
     private boolean isCoreBlock = false;
@@ -351,11 +351,11 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
     }
 
     public ISimplifiedBundle getLightCache() {
-        return this.lightCache;
+        return this.lightCache.get();
     }
 
     public void setLightCache(final ISimplifiedBundle lightCache) {
-        this.lightCache = lightCache;
+        this.lightCache.set(lightCache);
     }
 
     public NBTTagCompound getPreviousState() {

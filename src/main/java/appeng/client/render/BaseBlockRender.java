@@ -273,19 +273,20 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
                 block.setRenderStateByMeta(item.getItemDamage());
             }
 
-            renderer.uvRotateBottom = info.getTexture(ForgeDirection.DOWN)
+            final BlockRenderInfo.TextureSet textures = info.resolveTextures();
+            renderer.uvRotateBottom = textures.get(ForgeDirection.DOWN)
                     .setFlip(getOrientation(ForgeDirection.DOWN, ForgeDirection.SOUTH, ForgeDirection.UP));
-            renderer.uvRotateTop = info.getTexture(ForgeDirection.UP)
+            renderer.uvRotateTop = textures.get(ForgeDirection.UP)
                     .setFlip(getOrientation(ForgeDirection.UP, ForgeDirection.SOUTH, ForgeDirection.UP));
 
-            renderer.uvRotateEast = info.getTexture(ForgeDirection.EAST)
+            renderer.uvRotateEast = textures.get(ForgeDirection.EAST)
                     .setFlip(getOrientation(ForgeDirection.EAST, ForgeDirection.SOUTH, ForgeDirection.UP));
-            renderer.uvRotateWest = info.getTexture(ForgeDirection.WEST)
+            renderer.uvRotateWest = textures.get(ForgeDirection.WEST)
                     .setFlip(getOrientation(ForgeDirection.WEST, ForgeDirection.SOUTH, ForgeDirection.UP));
 
-            renderer.uvRotateNorth = info.getTexture(ForgeDirection.NORTH)
+            renderer.uvRotateNorth = textures.get(ForgeDirection.NORTH)
                     .setFlip(getOrientation(ForgeDirection.NORTH, ForgeDirection.SOUTH, ForgeDirection.UP));
-            renderer.uvRotateSouth = info.getTexture(ForgeDirection.SOUTH)
+            renderer.uvRotateSouth = textures.get(ForgeDirection.SOUTH)
                     .setFlip(getOrientation(ForgeDirection.SOUTH, ForgeDirection.SOUTH, ForgeDirection.UP));
         }
 
@@ -325,6 +326,7 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
         if (block.hasSubtypes() && item != null) {
             meta = item.getItemDamage();
         }
+        final BlockRenderInfo.TextureSet textures = block.getRendererInstance().resolveTextures();
 
         if (sides.contains(ForgeDirection.DOWN)) {
             tess.startDrawingQuads();
@@ -335,10 +337,12 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
                     0.0D,
                     0.0D,
                     0.0D,
-                    this.firstNotNull(
+                    this.getInventoryIcon(
                             renderer.overrideBlockTexture,
-                            block.getRendererInstance().getTexture(ForgeDirection.DOWN),
-                            block.getIcon(ForgeDirection.DOWN.ordinal(), meta)));
+                            textures.get(ForgeDirection.DOWN),
+                            block,
+                            ForgeDirection.DOWN,
+                            meta));
             tess.draw();
         }
 
@@ -351,10 +355,12 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
                     0.0D,
                     0.0D,
                     0.0D,
-                    this.firstNotNull(
+                    this.getInventoryIcon(
                             renderer.overrideBlockTexture,
-                            block.getRendererInstance().getTexture(ForgeDirection.UP),
-                            block.getIcon(ForgeDirection.UP.ordinal(), meta)));
+                            textures.get(ForgeDirection.UP),
+                            block,
+                            ForgeDirection.UP,
+                            meta));
             tess.draw();
         }
 
@@ -367,10 +373,12 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
                     0.0D,
                     0.0D,
                     0.0D,
-                    this.firstNotNull(
+                    this.getInventoryIcon(
                             renderer.overrideBlockTexture,
-                            block.getRendererInstance().getTexture(ForgeDirection.NORTH),
-                            block.getIcon(ForgeDirection.NORTH.ordinal(), meta)));
+                            textures.get(ForgeDirection.NORTH),
+                            block,
+                            ForgeDirection.NORTH,
+                            meta));
             tess.draw();
         }
 
@@ -383,10 +391,12 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
                     0.0D,
                     0.0D,
                     0.0D,
-                    this.firstNotNull(
+                    this.getInventoryIcon(
                             renderer.overrideBlockTexture,
-                            block.getRendererInstance().getTexture(ForgeDirection.SOUTH),
-                            block.getIcon(ForgeDirection.SOUTH.ordinal(), meta)));
+                            textures.get(ForgeDirection.SOUTH),
+                            block,
+                            ForgeDirection.SOUTH,
+                            meta));
             tess.draw();
         }
 
@@ -399,10 +409,12 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
                     0.0D,
                     0.0D,
                     0.0D,
-                    this.firstNotNull(
+                    this.getInventoryIcon(
                             renderer.overrideBlockTexture,
-                            block.getRendererInstance().getTexture(ForgeDirection.WEST),
-                            block.getIcon(ForgeDirection.WEST.ordinal(), meta)));
+                            textures.get(ForgeDirection.WEST),
+                            block,
+                            ForgeDirection.WEST,
+                            meta));
             tess.draw();
         }
 
@@ -415,22 +427,26 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
                     0.0D,
                     0.0D,
                     0.0D,
-                    this.firstNotNull(
+                    this.getInventoryIcon(
                             renderer.overrideBlockTexture,
-                            block.getRendererInstance().getTexture(ForgeDirection.EAST),
-                            block.getIcon(ForgeDirection.EAST.ordinal(), meta)));
+                            textures.get(ForgeDirection.EAST),
+                            block,
+                            ForgeDirection.EAST,
+                            meta));
             tess.draw();
         }
     }
 
-    private IIcon firstNotNull(final IIcon... s) {
-        for (final IIcon o : s) {
-            if (o != null) {
-                return o;
-            }
+    private IIcon getInventoryIcon(final IIcon override, final IIcon texture, final B block, final ForgeDirection side,
+            final int meta) {
+        if (override != null) {
+            return override;
         }
-
-        return ExtraBlockTextures.getMissing();
+        if (texture != null) {
+            return texture;
+        }
+        final IIcon icon = block.getIcon(side.ordinal(), meta);
+        return icon == null ? ExtraBlockTextures.getMissing() : icon;
     }
 
     public boolean renderInWorld(final B block, final IBlockAccess world, final int x, final int y, final int z,
@@ -453,20 +469,21 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
         if (te != null) {
             final ForgeDirection forward = te.getForward();
             final ForgeDirection up = te.getUp();
+            final BlockRenderInfo.TextureSet textures = info.resolveTextures();
 
-            renderer.uvRotateBottom = info.getTexture(ForgeDirection.DOWN)
+            renderer.uvRotateBottom = textures.get(ForgeDirection.DOWN)
                     .setFlip(getOrientation(ForgeDirection.DOWN, forward, up));
-            renderer.uvRotateTop = info.getTexture(ForgeDirection.UP)
+            renderer.uvRotateTop = textures.get(ForgeDirection.UP)
                     .setFlip(getOrientation(ForgeDirection.UP, forward, up));
 
-            renderer.uvRotateEast = info.getTexture(ForgeDirection.EAST)
+            renderer.uvRotateEast = textures.get(ForgeDirection.EAST)
                     .setFlip(getOrientation(ForgeDirection.EAST, forward, up));
-            renderer.uvRotateWest = info.getTexture(ForgeDirection.WEST)
+            renderer.uvRotateWest = textures.get(ForgeDirection.WEST)
                     .setFlip(getOrientation(ForgeDirection.WEST, forward, up));
 
-            renderer.uvRotateNorth = info.getTexture(ForgeDirection.NORTH)
+            renderer.uvRotateNorth = textures.get(ForgeDirection.NORTH)
                     .setFlip(getOrientation(ForgeDirection.NORTH, forward, up));
-            renderer.uvRotateSouth = info.getTexture(ForgeDirection.SOUTH)
+            renderer.uvRotateSouth = textures.get(ForgeDirection.SOUTH)
                     .setFlip(getOrientation(ForgeDirection.SOUTH, forward, up));
         }
     }
