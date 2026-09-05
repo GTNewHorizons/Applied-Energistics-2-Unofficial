@@ -33,6 +33,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class BlockController extends AEBaseTileBlock {
 
     private static final int COLORED_TEXTURE_COUNT = 4;
+    private static final String COLORED_TEXTURE_PATH = "appliedenergistics2:controller/";
 
     @SideOnly(Side.CLIENT)
     private IIcon[][] coloredTextures;
@@ -85,10 +86,10 @@ public class BlockController extends AEBaseTileBlock {
 
         for (final AEColor color : AEColor.VALID_COLORS) {
             this.coloredTextures[0][color.ordinal()] = iconRegistry
-                    .registerIcon(this.getTextureName() + "_" + color.name());
+                    .registerIcon(this.getTextureName().replace(":", ":controller/") + "_" + color.name());
             for (int id = 0; id < COLORED_TEXTURE_COUNT - 1; id++) {
-                this.coloredTextures[id + 1][color.ordinal()] = iconRegistry.registerIcon(
-                        "appliedenergistics2:" + this.getRenderTexture(id).getName() + "_" + color.name());
+                this.coloredTextures[id + 1][color.ordinal()] = iconRegistry
+                        .registerIcon(COLORED_TEXTURE_PATH + this.getRenderTexture(id).getName() + "_" + color.name());
             }
         }
     }
