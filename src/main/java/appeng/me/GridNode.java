@@ -53,7 +53,6 @@ import appeng.util.ReadOnlyCollection;
 public class GridNode implements IGridNode, IPathItem {
 
     private static final MENetworkChannelsChanged EVENT = new MENetworkChannelsChanged();
-    private static final int[] CHANNEL_COUNT = { 0, 8, 32, Integer.MAX_VALUE };
 
     private final List<GridConnection> connections = new LinkedList<>();
     private final IGridBlock gridProxy;
@@ -567,7 +566,16 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     public int getMaxChannels() {
-        return CHANNEL_COUNT[this.compressedData & 0x3];
+        switch (this.compressedData & 0x3) {
+            case 1:
+                return AEConfig.instance.normalCableChannelCapacity;
+            case 2:
+                return AEConfig.instance.denseCableChannelCapacity;
+            case 3:
+                return Integer.MAX_VALUE;
+            default:
+                return 0;
+        }
     }
 
     @Override
