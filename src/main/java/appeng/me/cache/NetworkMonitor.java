@@ -17,8 +17,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -132,8 +134,13 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public IItemList<T> getAvailableItems(final IItemList out, int iteration) {
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
         return this.getHandler().getAvailableItems(out, iteration);
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
+        return this.getHandler().getAvailableItems(out, iteration, filter);
     }
 
     @Override
