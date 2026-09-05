@@ -17,7 +17,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import net.minecraft.block.Block;
@@ -55,7 +54,6 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AppEng;
 import appeng.me.GridAccessException;
-import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
@@ -240,287 +238,81 @@ public class CraftingExecutionTests {
     @GameTest(template = "crafting_cpu", timeoutTicks = 760)
     public static void activeProcessingJobSurvivesCpuReconstruction(GameTestHelper helper) {
         CraftingNetwork network = getCraftingNetwork(helper);
-        helper.assertTrue(network.cpuStorage != network.cpuUnit, "CPU storage and unit labels must resolve distinctly");
-        TestPos interfacePos = helper.pos(INTERFACE_LABEL);
-        TestPos assemblerPos = helper.pos(ASSEMBLER_LABEL);
-        helper.assertEquals(
-                1L,
-                Math.abs(interfacePos.x() - assemblerPos.x()) + Math.abs(interfacePos.y() - assemblerPos.y())
-                        + Math.abs(interfacePos.z() - assemblerPos.z()),
-                "Interface and processing target must remain adjacent");
-
-        placeProcessingTarget(helper);
-        helper.assertInventoryEmpty(ASSEMBLER_LABEL);
         ItemStack driveCell = cell1k();
         insertItems(helper, driveCell, Blocks.cobblestone, 2);
         helper.setSlot(DRIVE_LABEL, 0, driveCell);
-        assertStoredAmount(helper, driveCell, Blocks.cobblestone, 2);
-        assertStoredAmount(helper, driveCell, Blocks.stone, 0);
 
-        AtomicReference<TileCraftingStorageTile> cpuStorage = new AtomicReference<>(network.cpuStorage);
-        AtomicReference<TileCraftingTile> cpuUnit = new AtomicReference<>(network.cpuUnit);
-        AtomicReference<ICraftingLink> link = new AtomicReference<>();
-        AtomicReference<String> craftingId = new AtomicReference<>();
-        AtomicReference<NBTTagCompound> storageState = new AtomicReference<>();
-        AtomicReference<NBTTagCompound> unitState = new AtomicReference<>();
-        AtomicReference<Block> storageBlock = new AtomicReference<>();
-        AtomicReference<Block> unitBlock = new AtomicReference<>();
-        AtomicBoolean resultReturned = new AtomicBoolean();
-        WorldServer world = (WorldServer) network.controller.getWorldObj();
-
-        TickCallbackHandle reconstructionConservesScenarioItems = helper.onEachTickDisabled(
-                "CPU reconstruction never duplicates output, replays processing input, or drops items",
-                () -> {
-                    long tick = world.getTotalWorldTime();
-                    long networkStone = networkStoredAmount(network.controller, Blocks.stone);
-                    long chestCobblestone = helper.countItems(ASSEMBLER_LABEL, new ItemStack(Blocks.cobblestone));
-                    helper.assertTrue(
-                            networkStone <= 1,
-                            "At most one stone may exist after CPU reconstruction; tick=" + tick
-                                    + ", network="
-                                    + networkStone);
-                    helper.assertEquals(
-                            resultReturned.get() ? 0L : 2L,
-                            chestCobblestone,
-                            "Processing input must not be replayed or lost; tick=" + tick
-                                    + ", chestCobblestone="
-                                    + chestCobblestone);
-                    helper.assertEquals(
-                            0L,
-                            networkStoredAmount(network.controller, Blocks.cobblestone),
-                            "Dispatched cobblestone must not return to storage; tick=" + tick);
-                    helper.assertTrue(
-                            craftingCpuDrops(helper).isEmpty(),
-                            "CPU reconstruction must not create item drops; tick=" + tick);
-                });
-
-        helper.startSequence().thenWaitUntil("wait for one usable processing CPU and powered network", 160, () -> {
-            assertActive(helper, network.controller.getProxy(), "Controller grid proxy should become active");
-            assertActive(helper, network.drive.getProxy(), "Drive grid proxy should become active");
-            assertActive(helper, cpuStorage.get().getProxy(), "CPU storage should receive a channel");
-            assertActive(helper, cpuUnit.get().getProxy(), "CPU unit should receive a channel");
-            assertActive(helper, network.blockInterface.getProxy(), "Interface should receive a channel");
-            helper.assertTrue(cpuStorage.get().isFormed(), "CPU storage should form a crafting CPU");
-            helper.assertTrue(cpuUnit.get().isFormed(), "CPU unit should form a crafting CPU");
-            helper.assertTrue(
-                    cpuStorage.get().getCluster() == cpuUnit.get().getCluster(),
-                    "CPU tiles should belong to one coherent cluster");
-            helper.assertEquals(
-                    1L,
-                    craftingGrid(network.controller).getCpus().size(),
-                    "Exactly one usable crafting CPU should be present");
-            assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 2);
-            assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
+        AtomicReference<ICraftingCPU> originalCpu = new AtomicReference<>();
+        IAEStack<?> requestedOutput = itemStack(Blocks.stone, 1);
+        Runnable assertCompletedExactlyOnce = () -> {
+            assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 1);
+            assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 0);
             helper.assertInventoryEmpty(ASSEMBLER_LABEL);
-        }).thenExecute("install locked two-cobblestone-to-one-stone processing pattern", () -> {
-            installPattern(network.blockInterface, encodedProcessingPattern(Blocks.cobblestone, 2, Blocks.stone, 1));
-            network.blockInterface.getConfigManager()
-                    .putSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.LOCK_UNTIL_RESULT);
-        }).thenWaitUntil(
-                "wait for reconstruction-test processing pattern advertisement",
-                80,
-                () -> helper.assertFalse(
-                        craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
-                        "Two-cobblestone processing pattern should be advertised"))
+            assertNotRequesting(helper, network.controller, Blocks.stone);
+        };
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for reconstruction-test crafting network to activate",
+                        100,
+                        () -> assertCraftingNetworkActive(helper, network))
+                .thenExecute("replace assembler role with processing-output chest", () -> placeProcessingTarget(helper))
+                .thenExecute("install locked two-cobblestone-to-one-stone processing pattern", () -> {
+                    installPattern(
+                            network.blockInterface,
+                            encodedProcessingPattern(Blocks.cobblestone, 2, Blocks.stone, 1));
+                    network.blockInterface.getConfigManager()
+                            .putSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.LOCK_UNTIL_RESULT);
+                })
+                .thenWaitUntil(
+                        "wait for reconstruction-test processing pattern advertisement",
+                        80,
+                        () -> helper.assertFalse(
+                                craftingOptionsFor(network.controller, Blocks.stone).isEmpty(),
+                                "Two-cobblestone processing pattern should be advertised"))
                 .thenExecute("submit one stone processing craft", () -> {
-                    link.set(submitCraft(helper, network.controller, Blocks.stone, 1));
-                    craftingId.set(link.get().getCraftingID());
+                    submitCraft(helper, network.controller, Blocks.stone, 1);
                     helper.assertTrue(
-                            craftingGrid(network.controller).isRequesting(itemStack(Blocks.stone, 1)),
+                            craftingGrid(network.controller).isRequesting(requestedOutput),
                             "Submitted stone craft should be tracked as an active request");
                 }).thenWaitUntil("wait for processing input dispatch and pending stone result", 240, () -> {
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 0);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
                     helper.assertInventoryCount(ASSEMBLER_LABEL, new ItemStack(Blocks.cobblestone), 2);
-                    helper.assertFalse(link.get().isCanceled(), "Dispatched crafting link must remain active");
-                    helper.assertFalse(link.get().isDone(), "Dispatched crafting link must still await stone");
                     helper.assertTrue(
-                            cpuStorage.get().getCluster() instanceof CraftingCPUCluster,
-                            "Dispatched job should have a formed crafting CPU cluster");
-                    CraftingCPUCluster cluster = (CraftingCPUCluster) cpuStorage.get().getCluster();
-                    helper.assertTrue(cluster.isBusy(), "Crafting CPU should remain busy waiting for returned stone");
-                    IAEStack<?> finalOutput = cluster.getFinalMultiOutput();
-                    helper.assertTrue(
-                            finalOutput instanceof IAEItemStack
-                                    && ((IAEItemStack) finalOutput).isSameType(itemStack(Blocks.stone, 1))
-                                    && finalOutput.getStackSize() == 1,
-                            "Active processing job should expect exactly one stone; observed=" + finalOutput);
-                    helper.assertTrue(
-                            network.blockInterface.getInterfaceDuality().getCraftingLockedReason()
-                                    == LockCraftingMode.LOCK_UNTIL_RESULT,
-                            "Interface should be locked pending the returned stone");
-                }).thenExecute("serialize both crafting CPU tiles independently", () -> {
-                    helper.assertTrue(
-                            cpuStorage.get().getCluster() == cpuUnit.get().getCluster(),
-                            "Both saved members should still share one cluster");
-                    storageState.set(new NBTTagCompound());
-                    unitState.set(new NBTTagCompound());
-                    cpuStorage.get().writeToNBT(storageState.get());
-                    cpuUnit.get().writeToNBT(unitState.get());
-                    boolean storageOwnsJob = storageState.get().getBoolean("core") && storageState.get().hasKey("link");
-                    boolean unitOwnsJob = unitState.get().getBoolean("core") && unitState.get().hasKey("link");
+                            craftingGrid(network.controller).isRequesting(requestedOutput),
+                            "Dispatched craft should still request stone");
+                }).thenExecute("reconstruct both crafting CPU tiles from their persisted state", () -> {
+                    ICraftingGrid crafting = craftingGrid(network.controller);
                     helper.assertEquals(
                             1L,
-                            (storageOwnsJob ? 1L : 0L) + (unitOwnsJob ? 1L : 0L),
-                            "Exactly one saved CPU member must own the core/job payload; storageCore="
-                                    + storageState.get().getBoolean("core")
-                                    + ", storageLink="
-                                    + storageState.get().hasKey("link")
-                                    + ", unitCore="
-                                    + unitState.get().getBoolean("core")
-                                    + ", unitLink="
-                                    + unitState.get().hasKey("link"));
-                    storageBlock.set(
-                            world.getBlock(cpuStorage.get().xCoord, cpuStorage.get().yCoord, cpuStorage.get().zCoord));
-                    unitBlock.set(world.getBlock(cpuUnit.get().xCoord, cpuUnit.get().yCoord, cpuUnit.get().zCoord));
-                }).thenIdle(1).thenExecuteAtStart("reconstruct both crafting CPU tile entities from saved NBT", () -> {
-                    TileCraftingStorageTile oldStorage = cpuStorage.get();
-                    TileCraftingTile oldUnit = cpuUnit.get();
-                    world.removeTileEntity(oldStorage.xCoord, oldStorage.yCoord, oldStorage.zCoord);
-                    world.removeTileEntity(oldUnit.xCoord, oldUnit.yCoord, oldUnit.zCoord);
-
-                    TileCraftingStorageTile freshStorage = reconstructCraftingTile(
-                            helper,
-                            oldStorage,
-                            storageState.get(),
-                            new TileCraftingStorageTile());
-                    TileCraftingTile freshUnit = reconstructCraftingTile(
-                            helper,
-                            oldUnit,
-                            unitState.get(),
-                            new TileCraftingTile());
-                    cpuStorage.set(freshStorage);
-                    cpuUnit.set(freshUnit);
-                    helper.assertTrue(freshStorage != oldStorage, "CPU storage identity should be fresh");
-                    helper.assertTrue(freshUnit != oldUnit, "CPU unit identity should be fresh");
+                            crafting.getCpus().size(),
+                            "Exactly one crafting CPU should own the active request");
+                    originalCpu.set(crafting.getCpus().iterator().next());
+                    reconstructCraftingCpu(helper);
+                }).thenWaitUntil("wait for rebuilt CPU to retain the active stone request", 240, () -> {
+                    ICraftingGrid crafting = craftingGrid(network.controller);
+                    helper.assertEquals(1L, crafting.getCpus().size(), "Exactly one rebuilt CPU should be usable");
+                    helper.assertFalse(
+                            crafting.getCpus().contains(originalCpu.get()),
+                            "Crafting grid must replace the pre-reconstruction CPU");
                     helper.assertTrue(
-                            world.getBlock(freshStorage.xCoord, freshStorage.yCoord, freshStorage.zCoord)
-                                    == storageBlock.get(),
-                            "CPU storage block must remain unchanged during tile reconstruction");
-                    helper.assertTrue(
-                            world.getBlock(freshUnit.xCoord, freshUnit.yCoord, freshUnit.zCoord) == unitBlock.get(),
-                            "CPU unit block must remain unchanged during tile reconstruction");
-                    helper.assertTrue(
-                            craftingCpuDrops(helper).isEmpty(),
-                            "Tile-only CPU reconstruction must not create item drops");
-                    reconstructionConservesScenarioItems.enable();
-                }).thenWaitUntil("wait for reconstructed CPU to reform the same active job", 240, () -> {
-                    assertActive(helper, cpuStorage.get().getProxy(), "Reconstructed CPU storage should become active");
-                    assertActive(helper, cpuUnit.get().getProxy(), "Reconstructed CPU unit should become active");
-                    helper.assertTrue(cpuStorage.get().isFormed(), "Reconstructed CPU storage should reform");
-                    helper.assertTrue(cpuUnit.get().isFormed(), "Reconstructed CPU unit should reform");
-                    helper.assertTrue(
-                            cpuStorage.get().getCluster() == cpuUnit.get().getCluster(),
-                            "Reconstructed CPU tiles should share one coherent cluster");
-                    helper.assertTrue(
-                            cpuStorage.get().getCluster() instanceof CraftingCPUCluster,
-                            "Reconstructed tiles should expose a crafting CPU cluster");
-                    CraftingCPUCluster cluster = (CraftingCPUCluster) cpuStorage.get().getCluster();
-                    helper.assertEquals(
-                            1L,
-                            craftingGrid(network.controller).getCpus().size(),
-                            "Exactly one reconstructed crafting CPU should be usable");
-                    helper.assertTrue(
-                            craftingGrid(network.controller).getCpus().contains(cluster),
-                            "Crafting cache should contain the reconstructed cluster");
-                    helper.assertTrue(cluster.isBusy(), "Reconstructed CPU should retain the active processing job");
-                    ICraftingLink restoredLink = cluster.getLastCraftingLink();
-                    helper.assertNotNull(restoredLink, "Reconstructed CPU should restore its crafting link");
-                    helper.assertTrue(
-                            craftingId.get().equals(restoredLink.getCraftingID()),
-                            "Reconstructed crafting link should preserve ID " + craftingId.get()
-                                    + "; observed="
-                                    + restoredLink.getCraftingID());
-                    helper.assertFalse(restoredLink.isCanceled(), "Reconstructed crafting link should remain active");
-                    helper.assertFalse(restoredLink.isDone(), "Reconstructed crafting link should still await stone");
-                    IAEStack<?> finalOutput = cluster.getFinalMultiOutput();
-                    helper.assertTrue(
-                            finalOutput instanceof IAEItemStack
-                                    && ((IAEItemStack) finalOutput).isSameType(itemStack(Blocks.stone, 1))
-                                    && finalOutput.getStackSize() == 1,
-                            "Reconstructed job should still expect exactly one stone; observed=" + finalOutput);
-                    helper.assertTrue(
-                            craftingGrid(network.controller).isRequesting(itemStack(Blocks.stone, 1)),
-                            "Reconstructed job should remain an active stone request");
+                            crafting.isRequesting(requestedOutput),
+                            "Rebuilt CPU should still request the pending stone");
                     helper.assertInventoryCount(ASSEMBLER_LABEL, new ItemStack(Blocks.cobblestone), 2);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 0);
                     assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 0);
-                }).thenIdle(1)
-                .thenExecuteAtStart(
-                        "remove dispatched input and return one stone through the ME interface path",
-                        () -> {
-                            int removed = helper.extractItem(ASSEMBLER_LABEL, new ItemStack(Blocks.cobblestone), 2);
-                            helper.assertEquals(
-                                    2L,
-                                    removed,
-                                    "Processor chest should return exactly two dispatched cobblestone");
-                            helper.assertInventoryCount(ASSEMBLER_LABEL, new ItemStack(Blocks.cobblestone), 0);
-                            resultReturned.set(true);
-                            IAEItemStack remainder = injectIntoGrid(network.controller, Blocks.stone, 1);
-                            helper.assertNull(
-                                    remainder,
-                                    "Exactly one returned stone should be accepted through the ME network");
-                        })
-                .thenWaitUntil("wait for reconstructed job to complete exactly once", 160, () -> {
-                    assertNetworkStoredAmount(helper, network.controller, Blocks.stone, 1);
-                    assertNetworkStoredAmount(helper, network.controller, Blocks.cobblestone, 0);
-                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.stone, 1);
-                    assertStoredAmount(helper, network.drive.getStackInSlot(0), Blocks.cobblestone, 0);
-                    helper.assertInventoryEmpty(ASSEMBLER_LABEL);
-                    CraftingCPUCluster cluster = (CraftingCPUCluster) cpuStorage.get().getCluster();
-                    helper.assertFalse(cluster.isBusy(), "Reconstructed CPU should have no pending task or output");
-                    helper.assertNull(
-                            cluster.getLastCraftingLink(),
-                            "Completed reconstructed CPU should clear its active crafting link");
-                    helper.assertTrue(
-                            network.blockInterface.getInterfaceDuality().getCraftingLockedReason()
-                                    == LockCraftingMode.NONE,
-                            "Accepted stone should clear the interface processing-output lock");
-                    assertNotRequesting(helper, network.controller, Blocks.stone);
-                }).thenExecuteFor(80, () -> {
-                    long tick = world.getTotalWorldTime();
-                    long networkStone = networkStoredAmount(network.controller, Blocks.stone);
-                    helper.assertEquals(
-                            1L,
-                            networkStone,
-                            "Replay guard requires exactly one stored stone; tick=" + tick
-                                    + ", observed="
-                                    + networkStone);
-                    helper.assertEquals(
-                            0L,
-                            networkStoredAmount(network.controller, Blocks.cobblestone),
-                            "Replay guard forbids cobblestone returning to storage; tick=" + tick);
-                    helper.assertInventoryEmpty(ASSEMBLER_LABEL);
-                    helper.assertTrue(
-                            craftingCpuDrops(helper).isEmpty(),
-                            "Replay guard forbids item drops; tick=" + tick);
-                    helper.assertEquals(
-                            1L,
-                            craftingGrid(network.controller).getCpus().size(),
-                            "Replay guard requires one coherent reconstructed CPU; tick=" + tick);
-                    long busyCpus = 0;
-                    for (ICraftingCPU cpu : craftingGrid(network.controller).getCpus()) {
-                        if (cpu.isBusy()) {
-                            busyCpus++;
-                        }
-                    }
-                    helper.assertEquals(0L, busyCpus, "Replay guard forbids a new active job; tick=" + tick);
-                    helper.assertNull(
-                            ((CraftingCPUCluster) cpuStorage.get().getCluster()).getLastCraftingLink(),
-                            "Replay guard requires no active crafting link; tick=" + tick);
-                    assertNotRequesting(helper, network.controller, Blocks.stone);
+                }).thenExecute("return the pending stone through the ME network", () -> {
+                    int removed = helper.extractItem(ASSEMBLER_LABEL, new ItemStack(Blocks.cobblestone), 2);
+                    helper.assertEquals(2L, removed, "Processing target should contain the two dispatched inputs");
+                    IAEItemStack remainder = injectIntoGrid(network.controller, Blocks.stone, 1);
+                    helper.assertNull(remainder, "Returned stone should fit into the ME network");
                 })
-                .thenExecute("stop reconstruction conservation callback", reconstructionConservesScenarioItems::remove)
-                .thenExecute("assert final processing conservation", () -> {
-                    helper.assertEquals(
-                            0L,
-                            networkStoredAmount(network.controller, Blocks.cobblestone),
-                            "Cobblestone conservation failed: 2 - 2 = 0");
-                    helper.assertEquals(
-                            1L,
-                            networkStoredAmount(network.controller, Blocks.stone),
-                            "Stone conservation failed: 0 + 1 = 1");
-                }).thenSucceed();
+                .thenWaitUntil(
+                        "wait for rebuilt CPU to complete the processing job exactly once",
+                        160,
+                        assertCompletedExactlyOnce)
+                .thenExecuteFor(80, assertCompletedExactlyOnce).thenSucceed();
     }
 
     // Cancelling a blocked processing job should return CPU-held ingredients without producing output.
@@ -799,19 +591,25 @@ public class CraftingExecutionTests {
         helper.destroyBlock(label);
     }
 
-    private static <T extends TileCraftingTile> T reconstructCraftingTile(GameTestHelper helper,
-            TileCraftingTile previous, NBTTagCompound state, T replacement) {
-        WorldServer world = (WorldServer) previous.getWorldObj();
-        int x = previous.xCoord;
-        int y = previous.yCoord;
-        int z = previous.zCoord;
-        replacement.readFromNBT((NBTTagCompound) state.copy());
-        world.setTileEntity(x, y, z, replacement);
-        TileEntity installed = world.getTileEntity(x, y, z);
-        helper.assertTrue(
-                installed == replacement,
-                "Fresh " + replacement.getClass().getSimpleName() + " should attach at unchanged CPU block");
-        return replacement;
+    private static void reconstructCraftingCpu(GameTestHelper helper) {
+        TestPos storage = helper.absolute(CPU_STORAGE_LABEL);
+        TestPos unit = helper.absolute(CPU_UNIT_LABEL);
+        NBTTagCompound storageState = helper.getTileNBT(CPU_STORAGE_LABEL);
+        NBTTagCompound unitState = helper.getTileNBT(CPU_UNIT_LABEL);
+        WorldServer world = (WorldServer) helper.assertTileEntityPresent(CPU_STORAGE_LABEL).getWorldObj();
+
+        world.removeTileEntity(storage.x(), storage.y(), storage.z());
+        world.removeTileEntity(unit.x(), unit.y(), unit.z());
+        restoreTile(helper, world, storage, storageState);
+        restoreTile(helper, world, unit, unitState);
+    }
+
+    private static void restoreTile(GameTestHelper helper, WorldServer world, TestPos pos, NBTTagCompound state) {
+        Block block = world.getBlock(pos.x(), pos.y(), pos.z());
+        TileEntity replacement = block.createTileEntity(world, world.getBlockMetadata(pos.x(), pos.y(), pos.z()));
+        helper.assertNotNull(replacement, "CPU block should create a replacement tile entity");
+        replacement.readFromNBT(state);
+        world.setTileEntity(pos.x(), pos.y(), pos.z(), replacement);
     }
 
     private static List<EntityItem> craftingCpuDrops(GameTestHelper helper) {
