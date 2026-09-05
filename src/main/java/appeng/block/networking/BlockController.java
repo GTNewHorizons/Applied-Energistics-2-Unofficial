@@ -15,13 +15,16 @@ import java.util.EnumSet;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 import appeng.api.util.AEColor;
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockController;
+import appeng.client.texture.ControllerLightTexture;
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.tile.networking.TileController;
 import cpw.mods.fml.relauncher.Side;
@@ -33,6 +36,9 @@ public class BlockController extends AEBaseTileBlock {
 
     @SideOnly(Side.CLIENT)
     private IIcon[][] coloredTextures;
+
+    @SideOnly(Side.CLIENT)
+    private IIcon[][] lightTextures;
 
     public BlockController() {
         super(Material.iron);
@@ -61,6 +67,22 @@ public class BlockController extends AEBaseTileBlock {
         super.registerBlockIcons(iconRegistry);
         this.coloredTextures = new IIcon[COLORED_TEXTURE_COUNT][AEColor.VALUES.length];
 
+        if (!AEConfig.instance.controllerAnimation.usesOriginalTexture()) {
+            this.lightTextures = new IIcon[2][AEColor.VALUES.length];
+            final TextureMap map = (TextureMap) iconRegistry;
+            for (final AEColor color : AEColor.VALUES) {
+                for (int id = 0; id < 2; id++) {
+                    final String source = id == 0 ? "BlockControllerLights" : "BlockControllerColumnLights";
+                    final ControllerLightTexture lights = new ControllerLightTexture(
+                            source,
+                            color,
+                            AEConfig.instance.controllerAnimation);
+                    map.setTextureEntry(lights.getIconName(), lights);
+                    this.lightTextures[id][color.ordinal()] = map.getTextureExtry(lights.getIconName());
+                }
+            }
+        }
+
         for (final AEColor color : AEColor.VALID_COLORS) {
             this.coloredTextures[0][color.ordinal()] = iconRegistry
                     .registerIcon(this.getTextureName() + "_" + color.name());
@@ -69,6 +91,11 @@ public class BlockController extends AEBaseTileBlock {
                         "appliedenergistics2:" + this.getRenderTexture(id).getName() + "_" + color.name());
             }
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    public IIcon getLightTexture(final int id, final AEColor color) {
+        return this.lightTextures[id][color.ordinal()];
     }
 
     @SideOnly(Side.CLIENT)

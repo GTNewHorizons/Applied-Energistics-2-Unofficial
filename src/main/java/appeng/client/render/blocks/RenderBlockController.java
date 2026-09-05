@@ -13,11 +13,13 @@ package appeng.client.render.blocks;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 
 import appeng.block.networking.BlockController;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.AEConfig;
 import appeng.tile.networking.TileController;
 
 public class RenderBlockController extends BaseBlockRender<BlockController, TileController> {
@@ -119,15 +121,18 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
         final boolean out = renderer.renderStandardBlock(blk, x, y, z);
 
         if (lights != null) {
+            final IIcon lightIcon = isConflict || AEConfig.instance.controllerAnimation.usesOriginalTexture()
+                    ? lights.getIcon()
+                    : blk.getLightTexture(textureId, controller.getColor());
             final Tessellator tess = Tessellator.instance;
             tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
             tess.setBrightness(14 << 20 | 14 << 4);
-            renderer.renderFaceXNeg(blk, x, y, z, lights.getIcon());
-            renderer.renderFaceXPos(blk, x, y, z, lights.getIcon());
-            renderer.renderFaceYNeg(blk, x, y, z, lights.getIcon());
-            renderer.renderFaceYPos(blk, x, y, z, lights.getIcon());
-            renderer.renderFaceZNeg(blk, x, y, z, lights.getIcon());
-            renderer.renderFaceZPos(blk, x, y, z, lights.getIcon());
+            renderer.renderFaceXNeg(blk, x, y, z, lightIcon);
+            renderer.renderFaceXPos(blk, x, y, z, lightIcon);
+            renderer.renderFaceYNeg(blk, x, y, z, lightIcon);
+            renderer.renderFaceYPos(blk, x, y, z, lightIcon);
+            renderer.renderFaceZNeg(blk, x, y, z, lightIcon);
+            renderer.renderFaceZPos(blk, x, y, z, lightIcon);
         }
 
         blk.getRendererInstance().setTemporaryRenderIcon(null);
