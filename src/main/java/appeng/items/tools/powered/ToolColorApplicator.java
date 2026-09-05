@@ -13,6 +13,7 @@ package appeng.items.tools.powered;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,6 +26,7 @@ import net.minecraft.block.BlockDispenser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemSnowball;
 import net.minecraft.item.ItemStack;
@@ -159,6 +161,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
             final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
         int trueX = x, trueY = y, trueZ = z;
         boolean usingOffhand = false;
+        final boolean creative = player.capabilities.isCreativeMode;
 
         if (Platform.isBackhandLoaded) {
             if (handleOffhand(stack, player, world, x, y, z, side, hitX, hitY, hitZ)) {
@@ -178,30 +181,32 @@ public class ToolColorApplicator extends AEBasePoweredItem
             return false;
         }
 
-        if (this.getAECurrentPower(stack) < POWER_PER_USE) {
+        if (!creative && this.getAECurrentPower(stack) < POWER_PER_USE) {
             return false;
         }
 
         final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
                 .getCellInventory(stack, null, StorageChannel.ITEMS);
-        if (inv == null) {
+        if (!creative && inv == null) {
             return false;
         }
 
-        ItemStack activeConfig = this.getColor(stack);
+        ItemStack activeConfig = this.getColor(stack, creative);
         if (activeConfig == null) {
             return false;
         }
         activeConfig.stackSize = 1;
 
-        final IAEItemStack extractedSim = inv
-                .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
-
-        if (extractedSim == null) {
-            return false;
+        ItemStack paintSource = activeConfig;
+        if (!creative) {
+            final IAEItemStack extractedSim = inv
+                    .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
+            if (extractedSim == null) {
+                return false;
+            }
+            paintSource = extractedSim.getItemStack();
         }
 
-        ItemStack paintSource = extractedSim.getItemStack();
         AEColor paintColor = this.getColorFromItem(paintSource);
 
         TileEntity targetTe = world.getTileEntity(trueX, trueY, trueZ);
@@ -216,7 +221,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (success) {
-            if (this.consumePowerAndItemsForTe(targetTe)) {
+            if (!creative && this.consumePowerAndItemsForTe(targetTe)) {
                 inv.extractItems(AEItemStack.create(paintSource), Actionable.MODULATE, new BaseActionSource());
                 this.extractAEPower(stack, POWER_PER_USE);
 
@@ -325,6 +330,10 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     public ItemStack getColor(final ItemStack is) {
+        return this.getColor(is, false);
+    }
+
+    private ItemStack getColor(final ItemStack is, final boolean creative) {
         final NBTTagCompound c = is.getTagCompound();
         if (c != null && c.hasKey(NBT_COLOR)) {
             final NBTTagCompound color = c.getCompoundTag(NBT_COLOR);
@@ -333,7 +342,12 @@ public class ToolColorApplicator extends AEBasePoweredItem
                 return oldColor;
             }
         }
-        return this.findNextColor(is, null, 0);
+        return creative ? this.getColorStack(AEColor.Transparent) : this.findNextColor(is, null, 0);
+    }
+
+    private ItemStack getColorStack(final AEColor color) {
+        return color == AEColor.Transparent ? new ItemStack(Items.snowball)
+                : AEApi.instance().definitions().items().coloredPaintBall().stack(color, 1);
     }
 
     private ItemStack findNextColor(final ItemStack is, final ItemStack anchor, final int scrollOffset) {
@@ -456,6 +470,16 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     public void cycleColors(final ItemStack is, final ItemStack paintBall, final int i) {
+        this.cycleColors(is, paintBall, i, false);
+    }
+
+    private void cycleColors(final ItemStack is, final ItemStack paintBall, final int i, final boolean creative) {
+        if (creative) {
+            final AEColor color = this.getColorFromItem(paintBall);
+            this.setColor(is, AEColor.fromOrdinal(Math.floorMod(color.ordinal() + i, AEColor.VALUES.length)));
+            return;
+        }
+
         if (paintBall == null) {
             this.setColor(is, this.getColor(is));
         } else {
@@ -464,6 +488,18 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     public Map<AEColor, Long> getAvailableColorsCount(ItemStack stack) {
+        return this.getAvailableColorsCount(stack, false);
+    }
+
+    public Map<AEColor, Long> getAvailableColorsCount(ItemStack stack, boolean creative) {
+        if (creative) {
+            final Map<AEColor, Long> availableColors = new EnumMap<>(AEColor.class);
+            for (final AEColor color : AEColor.VALUES) {
+                availableColors.put(color, 1L);
+            }
+            return availableColors;
+        }
+
         if (this.getAECurrentPower(stack) <= 0) {
             return Collections.emptyMap();
         }
@@ -621,6 +657,12 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public void onWheel(final ItemStack is, final boolean up) {
         this.cycleColors(is, this.getColor(is), up ? 1 : -1);
+    }
+
+    @Override
+    public void onWheel(final EntityPlayer player, final ItemStack is, final boolean up) {
+        final boolean creative = player.capabilities.isCreativeMode;
+        this.cycleColors(is, this.getColor(is, creative), up ? 1 : -1, creative);
     }
 
     @Override
