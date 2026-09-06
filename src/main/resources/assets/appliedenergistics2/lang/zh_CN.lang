@@ -863,6 +863,7 @@ item.appliedenergistics2.ToolNetherQuartzWrench.name=下界石英扳手
 
 item.appliedenergistics2.ItemPaintBall.name=染色球
 item.appliedenergistics2.ToolPortableCell.name=便携元件
+item.appliedenergistics2.ToolPortableCellWorkbench.name=便携元件工作台
 item.appliedenergistics2.ToolNetworkTool.name=网络工具
 item.appliedenergistics2.ToolAdvancedNetworkTool.name=高级网络工具
 item.appliedenergistics2.ToolChargedStaff.name=充能手杖
