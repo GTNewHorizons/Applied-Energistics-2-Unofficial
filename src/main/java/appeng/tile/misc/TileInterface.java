@@ -16,6 +16,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -35,6 +36,7 @@ import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IPowerChannelState;
+import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingLink;
@@ -55,6 +57,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
+import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.capabilities.MEItemIO;
@@ -73,10 +76,11 @@ import io.netty.buffer.ByteBuf;
 
 public class TileInterface extends AENetworkInvTile
         implements IGridTickable, ITileStorageMonitorable, IStorageMonitorable, IInventoryDestination, IInterfaceHost,
-        IPriorityHost, IPowerChannelState, IPrimaryGuiIconProvider {
+        IPriorityHost, IPowerChannelState, IPrimaryGuiIconProvider, IColorableTile {
 
     private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
     private ForgeDirection pointAt = ForgeDirection.UNKNOWN;
+    private AEColor paintedColor = AEColor.Transparent;
 
     private static final int POWERED_FLAG = 1;
     private static final int CHANNEL_FLAG = 2;
@@ -160,6 +164,7 @@ public class TileInterface extends AENetworkInvTile
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileInterface(final NBTTagCompound data) {
         data.setInteger("pointAt", this.pointAt.ordinal());
+        data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
         this.duality.writeToNBT(data);
     }
 
@@ -167,6 +172,10 @@ public class TileInterface extends AENetworkInvTile
     public void readFromNBT_TileInterface(final NBTTagCompound data) {
         final int val = data.getInteger("pointAt");
         this.pointAt = ForgeDirection.getOrientation(val);
+        if (data.hasKey("paintedColor")) {
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
+            this.getProxy().setColor(this.paintedColor);
+        }
         this.duality.readFromNBT(data);
     }
 
@@ -308,6 +317,9 @@ public class TileInterface extends AENetworkInvTile
     public boolean readFromStream_TileInterface(final ByteBuf data) {
         final boolean oldStuck = isStuck();
         final int newState = data.readByte();
+        final AEColor oldPaintedColor = this.paintedColor;
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
+        this.getProxy().setColor(this.paintedColor);
         boolean changed = false;
         if (newState != clientFlags) {
             clientFlags = newState;
@@ -316,6 +328,11 @@ public class TileInterface extends AENetworkInvTile
         }
 
         if (oldStuck != isStuck()) {
+            this.markForUpdate();
+            changed = true;
+        }
+
+        if (oldPaintedColor != this.paintedColor) {
             this.markForUpdate();
             changed = true;
         }
@@ -337,6 +354,7 @@ public class TileInterface extends AENetworkInvTile
         }
         if (duality.somethingStuck) clientFlags |= STUCK_FLAG;
         data.writeByte(clientFlags);
+        data.writeByte(this.paintedColor.ordinal());
     }
 
     @Override
@@ -356,6 +374,26 @@ public class TileInterface extends AENetworkInvTile
 
     public boolean isStuck() {
         return (clientFlags & STUCK_FLAG) == STUCK_FLAG;
+    }
+
+    @Override
+    public AEColor getColor() {
+        return this.paintedColor;
+    }
+
+    @Override
+    public boolean recolourBlock(final ForgeDirection side, final AEColor newPaintedColor, final EntityPlayer who) {
+        if (this.paintedColor == newPaintedColor) {
+            return false;
+        }
+        this.paintedColor = newPaintedColor;
+        this.getProxy().setColor(this.paintedColor);
+        if (this.getGridNode(side) != null) {
+            this.getGridNode(side).updateState();
+        }
+        this.markDirty();
+        this.markForUpdate();
+        return true;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package appeng.gametests.interfaces;
 
 import static appeng.gametests.AEGameTestHelpers.assertActive;
+import static appeng.gametests.AEGameTestHelpers.assertInactive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
@@ -15,6 +16,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntityChest;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.github.bsideup.jabel.Desugar;
 import com.google.common.collect.ImmutableCollection;
@@ -32,6 +35,7 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.util.AEColor;
 import appeng.container.ContainerNull;
 import appeng.core.AppEng;
 import appeng.helpers.IInterfaceHost;
@@ -39,6 +43,7 @@ import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.misc.TileInterface;
+import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
 import appeng.util.Platform;
@@ -50,6 +55,7 @@ public class InterfaceTests {
     private static final String CONTROLLER_LABEL = "controller";
     private static final String DRIVE_LABEL = "drive";
     private static final String BLOCK_INTERFACE_LABEL = "block_interface";
+    private static final String BLOCK_INTERFACE_CABLE_LABEL = "block_interface_cable";
     private static final String PART_INTERFACE_HOST_LABEL = "part_interface_host";
     private static final String ADJACENT_CHEST_LABEL = "adjacent_chest";
     private static final String ASSEMBLER_LABEL = "assembler";
@@ -59,6 +65,31 @@ public class InterfaceTests {
     private static final String SUBNET_CONTROLLER_LABEL = "subnet_controller";
 
     private static final int STOCK_AMOUNT = 32;
+
+    @GameTest(template = "interface_network", timeoutTicks = 20)
+    public static void coloredBlockInterfaceRejectsMismatchedCable(GameTestHelper helper) {
+        TileInterface blockInterface = helper.assertTileEntityPresent(TileInterface.class, BLOCK_INTERFACE_LABEL);
+        TileCableBus cable = helper.assertTileEntityPresent(TileCableBus.class, BLOCK_INTERFACE_CABLE_LABEL);
+        FakePlayer player = helper.spawnFakePlayer("interface_colors");
+
+        helper.assertTrue(
+                blockInterface.recolourBlock(ForgeDirection.NORTH, AEColor.Red, player),
+                "Interface should accept paint");
+        helper.assertTrue(cable.recolourBlock(ForgeDirection.SOUTH, AEColor.Blue, player), "Cable should accept paint");
+        helper.assertEquals(AEColor.Red, blockInterface.getColor(), "Interface should retain paint");
+        helper.assertEquals(
+                AEColor.Red,
+                blockInterface.getProxy().getColor(),
+                "Interface proxy should use its paint color");
+        helper.onEachTick("different colors stay disconnected", () -> {
+            assertInactive(helper, blockInterface.getProxy(), "Colored interface should remain disconnected");
+            helper.assertNotSame(
+                    blockInterface.getProxy().getNode().getGrid(),
+                    cable.getGridNode(ForgeDirection.UNKNOWN).getGrid(),
+                    "Different-colored interface and cable should stay on separate grids");
+        });
+        helper.succeedAtTimeout();
+    }
 
     // Configured interface stock should be pulled from ME storage into the interface inventory.
     @GameTest(template = "interface_network", timeoutTicks = 160)
