@@ -570,8 +570,9 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
     }
 
     private IBlockAccess getHostWorld() {
-        final TileEntity te = this.getTile();
-        return te == null ? null : te.getWorldObj();
+        final IPartHost host = this.getHost();
+        final TileEntity te = host != null ? host.getTile() : this.getTile();
+        return te != null ? te.getWorldObj() : null;
     }
 
     private static int getSideIndexFromDirection(ForgeDirection direction) {
