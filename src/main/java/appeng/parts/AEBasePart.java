@@ -421,6 +421,8 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 && memCardIS.getItem() instanceof IMemoryCard memoryCard) {
             if (ForgeEventFactory.onItemUseStart(player, memCardIS, 1) <= 0) return false;
 
+            if (player.worldObj.isRemote) return true;
+
             ItemStack is = this.getItemStack(PartItemStack.Network);
 
             // Blocks and parts share the same soul!
