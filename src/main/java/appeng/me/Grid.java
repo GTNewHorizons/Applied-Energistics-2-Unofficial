@@ -324,10 +324,10 @@ public class Grid implements IGrid {
     }
 
     private HashMap<IGridHost, IGrid> getSubnetGridMap(Class<? extends IGridHost> accessType) {
-        IMachineSet storageBuses = this.getMachines(PartStorageBus.class);
+        IMachineSet storageBuses = this.getMachines(accessType);
         HashMap<IGridHost, IGrid> gridConnections = new HashMap<>();
         for (IGridNode bus : storageBuses) {
-            if (bus.getMachine() instanceof PartStorageBus sb) { // TODO Support partFluidStorageBus
+            if (bus.getMachine() instanceof PartStorageBus sb) {
                 IGrid connectedGrid = sb.getConnectedGrid();
                 if (connectedGrid != null) gridConnections.put(sb, sb.getConnectedGrid());
             }

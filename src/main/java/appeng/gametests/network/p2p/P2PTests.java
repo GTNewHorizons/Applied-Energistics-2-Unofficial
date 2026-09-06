@@ -131,12 +131,11 @@ public class P2PTests {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PRedstone input = inputTunnel(helper, PartP2PRedstone.class);
         PartP2PRedstone output = outputTunnel(helper, PartP2PRedstone.class);
-        TickCallbackHandle unpoweredOutputStaysLow = helper.onEachTick(() -> {
+        TickCallbackHandle unpoweredOutputStaysLow = helper.onEachTickDisabled("unpowered P2P output stays low", () -> {
             assertCarrierActive(helper, controller);
             assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
             assertRedstonePower(helper, 0);
         });
-        unpoweredOutputStaysLow.disable();
 
         helper.startSequence().thenWaitUntil("wait for the linked redstone P2P pair to settle low", 60, () -> {
             assertCarrierActive(helper, controller);
@@ -165,12 +164,12 @@ public class P2PTests {
         PartP2PItems input = (PartP2PItems) inputTunnel(helper, PartP2PItems.class).unbind(null);
         PartP2PItems output = (PartP2PItems) outputTunnel(helper, PartP2PItems.class).unbind(null);
         helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
-        TickCallbackHandle noUnboundTransfer = helper.onEachTick(() -> {
-            assertUnboundPairOnCarrier(helper, controller, input, output);
-            helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
-            assertInventoryTotal(helper, Blocks.cobblestone, 1);
-        });
-        noUnboundTransfer.disable();
+        TickCallbackHandle noUnboundTransfer = helper
+                .onEachTickDisabled("unbound P2P tunnels do not transfer items", () -> {
+                    assertUnboundPairOnCarrier(helper, controller, input, output);
+                    helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
+                    assertInventoryTotal(helper, Blocks.cobblestone, 1);
+                });
 
         helper.startSequence()
                 .thenWaitUntil(
@@ -434,10 +433,9 @@ public class P2PTests {
     }
 
     private static TickCallbackHandle watchItemConservation(GameTestHelper helper, long expectedTotal) {
-        TickCallbackHandle callback = helper
-                .onEachTick(() -> assertInventoryTotal(helper, Blocks.cobblestone, expectedTotal));
-        callback.disable();
-        return callback;
+        return helper.onEachTickDisabled(
+                "P2P item conservation",
+                () -> assertInventoryTotal(helper, Blocks.cobblestone, expectedTotal));
     }
 
     private static void assertInventoryTotal(GameTestHelper helper, Block block, long expectedTotal) {

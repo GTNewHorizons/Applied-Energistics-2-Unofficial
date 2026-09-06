@@ -27,6 +27,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -354,7 +355,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
 
                         /* Name changed? */
                         String rawName = machine.getRawName();
-                        String suffix = machine.getNameSuffix();
+                        String suffix = serializeSuffix(machine.getNameSuffix());
 
                         if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
                             if (update == null) update = new PacketInterfaceTerminalUpdate();
@@ -466,6 +467,13 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         return !ItemStack.areItemStacksEqual(a, b);
     }
 
+    /**
+     * The suffix travels as a string, so components are serialized here and turned back into text on the client.
+     */
+    private static String serializeSuffix(final IChatComponent suffix) {
+        return suffix == null ? null : IChatComponent.Serializer.func_150696_a(suffix);
+    }
+
     private static class InvTracker {
 
         private final long id;
@@ -493,7 +501,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
             this.id = id;
             this.shouldDisplay = getTerminalVisibility(machine);
             this.name = machine.getRawName();
-            this.suffix = machine.getNameSuffix();
+            this.suffix = serializeSuffix(machine.getNameSuffix());
             this.patterns = machine.getPatterns();
             this.world = machine.getTileEntity().getWorldObj();
             this.rowSize = machine.rowSize();

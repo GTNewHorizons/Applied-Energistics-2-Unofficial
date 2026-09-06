@@ -67,6 +67,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private GuiImgButton cell;
     private GuiImgButton tReshuffle;
     private GuiToggleButton diagnostics;
+    private GuiToggleButton liteCrafting;
     private GuiToggleButton flowTracking;
     private int tooltip = -1;
     private final DecimalFormat df;
@@ -215,6 +216,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     // XD
                 }
             }
+        } else if (btn == this.liteCrafting) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "ToggleLiteCrafting"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         } else if (btn == this.flowTracking) {
             final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
             if (container.isFlowTrackingGloballyEnabled()) {
@@ -268,10 +275,19 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 GuiText.CraftingDiagnosticsHint.getLocal());
         this.buttonList.add(this.diagnostics);
 
+        this.liteCrafting = new GuiToggleButton(
+                this.guiLeft - 18,
+                this.guiTop + (this.isAdvanced ? 88 : 48),
+                178,
+                194,
+                GuiText.CraftingModeLite.getLocal(),
+                GuiText.CraftingModeLiteDesc.getLocal());
+        this.buttonList.add(this.liteCrafting);
+
         if (AEConfig.instance.enableItemFlowTracking) {
             this.flowTracking = new GuiToggleButton(
                     this.guiLeft - 18,
-                    this.guiTop + (this.isAdvanced ? 88 : 48),
+                    this.guiTop + (this.isAdvanced ? 108 : 68),
                     198,
                     199,
                     GuiText.ItemFlowTracking.getLocal(),
@@ -286,6 +302,11 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
             this.diagnostics.setState(container.isDiagnosticsMode());
             this.diagnostics.enabled = container.isDiagnosticsGloballyEnabled();
+        }
+
+        if (this.liteCrafting != null) {
+            final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
+            this.liteCrafting.setState(container.liteCraftingDefault);
         }
 
         if (this.flowTracking != null) {

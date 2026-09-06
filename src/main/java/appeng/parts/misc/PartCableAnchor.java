@@ -40,7 +40,7 @@ import io.netty.buffer.ByteBuf;
 
 public class PartCableAnchor implements IPart {
 
-    private ISimplifiedBundle renderCache = null;
+    private final ThreadLocal<ISimplifiedBundle> renderCache = new ThreadLocal<>();
     private ItemStack is = null;
     private IPartHost host = null;
     private ForgeDirection mySide = ForgeDirection.UP;
@@ -76,7 +76,7 @@ public class PartCableAnchor implements IPart {
     @SideOnly(Side.CLIENT)
     public void renderStatic(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer) {
-        this.renderCache = rh.useSimplifiedRendering(x, y, z, this, this.renderCache);
+        this.renderCache.set(rh.useSimplifiedRendering(x, y, z, this, this.renderCache.get()));
         final IIcon myIcon = this.is.getIconIndex();
         rh.setTexture(myIcon);
         if (this.host != null && this.host.getFacadeContainer().getFacade(this.mySide) != null) {

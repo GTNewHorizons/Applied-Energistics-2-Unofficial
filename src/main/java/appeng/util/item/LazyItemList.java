@@ -95,6 +95,11 @@ public final class LazyItemList<StackType extends IAEStack<StackType>> implement
     }
 
     @Override
+    public boolean hasWriteAccess() {
+        return getCachedOrCompute().hasWriteAccess();
+    }
+
+    @Override
     public StackType[] toArray(StackType[] zeroSizedArray) {
         return getCachedOrCompute().toArray(zeroSizedArray);
     }

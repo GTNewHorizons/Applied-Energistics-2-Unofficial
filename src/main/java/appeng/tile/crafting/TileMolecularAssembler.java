@@ -78,7 +78,7 @@ public class TileMolecularAssembler extends AENetworkInvTile
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 9 + 2);
     private final IConfigManager settings;
     private final UpgradeInventory upgrades;
-    private ISimplifiedBundle lightCache;
+    private final ThreadLocal<ISimplifiedBundle> lightCache = new ThreadLocal<>();
     private boolean isPowered = false;
     private ForgeDirection pushDirection = ForgeDirection.UNKNOWN;
     private ItemStack myPattern = null;
@@ -546,10 +546,10 @@ public class TileMolecularAssembler extends AENetworkInvTile
     }
 
     public ISimplifiedBundle getLightCache() {
-        return this.lightCache;
+        return this.lightCache.get();
     }
 
     public void setLightCache(final ISimplifiedBundle lightCache) {
-        this.lightCache = lightCache;
+        this.lightCache.set(lightCache);
     }
 }
