@@ -1819,6 +1819,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             final int newHasItem = stack != null ? 1 : 0;
 
             inv.setInventorySlotContents(idx, stack);
+            brokenRecipes[idx] = null;
             numItems += newHasItem - oldHasItem;
             assert numItems >= 0;
         }
