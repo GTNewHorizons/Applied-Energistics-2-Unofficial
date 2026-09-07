@@ -47,7 +47,7 @@ public class GuiColorSelect extends GuiScreen {
 
     private static final ResourceLocation TEXTURE = new ResourceLocation(
             "appliedenergistics2",
-            "textures/guis/colorAplicator.png");
+            "textures/guis/colorApplicator.png");
 
     private static final int BTN_TEX_V = 74;
     private static final int BTN_TEX_U_NORMAL = 0;
