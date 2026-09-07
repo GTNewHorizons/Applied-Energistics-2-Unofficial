@@ -35,13 +35,20 @@ public class PortableCellWorkbenchHost
     protected final IInventory playerInventory;
     protected final Item workbenchItem;
     protected final int inventorySlot;
+    protected final int inventorySlotIndex;
     protected final String portableId;
     protected final CellWorkbenchState state;
 
     public PortableCellWorkbenchHost(IInventory playerInventory, Item workbenchItem, int inventorySlot) {
+        this(playerInventory, workbenchItem, inventorySlot, inventorySlot);
+    }
+
+    public PortableCellWorkbenchHost(IInventory playerInventory, Item workbenchItem, int inventorySlot,
+            int inventorySlotIndex) {
         this.playerInventory = playerInventory;
         this.workbenchItem = workbenchItem;
         this.inventorySlot = inventorySlot;
+        this.inventorySlotIndex = inventorySlotIndex;
 
         ItemStack stack = this.getItemStack();
         if (stack == null || stack.getItem() != workbenchItem) {
@@ -62,7 +69,7 @@ public class PortableCellWorkbenchHost
 
     @Override
     public int getInventorySlot() {
-        return this.inventorySlot;
+        return this.inventorySlotIndex;
     }
 
     @Override

@@ -925,6 +925,7 @@ waila.appliedenergistics2.IOBusSpeed=Speed: %s %s/t
 
 # Baubles Extended
 slot.Terminal=§aTerminal§7
+slot.PortableCellWorkbench=§aPortable Cell Workbench§7
 
 waila.appliedenergistics2.wireless.connected=Connected to %s
 waila.appliedenergistics2.wireless.connected.multiple=Connected to %s Wireless (shift for details)
@@ -1292,6 +1293,7 @@ key.cycle_controller_animation.desc=Cycle controller animation
 key.container_interaction.desc=Container Item Interaction
 key.wireless_extra_action.desc=Wireless Extra Action
 key.wireless_mode_switch.desc=Wireless Mode Switch
+key.open_portable_cell_workbench.desc=Open Portable Cell Workbench
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern

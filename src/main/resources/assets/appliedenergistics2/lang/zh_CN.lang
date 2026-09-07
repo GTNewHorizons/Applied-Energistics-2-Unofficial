@@ -689,6 +689,7 @@ waila.appliedenergistics2.Waiting=Waiting:
 
 # Baubles Extended
 slot.Terminal=§aTerminal§7
+slot.PortableCellWorkbench=§a便携元件工作台§7
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k-ME存储元件
@@ -958,6 +959,7 @@ key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=切换是否选中搜索框
 key.search_connected_inventories.desc=Search network inventories for item
 key.control_operation.desc=Control operation
+key.open_portable_cell_workbench.desc=打开便携元件工作台
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern
