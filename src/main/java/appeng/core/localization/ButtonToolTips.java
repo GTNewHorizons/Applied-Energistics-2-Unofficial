@@ -254,6 +254,12 @@ public enum ButtonToolTips implements Localization {
     PinsSectionActive,
     PinsSectionHint,
 
+    ControllerAnimation,
+    ControllerAnimationActive,
+    ControllerAnimationHint,
+    ControllerAnimationStatus,
+    ControllerAnimationStatusDefault,
+
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,
     ToggleShowOnlySubstituteOffDesc,

@@ -1,6 +1,8 @@
 package appeng.core.settings;
 
-public enum ControllerAnimation {
+import appeng.core.localization.Localization;
+
+public enum ControllerAnimation implements Localization {
 
     ORIGINAL_RAINBOW,
     WAVE,
@@ -40,6 +42,11 @@ public enum ControllerAnimation {
 
     public boolean followsCircuitPaths() {
         return this == CIRCUIT_TRACE;
+    }
+
+    @Override
+    public String getUnlocalized() {
+        return "gui.appliedenergistics2.ControllerAnimation." + this;
     }
 
     public int frameCount() {

@@ -143,6 +143,10 @@ public class ClientHelper extends ServerHelper {
         return controllerAnimation;
     }
 
+    public static ControllerAnimation getControllerAnimationDefault() {
+        return controllerAnimation;
+    }
+
     @SubscribeEvent
     public void onPlayerJoinWorld(final EntityJoinWorldEvent event) {
         if (event.entity instanceof EntityPlayerSP) syncControllerAnimationDefault();

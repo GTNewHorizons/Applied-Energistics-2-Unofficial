@@ -59,8 +59,6 @@ public enum GuiText implements Localization {
     AdvancedNetworkTool,
     CraftingDiagnostics,
     CraftingDiagnosticsHint,
-    ControllerAnimation,
-    ControllerAnimationHint,
     ItemFlowTracking,
     ItemFlowTrackingHint,
     PowerUsageRate,
