@@ -126,7 +126,7 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
 
         final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
-        int high = 0;
+        int high = -1;
         boolean changed = false;
         for (final ItemSlot is : this.adaptor) {
             final CachedItemStack old = this.memory.get(is.getSlot());
