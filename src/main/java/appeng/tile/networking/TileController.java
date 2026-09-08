@@ -101,9 +101,12 @@ public class TileController extends AENetworkPowerTile implements IColorableTile
     public void onPlacement(final ItemStack stack, final EntityPlayer player, final int side) {
         super.onPlacement(stack, player, side);
         if (!this.worldObj.isRemote && player != null) {
-            this.setControllerAnimation(
-                    ControllerAnimation.fromOrdinal(player.getEntityData().getByte(PLAYER_DEFAULT_NBT_KEY)));
+            this.setControllerAnimation(getPlayerDefaultAnimation(player));
         }
+    }
+
+    public static ControllerAnimation getPlayerDefaultAnimation(final EntityPlayer player) {
+        return ControllerAnimation.fromOrdinal(player.getEntityData().getByte(PLAYER_DEFAULT_NBT_KEY));
     }
 
     public static void setPlayerDefaultAnimation(final EntityPlayer player, final String animation) {

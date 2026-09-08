@@ -52,6 +52,7 @@ import io.netty.buffer.Unpooled;
 public class PacketValueConfig extends AppEngPacket {
 
     public static final String CONTROLLER_ANIMATION_DEFAULT = "ControllerAnimationDefault";
+    public static final String APPLY_CONTROLLER_ANIMATION_DEFAULT = "ApplyControllerAnimationDefault";
     public static final String CYCLE_CONTROLLER_ANIMATION = "CycleControllerAnimation";
     public static final String CYCLE_CONTROLLER_ANIMATION_BACKWARDS = "CycleControllerAnimationBackwards";
 
@@ -168,6 +169,8 @@ public class PacketValueConfig extends AppEngPacket {
                 qk.openReshuffle(player);
             } else if (this.Value.equals("ToggleLiteCrafting")) {
                 qk.toggleLiteCraftingMode();
+            } else if (this.Value.equals(APPLY_CONTROLLER_ANIMATION_DEFAULT)) {
+                qk.setControllerAnimation(TileController.getPlayerDefaultAnimation(player));
             } else if (this.Value.equals(CYCLE_CONTROLLER_ANIMATION)) {
                 qk.cycleControllerAnimation(false);
             } else if (this.Value.equals(CYCLE_CONTROLLER_ANIMATION_BACKWARDS)) {

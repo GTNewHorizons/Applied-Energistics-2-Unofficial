@@ -46,6 +46,7 @@ import appeng.api.util.AEColor;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.block.networking.BlockController;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiContextMenu;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
@@ -248,8 +249,9 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
                                 "NetworkStatus",
-                                backwards || isShiftKeyDown() ? PacketValueConfig.CYCLE_CONTROLLER_ANIMATION_BACKWARDS
-                                        : PacketValueConfig.CYCLE_CONTROLLER_ANIMATION));
+                                isShiftKeyDown() && !backwards ? PacketValueConfig.APPLY_CONTROLLER_ANIMATION_DEFAULT
+                                        : backwards ? PacketValueConfig.CYCLE_CONTROLLER_ANIMATION_BACKWARDS
+                                                : PacketValueConfig.CYCLE_CONTROLLER_ANIMATION));
             } catch (final IOException e) {
                 AELog.debug(e);
             }
@@ -317,13 +319,14 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             this.buttonList.add(this.flowTracking);
         }
 
-        this.controllerAnimation = new GuiButton(
+        this.controllerAnimation = new GuiAeButton(
                 0,
                 this.guiLeft - 18,
                 this.guiTop + (this.isAdvanced ? 128 : 88),
                 16,
                 16,
-                "") {
+                "",
+                GuiText.ControllerAnimation.getLocal() + '\n' + GuiText.ControllerAnimationHint.getLocal()) {
 
             @Override
             public void drawButton(final Minecraft mc, final int mouseX, final int mouseY) {}

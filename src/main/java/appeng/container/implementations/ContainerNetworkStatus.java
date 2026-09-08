@@ -42,6 +42,7 @@ import appeng.api.util.NamedDimensionalCoord;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.AEConfig;
+import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
@@ -282,6 +283,14 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         final PathGridCache cache = this.getPathGridCache();
         if (cache == null) return;
         cache.cycleControllerAnimation(backwards);
+        this.refreshControllerAnimation();
+        super.detectAndSendChanges();
+    }
+
+    public void setControllerAnimation(final ControllerAnimation animation) {
+        final PathGridCache cache = this.getPathGridCache();
+        if (cache == null) return;
+        cache.setControllerAnimation(animation);
         this.refreshControllerAnimation();
         super.detectAndSendChanges();
     }
