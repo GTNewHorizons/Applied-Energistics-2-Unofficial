@@ -51,6 +51,10 @@ import io.netty.buffer.Unpooled;
 
 public class PacketValueConfig extends AppEngPacket {
 
+    public static final String CONTROLLER_ANIMATION_DEFAULT = "ControllerAnimationDefault";
+    public static final String CYCLE_CONTROLLER_ANIMATION = "CycleControllerAnimation";
+    public static final String CYCLE_CONTROLLER_ANIMATION_BACKWARDS = "CycleControllerAnimationBackwards";
+
     private final String Name;
     private final String Value;
 
@@ -87,7 +91,7 @@ public class PacketValueConfig extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
 
-        if (this.Name.equals("ControllerAnimationDefault")) {
+        if (this.Name.equals(CONTROLLER_ANIMATION_DEFAULT)) {
             TileController.setPlayerDefaultAnimation(player, this.Value);
         } else if (this.Name.equals("Item") && player.getHeldItem() != null
                 && player.getHeldItem().getItem() instanceof IMouseWheelItem) {
@@ -164,9 +168,9 @@ public class PacketValueConfig extends AppEngPacket {
                 qk.openReshuffle(player);
             } else if (this.Value.equals("ToggleLiteCrafting")) {
                 qk.toggleLiteCraftingMode();
-            } else if (this.Value.equals("CycleControllerAnimation")) {
+            } else if (this.Value.equals(CYCLE_CONTROLLER_ANIMATION)) {
                 qk.cycleControllerAnimation(false);
-            } else if (this.Value.equals("CycleControllerAnimationBackwards")) {
+            } else if (this.Value.equals(CYCLE_CONTROLLER_ANIMATION_BACKWARDS)) {
                 qk.cycleControllerAnimation(true);
             }
         } else if (c instanceof ContainerNetworkTool) {

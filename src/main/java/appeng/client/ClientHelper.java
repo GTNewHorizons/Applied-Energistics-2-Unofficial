@@ -174,8 +174,8 @@ public class ClientHelper extends ServerHelper {
         final Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft.thePlayer == null || minecraft.theWorld == null) return;
         try {
-            NetworkHandler.instance
-                    .sendToServer(new PacketValueConfig("ControllerAnimationDefault", controllerAnimation.name()));
+            NetworkHandler.instance.sendToServer(
+                    new PacketValueConfig(PacketValueConfig.CONTROLLER_ANIMATION_DEFAULT, controllerAnimation.name()));
         } catch (final IOException e) {
             AELog.debug(e);
         }

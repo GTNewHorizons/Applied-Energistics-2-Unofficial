@@ -248,8 +248,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
                                 "NetworkStatus",
-                                backwards || isShiftKeyDown() ? "CycleControllerAnimationBackwards"
-                                        : "CycleControllerAnimation"));
+                                backwards || isShiftKeyDown() ? PacketValueConfig.CYCLE_CONTROLLER_ANIMATION_BACKWARDS
+                                        : PacketValueConfig.CYCLE_CONTROLLER_ANIMATION));
             } catch (final IOException e) {
                 AELog.debug(e);
             }
