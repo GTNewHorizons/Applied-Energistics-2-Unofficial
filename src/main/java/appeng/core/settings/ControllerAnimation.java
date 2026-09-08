@@ -11,9 +11,27 @@ public enum ControllerAnimation {
     SINGULARITY,
     CIRCUIT_TRACE;
 
+    public static ControllerAnimation fromOrdinal(final int ordinal) {
+        final ControllerAnimation[] styles = values();
+        return ordinal >= 0 && ordinal < styles.length ? styles[ordinal] : ORIGINAL_RAINBOW;
+    }
+
+    public static ControllerAnimation fromName(final String name) {
+        try {
+            return valueOf(name);
+        } catch (final IllegalArgumentException | NullPointerException ignored) {
+            return ORIGINAL_RAINBOW;
+        }
+    }
+
     public ControllerAnimation next() {
         final ControllerAnimation[] styles = values();
         return styles[(ordinal() + 1) % styles.length];
+    }
+
+    public ControllerAnimation previous() {
+        final ControllerAnimation[] styles = values();
+        return styles[(ordinal() + styles.length - 1) % styles.length];
     }
 
     public boolean usesOriginalTexture() {

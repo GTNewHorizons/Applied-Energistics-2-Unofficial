@@ -12,12 +12,14 @@ package appeng.client;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.entity.RenderItem;
@@ -38,6 +40,8 @@ import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Property;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 import org.lwjgl.opengl.GL11;
 
@@ -66,7 +70,9 @@ import appeng.client.texture.ExtraItemTextures;
 import appeng.client.texture.WirelessTextures;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
+import appeng.core.AppEng;
 import appeng.core.CommonHelper;
+import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketAssemblerAnimation;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -80,6 +86,7 @@ import appeng.hooks.TickHandler.PlayerColor;
 import appeng.server.ServerHelper;
 import appeng.transformer.MissingCoreMod;
 import appeng.util.Platform;
+import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -89,6 +96,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 public class ClientHelper extends ServerHelper {
 
     private final EnumMap<ActionKey, KeyBinding> bindings = new EnumMap<>(ActionKey.class);
+    private static ControllerAnimation controllerAnimation = ControllerAnimation.ORIGINAL_RAINBOW;
 
     private static final RenderItem ITEM_RENDERER = new RenderItem();
     private static final RenderBlocks BLOCK_RENDERER = new RenderBlocks();
@@ -108,6 +116,7 @@ public class ClientHelper extends ServerHelper {
 
     @Override
     public void init() {
+        loadControllerAnimation();
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new BlockPosHighlighter());
         MinecraftForge.EVENT_BUS.register(new NetworkVisualiserRender());
@@ -116,11 +125,59 @@ public class ClientHelper extends ServerHelper {
         FMLCommonHandler.instance().bus().register(BlockRendererPreviewEvent.getInstance());
         FMLCommonHandler.instance().bus().register(new KeyBindHandler());
         FMLCommonHandler.instance().bus().register(new NotificationManager());
+        FMLCommonHandler.instance().bus().register(this);
 
         for (ActionKey key : ActionKey.values()) {
             final KeyBinding binding = new KeyBinding(key.getTranslationKey(), key.getDefaultKey(), KEY_CATEGORY);
             ClientRegistry.registerKeyBinding(binding);
             this.bindings.put(key, binding);
+        }
+    }
+
+    public static ControllerAnimation cycleControllerAnimation() {
+        controllerAnimation = controllerAnimation.next();
+        AEConfig.instance.get("Client", "controllerAnimation", ControllerAnimation.ORIGINAL_RAINBOW.name())
+                .set(controllerAnimation.name());
+        AEConfig.instance.save();
+        syncControllerAnimationDefault();
+        return controllerAnimation;
+    }
+
+    @SubscribeEvent
+    public void onPlayerJoinWorld(final EntityJoinWorldEvent event) {
+        if (event.entity instanceof EntityPlayerSP) syncControllerAnimationDefault();
+    }
+
+    @SubscribeEvent
+    public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (!event.modID.equals(AppEng.MOD_ID)) return;
+        loadControllerAnimation();
+        syncControllerAnimationDefault();
+    }
+
+    private static void loadControllerAnimation() {
+        final Property property = AEConfig.instance.get(
+                "Client",
+                "controllerAnimation",
+                ControllerAnimation.ORIGINAL_RAINBOW.name(),
+                "Default animation for a controller placed into a network without another controller.");
+        property.setValidValues(Arrays.stream(ControllerAnimation.values()).map(Enum::name).toArray(String[]::new));
+        try {
+            controllerAnimation = ControllerAnimation.valueOf(property.getString());
+        } catch (IllegalArgumentException e) {
+            controllerAnimation = ControllerAnimation.ORIGINAL_RAINBOW;
+            property.set(controllerAnimation.name());
+        }
+    }
+
+    private static void syncControllerAnimationDefault() {
+        final Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.thePlayer == null || minecraft.theWorld == null) return;
+        try {
+            NetworkHandler.instance
+                    .sendToServer(new PacketValueConfig("ControllerAnimationDefault", controllerAnimation.name()));
+        } catch (final IOException e) {
+            AELog.debug(e);
         }
     }
 

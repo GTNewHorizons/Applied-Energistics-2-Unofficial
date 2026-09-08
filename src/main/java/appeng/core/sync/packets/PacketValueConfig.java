@@ -45,6 +45,7 @@ import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.IMouseWheelItem;
+import appeng.tile.networking.TileController;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -86,7 +87,9 @@ public class PacketValueConfig extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
 
-        if (this.Name.equals("Item") && player.getHeldItem() != null
+        if (this.Name.equals("ControllerAnimationDefault")) {
+            TileController.setPlayerDefaultAnimation(player, this.Value);
+        } else if (this.Name.equals("Item") && player.getHeldItem() != null
                 && player.getHeldItem().getItem() instanceof IMouseWheelItem) {
             final ItemStack is = player.getHeldItem();
             final IMouseWheelItem si = (IMouseWheelItem) is.getItem();
@@ -161,6 +164,10 @@ public class PacketValueConfig extends AppEngPacket {
                 qk.openReshuffle(player);
             } else if (this.Value.equals("ToggleLiteCrafting")) {
                 qk.toggleLiteCraftingMode();
+            } else if (this.Value.equals("CycleControllerAnimation")) {
+                qk.cycleControllerAnimation(false);
+            } else if (this.Value.equals("CycleControllerAnimationBackwards")) {
+                qk.cycleControllerAnimation(true);
             }
         } else if (c instanceof ContainerNetworkTool) {
             if (this.Name.equals("NetworkTool")) {

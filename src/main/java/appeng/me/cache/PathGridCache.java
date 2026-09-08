@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.logging.log4j.Level;
@@ -34,6 +35,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.features.AEFeature;
+import appeng.core.settings.ControllerAnimation;
 import appeng.core.stats.Achievements;
 import appeng.me.pathfinding.AdHocChannelUpdater;
 import appeng.me.pathfinding.ChannelFinalizer;
@@ -43,6 +45,8 @@ import appeng.tile.networking.TileController;
 import appeng.util.Platform;
 
 public class PathGridCache implements IPathingGrid {
+
+    private static final String CONTROLLER_ANIMATION_KEY = "controllerAnimation";
 
     private final Set<TileController> controllers = new HashSet<>();
     private final Set<IGridNode> nodesNeedingChannels = new HashSet<>();
@@ -55,6 +59,7 @@ public class PathGridCache implements IPathingGrid {
     private boolean updateNetwork = true;
     private boolean booting = false;
     private ControllerState controllerState = ControllerState.NO_CONTROLLER;
+    private ControllerAnimation controllerAnimation;
     private int lastChannels = 0;
 
     public PathGridCache(final IGrid g) {
@@ -126,6 +131,7 @@ public class PathGridCache implements IPathingGrid {
 
         if (machine instanceof TileController) {
             this.controllers.remove(machine);
+            if (this.controllers.isEmpty()) this.controllerAnimation = null;
             this.recalculateControllerNextTick = true;
         }
 
@@ -148,8 +154,13 @@ public class PathGridCache implements IPathingGrid {
             AELog.printStackTrace(Level.INFO);
         }
 
-        if (machine instanceof TileController) {
-            this.controllers.add((TileController) machine);
+        if (machine instanceof TileController controller) {
+            if (this.controllerAnimation == null) {
+                this.controllerAnimation = controller.getControllerAnimation();
+            } else {
+                controller.setControllerAnimation(this.controllerAnimation);
+            }
+            this.controllers.add(controller);
             this.recalculateControllerNextTick = true;
         }
 
@@ -165,13 +176,45 @@ public class PathGridCache implements IPathingGrid {
     }
 
     @Override
-    public void onSplit(final IGridStorage storageB) {}
+    public void onSplit(final IGridStorage storageB) {
+        if (this.controllerAnimation != null) {
+            storageB.dataObject().setString(CONTROLLER_ANIMATION_KEY, this.controllerAnimation.name());
+        }
+    }
 
     @Override
-    public void onJoin(final IGridStorage storageB) {}
+    public void onJoin(final IGridStorage storageB) {
+        if (this.controllerAnimation != null || storageB == null) return;
+        final NBTTagCompound data = storageB.dataObject();
+        if (data.hasKey(CONTROLLER_ANIMATION_KEY)) {
+            this.controllerAnimation = ControllerAnimation.fromName(data.getString(CONTROLLER_ANIMATION_KEY));
+        }
+    }
 
     @Override
-    public void populateGridStorage(final IGridStorage storage) {}
+    public void populateGridStorage(final IGridStorage storage) {
+        if (this.controllerAnimation != null) {
+            storage.dataObject().setString(CONTROLLER_ANIMATION_KEY, this.controllerAnimation.name());
+        } else {
+            storage.dataObject().removeTag(CONTROLLER_ANIMATION_KEY);
+        }
+    }
+
+    public ControllerAnimation getControllerAnimation() {
+        return this.controllerAnimation == null ? ControllerAnimation.ORIGINAL_RAINBOW : this.controllerAnimation;
+    }
+
+    public void cycleControllerAnimation(final boolean backwards) {
+        final ControllerAnimation animation = this.getControllerAnimation();
+        this.setControllerAnimation(backwards ? animation.previous() : animation.next());
+    }
+
+    public void setControllerAnimation(final ControllerAnimation animation) {
+        this.controllerAnimation = animation;
+        for (final TileController controller : this.controllers) {
+            controller.setControllerAnimation(animation);
+        }
+    }
 
     private void recalcController() {
         this.recalculateControllerNextTick = false;
