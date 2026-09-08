@@ -40,6 +40,8 @@ import appeng.util.item.ItemFilterList;
 
 public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
 
+    private static final int CACHE_REFRESH_INTERVAL = 256;
+
     private final InventoryAdaptor adaptor;
     private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
     private final HashMap<IMEMonitorHandlerReceiver, Object> listeners = new HashMap<>();
@@ -47,6 +49,7 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
     private BaseActionSource mySource;
     private StorageFilter mode = StorageFilter.EXTRACTABLE_ONLY;
     private boolean init = false;
+    private int ticksSinceCacheRefresh = 0;
 
     public MEMonitorIInventory(final InventoryAdaptor adaptor) {
         this.adaptor = adaptor;
@@ -177,10 +180,19 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
             end.clear();
         }
 
-        if (!changes.isEmpty()) {
+        if (++this.ticksSinceCacheRefresh >= CACHE_REFRESH_INTERVAL) {
+            this.list.resetStatus();
+            for (final CachedItemStack cached : this.memory.values()) {
+                this.list.add(cached.aeStack);
+            }
+            this.ticksSinceCacheRefresh = 0;
+        } else {
             for (final IAEStack<?> change : changes) {
                 this.list.add((IAEItemStack) change);
             }
+        }
+
+        if (!changes.isEmpty()) {
             this.postDifference(changes);
         }
 
