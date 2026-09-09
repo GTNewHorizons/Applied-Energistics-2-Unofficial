@@ -975,19 +975,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ToggleShowOnlySubstituteOffDesc);
 
             this.registerApp(
-                    16 * 13,
+                    16 * 13 + 8,
                     Settings.CPU_PRIORITY_DISPLAY,
                     CPUPriorityDisplay.BADGE,
                     ButtonToolTips.CPUPriorityDisplay,
                     ButtonToolTips.CPUPriorityDisplay_Badge);
             this.registerApp(
-                    16 * 13 + 1,
+                    16 * 13 + 9,
                     Settings.CPU_PRIORITY_DISPLAY,
                     CPUPriorityDisplay.COMPACT,
                     ButtonToolTips.CPUPriorityDisplay,
                     ButtonToolTips.CPUPriorityDisplay_Compact);
             this.registerApp(
-                    16 * 13 + 7,
+                    16 * 13 + 10,
                     Settings.CPU_PRIORITY_DISPLAY,
                     CPUPriorityDisplay.OFF,
                     ButtonToolTips.CPUPriorityDisplay,
