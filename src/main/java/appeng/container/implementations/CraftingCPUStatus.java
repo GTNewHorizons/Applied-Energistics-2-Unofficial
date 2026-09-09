@@ -45,6 +45,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final boolean isSuspended;
     private final String sourcePlayer;
     private final boolean craftingLinkStandalone;
+    private final int priority;
 
     public CraftingCPUStatus() {
         this.serverCluster = null;
@@ -62,6 +63,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.isSuspended = false;
         this.sourcePlayer = null;
         this.craftingLinkStandalone = false;
+        this.priority = 0;
     }
 
     public CraftingCPUStatus(ICraftingCPU cluster, int serial) {
@@ -88,6 +90,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.isSuspended = cluster.isSuspended();
         this.sourcePlayer = cluster.getSourcePlayer();
         this.craftingLinkStandalone = cluster.isCraftingLinkStandalone();
+        this.priority = cluster.getPriority();
     }
 
     public CraftingCPUStatus(NBTTagCompound i) {
@@ -107,6 +110,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.isSuspended = i.getBoolean("isSuspended");
         this.sourcePlayer = i.hasKey("sourcePlayer") ? i.getString("sourcePlayer") : null;
         this.craftingLinkStandalone = i.getBoolean("craftingLinkStandalone");
+        this.priority = i.getInteger("priority");
     }
 
     public CraftingCPUStatus(ByteBuf packet) throws IOException {
@@ -141,6 +145,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         i.setInteger("allowMode", this.allowMode.ordinal());
         i.setBoolean("isSuspended", this.isSuspended);
         i.setBoolean("craftingLinkStandalone", this.craftingLinkStandalone);
+        i.setInteger("priority", this.priority);
         if (this.sourcePlayer != null) {
             i.setString("sourcePlayer", this.sourcePlayer);
         }
@@ -220,6 +225,10 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
 
     public boolean isCraftingLinkStandalone() {
         return craftingLinkStandalone;
+    }
+
+    public int getPriority() {
+        return priority;
     }
 
     @Override

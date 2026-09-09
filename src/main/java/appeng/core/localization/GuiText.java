@@ -331,6 +331,8 @@ public enum GuiText implements Localization {
     CPUOnlyAllowNonPlayer,
     CPUOnlyAllowPlayer,
     CPUSourcePlayer,
+    CPUPriority,
+    CPUPriorityHint,
     CPUSourceMachineRequested,
 
     ReshuffleTooltipDesc1,

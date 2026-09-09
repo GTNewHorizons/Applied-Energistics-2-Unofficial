@@ -154,6 +154,18 @@ public interface ICraftingCPU extends IBaseMonitor {
         return false;
     }
 
+    /**
+     * Get the scheduling priority of this CPU.
+     */
+    default int getPriority() {
+        return 0;
+    }
+
+    /**
+     * Sets the scheduling priority of this CPU, see {@link #getPriority()}.
+     */
+    default void setPriority(int priority) {}
+
     default String getSourcePlayer() {
         return null;
     }

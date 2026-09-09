@@ -26,6 +26,7 @@ import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
 import appeng.api.config.AdvancedBlockingMode;
 import appeng.api.config.BooleanOperation;
+import appeng.api.config.CPUPriorityDisplay;
 import appeng.api.config.CPUSortBy;
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
@@ -972,6 +973,25 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_OFF,
                     ButtonToolTips.ToggleShowOnlySubstitute,
                     ButtonToolTips.ToggleShowOnlySubstituteOffDesc);
+
+            this.registerApp(
+                    16 * 13,
+                    Settings.CPU_PRIORITY_DISPLAY,
+                    CPUPriorityDisplay.BADGE,
+                    ButtonToolTips.CPUPriorityDisplay,
+                    ButtonToolTips.CPUPriorityDisplay_Badge);
+            this.registerApp(
+                    16 * 13 + 1,
+                    Settings.CPU_PRIORITY_DISPLAY,
+                    CPUPriorityDisplay.COMPACT,
+                    ButtonToolTips.CPUPriorityDisplay,
+                    ButtonToolTips.CPUPriorityDisplay_Compact);
+            this.registerApp(
+                    16 * 13 + 7,
+                    Settings.CPU_PRIORITY_DISPLAY,
+                    CPUPriorityDisplay.OFF,
+                    ButtonToolTips.CPUPriorityDisplay,
+                    ButtonToolTips.CPUPriorityDisplay_Off);
 
             this.registerApp(64, Settings.CPU_SORT_BY, CPUSortBy.NAME, ButtonToolTips.SortBy, ButtonToolTips.CPUName);
             this.registerApp(
