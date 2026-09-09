@@ -415,7 +415,8 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     public void setCustomName(final String name) {
         super.setCustomName(name);
         for (TileWirelessBase tile : getConnectedTiles()) {
-            if (name.isEmpty() && !tile.hasCustomName() || Objects.equals(tile.getCustomName(), name)) continue;
+            if ((name == null || name.isEmpty()) && !tile.hasCustomName() || Objects.equals(tile.getCustomName(), name))
+                continue;
             tile.setCustomName(name);
         }
     }

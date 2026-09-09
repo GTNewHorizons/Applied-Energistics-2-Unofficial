@@ -13,7 +13,6 @@ package appeng.container;
 import static appeng.util.Platform.getItemFromPlayerInventoryBySlotIndex;
 import static appeng.util.Platform.isStacksIdentical;
 import static appeng.util.Platform.setPlayerInventorySlotByIndex;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.cleanroommc.bogosorter.api.IBogoSortAPI;
+import com.glodblock.github.common.parts.PartFluidStorageBus;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -102,7 +102,6 @@ import appeng.me.Grid;
 import appeng.me.MachineSet;
 import appeng.me.NetworkList;
 import appeng.me.cache.ItemFlowGridCache;
-import appeng.me.storage.MEInventoryHandler;
 import appeng.parts.automation.UpgradeInventory;
 import appeng.parts.misc.PartStorageBus;
 import appeng.tile.inventory.IAEStackInventory;
@@ -781,22 +780,31 @@ public abstract class AEBaseContainer extends Container {
             return;
         }
 
-        // get target item.
-        final IAEItemStack slotItem = this.clientRequestedTargetItem instanceof IAEItemStack ais ? ais : null;
+        final IAEStack<?> slotItem = this.clientRequestedTargetItem;
 
         switch (action) {
             case CREATIVE_DUPLICATE -> {
-                if (player.capabilities.isCreativeMode && slotItem != null) {
-                    final ItemStack is = slotItem.getItemStack();
+                if (player.capabilities.isCreativeMode && slotItem instanceof IAEItemStack itemStack) {
+                    final ItemStack is = itemStack.getItemStack();
                     is.stackSize = is.getMaxStackSize();
                     player.inventory.setItemStack(is);
                     this.updateHeld(player);
                 }
             }
             case FIND_ITEMS -> {
-                final Class<? extends IGridHost>[] checkedMachineClasses = new Class[] { TileDrive.class,
-                        TileChest.class, PartStorageBus.class, };
                 if (slotItem == null) return;
+
+                final Class<? extends IGridHost> storageBusClass;
+                if (slotItem.getChannel() == StorageChannel.ITEMS) {
+                    storageBusClass = PartStorageBus.class;
+                } else if (slotItem.getChannel() == StorageChannel.FLUIDS) {
+                    storageBusClass = PartFluidStorageBus.class;
+                } else {
+                    return;
+                }
+
+                final Class<? extends IGridHost>[] checkedMachineClasses = new Class[] { TileDrive.class,
+                        TileChest.class, storageBusClass, };
 
                 IGrid g = null;
                 // Pull grid
@@ -813,15 +821,8 @@ public abstract class AEBaseContainer extends Container {
                 List<ItemSearchDTO> coords = new ArrayList<>();
 
                 List<IGridNode> machineList = new ArrayList<>();
-                Class<? extends IGridHost> classType = null;
-                if (slotItem.getChannel() == StorageChannel.ITEMS) {
-                    classType = PartStorageBus.class;
-                } else if (slotItem.getChannel() == StorageChannel.FLUIDS) {
-                    // TODO Support Fluids for item searching
-                }
-
                 // Retrieve list of all grids
-                NetworkList grids = g.getAllRecursiveGridConnections(classType);
+                NetworkList grids = g.getAllRecursiveGridConnections(storageBusClass);
 
                 for (Grid subnet : grids) {
                     for (Class<? extends IGridHost> type : checkedMachineClasses) {
@@ -843,11 +844,10 @@ public abstract class AEBaseContainer extends Container {
 
                     if (machine instanceof TileDrive innerMachine) {
                         for (int i = 0; i < innerMachine.getSizeInventory(); i++) {
-                            IMEInventoryHandler<IAEItemStack> cell = innerMachine.getCellInvBySlot(i);
+                            IMEInventoryHandler cell = innerMachine.getCellInvBySlot(i);
                             if (cell == null || cell.getChannel() != slotItem.getChannel()) continue;
 
-                            IAEStack<IAEItemStack> result = cell
-                                    .getAvailableItem(slotItem, IterationCounter.fetchNewId());
+                            IAEStack<?> result = cell.getAvailableItem(slotItem, IterationCounter.fetchNewId());
                             if (result == null) continue;
 
                             coords.add(
@@ -863,14 +863,14 @@ public abstract class AEBaseContainer extends Container {
                     }
                     if (machine instanceof PartStorageBus innerMachine) {
                         // Check if storageBus is subnet
-                        if (innerMachine.getConnectedGrid() != null || innerMachine.getStackType() != ITEM_STACK_TYPE) {
+                        if (innerMachine.getConnectedGrid() != null
+                                || innerMachine.getStackType() != slotItem.getStackType()) {
                             continue;
                         }
 
-                        MEInventoryHandler<IAEItemStack> handler = innerMachine.getInternalHandler();
+                        IMEInventoryHandler handler = innerMachine.getInternalHandler();
                         if (handler == null) continue;
-                        IAEStack<IAEItemStack> result = handler
-                                .getAvailableItem(slotItem, IterationCounter.fetchNewId());
+                        IAEStack<?> result = handler.getAvailableItem(slotItem, IterationCounter.fetchNewId());
                         if (result == null) continue;
                         coords.add(
                                 new ItemSearchDTO(

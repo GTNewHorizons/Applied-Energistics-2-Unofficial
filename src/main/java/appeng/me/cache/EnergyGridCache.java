@@ -45,6 +45,7 @@ import appeng.me.Grid;
 import appeng.me.GridNode;
 import appeng.me.energy.EnergyThreshold;
 import appeng.me.energy.EnergyWatcher;
+import appeng.parts.networking.PartQuartzFiber;
 
 public class EnergyGridCache implements IEnergyGrid {
 
@@ -338,6 +339,10 @@ public class EnergyGridCache implements IEnergyGrid {
             final Iterator<IEnergyGridProvider> i = this.energyGridProviders.iterator();
             while (amt > 0 && i.hasNext()) {
                 final IEnergyGridProvider what = i.next();
+                if (what.getClass() == PartQuartzFiber.class && seen.getClass() == HashSet.class
+                        && !((PartQuartzFiber) what).hasUnvisitedEnergyGrid(seen)) {
+                    continue;
+                }
                 final Set<IEnergyGrid> listCopy = new HashSet<>(seen);
 
                 final double cannotHold = what.injectAEPower(amt, Actionable.SIMULATE, listCopy);

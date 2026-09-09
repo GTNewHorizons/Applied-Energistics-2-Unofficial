@@ -179,7 +179,12 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     @Override
     public void setCustomName(String name) {
-        this.getItemStack().setStackDisplayName(name);
+        // An empty name has to clear the display tag, otherwise hasDisplayName() keeps reporting a name
+        if (name == null || name.isEmpty()) {
+            this.getItemStack().func_135074_t();
+        } else {
+            this.getItemStack().setStackDisplayName(name);
+        }
     }
 
     @Override
@@ -416,6 +421,8 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 && memCardIS.getItem() instanceof IMemoryCard memoryCard) {
             if (ForgeEventFactory.onItemUseStart(player, memCardIS, 1) <= 0) return false;
 
+            if (player.worldObj.isRemote) return true;
+
             ItemStack is = this.getItemStack(PartItemStack.Network);
 
             // Blocks and parts share the same soul!
@@ -565,8 +572,9 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
     }
 
     private IBlockAccess getHostWorld() {
-        final TileEntity te = this.getTile();
-        return te == null ? null : te.getWorldObj();
+        final IPartHost host = this.getHost();
+        final TileEntity te = host != null ? host.getTile() : this.getTile();
+        return te != null ? te.getWorldObj() : null;
     }
 
     private static int getSideIndexFromDirection(ForgeDirection direction) {

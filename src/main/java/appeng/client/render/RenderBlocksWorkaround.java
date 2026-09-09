@@ -10,7 +10,6 @@
 
 package appeng.client.render;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -30,14 +29,22 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class RenderBlocksWorkaround extends RenderBlocks {
 
-    private final int[] lightHashTmp = new int[27];
+    private int lightingHashCacheDepth;
+    private Block lightingHashCacheBlock;
+    private IBlockAccess lightingHashCacheWorld;
+    private int lightingHashCacheX;
+    private int lightingHashCacheY;
+    private int lightingHashCacheZ;
+    private int lightingHashCacheValue;
     private boolean calculations = true;
     private EnumSet<ForgeDirection> renderFaces = EnumSet.allOf(ForgeDirection.class);
     private EnumSet<ForgeDirection> faces = EnumSet.allOf(ForgeDirection.class);
     private boolean isFacade = false;
     private boolean useTextures = true;
     private float opacity = 1.0f;
-    private LightingCache lightState = new LightingCache();
+    private final LightingCache lightState = new LightingCache();
+    private Block resolvedTextureBlock;
+    private BlockRenderInfo.TextureSet resolvedTextures;
 
     public static final boolean fixedBottomFaceUV = (boolean) Launch.blackboard
             .getOrDefault("hodgepodge.FixesConfig.fixBottomFaceUV", Boolean.FALSE);
@@ -48,6 +55,33 @@ public class RenderBlocksWorkaround extends RenderBlocks {
 
     private int getCurrentBrightness(Tessellator tessellator) {
         return tessellator.brightness;
+    }
+
+    @Override
+    public IIcon getBlockIcon(final Block block, final IBlockAccess world, final int x, final int y, final int z,
+            final int side) {
+        if (side >= 0 && side < ForgeDirection.VALID_DIRECTIONS.length
+                && block == this.resolvedTextureBlock
+                && this.resolvedTextures != null) {
+            final IIcon icon = this.resolvedTextures.getRenderIcon(ForgeDirection.getOrientation(side));
+            if (icon != null) {
+                return icon;
+            }
+        }
+        return super.getBlockIcon(block, world, x, y, z, side);
+    }
+
+    Block getResolvedTextureBlock() {
+        return this.resolvedTextureBlock;
+    }
+
+    BlockRenderInfo.TextureSet getResolvedTextures() {
+        return this.resolvedTextures;
+    }
+
+    void setResolvedTextures(final Block block, final BlockRenderInfo.TextureSet textures) {
+        this.resolvedTextureBlock = block;
+        this.resolvedTextures = textures;
     }
 
     void setTexture(final IIcon ico) {
@@ -67,28 +101,41 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     // spotless:off
     private boolean renderStandardBlockNoCalculations(final Block b, final int x, final int y, final int z) {
         final Tessellator tessellator = Tessellator.instance;
-        tessellator.setBrightness(this.lightState.bXPos);
-        this.restoreAO(this.lightState.aoXPos, this.lightState.foXPos);
-        this.renderFaceXPos(b, x, y, z, this.isUseTextures() ? this.lightState.rXPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.EAST.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.EAST)) {
+            tessellator.setBrightness(this.lightState.bXPos);
+            this.restoreAO(this.lightState.aoXPos, this.lightState.foXPos);
+            this.renderFaceXPos(b, x, y, z, this.isUseTextures() ? this.lightState.rXPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.EAST.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bXNeg);
-        this.restoreAO(this.lightState.aoXNeg, this.lightState.foXNeg);
-        this.renderFaceXNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rXNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.WEST.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.WEST)) {
+            tessellator.setBrightness(this.lightState.bXNeg);
+            this.restoreAO(this.lightState.aoXNeg, this.lightState.foXNeg);
+            this.renderFaceXNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rXNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.WEST.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bYPos);
-        this.restoreAO(this.lightState.aoYPos, this.lightState.foYPos);
-        this.renderFaceYPos(b, x, y, z, this.isUseTextures() ? this.lightState.rYPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.UP.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.UP)) {
+            tessellator.setBrightness(this.lightState.bYPos);
+            this.restoreAO(this.lightState.aoYPos, this.lightState.foYPos);
+            this.renderFaceYPos(b, x, y, z, this.isUseTextures() ? this.lightState.rYPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.UP.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bYNeg);
-        this.restoreAO(this.lightState.aoYNeg, this.lightState.foYNeg);
-        this.renderFaceYNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rYNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.DOWN.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.DOWN)) {
+            tessellator.setBrightness(this.lightState.bYNeg);
+            this.restoreAO(this.lightState.aoYNeg, this.lightState.foYNeg);
+            this.renderFaceYNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rYNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.DOWN.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bZPos);
-        this.restoreAO(this.lightState.aoZPos, this.lightState.foZPos);this.renderFaceZPos(b, x, y, z, this.isUseTextures() ? this.lightState.rZPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.SOUTH.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.SOUTH)) {
+            tessellator.setBrightness(this.lightState.bZPos);
+            this.restoreAO(this.lightState.aoZPos, this.lightState.foZPos);
+            this.renderFaceZPos(b, x, y, z, this.isUseTextures() ? this.lightState.rZPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.SOUTH.ordinal()));
+        }
 
-        tessellator.setBrightness(this.lightState.bZNeg);
-        this.restoreAO(this.lightState.aoZNeg, this.lightState.foZNeg);
-        this.renderFaceZNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rZNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.NORTH.ordinal()));
+        if (this.shouldRenderFace(ForgeDirection.NORTH)) {
+            tessellator.setBrightness(this.lightState.bZNeg);
+            this.restoreAO(this.lightState.aoZNeg, this.lightState.foZNeg);
+            this.renderFaceZNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rZNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.NORTH.ordinal()));
+        }
 
         return true;
     }
@@ -490,32 +537,68 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         return ((LightingCache) sim).lightHash == lh;
     }
 
+    void beginLightingHashCache() {
+        this.lightingHashCacheDepth++;
+        this.clearLightingHashCache();
+    }
+
+    void endLightingHashCache() {
+        this.clearLightingHashCache();
+        this.lightingHashCacheDepth--;
+    }
+
+    private void clearLightingHashCache() {
+        this.lightingHashCacheBlock = null;
+        this.lightingHashCacheWorld = null;
+    }
+
     private int getLightingHash(final Block blk, final IBlockAccess w, final int x, final int y, final int z) {
-        int o = 0;
+        if (this.lightingHashCacheDepth > 0 && this.lightingHashCacheBlock == blk
+                && this.lightingHashCacheWorld == w
+                && this.lightingHashCacheX == x
+                && this.lightingHashCacheY == y
+                && this.lightingHashCacheZ == z) {
+            return this.lightingHashCacheValue;
+        }
+
+        int hash = 1;
 
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 for (int k = -1; k <= 1; k++) {
-
-                    this.lightHashTmp[o] = blk.getMixedBrightnessForBlock(w, x + i, y + j, z + k);
-                    o++;
+                    hash = 31 * hash + blk.getMixedBrightnessForBlock(w, x + i, y + j, z + k);
                 }
             }
         }
 
-        return Arrays.hashCode(this.lightHashTmp);
+        if (this.lightingHashCacheDepth > 0) {
+            this.lightingHashCacheBlock = blk;
+            this.lightingHashCacheWorld = w;
+            this.lightingHashCacheX = x;
+            this.lightingHashCacheY = y;
+            this.lightingHashCacheZ = z;
+            this.lightingHashCacheValue = hash;
+        }
+
+        return hash;
     }
 
     public void populate(final ISimplifiedBundle sim) {
-        this.lightState = new LightingCache((LightingCache) sim);
+        this.lightState.copyFrom((LightingCache) sim);
     }
 
-    public ISimplifiedBundle getLightingCache() {
-        return new LightingCache(this.lightState);
+    public ISimplifiedBundle getLightingCache(final ISimplifiedBundle sim) {
+        final LightingCache cache = sim == null ? new LightingCache() : (LightingCache) sim;
+        cache.copyFrom(this.lightState);
+        return cache;
     }
 
     Set<ForgeDirection> getFaces() {
         return this.faces;
+    }
+
+    boolean shouldRenderFace(final ForgeDirection face) {
+        return this.faces.contains(face) && this.renderFaces.contains(face);
     }
 
     public void setFaces(final EnumSet<ForgeDirection> faces) {
@@ -554,7 +637,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         this.opacity = opacity;
     }
 
-    private EnumSet<ForgeDirection> getRenderFaces() {
+    EnumSet<ForgeDirection> getRenderFaces() {
         return this.renderFaces;
     }
 
@@ -591,40 +674,6 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         public int bZNeg;
         public int lightHash;
 
-        public LightingCache(final LightingCache secondCSrc) {
-            this.rXPos = secondCSrc.rXPos;
-            this.rXNeg = secondCSrc.rXNeg;
-            this.rYPos = secondCSrc.rYPos;
-            this.rYNeg = secondCSrc.rYNeg;
-            this.rZPos = secondCSrc.rZPos;
-            this.rZNeg = secondCSrc.rZNeg;
-
-            this.isAO = secondCSrc.isAO;
-
-            this.bXPos = secondCSrc.bXPos;
-            this.bXNeg = secondCSrc.bXNeg;
-            this.bYPos = secondCSrc.bYPos;
-            this.bYNeg = secondCSrc.bYNeg;
-            this.bZPos = secondCSrc.bZPos;
-            this.bZNeg = secondCSrc.bZNeg;
-
-            this.aoXPos = secondCSrc.aoXPos.clone();
-            this.aoXNeg = secondCSrc.aoXNeg.clone();
-            this.aoYPos = secondCSrc.aoYPos.clone();
-            this.aoYNeg = secondCSrc.aoYNeg.clone();
-            this.aoZPos = secondCSrc.aoZPos.clone();
-            this.aoZNeg = secondCSrc.aoZNeg.clone();
-
-            this.foXPos = secondCSrc.foXPos.clone();
-            this.foXNeg = secondCSrc.foXNeg.clone();
-            this.foYPos = secondCSrc.foYPos.clone();
-            this.foYNeg = secondCSrc.foYNeg.clone();
-            this.foZPos = secondCSrc.foZPos.clone();
-            this.foZNeg = secondCSrc.foZNeg.clone();
-
-            this.lightHash = secondCSrc.lightHash;
-        }
-
         public LightingCache() {
             this.rXPos = null;
             this.rXNeg = null;
@@ -657,6 +706,40 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             this.foZNeg = new float[12];
 
             this.lightHash = 0;
+        }
+
+        public void copyFrom(final LightingCache source) {
+            this.rXPos = source.rXPos;
+            this.rXNeg = source.rXNeg;
+            this.rYPos = source.rYPos;
+            this.rYNeg = source.rYNeg;
+            this.rZPos = source.rZPos;
+            this.rZNeg = source.rZNeg;
+
+            this.isAO = source.isAO;
+
+            this.bXPos = source.bXPos;
+            this.bXNeg = source.bXNeg;
+            this.bYPos = source.bYPos;
+            this.bYNeg = source.bYNeg;
+            this.bZPos = source.bZPos;
+            this.bZNeg = source.bZNeg;
+
+            System.arraycopy(source.aoXPos, 0, this.aoXPos, 0, this.aoXPos.length);
+            System.arraycopy(source.aoXNeg, 0, this.aoXNeg, 0, this.aoXNeg.length);
+            System.arraycopy(source.aoYPos, 0, this.aoYPos, 0, this.aoYPos.length);
+            System.arraycopy(source.aoYNeg, 0, this.aoYNeg, 0, this.aoYNeg.length);
+            System.arraycopy(source.aoZPos, 0, this.aoZPos, 0, this.aoZPos.length);
+            System.arraycopy(source.aoZNeg, 0, this.aoZNeg, 0, this.aoZNeg.length);
+
+            System.arraycopy(source.foXPos, 0, this.foXPos, 0, this.foXPos.length);
+            System.arraycopy(source.foXNeg, 0, this.foXNeg, 0, this.foXNeg.length);
+            System.arraycopy(source.foYPos, 0, this.foYPos, 0, this.foYPos.length);
+            System.arraycopy(source.foYNeg, 0, this.foYNeg, 0, this.foYNeg.length);
+            System.arraycopy(source.foZPos, 0, this.foZPos, 0, this.foZPos.length);
+            System.arraycopy(source.foZNeg, 0, this.foZNeg, 0, this.foZNeg.length);
+
+            this.lightHash = source.lightHash;
         }
     }
 }

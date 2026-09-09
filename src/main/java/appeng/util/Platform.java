@@ -1136,10 +1136,8 @@ public class Platform {
                 } else if (mode == FuzzyMode.PERCENT_99) {
                     return (a.getItemDamageForDisplay() > 1) == (b.getItemDamageForDisplay() > 1);
                 } else {
-                    final float percentDamagedOfA = 1.0f
-                            - (float) a.getItemDamageForDisplay() / (float) a.getMaxDamage();
-                    final float percentDamagedOfB = 1.0f
-                            - (float) b.getItemDamageForDisplay() / (float) b.getMaxDamage();
+                    final float percentDamagedOfA = (float) a.getItemDamageForDisplay() / (float) a.getMaxDamage();
+                    final float percentDamagedOfB = (float) b.getItemDamageForDisplay() / (float) b.getMaxDamage();
 
                     return (percentDamagedOfA > mode.breakPoint) == (percentDamagedOfB > mode.breakPoint);
                 }

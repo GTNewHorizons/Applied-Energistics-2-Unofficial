@@ -54,8 +54,7 @@ public class FacadePart implements IFacadePart, IBoxProvider {
     private final ForgeDirection side;
     private int thickness = 2;
 
-    @SideOnly(Side.CLIENT)
-    private ISimplifiedBundle prevLight;
+    private final ThreadLocal<ISimplifiedBundle> prevLight = new ThreadLocal<>();
 
     public FacadePart(final ItemStack facade, final ForgeDirection side) {
         if (facade == null) {
@@ -163,14 +162,14 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                             rbw.setCalculations(true);
                             rbw.setFaces(EnumSet.noneOf(ForgeDirection.class));
 
-                            if (this.prevLight != null
-                                    && rbw.similarLighting(blk, rbw.blockAccess, x, y, z, this.prevLight)) {
-                                rbw.populate(this.prevLight);
+                            final ISimplifiedBundle prevLight = this.prevLight.get();
+                            if (prevLight != null && rbw.similarLighting(blk, rbw.blockAccess, x, y, z, prevLight)) {
+                                rbw.populate(prevLight);
                             } else {
                                 instance.setRenderColor(color);
                                 rbw.renderStandardBlock(instance.getBlock(), x, y, z);
                                 instance.setRenderColor(0xffffff);
-                                this.prevLight = rbw.getLightingCache();
+                                this.prevLight.set(rbw.getLightingCache(prevLight));
                             }
 
                             rbw.setCalculations(false);

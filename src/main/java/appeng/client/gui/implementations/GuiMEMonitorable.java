@@ -686,13 +686,14 @@ public class GuiMEMonitorable extends AEBaseGui
 
     @Override
     protected boolean canDragVirtualSlot(VirtualMESlot slot, @Nullable ItemStack holding) {
-        return (Keyboard.isKeyDown(Keyboard.KEY_SPACE) && slot instanceof VirtualMEMonitorableSlot)
-                || super.canDragVirtualSlot(slot, holding);
+        return ((Keyboard.isKeyDown(Keyboard.KEY_SPACE) || isShiftKeyDown())
+                && slot instanceof VirtualMEMonitorableSlot) || super.canDragVirtualSlot(slot, holding);
     }
 
     @Override
     protected void handleDragVirtualSlot(VirtualMESlot slot, int mouseButton) {
-        if (!Keyboard.isKeyDown(Keyboard.KEY_SPACE) || !this.handleMonitorableSlotClick(slot, mouseButton)) {
+        if ((!Keyboard.isKeyDown(Keyboard.KEY_SPACE) && !isShiftKeyDown())
+                || !this.handleMonitorableSlotClick(slot, mouseButton)) {
             super.handleDragVirtualSlot(slot, mouseButton);
         }
     }

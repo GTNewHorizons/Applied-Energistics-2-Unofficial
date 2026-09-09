@@ -10,7 +10,9 @@ public enum ActionKey {
 
     PICK_BLOCK(Keyboard.KEY_NONE),
 
-    LOCATE_ITEM_FLOW(Keyboard.KEY_NONE);
+    LOCATE_ITEM_FLOW(Keyboard.KEY_NONE),
+
+    CYCLE_CONTROLLER_ANIMATION(Keyboard.KEY_NONE);
 
     private final int defaultKey;
 

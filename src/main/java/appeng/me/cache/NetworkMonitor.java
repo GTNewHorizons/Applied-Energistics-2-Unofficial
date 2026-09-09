@@ -251,10 +251,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         return this.listeners.entrySet().iterator();
     }
 
-    private T monitorDifference(final IAEStack original, final T leftOvers, final boolean extraction,
-            final BaseActionSource src) {
-        final T diff = (T) original.copy();
-
+    private T monitorDifference(final T diff, final T leftOvers, final boolean extraction, final BaseActionSource src) {
         if (extraction) {
             diff.setStackSize(leftOvers == null ? 0 : -leftOvers.getStackSize());
         } else if (leftOvers != null) {
