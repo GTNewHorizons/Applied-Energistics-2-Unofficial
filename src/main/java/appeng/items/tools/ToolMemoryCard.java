@@ -30,6 +30,9 @@ import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
+import appeng.api.AEApi;
+import appeng.api.definitions.IItemDefinition;
+import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.implementations.items.MemoryCardMessages;
@@ -37,6 +40,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
+import appeng.helpers.IInterfaceHost;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.NetworkToolViewer;
 import appeng.parts.automation.UpgradeInventory;
@@ -165,6 +169,91 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
             }
             if (tagList.tagCount() > 0) data.setTag("upgradesList", tagList);
         }
+    }
+
+    private static final String PATTERNS_KEY = "interfacePatterns";
+
+    public static void savePatterns(final NBTTagCompound data, final IInterfaceHost iHost) {
+        final IInventory patterns = iHost.getInterfaceDuality().getPatterns();
+        final NBTTagList tagList = new NBTTagList();
+
+        for (int i = 0; i < patterns.getSizeInventory(); i++) {
+            final ItemStack is = patterns.getStackInSlot(i);
+            if (is == null || !(is.getItem() instanceof ICraftingPatternItem)) {
+                continue;
+            }
+
+            final NBTTagCompound tag = new NBTTagCompound();
+            is.writeToNBT(tag);
+            tag.setInteger("Slot", i);
+            tagList.appendTag(tag);
+        }
+
+        if (tagList.tagCount() > 0) {
+            data.setTag(PATTERNS_KEY, tagList);
+        }
+    }
+
+    public static void insertPatterns(final NBTTagCompound data, final EntityPlayer player,
+            final IInterfaceHost iHost) {
+        if (!data.hasKey(PATTERNS_KEY, NBT.TAG_LIST)) {
+            return;
+        }
+
+        final IInventory patterns = iHost.getInterfaceDuality().getPatterns();
+        final int enabled = Math.min(iHost.rows() * iHost.rowSize(), patterns.getSizeInventory());
+        final NBTTagList tagList = data.getTagList(PATTERNS_KEY, NBT.TAG_COMPOUND);
+
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            final NBTTagCompound tag = tagList.getCompoundTagAt(i);
+            final ItemStack pattern = ItemStack.loadItemStackFromNBT(tag);
+            if (pattern == null) {
+                continue;
+            }
+
+            final int slot = findFreeSlot(patterns, enabled, tag.getInteger("Slot"));
+            if (slot < 0 || !consumeBlankPattern(player)) {
+                return;
+            }
+
+            patterns.setInventorySlotContents(slot, pattern);
+        }
+    }
+
+    /**
+     * Free slot below {@code enabled}, preferring the requested one. -1 when full.
+     */
+    private static int findFreeSlot(final IInventory patterns, final int enabled, final int preferred) {
+        if (preferred >= 0 && preferred < enabled && patterns.getStackInSlot(preferred) == null) {
+            return preferred;
+        }
+
+        for (int i = 0; i < enabled; i++) {
+            if (patterns.getStackInSlot(i) == null) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static boolean consumeBlankPattern(final EntityPlayer player) {
+        if (player.capabilities.isCreativeMode) {
+            return true;
+        }
+
+        final IItemDefinition blank = AEApi.instance().definitions().materials().blankPattern();
+
+        for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+            if (blank.isSameAs(player.inventory.getStackInSlot(i))) {
+                player.inventory.decrStackSize(i, 1);
+                player.inventory.markDirty();
+                player.inventoryContainer.detectAndSendChanges();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static void insertUpgrades(final NBTTagCompound data, final EntityPlayer player, final UpgradeInventory up) {
