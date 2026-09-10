@@ -127,6 +127,8 @@ public class CraftingGridCache
     protected final OreListMultiMap<ICraftingPatternDetails> craftableItemSubstitutes = new OreListMultiMap<>();
     protected final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItemsLegacy = new HashMap<>();
     protected final Map<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
+    private ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> craftableItemsSnapshot = ImmutableMap
+            .of();
     protected final Map<UUID, ICraftingPatternDetails> inputOnlyPatterns = new HashMap<>();
     protected final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<>();
     protected final Multimap<IAEStack, CraftingWatcher> interests = HashMultimap.create();
@@ -370,6 +372,8 @@ public class CraftingGridCache
             final IAEItemStack ais = stackConvert(e.getKey());
             if (ais != null) craftableItemsLegacy.put(ais, ImmutableList.copyOf(e.getValue()));
         }
+
+        this.craftableItemsSnapshot = ImmutableMap.copyOf(this.craftableItems);
     }
 
     public ICraftingPatternDetails getInputOnlyPattern(final UUID uuid) {
@@ -554,7 +558,7 @@ public class CraftingGridCache
 
     @Override
     public ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> getCraftingMultiPatterns() {
-        return ImmutableMap.copyOf(this.craftableItems);
+        return this.craftableItemsSnapshot;
     }
 
     @Override
