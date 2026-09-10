@@ -10,6 +10,8 @@
 
 package appeng.me;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedList;
@@ -159,33 +161,30 @@ public class GridNode implements IGridNode, IPathItem {
 
         CraftingGridCache.pauseRebuilds();
 
-        LinkedList<GridNode> nextRun = new LinkedList<>();
+        final Deque<GridNode> nextRun = new ArrayDeque<>();
         nextRun.add(this);
 
         this.visitorIterationNumber = tracker;
 
         if (g instanceof IGridConnectionVisitor gcv) {
-            final LinkedList<IGridConnection> nextConn = new LinkedList<>();
+            final List<IGridConnection> nextConn = new ArrayList<>(this.connections.size());
 
             while (!nextRun.isEmpty()) {
-                while (!nextConn.isEmpty()) {
-                    gcv.visitConnection(nextConn.poll());
+                for (final IGridConnection connection : nextConn) {
+                    gcv.visitConnection(connection);
                 }
+                nextConn.clear();
 
-                final Iterable<GridNode> thisRun = nextRun;
-                nextRun = new LinkedList<>();
-
-                for (final GridNode n : thisRun) {
-                    n.visitorConnection(tracker, g, nextRun, nextConn);
+                final int nodesThisRun = nextRun.size();
+                for (int i = 0; i < nodesThisRun; i++) {
+                    nextRun.removeFirst().visitorConnection(tracker, g, nextRun, nextConn);
                 }
             }
         } else {
             while (!nextRun.isEmpty()) {
-                final Iterable<GridNode> thisRun = nextRun;
-                nextRun = new LinkedList<>();
-
-                for (final GridNode n : thisRun) {
-                    n.visitorNode(tracker, g, nextRun);
+                final int nodesThisRun = nextRun.size();
+                for (int i = 0; i < nodesThisRun; i++) {
+                    nextRun.removeFirst().visitorNode(tracker, g, nextRun);
                 }
             }
         }
@@ -461,7 +460,7 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     private void visitorConnection(final Object tracker, final IGridVisitor g, final Deque<GridNode> nextRun,
-            final Deque<IGridConnection> nextConnections) {
+            final List<IGridConnection> nextConnections) {
         if (g.visitNode(this)) {
             for (final IGridConnection gc : this.getConnections()) {
                 final GridNode gn = (GridNode) gc.getOtherSide(this);
