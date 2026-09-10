@@ -191,7 +191,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
             return false;
         }
 
-        ItemStack activeConfig = this.getColor(stack, creative);
+        ItemStack activeConfig = this.getColor(stack);
         if (activeConfig == null) {
             return false;
         }
