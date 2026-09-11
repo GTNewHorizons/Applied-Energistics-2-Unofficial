@@ -104,6 +104,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean highlightPatternTypeMismatchInGUI = true;
     public int screenColor = 0xFFFFFF;
     private boolean useLiteCraftingMode = false;
+    public boolean anchorsFunctionAsLadders = false;
 
     /** Max rows for crafting pins section (1-16). Caps the cycle button options. */
     public int maxCraftingPinRows = 16;
@@ -430,6 +431,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.visualiserWidthNormal = (float) this.get("Client", "visualiserWidthNormal", 1.0f).getDouble(1.0f);
         this.useLiteCraftingMode = this.get("Client", "isLiteCraftingEnabled", this.useLiteCraftingMode)
                 .getBoolean(this.useLiteCraftingMode);
+        this.anchorsFunctionAsLadders = this.get("Client", "anchorsFunctionAsLadders", false).getBoolean(true);
 
         // Pin options (under Client category)
         Property pMaxCraft = this.get("Client", "maxCraftingPinRows", this.maxCraftingPinRows);
