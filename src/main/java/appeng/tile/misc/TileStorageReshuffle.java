@@ -250,9 +250,8 @@ public class TileStorageReshuffle extends AENetworkTile
                 if (monitor != null) {
                     final IAEStack<?> res = monitor
                             .injectItems(aes, Actionable.MODULATE, new ReshuffleActionSource(this));
-                    if (res != null) this.cantInject.add(res);
-
-                    i.remove();
+                    if (res == null) i.remove();
+                    else aes.setStackSize(res.getStackSize());
                 }
             }
         } catch (Exception ignored) {}

@@ -52,13 +52,24 @@ public class ReshuffleTask {
     private final IItemList<IAEStack<?>> afterSnapshot = new IAEStackList();
     private final IItemList<IAEStack<?>> stackLookup = new IAEStackList();
 
-    private final List<IAEStack<?>> injectQueue = new ArrayList<>();
+    private final List<PendingInjection> injectQueue = new ArrayList<>();
 
     private Iterator<Iterator<IMEInventoryHandler>> netTypesIterator = null;
     private Iterator<IMEInventoryHandler> typeInvHandlersIterator = null;
     private deepDig deepInspector = null;
 
-    private Iterator<IAEStack<?>> injectIterator = null;
+    private Iterator<PendingInjection> injectIterator = null;
+
+    private static class PendingInjection {
+
+        private final IAEStack<?> stack;
+        private final IMEInventoryHandler source;
+
+        private PendingInjection(IAEStack<?> stack, IMEInventoryHandler source) {
+            this.stack = stack;
+            this.source = source;
+        }
+    }
 
     private static class deepDig {
 
@@ -164,12 +175,14 @@ public class ReshuffleTask {
 
                         if (extracted == null) {
                             this.cantExtract.add(aes);
-                        } else if (extracted.getStackSize() != aes.getStackSize()) {
-                            aes.decStackSize(extracted.getStackSize());
-                            this.cantExtract.add(aes);
                         } else {
+                            if (extracted.getStackSize() != aes.getStackSize()) {
+                                aes.decStackSize(extracted.getStackSize());
+                                this.cantExtract.add(aes);
+                            }
                             this.extractedItems += extracted.getStackSize();
                             target.add(extracted);
+                            this.injectQueue.add(new PendingInjection(extracted, cellHandler));
                         }
 
                         this.extractedTypes = this.extracted.size();
@@ -191,12 +204,12 @@ public class ReshuffleTask {
     private void toQueueList() {
         final Iterator<IAEStack<?>> i = this.extracted.iterator();
         while (i.hasNext()) {
-            final IAEStack<?> item = i.next();
-            this.injectQueue.add(item);
+            i.next();
             i.remove();
         }
-        this.injectQueue
-                .sort(Comparator.comparingLong(aes -> this.insertOrder ? -aes.getStackSize() : aes.getStackSize()));
+        this.injectQueue.sort(
+                Comparator.comparingLong(
+                        pending -> this.insertOrder ? -pending.stack.getStackSize() : pending.stack.getStackSize()));
     }
 
     public void processNextBatch() {
@@ -221,19 +234,16 @@ public class ReshuffleTask {
                 if (this.injectIterator == null) this.injectIterator = this.injectQueue.iterator();
 
                 while (this.injectIterator.hasNext()) {
-                    final IAEStack<?> aes = this.injectIterator.next();
+                    final PendingInjection pending = this.injectIterator.next();
+                    final IAEStack<?> aes = pending.stack;
                     final IMEMonitor monitor = this.sg.getMEMonitor(aes.getStackType());
 
-                    if (monitor == null) {
-                        this.cantInject.add(aes);
-                        this.injectIterator.remove();
-                        continue;
-                    }
-
-                    final IAEStack<?> res = monitor.injectItems(aes, Actionable.MODULATE, this.src);
+                    final IAEStack<?> res = monitor == null ? aes
+                            : monitor.injectItems(aes, Actionable.MODULATE, this.src);
 
                     if (res != null) {
-                        this.cantInject.add(res);
+                        final IAEStack<?> notRestored = pending.source.injectItems(res, Actionable.MODULATE, this.src);
+                        if (notRestored != null) this.cantInject.add(notRestored);
                         this.injectedItems -= res.getStackSize();
                         if (res.getStackSize() == aes.getStackSize()) this.injectedTypes -= 1;
                     }
@@ -262,17 +272,13 @@ public class ReshuffleTask {
 
     public void cancel() {
         this.phase = ReshufflePhase.CANCEL;
-        this.returnPendingItems(this.extracted.iterator());
         this.returnPendingItems(this.injectQueue.iterator());
     }
 
     public void nbt(NBTTagCompound tag) {
-        final NBTTagList tagListExtracted = Platform.writeAEStackListNBT(this.extracted);
-        tag.setTag("extracted", tagListExtracted);
-
         final NBTTagList tagListInjectQueue = new NBTTagList();
-        this.injectQueue
-                .forEach(aes -> tagListInjectQueue.appendTag(Platform.writeStackNBT(aes, new NBTTagCompound())));
+        this.injectQueue.forEach(
+                pending -> tagListInjectQueue.appendTag(Platform.writeStackNBT(pending.stack, new NBTTagCompound())));
 
         tag.setTag("injectQueue", tagListInjectQueue);
     }
@@ -288,17 +294,12 @@ public class ReshuffleTask {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void returnPendingItems(Iterator<IAEStack<?>> i) {
+    private void returnPendingItems(Iterator<PendingInjection> i) {
         while (i.hasNext()) {
-            final IAEStack<?> aes = i.next();
-            final IMEMonitor monitor = this.sg.getMEMonitor(aes.getStackType());
-
-            if (monitor != null) {
-                final IAEStack<?> res = monitor.injectItems(aes, Actionable.MODULATE, this.src);
-                if (res != null) this.cantInject.add(res);
-
-                i.remove();
-            }
+            final PendingInjection pending = i.next();
+            final IAEStack<?> res = pending.source.injectItems(pending.stack, Actionable.MODULATE, this.src);
+            if (res != null) this.cantInject.add(res);
+            i.remove();
         }
     }
 
