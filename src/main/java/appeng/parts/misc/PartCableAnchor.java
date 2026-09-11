@@ -34,6 +34,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.ISimplifiedBundle;
 import appeng.api.parts.PartItemStack;
+import appeng.core.AEConfig;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -126,7 +127,8 @@ public class PartCableAnchor implements IPart {
 
     @Override
     public boolean isLadder(final EntityLivingBase entity) {
-        return this.mySide.offsetY == 0 && (entity.isCollidedHorizontally || !entity.onGround);
+        return AEConfig.instance.anchorsFunctionAsLadders && this.mySide.offsetY == 0
+                && (entity.isCollidedHorizontally || !entity.onGround);
     }
 
     @Override
