@@ -63,6 +63,7 @@ import codechicken.multipart.JNormalOcclusion;
 import codechicken.multipart.NormalOcclusionTest;
 import codechicken.multipart.NormallyOccludedPart;
 import codechicken.multipart.TMultiPart;
+import codechicken.multipart.TileMultipart;
 import codechicken.multipart.scalatraits.TIInventoryTile;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -148,6 +149,12 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
     @Override
     public int getLightValue() {
         return this.getCableBus().getLightValue();
+    }
+
+    @Override
+    public void bind(final TileMultipart tile) {
+        super.bind(tile);
+        this.getCableBus().updatePartHostInfo();
     }
 
     @Override
@@ -459,6 +466,9 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
 
     @Override
     public ForgeDirection addPart(final ItemStack is, final ForgeDirection side, final EntityPlayer owner) {
+        if (!this.canAddPart(is, side)) {
+            return null;
+        }
         return this.getCableBus().addPart(is, side, owner);
     }
 
