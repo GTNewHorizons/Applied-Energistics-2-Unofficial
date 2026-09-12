@@ -13,11 +13,13 @@ package appeng.me.storage;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+import appeng.api.config.AccessRestriction;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellCacheRegistry;
+import appeng.api.storage.ICellContainer;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
@@ -127,6 +129,14 @@ public abstract class CellInventoryHandler<StackType extends IAEStack<StackType>
     @Override
     public boolean canGetInv() {
         return this.getCellInv() != null;
+    }
+
+    @Override
+    public AccessRestriction getReshuffleAccess() {
+        final ICellInventory<StackType> cell = this.getCellInv();
+        return cell instanceof CellInventory<?>inventory && inventory.container instanceof ICellContainer container
+                ? container.getReshuffleAccess()
+                : AccessRestriction.READ_WRITE;
     }
 
     @Override
