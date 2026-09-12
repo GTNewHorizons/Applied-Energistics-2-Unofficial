@@ -184,6 +184,8 @@ public enum CableBusTextures {
     PartImportSides("PartImportSides"),
 
     PartWirelessSides("PartWirelessSides"),
+
+    PartWirelessFixtureSides("WirelessFixture/PartWirelessFixtureSides"),
     PartStorageSides("PartStorageSides"),
     PartStorageBack("PartStorageBack");
 
