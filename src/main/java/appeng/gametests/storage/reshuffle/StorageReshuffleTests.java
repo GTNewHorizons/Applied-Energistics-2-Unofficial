@@ -14,6 +14,7 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.Constants.NBT;
 
 import com.gtnewhorizons.horizonqa.api.GameTestArguments;
@@ -22,23 +23,25 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
+import appeng.api.AEApi;
 import appeng.api.config.ReshufflePhase;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
-import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AppEng;
 import appeng.helpers.ReshuffleReport;
-import appeng.helpers.ReshuffleTask;
 import appeng.helpers.ScanTask;
 import appeng.me.GridAccessException;
+import appeng.me.cache.NetworkMonitor;
+import appeng.me.storage.NetworkInventoryHandler;
+import appeng.me.storage.NullInventory;
 import appeng.tile.misc.TileStorageReshuffle;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
-import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import appeng.util.item.IAEStackList;
 
@@ -200,16 +203,14 @@ public final class StorageReshuffleTests {
                 }).thenSucceed();
     }
 
-    @GameTest(template = TEMPLATE, timeoutTicks = 100)
+    @GameTest(template = TEMPLATE, timeoutTicks = 140)
     public static void missingDestinationRestoresItemsToTheirSource(GameTestHelper helper) {
         Fixture fixture = placeFixture(helper);
         ItemStack firstSourceCell = cell1k();
         ItemStack secondSourceCell = cell1k();
         insertItems(helper, firstSourceCell, Blocks.cobblestone, 64);
         insertItems(helper, secondSourceCell, Blocks.cobblestone, 32);
-        ReshuffleTask[] task = new ReshuffleTask[1];
-        ItemStack[] removedSourceCells = new ItemStack[2];
-        IItemList<IAEStack<?>> cantInject = new IAEStackList();
+        TileEntityChest[] removedCells = new TileEntityChest[1];
 
         helper.startSequence()
                 .thenWaitUntil(
@@ -224,19 +225,33 @@ public final class StorageReshuffleTests {
                         "wait for rollback source contents",
                         20,
                         () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 96))
-                .thenExecute("extract then remove the destinations", () -> {
-                    task[0] = createTask(fixture.controller, cantInject, new AEStackTypeFilter(), false);
-                    advanceToPhase(helper, task[0], ReshufflePhase.INJECTION);
-                    removedSourceCells[0] = fixture.sourceDrive.getStackInSlot(0);
-                    removedSourceCells[1] = fixture.meChest.getStackInSlot(1);
+                .thenExecute("start rollback reshuffle", fixture.reshuffler::startReshuffle)
+                .thenWaitUntil("wait for extraction to finish", 40, () -> {
+                    ReshuffleReport report = fixture.reshuffler.getReshuffleReport();
+                    helper.assertNotNull(report, "Running reshuffler should produce a report");
+                    helper.assertEquals(ReshufflePhase.INJECTION, report.phase, "Reshuffler should reach injection");
+                }).thenExecute("remove destinations while preserving their cells", () -> {
+                    ItemStack firstRemovedCell = fixture.sourceDrive.getStackInSlot(0);
+                    ItemStack secondRemovedCell = fixture.meChest.getStackInSlot(1);
                     helper.clearSlot(SOURCE_DRIVE, 0);
                     helper.clearSlot(ME_CHEST, 1);
-                    finishTask(helper, task[0]);
-                }).thenExecute("verify source rollback", () -> {
-                    assertStoredAmount(helper, removedSourceCells[0], Blocks.cobblestone, 64);
-                    assertStoredAmount(helper, removedSourceCells[1], Blocks.cobblestone, 32);
-                    helper.assertTrue(cantInject.isEmpty(), "Direct rollback should not leave pending items");
-                    helper.assertEquals(ReshufflePhase.DONE, task[0].getReport().phase, "Task should finish cleanly");
+                    helper.destroyBlock(TARGET_DRIVE);
+                    helper.setBlock(TARGET_DRIVE, Blocks.chest);
+                    removedCells[0] = helper.assertTileEntityPresent(TileEntityChest.class, TARGET_DRIVE);
+                    removedCells[0].setInventorySlotContents(0, firstRemovedCell);
+                    removedCells[0].setInventorySlotContents(1, secondRemovedCell);
+                })
+                .thenWaitUntil(
+                        "wait for rollback reshuffle completion",
+                        40,
+                        () -> assertDone(helper, fixture.reshuffler))
+                .thenExecute("verify source rollback", () -> {
+                    assertStoredAmount(helper, removedCells[0].getStackInSlot(0), Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, removedCells[0].getStackInSlot(1), Blocks.cobblestone, 32);
+                    helper.assertEquals(
+                            0L,
+                            pendingAmount(fixture.reshuffler, Blocks.cobblestone),
+                            "Direct rollback should not leave pending items");
                 }).thenSucceed();
     }
 
@@ -273,14 +288,14 @@ public final class StorageReshuffleTests {
                 }).thenSucceed();
     }
 
-    @GameTest(template = TEMPLATE, timeoutTicks = 100)
+    @GameTest(template = TEMPLATE, timeoutTicks = 140)
     public static void pendingItemsSerializeExactlyOnce(GameTestHelper helper) {
         Fixture fixture = placeFixture(helper);
         ItemStack firstSourceCell = cell1k();
         ItemStack secondSourceCell = cell1k();
         insertItems(helper, firstSourceCell, Blocks.cobblestone, 64);
         insertItems(helper, secondSourceCell, Blocks.cobblestone, 32);
-        ReshuffleTask[] task = new ReshuffleTask[1];
+        TileStorageReshuffle[] restored = new TileStorageReshuffle[1];
 
         helper.startSequence()
                 .thenWaitUntil(
@@ -295,27 +310,31 @@ public final class StorageReshuffleTests {
                         "wait for persistence source contents",
                         20,
                         () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 96))
-                .thenExecute("serialize pending extraction", () -> {
-                    task[0] = createTask(fixture.controller, new IAEStackList(), new AEStackTypeFilter(), false);
-                    advanceToPhase(helper, task[0], ReshufflePhase.INJECTION);
-
-                    NBTTagCompound tag = new NBTTagCompound();
-                    task[0].nbt(tag);
-                    IItemList<IAEStack<?>> restored = new IAEStackList();
-                    ReshuffleTask.nbtLoad(tag, restored);
-                    IAEStack<?> pending = restored.findPrecise(itemStack(Blocks.cobblestone, 1));
-
-                    helper.assertNotNull(pending, "Serialized task should contain the pending stack");
-                    helper.assertEquals(96L, pending.getStackSize(), "Pending stack should contain both sources");
-                    helper.assertEquals(1, restored.size(), "Recovery list should contain one stack type");
+                .thenExecute("start persistent reshuffle", fixture.reshuffler::startReshuffle)
+                .thenWaitUntil("wait for persistent extraction to finish", 40, () -> {
+                    ReshuffleReport report = fixture.reshuffler.getReshuffleReport();
+                    helper.assertNotNull(report, "Running reshuffler should produce a report");
+                    helper.assertEquals(ReshufflePhase.INJECTION, report.phase, "Reshuffler should reach injection");
+                }).thenExecute("reload with pending extraction", () -> {
+                    NBTTagCompound savedState = new NBTTagCompound();
+                    fixture.reshuffler.writeToNBT(savedState);
                     helper.assertEquals(
                             1,
-                            tag.getTagList("injectQueue", NBT.TAG_COMPOUND).tagCount(),
-                            "Identical stacks should use one injection operation");
-                    task[0].cancel();
-                }).thenExecute("verify persistence cleanup", () -> {
-                    assertStoredAmount(helper, fixture.sourceDrive.getStackInSlot(0), Blocks.cobblestone, 64);
-                    assertStoredAmount(helper, fixture.targetDrive.getStackInSlot(0), Blocks.cobblestone, 32);
+                            savedState.getTagList("injectQueue", NBT.TAG_COMPOUND).tagCount(),
+                            "Identical pending stacks should serialize as one stack");
+
+                    helper.destroyBlock(RESHUFFLER);
+                    Block reshufflerBlock = AEApi.instance().definitions().blocks().storageReshuffle().maybeBlock()
+                            .get();
+                    helper.setBlock(RESHUFFLER, reshufflerBlock);
+                    restored[0] = helper.assertTileEntityPresent(TileStorageReshuffle.class, RESHUFFLER);
+                    restored[0].readFromNBT(savedState);
+                }).thenWaitUntil("wait for restored reshuffler activation", 40, () -> {
+                    assertActive(helper, restored[0].getProxy(), "Restored reshuffler should be active");
+                    helper.assertEquals(
+                            96L,
+                            pendingAmount(restored[0], Blocks.cobblestone),
+                            "Restored recovery queue should contain both sources exactly once");
                 }).thenSucceed();
     }
 
@@ -324,8 +343,6 @@ public final class StorageReshuffleTests {
         Fixture fixture = placeFixture(helper);
         ItemStack sourceCell = cell1k();
         insertItems(helper, sourceCell, Blocks.cobblestone, 64);
-        IItemList<IAEStack<?>> cantInject = new IAEStackList();
-        ReshuffleTask[] task = new ReshuffleTask[1];
 
         helper.startSequence()
                 .thenWaitUntil("wait for error network activation", 40, () -> { assertFixtureActive(helper, fixture); })
@@ -334,19 +351,21 @@ public final class StorageReshuffleTests {
                         "wait for error source contents",
                         20,
                         () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 64))
-                .thenExecute("fail with an extracted stack pending", () -> {
-                    task[0] = createTask(fixture.controller, cantInject, new AEStackTypeFilter(), false);
-                    advanceToPhase(helper, task[0], ReshufflePhase.INJECTION);
-                    task[0].error();
-                }).thenExecute("verify pending stack entered recovery queue", () -> {
+                .thenExecute("start reshuffle with a failing destination", () -> {
+                    installFailingDestination(helper, fixture.controller);
+                    fixture.reshuffler.startReshuffle();
+                }).thenWaitUntil("wait for tile-tick failure handling", 40, () -> {
+                    ReshuffleReport report = fixture.reshuffler.getReshuffleReport();
+                    helper.assertNotNull(report, "Failed reshuffler should produce a report");
+                    helper.assertFalse(fixture.reshuffler.isReshuffleRunning(), "Failed reshuffler should stop");
+                    helper.assertEquals(ReshufflePhase.ERROR, report.phase, "Task should report the error");
                     helper.assertEquals(
                             64L,
-                            storedAmount(cantInject, Blocks.cobblestone),
-                            "Recovery amount should match");
-                    helper.assertEquals(
-                            ReshufflePhase.ERROR,
-                            task[0].getReport().phase,
-                            "Task should report the error");
+                            pendingAmount(fixture.reshuffler, Blocks.cobblestone),
+                            "Pending stack should enter the tile recovery queue");
+                    helper.assertFalse(
+                            itemNetworkMonitor(fixture.controller).isLocked(),
+                            "Failure handling should unlock the item monitor");
                 }).thenSucceed();
     }
 
@@ -415,32 +434,6 @@ public final class StorageReshuffleTests {
         assertActive(helper, fixture.meChest.getProxy(), "ME chest should be active");
     }
 
-    private static ReshuffleTask createTask(TileController controller, IItemList<IAEStack<?>> cantInject,
-            AEStackTypeFilter filters, boolean largeStacksFirst) {
-        return new ReshuffleTask(
-                filters,
-                getStorageGrid(controller),
-                cantInject,
-                new ReshuffleActionSource(controller),
-                false,
-                largeStacksFirst);
-    }
-
-    private static void advanceToPhase(GameTestHelper helper, ReshuffleTask task, ReshufflePhase phase) {
-        task.initialize();
-        for (int i = 0; i < 100 && task.getReport().phase != phase; i++) {
-            task.processNextBatch();
-        }
-        helper.assertEquals(phase, task.getReport().phase, "Reshuffle should reach " + phase);
-    }
-
-    private static void finishTask(GameTestHelper helper, ReshuffleTask task) {
-        for (int i = 0; i < 100 && task.isRunning(); i++) {
-            task.processNextBatch();
-        }
-        helper.assertFalse(task.isRunning(), "Reshuffle should finish within the operation budget");
-    }
-
     private static void assertDone(GameTestHelper helper, TileStorageReshuffle reshuffler) {
         ReshuffleReport report = reshuffler.getReshuffleReport();
         helper.assertNotNull(report, "Reshuffler should produce a report");
@@ -456,6 +449,18 @@ public final class StorageReshuffleTests {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private static void installFailingDestination(GameTestHelper helper, TileController controller) {
+        Object handler = itemNetworkMonitor(controller).getHandler();
+        helper.assertTrue(handler instanceof NetworkInventoryHandler<?>, "Item monitor should use the network handler");
+        ((NetworkInventoryHandler<IAEItemStack>) handler).addNewStorage(new FailingInventory());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static NetworkMonitor<IAEItemStack> itemNetworkMonitor(TileController controller) {
+        return (NetworkMonitor<IAEItemStack>) getStorageGrid(controller).getItemInventory();
+    }
+
     private static long pendingAmount(TileStorageReshuffle reshuffler, Block block) {
         NBTTagCompound tag = new NBTTagCompound();
         reshuffler.writeToNBT_TileStorageReshuffle(tag);
@@ -465,6 +470,30 @@ public final class StorageReshuffleTests {
     private static long storedAmount(IItemList<IAEStack<?>> stacks, Block block) {
         IAEStack<?> stack = stacks.findPrecise(itemStack(block, 1));
         return stack == null ? 0 : stack.getStackSize();
+    }
+
+    private static final class FailingInventory extends NullInventory<IAEItemStack> {
+
+        private boolean failed;
+
+        @Override
+        public boolean canAccept(IAEItemStack input) {
+            if (!this.failed && input.isSameType(itemStack(Blocks.cobblestone, 1))) {
+                this.failed = true;
+                throw new IllegalStateException("Intentional reshuffle injection failure");
+            }
+            return false;
+        }
+
+        @Override
+        public int getPriority() {
+            return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public boolean validForPass(int pass) {
+            return pass == 1;
+        }
     }
 
     private static final class Fixture {
