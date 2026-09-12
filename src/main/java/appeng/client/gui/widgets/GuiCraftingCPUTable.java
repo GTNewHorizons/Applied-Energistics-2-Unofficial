@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
@@ -21,6 +22,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import appeng.api.AEApi;
+import appeng.api.config.CPUPriorityDisplay;
 import appeng.api.config.CPUSortBy;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
@@ -50,16 +52,34 @@ public class GuiCraftingCPUTable {
     public static final int CPU_TABLE_SLOT_YOFF = 0;
     public static final int CPU_TABLE_SLOT_WIDTH = 67;
     public static final int CPU_TABLE_SLOT_HEIGHT = 23;
+    private static final int PRIORITY_STEP_SMALL = 1;
+    private static final int PRIORITY_STEP_LARGE = 10;
+    private static final float CPU_NAME_SCALE = 0.8f;
+    private static final float PRIORITY_BADGE_SCALE = 0.7f;
+    private static final int PRIORITY_BADGE_X = 3;
+    private static final int PRIORITY_BADGE_Y = 2;
+    private static final int PRIORITY_BADGE_HEIGHT = 9;
+    private static final int PRIORITY_BADGE_PAD_X = 2;
+    private static final int PRIORITY_BADGE_GAP = 2;
+    private static final float PRIORITY_COMPACT_SCALE = 0.5f;
+    private static final int PRIORITY_COMPACT_HEIGHT = 7;
+    private static final int PRIORITY_COMPACT_PAD_X = 1;
+    private static final int PRIORITY_COMPACT_MARGIN = 2;
+    private static final int JOB_ICON_X = CPU_TABLE_SLOT_WIDTH - 19;
     private static final int CPU_SORT_BUTTON_X = -85;
     private static final int CPU_SORT_BUTTON_Y = 2;
     private static final int CPU_SORT_DIRECTION_BUTTON_X = CPU_SORT_BUTTON_X + 16;
     private static final int CPU_SORT_DIRECTION_BUTTON_Y = 2;
+    private static final int CPU_PRIORITY_DISPLAY_BUTTON_X = CPU_SORT_DIRECTION_BUTTON_X + 16;
+    private static final int CPU_PRIORITY_DISPLAY_BUTTON_Y = 2;
 
     private final GuiScrollbar cpuScrollbar;
     private final GuiImgButton cpuSortButton;
     private final GuiImgButton cpuSortDirectionButton;
+    private final GuiImgButton cpuPriorityDisplayButton;
     private static final CPUSortBy[] CPU_SORT_ORDER = CPUSortBy.values();
     private static final SortDir[] CPU_SORT_DIRECTION_ORDER = SortDir.values();
+    private static final CPUPriorityDisplay[] CPU_PRIORITY_DISPLAY_ORDER = CPUPriorityDisplay.values();
 
     private String selectedCPUName = "";
     private static final DecimalFormat DF = new DecimalFormat("#.##");
@@ -88,6 +108,9 @@ public class GuiCraftingCPUTable {
         this.cpuSortButton = new GuiImgButton(0, 0, Settings.CPU_SORT_BY, savedSortMode);
         SortDir savedSortDirection = (SortDir) AEConfig.instance.settings.getSetting(Settings.CPU_SORT_DIRECTION);
         this.cpuSortDirectionButton = new GuiImgButton(0, 0, Settings.CPU_SORT_DIRECTION, savedSortDirection);
+        CPUPriorityDisplay savedPriorityDisplay = (CPUPriorityDisplay) AEConfig.instance.settings
+                .getSetting(Settings.CPU_PRIORITY_DISPLAY);
+        this.cpuPriorityDisplayButton = new GuiImgButton(0, 0, Settings.CPU_PRIORITY_DISPLAY, savedPriorityDisplay);
         this.cpuScrollbar.setLeft(-16);
         this.cpuScrollbar.setTop(19);
         this.cpuScrollbar.setWidth(12);
@@ -133,6 +156,7 @@ public class GuiCraftingCPUTable {
         final ItemStack cell64k = AEApi.instance().definitions().items().cell64k().maybeStack(1).orNull();
         {
             FontRenderer font = Minecraft.getMinecraft().fontRenderer;
+            final CPUPriorityDisplay priorityDisplay = getPriorityDisplay();
             for (int i = firstCpu; i < firstCpu + CPU_TABLE_SLOTS; i++) {
                 if (i < 0 || i >= cpus.size()) {
                     continue;
@@ -170,16 +194,30 @@ public class GuiCraftingCPUTable {
                         CPU_TABLE_SLOT_HEIGHT);
                 GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
+                final boolean showPriority = cpu.getPriority() != 0 && priorityDisplay != CPUPriorityDisplay.OFF;
+                final boolean badgeBeforeName = showPriority && priorityDisplay == CPUPriorityDisplay.BADGE;
+
+                final int nameLeft = badgeBeforeName
+                        ? drawPriorityChip(
+                                font,
+                                x + PRIORITY_BADGE_X,
+                                y + PRIORITY_BADGE_Y,
+                                PRIORITY_BADGE_HEIGHT,
+                                PRIORITY_BADGE_SCALE,
+                                PRIORITY_BADGE_PAD_X,
+                                cpu.getPriority()) + PRIORITY_BADGE_X + PRIORITY_BADGE_GAP
+                        : PRIORITY_BADGE_X;
+                final int nameRight = cpu.getCrafting() != null ? JOB_ICON_X - 1 : CPU_TABLE_SLOT_WIDTH - 3;
+
                 String name = cpu.getName();
                 if (name == null || name.isEmpty()) {
                     name = GuiText.CPUs.getLocal() + " #" + NumberFormat.getInstance().format((cpu.getSerial()));
                 }
-                if (name.length() > 12) {
-                    name = name.substring(0, 11) + "..";
-                }
+                name = truncateToWidth(font, name, CPU_NAME_SCALE, nameRight - nameLeft);
+
                 GL11.glPushMatrix();
-                GL11.glTranslatef(x + 3, y + 3, 0);
-                GL11.glScalef(0.8f, 0.8f, 1.0f);
+                GL11.glTranslatef(x + nameLeft, y + 3, 0);
+                GL11.glScalef(CPU_NAME_SCALE, CPU_NAME_SCALE, 1.0f);
                 font.drawString(name, 0, 0, ColorUtils.craftingStatusCPUName.getColor());
                 GL11.glPopMatrix();
 
@@ -253,6 +291,23 @@ public class GuiCraftingCPUTable {
 
                 }
                 GL11.glPopMatrix();
+
+                // compact mode
+                if (showPriority && priorityDisplay == CPUPriorityDisplay.COMPACT) {
+                    final int width = priorityChipWidth(
+                            font,
+                            cpu.getPriority(),
+                            PRIORITY_COMPACT_SCALE,
+                            PRIORITY_COMPACT_PAD_X);
+                    drawPriorityChip(
+                            font,
+                            x + CPU_TABLE_SLOT_WIDTH - PRIORITY_COMPACT_MARGIN - width,
+                            y + CPU_TABLE_SLOT_HEIGHT - PRIORITY_COMPACT_HEIGHT - 3,
+                            PRIORITY_COMPACT_HEIGHT,
+                            PRIORITY_COMPACT_SCALE,
+                            PRIORITY_COMPACT_PAD_X,
+                            cpu.getPriority());
+                }
             }
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         }
@@ -369,6 +424,24 @@ public class GuiCraftingCPUTable {
             }
             tooltip.append('\n');
 
+            // priority
+            final int hoveredPriority = hoveredCpu.getPriority();
+            tooltip.append(green);
+            tooltip.append(GuiText.CPUPriority.getLocal());
+            tooltip.append(reset);
+            tooltip.append(": ");
+            if (hoveredPriority > 0) {
+                tooltip.append(gold).append('+').append(hoveredPriority);
+            } else if (hoveredPriority < 0) {
+                tooltip.append(EnumChatFormatting.AQUA).append(hoveredPriority);
+            } else {
+                tooltip.append(EnumChatFormatting.GRAY).append(hoveredPriority);
+            }
+            tooltip.append(reset);
+            tooltip.append('\n');
+            tooltip.append(GuiText.CPUPriorityHint.getLocal());
+            tooltip.append('\n');
+
             if (tooltip.length() > 0) {
                 parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, tooltip.toString());
             }
@@ -401,6 +474,74 @@ public class GuiCraftingCPUTable {
         parent.drawTexturedModalRect(tableLeft + 95, tableTop, 93, 0, 1, 1);
         // Copy (93,1) -> (94,1)
         parent.drawTexturedModalRect(tableLeft + 94, tableTop + 1, 93, 1, 1, 1);
+    }
+
+    private static String priorityLabel(int priority) {
+        return priority > 0 ? "+" + priority : String.valueOf(priority);
+    }
+
+    private static int priorityChipWidth(FontRenderer font, int priority, float scale, int padX) {
+        return Math.round(font.getStringWidth(priorityLabel(priority)) * scale) + 2 * padX;
+    }
+
+    private int drawPriorityChip(FontRenderer font, int left, int top, int height, float scale, int padX,
+            int priority) {
+        final String label = priorityLabel(priority);
+        final int width = priorityChipWidth(font, priority, scale, padX);
+        final int fill = opaque(
+                priority > 0 ? ColorUtils.craftingStatusCPUPriorityRaised.getColor()
+                        : ColorUtils.craftingStatusCPUPriorityLowered.getColor());
+
+        // outline first, then the fill inset by a pixel
+        AEBaseGui.drawRect(left, top, left + width, top + height, shade(fill, 0.55f));
+        AEBaseGui.drawRect(left + 1, top + 1, left + width - 1, top + height - 1, fill);
+
+        GL11.glPushMatrix();
+        GL11.glTranslatef(left + padX, top + (height - font.FONT_HEIGHT * scale) / 2.0f + 0.5f, 0);
+        GL11.glScalef(scale, scale, 1.0f);
+        font.drawString(label, 0, 0, ColorUtils.craftingStatusCPUPriorityText.getColor());
+        GL11.glPopMatrix();
+
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
+        return width;
+    }
+
+    private static int opaque(int color) {
+        return 0xFF000000 | color;
+    }
+
+    private static int shade(int argb, float factor) {
+        final int r = Math.round(((argb >> 16) & 0xFF) * factor);
+        final int g = Math.round(((argb >> 8) & 0xFF) * factor);
+        final int b = Math.round((argb & 0xFF) * factor);
+        return (argb & 0xFF000000) | (r << 16) | (g << 8) | b;
+    }
+
+    private static String truncateToWidth(FontRenderer font, String text, float scale, int maxPixels) {
+        if (font.getStringWidth(text) * scale <= maxPixels) {
+            return text;
+        }
+
+        final String ellipsis = "..";
+        final float budget = maxPixels - font.getStringWidth(ellipsis) * scale;
+
+        if (budget <= 0) {
+            return ellipsis;
+        }
+
+        int end = 0;
+        float width = 0;
+        while (end < text.length()) {
+            final float next = width + font.getCharWidth(text.charAt(end)) * scale;
+            if (next > budget) {
+                break;
+            }
+            width = next;
+            end++;
+        }
+
+        return text.substring(0, end) + ellipsis;
     }
 
     /**
@@ -438,9 +579,16 @@ public class GuiCraftingCPUTable {
         if (!buttonList.contains(this.cpuSortDirectionButton)) {
             buttonList.add(this.cpuSortDirectionButton);
         }
+        if (!buttonList.contains(this.cpuPriorityDisplayButton)) {
+            buttonList.add(this.cpuPriorityDisplayButton);
+        }
     }
 
     public boolean actionPerformed(GuiButton btn, boolean backwards) {
+        if (btn == this.cpuPriorityDisplayButton) {
+            cyclePriorityDisplay(backwards);
+            return true;
+        }
         if (btn == this.cpuSortDirectionButton) {
             cycleSortDirection(backwards);
             return true;
@@ -478,6 +626,30 @@ public class GuiCraftingCPUTable {
         CPUSortBy next = CPU_SORT_ORDER[nextIndex];
         this.cpuSortButton.set(next);
         AEConfig.instance.settings.putSetting(Settings.CPU_SORT_BY, next);
+    }
+
+    private void cyclePriorityDisplay(boolean backwards) {
+        final CPUPriorityDisplay current = (CPUPriorityDisplay) this.cpuPriorityDisplayButton.getCurrentValue();
+        int index = 0;
+        for (int i = 0; i < CPU_PRIORITY_DISPLAY_ORDER.length; i++) {
+            if (CPU_PRIORITY_DISPLAY_ORDER[i] == current) {
+                index = i;
+                break;
+            }
+        }
+        int nextIndex = backwards ? index - 1 : index + 1;
+        if (nextIndex < 0) {
+            nextIndex = CPU_PRIORITY_DISPLAY_ORDER.length - 1;
+        } else if (nextIndex >= CPU_PRIORITY_DISPLAY_ORDER.length) {
+            nextIndex = 0;
+        }
+        CPUPriorityDisplay next = CPU_PRIORITY_DISPLAY_ORDER[nextIndex];
+        this.cpuPriorityDisplayButton.set(next);
+        AEConfig.instance.settings.putSetting(Settings.CPU_PRIORITY_DISPLAY, next);
+    }
+
+    private static CPUPriorityDisplay getPriorityDisplay() {
+        return (CPUPriorityDisplay) AEConfig.instance.settings.getSetting(Settings.CPU_PRIORITY_DISPLAY);
     }
 
     private void cycleSortDirection(boolean backwards) {
@@ -519,12 +691,31 @@ public class GuiCraftingCPUTable {
         y -= guiTop;
         int dwheel = Mouse.getEventDWheel();
         if (x >= 9 && x < CPU_TABLE_SLOT_WIDTH + 9 && y >= 19 && y < 19 + CPU_TABLE_SLOTS * CPU_TABLE_SLOT_HEIGHT) {
-            if (this.cpuScrollbar != null && dwheel != 0) {
+            if (dwheel == 0) {
+                return false;
+            }
+            if (GuiScreen.isShiftKeyDown()) {
+                final CraftingCPUStatus hovered = hitCpu(x - CPU_TABLE_WIDTH, y);
+                if (hovered != null) {
+                    final int step = AEBaseGui.isCtrlKeyDown() ? PRIORITY_STEP_LARGE : PRIORITY_STEP_SMALL;
+                    sendCPUPriority(hovered.getSerial(), dwheel > 0 ? step : -step);
+                    return true;
+                }
+            }
+            if (this.cpuScrollbar != null) {
                 this.cpuScrollbar.wheel(dwheel);
                 return true;
             }
         }
         return false;
+    }
+
+    public void sendCPUPriority(int serial, int delta) {
+        try {
+            NetworkHandler.instance.sendToServer(new PacketValueConfig("CPUTable.Cpu.Priority", serial + ":" + delta));
+        } catch (final IOException e) {
+            AELog.warn(e);
+        }
     }
 
     public boolean hideItemPanelSlot(int x, int y, int w, int h) {
@@ -603,5 +794,7 @@ public class GuiCraftingCPUTable {
         this.cpuSortButton.yPosition = guiTop + CPU_SORT_BUTTON_Y;
         this.cpuSortDirectionButton.xPosition = guiLeft + CPU_SORT_DIRECTION_BUTTON_X;
         this.cpuSortDirectionButton.yPosition = guiTop + CPU_SORT_DIRECTION_BUTTON_Y;
+        this.cpuPriorityDisplayButton.xPosition = guiLeft + CPU_PRIORITY_DISPLAY_BUTTON_X;
+        this.cpuPriorityDisplayButton.yPosition = guiTop + CPU_PRIORITY_DISPLAY_BUTTON_Y;
     }
 }

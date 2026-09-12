@@ -110,6 +110,8 @@ public class CraftingGridCache
     private static final ExecutorService CRAFTING_POOL;
     private static final Comparator<ICraftingPatternDetails> COMPARATOR = (firstDetail,
             nextDetail) -> nextDetail.getPriority() - firstDetail.getPriority();
+    private static final Comparator<CraftingCPUCluster> BY_PRIORITY_DESCENDING = Comparator
+            .comparingInt(CraftingCPUCluster::getPriority).reversed();
 
     static {
         final ThreadFactory factory = ar -> new Thread(ar, "AE Crafting Calculator");
@@ -118,6 +120,8 @@ public class CraftingGridCache
     }
 
     protected final Set<CraftingCPUCluster> craftingCPUClusters = new HashSet<>();
+    protected final List<CraftingCPUCluster> cpuTickOrder = new ArrayList<>();
+    protected boolean cpuTickOrderDirty = true;
     protected final Set<ICraftingProvider> craftingProviders = new HashSet<>();
     protected final Map<IGridNode, ICraftingWatcher> craftingWatchers = new HashMap<>();
     protected final IGrid grid;
@@ -174,10 +178,25 @@ public class CraftingGridCache
 
         this.craftingLinks.values().removeIf(craftingLinkNexus -> craftingLinkNexus.isDead(this.grid, this));
 
-        for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
+        for (final CraftingCPUCluster cpu : this.getCpuTickOrder()) {
             cpu.tryExtractItems();
             cpu.updateCraftingLogic(this.grid, this.energyGrid, this);
         }
+    }
+
+    public void invalidateCpuTickOrder() {
+        this.cpuTickOrderDirty = true;
+    }
+
+    protected List<CraftingCPUCluster> getCpuTickOrder() {
+        if (this.cpuTickOrderDirty) {
+            this.cpuTickOrderDirty = false;
+            this.cpuTickOrder.clear();
+            this.cpuTickOrder.addAll(this.craftingCPUClusters);
+            this.cpuTickOrder.sort(BY_PRIORITY_DESCENDING);
+        }
+
+        return this.cpuTickOrder;
     }
 
     @Override
@@ -382,6 +401,8 @@ public class CraftingGridCache
 
     protected void updateCPUClusters() {
         this.craftingCPUClusters.clear();
+        this.cpuTickOrder.clear();
+        this.cpuTickOrderDirty = true;
 
         for (Object cls : StreamSupport.stream(grid.getMachinesClasses().spliterator(), false)
                 .filter(TileCraftingStorageTile.class::isAssignableFrom).toArray()) {
