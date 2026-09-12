@@ -22,6 +22,7 @@ import appeng.api.config.Actionable;
 import appeng.api.config.IncludeExclude;
 import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMENetworkInventory;
@@ -99,7 +100,8 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public T injectItems(final T input, final Actionable type, final BaseActionSource src) {
-        if (!this.canAccept(input)) {
+        if (!this.canAccept(input) || src instanceof ReshuffleActionSource
+                && !this.getReshuffleAccess().hasPermission(AccessRestriction.WRITE)) {
             return input;
         }
 
@@ -108,7 +110,8 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public T extractItems(final T request, final Actionable type, final BaseActionSource src) {
-        if (!this.hasReadAccess) {
+        if (!this.hasReadAccess || src instanceof ReshuffleActionSource
+                && !this.getReshuffleAccess().hasPermission(AccessRestriction.READ)) {
             return null;
         }
         if (this.isExtractFilterActive() && !this.myExtractPartitionList.isEmpty()) {
@@ -253,6 +256,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     @Override
     public boolean getSticky() {
         return isSticky || this.internal.getSticky();
+    }
+
+    @Override
+    public AccessRestriction getReshuffleAccess() {
+        return this.internal.getReshuffleAccess();
     }
 
     @Override
