@@ -17,5 +17,9 @@ public interface IMouseWheelItem {
 
     void onWheel(ItemStack is, boolean up);
 
+    default void onWheel(EntityPlayer player, ItemStack is, boolean up) {
+        this.onWheel(is, up);
+    }
+
     void onWheelClick(EntityPlayer player, ItemStack is);
 }
