@@ -13,6 +13,9 @@ package appeng.me.storage;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import java.util.Optional;
+import java.util.function.Predicate;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.inventory.IInventory;
@@ -428,6 +431,14 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
             }
         }
         return count == 0 ? null : request.copy().setStackSize(count);
+    }
+
+    @Override
+    public IItemList<StackType> getAvailableItems(IItemList<StackType> out, int iteration,
+            Optional<Predicate<StackType>> filter) {
+        this.getCellStacks().getAvailableItems(out, iteration, filter);
+
+        return out;
     }
 
     @Override

@@ -14,6 +14,8 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
@@ -133,6 +135,26 @@ public final class HashBasedItemList implements IItemList<IAEItemStack> {
         }
 
         return null;
+    }
+
+    @Override
+    public void getAvailableItems(IItemList<IAEItemStack> out, int iteration,
+            Optional<Predicate<IAEItemStack>> filter) {
+        if (!filter.isPresent()) {
+            this.records.forEach(stack -> {
+                if (stack.isMeaningful()) {
+                    out.add(stack);
+                }
+            });
+        } else {
+            Predicate<IAEItemStack> pred = filter.get();
+
+            this.records.forEach(stack -> {
+                if (stack.isMeaningful() && pred.test(stack)) {
+                    out.add(stack);
+                }
+            });
+        }
     }
 
     @Override
