@@ -20,6 +20,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.RandomAccess;
 import java.util.Set;
 
 import net.minecraft.client.renderer.RenderBlocks;
@@ -75,6 +76,7 @@ import appeng.me.storage.MEMonitorPassThrough;
 import appeng.me.storage.NullInventory;
 import appeng.parts.PartBasicState;
 import appeng.util.Platform;
+import appeng.util.inv.MEInventoryCrafting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
@@ -110,6 +112,19 @@ public class PartPatternRepeater extends PartBasicState
             monitor.setChangeSource(actionSource);
             this.monitors.put(type, monitor);
         }
+    }
+
+    /**
+     * 饱和乘法辅助方法：防止整数溢出
+     */
+    private static long saturatedMultiply(final long value, final int multiplier) {
+        if (value <= 0 || multiplier <= 0) {
+            return 0;
+        }
+        if (value > Long.MAX_VALUE / multiplier) {
+            return Long.MAX_VALUE;
+        }
+        return value * multiplier;
     }
 
     @Override
@@ -238,13 +253,118 @@ public class PartPatternRepeater extends PartBasicState
         this.provider = data.getBoolean("provider");
     }
 
-    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
-        return pushPatternToRepeater(patternDetails, table, new HashSet<>());
+    @Override
+    public boolean canMergePatternPush(final ICraftingPatternDetails patternDetails) {
+        return canMergePatternPushInternal(patternDetails, new HashSet<>());
     }
 
-    public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final InventoryCrafting table,
+    private boolean canMergePatternPushInternal(final ICraftingPatternDetails patternDetails,
             Set<CraftingGridCache> visitedRepeaters) {
-        if (this.targetCraftingGrid == null) return false;
+        if (this.targetCraftingGrid == null || visitedRepeaters.contains(this.targetCraftingGrid)) {
+            return false;
+        }
+        visitedRepeaters.add(this.targetCraftingGrid);
+
+        List<ICraftingMedium> craftingMediumList = this.targetCraftingGrid.getMediums(patternDetails);
+        if (craftingMediumList instanceof RandomAccess) {
+            for (var i = 0; i < craftingMediumList.size(); i++) {
+                ICraftingMedium medium = craftingMediumList.get(i);
+                if (medium instanceof PartPatternRepeater nextRepeater) {
+                    if (nextRepeater.canMergePatternPushInternal(patternDetails, visitedRepeaters)) {
+                        return true;
+                    }
+                } else if (medium.canMergePatternPush(patternDetails)) {
+                    return true;
+                }
+            }
+        } else {
+            for (ICraftingMedium medium : craftingMediumList) {
+                if (medium instanceof PartPatternRepeater nextRepeater) {
+                    if (nextRepeater.canMergePatternPushInternal(patternDetails, visitedRepeaters)) {
+                        return true;
+                    }
+                } else if (medium.canMergePatternPush(patternDetails)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public int getMaxPatternPushMultiplier(final ICraftingPatternDetails patternDetails, final int maxMultiplier) {
+        return getMaxPatternPushMultiplierInternal(patternDetails, maxMultiplier, new HashSet<>());
+    }
+
+    private int getMaxPatternPushMultiplierInternal(final ICraftingPatternDetails patternDetails,
+            final int maxMultiplier, Set<CraftingGridCache> visitedRepeaters) {
+        if (maxMultiplier <= 0 || this.targetCraftingGrid == null) return 0;
+
+        if (visitedRepeaters.contains(this.targetCraftingGrid)) {
+            return 0;
+        }
+        visitedRepeaters.add(this.targetCraftingGrid);
+
+        int maxFound = 0;
+        List<ICraftingMedium> craftingMediumList = this.targetCraftingGrid.getMediums(patternDetails);
+        if (craftingMediumList instanceof RandomAccess) {
+            for (var i = 0; i < craftingMediumList.size(); i++) {
+                int mediumMax = 0;
+                ICraftingMedium medium = craftingMediumList.get(i);
+
+                if (medium instanceof PartPatternRepeater nextRepeater) {
+                    if (nextRepeater.targetCraftingGrid != null
+                            && !visitedRepeaters.contains(nextRepeater.targetCraftingGrid)) {
+                        mediumMax = nextRepeater
+                                .getMaxPatternPushMultiplierInternal(patternDetails, maxMultiplier, visitedRepeaters);
+                    }
+                } else {
+                    mediumMax = medium.getMaxPatternPushMultiplier(patternDetails, maxMultiplier);
+                }
+
+                maxFound = Math.max(maxFound, mediumMax);
+            }
+        } else {
+            for (ICraftingMedium medium : craftingMediumList) {
+                int mediumMax = 0;
+
+                if (medium instanceof PartPatternRepeater nextRepeater) {
+                    if (nextRepeater.targetCraftingGrid != null
+                            && !visitedRepeaters.contains(nextRepeater.targetCraftingGrid)) {
+                        mediumMax = nextRepeater
+                                .getMaxPatternPushMultiplierInternal(patternDetails, maxMultiplier, visitedRepeaters);
+                    }
+                } else {
+                    mediumMax = medium.getMaxPatternPushMultiplier(patternDetails, maxMultiplier);
+                }
+
+                maxFound = Math.max(maxFound, mediumMax);
+            }
+        }
+
+        return maxFound;
+    }
+
+    @Override
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier) {
+        if (multiplier <= 0) return false;
+        return pushPatternToRepeater(patternDetails, table, multiplier, new HashSet<>());
+    }
+
+    @Deprecated
+    @Override
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
+        if (table instanceof MEInventoryCrafting meTable) {
+            return pushPattern(patternDetails, meTable, 1);
+        }
+        throw new IllegalArgumentException(
+                "PartPatternRepeater.pushPattern requires MEInventoryCrafting, got " + table.getClass().getName());
+    }
+
+    public boolean pushPatternToRepeater(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier, Set<CraftingGridCache> visitedRepeaters) {
+        if (multiplier <= 0 || this.targetCraftingGrid == null) return false;
 
         // Keeps track of the nets of pattern repeaters that are called recursively to ensure no loops occur
         visitedRepeaters.add(this.targetCraftingGrid);
@@ -256,18 +376,22 @@ public class PartPatternRepeater extends PartBasicState
             if (medium instanceof PartPatternRepeater pushRepeater) {
                 if (pushRepeater.targetCraftingGrid != null
                         && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid)
-                        && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters)) {
+                        && pushRepeater.pushPatternToRepeater(patternDetails, table, multiplier, visitedRepeaters)) {
                     for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-                        waitingStacks.add(outputStack.copy());
+                        IAEStack<?> multipliedStack = outputStack.copy();
+                        multipliedStack.setStackSize(saturatedMultiply(outputStack.getStackSize(), multiplier));
+                        waitingStacks.add(multipliedStack);
                     }
                     this.addInterception();
 
                     return true;
                 }
             } else {
-                if (medium.pushPattern(patternDetails, table)) {
+                if (medium.pushPattern(patternDetails, table, multiplier)) {
                     for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-                        waitingStacks.add(outputStack.copy());
+                        IAEStack<?> multipliedStack = outputStack.copy();
+                        multipliedStack.setStackSize(saturatedMultiply(outputStack.getStackSize(), multiplier));
+                        waitingStacks.add(multipliedStack);
                     }
                     this.addInterception();
 

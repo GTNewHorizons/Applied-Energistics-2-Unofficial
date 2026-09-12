@@ -70,6 +70,7 @@ import appeng.api.crafting.ICraftingIconProvider;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.tiles.ICraftingMachine;
+import appeng.api.implementations.tiles.IPatternProviderBatchTarget;
 import appeng.api.interfaces.IInterfaceNameProvider;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
@@ -727,7 +728,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             if (te == null) continue;
 
-            if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+            if (te.getClass() == getOCAdapterClass()) continue;
 
             if (te instanceof IInterfaceHost host) {
                 try {
@@ -1206,11 +1207,90 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     @Override
-    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
+    public boolean canMergePatternPush(final ICraftingPatternDetails patternDetails) {
+        if (this.hasItemsToSend() || !this.gridProxy.isActive() || !this.craftingList.contains(patternDetails)) {
+            return false;
+        }
+
+        if (getCraftingLockedReason() != LockCraftingMode.NONE) {
+            return false;
+        }
+
+        if (this.isBlocking() && !this.isSmartBlocking()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int getMaxPatternPushMultiplier(final ICraftingPatternDetails patternDetails, final int maxMultiplier) {
+        if (maxMultiplier <= 0 || !canMergePatternPush(patternDetails)) {
+            return 0;
+        }
+
+        final TileEntity tile = this.iHost.getTileEntity();
+        final World w = tile.getWorldObj();
+        final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
+
+        for (final ForgeDirection s : possibleDirections) {
+            final TileEntity te = w
+                    .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+
+            if (te == null) continue;
+
+            if (te.getClass() == getOCAdapterClass()) continue;
+
+            if (te instanceof ICraftingMachine cm) {
+                if (!cm.acceptsPlans()) {
+                    continue;
+                }
+
+                if (te instanceof IPatternProviderBatchTarget batchTarget) {
+                    int targetMultiplier = batchTarget
+                            .getMaxPatternPushMultiplier(patternDetails, null, maxMultiplier, s.getOpposite());
+
+                    if (targetMultiplier > 0) {
+                        return Math.min(targetMultiplier, maxMultiplier);
+                    }
+                } else {
+                    return 1;
+                }
+                continue;
+            }
+
+            if (te instanceof IInterfaceHost ih) {
+                try {
+                    final DualityInterface di = ih.getInterfaceDuality();
+                    if (di != null && di.sameGrid(this.gridProxy.getGrid())) {
+                        continue;
+                    }
+                } catch (final GridAccessException e) {
+                    continue;
+                }
+            }
+
+            final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
+            if (ad != null) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    @Override
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier) {
+        if (multiplier <= 0) {
+            return false;
+        }
+
         if (this.hasItemsToSend() || !this.gridProxy.isActive() || !this.craftingList.contains(patternDetails)) {
             scheduledReason = ScheduledReason.SOMETHING_STUCK;
             return false;
         }
+
         if (getCraftingLockedReason() != LockCraftingMode.NONE) {
             scheduledReason = ScheduledReason.LOCK_MODE;
             return false;
@@ -1251,11 +1331,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             if (te == null) continue;
 
-            if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+            if (te.getClass() == getOCAdapterClass()) continue;
 
             if (te instanceof ICraftingMachine cm) {
                 if (cm.acceptsPlans()) {
-                    if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
+                    if (cm.pushPattern(patternDetails, table, multiplier, s.getOpposite())) {
                         onPushPatternSuccess(te, s.getOpposite(), patternDetails);
                         return true;
                     }
@@ -1343,11 +1423,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
 
         if (hadAcceptedSome) {
-            for (IAEStack<?> aes : stacksToPush) {
-                this.addToSendList(aes);
+            for (var i = 0; i < stacksToPush.size(); i++) {
+                this.addToSendList(stacksToPush.get(i));
             }
-
-            return true;
+            return multiplier <= 1;
         } else if (foundTarget && scheduledReason != ScheduledReason.UNSUPPORTED_STACK
                 && scheduledReason != ScheduledReason.BLOCKING_MODE) {
                     foundReason = true;
@@ -1357,6 +1436,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (!foundReason) scheduledReason = ScheduledReason.NO_TARGET;
 
         return false;
+    }
+
+    @Deprecated
+    @Override
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
+        if (table instanceof MEInventoryCrafting meTable) {
+            return pushPattern(patternDetails, meTable, 1);
+        }
+        throw new IllegalArgumentException(
+                "DualityInterface.pushPattern requires MEInventoryCrafting, got " + table.getClass().getName());
     }
 
     @Override
@@ -1397,7 +1486,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             for (final ForgeDirection s : possibleDirections) {
                 final TileEntity te = w
                         .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
-                if (te != null && te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+                if (te != null && te.getClass() == getOCAdapterClass()) continue;
                 final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
                 if (ad != null) {
                     if (ad.simulateRemove(1, null, null) == null || inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
@@ -1896,5 +1985,18 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
             return list;
         }
+    }
+
+    private static Class<?> ocAdapterClass = DualityInterface.class;
+
+    private static final Class<?> getOCAdapterClass() {
+        if (ocAdapterClass == DualityInterface.class) {
+            try {
+                ocAdapterClass = Class.forName("li.cil.oc.common.tileentity.Adapter");
+            } catch (ClassNotFoundException e) {
+                ocAdapterClass = null;
+            }
+        }
+        return ocAdapterClass;
     }
 }

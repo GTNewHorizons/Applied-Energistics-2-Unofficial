@@ -62,6 +62,7 @@ import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.IInventoryDestination;
+import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.inv.WrapperInvSlot;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -545,8 +546,25 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     @Override
+    @Deprecated
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         return this.duality.pushPattern(patternDetails, table);
+    }
+
+    @Override
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier) {
+        return this.duality.pushPattern(patternDetails, table, multiplier);
+    }
+
+    @Override
+    public boolean canMergePatternPush(final ICraftingPatternDetails patternDetails) {
+        return this.duality.canMergePatternPush(patternDetails);
+    }
+
+    @Override
+    public int getMaxPatternPushMultiplier(final ICraftingPatternDetails patternDetails, final int maxMultiplier) {
+        return this.duality.getMaxPatternPushMultiplier(patternDetails, maxMultiplier);
     }
 
     @Override
