@@ -10,9 +10,11 @@ import static appeng.gametests.AEGameTestHelpers.itemStack;
 import java.util.Arrays;
 import java.util.List;
 
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import com.gtnewhorizons.horizonqa.api.GameTestArguments;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
@@ -37,6 +39,7 @@ import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
 import appeng.util.AEStackTypeFilter;
+import appeng.util.Platform;
 import appeng.util.item.IAEStackList;
 
 @GameTestHolder(AppEng.MOD_ID)
@@ -302,6 +305,85 @@ public final class StorageReshuffleTests {
                 .thenSucceed();
     }
 
+    @GameTest(template = TEMPLATE, timeoutTicks = 100)
+    public static void errorMovesPendingItemsToRecoveryQueue(GameTestHelper helper) {
+        Fixture fixture = placeFixture(helper);
+        ItemStack sourceCell = cell1k();
+        insertItems(helper, sourceCell, Blocks.cobblestone, 64);
+        IItemList<IAEStack<?>> cantInject = new IAEStackList();
+        ReshuffleTask[] task = new ReshuffleTask[1];
+
+        helper.startSequence()
+                .thenWaitUntil("wait for error network activation", 40, () -> { assertFixtureActive(helper, fixture); })
+                .thenExecute("install error source", () -> { helper.setSlot(SOURCE_DRIVE, 0, sourceCell); })
+                .thenWaitUntil(
+                        "wait for error source contents",
+                        20,
+                        () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 64))
+                .thenExecute("fail with an extracted stack pending", () -> {
+                    task[0] = createTask(fixture.controller, cantInject, new AEStackTypeFilter(), false);
+                    advanceToPhase(helper, task[0], ReshufflePhase.INJECTION);
+                    task[0].error();
+                }).thenExecute("verify pending stack entered recovery queue", () -> {
+                    helper.assertEquals(
+                            64L,
+                            storedAmount(cantInject, Blocks.cobblestone),
+                            "Recovery amount should match");
+                    helper.assertEquals(
+                            ReshufflePhase.ERROR,
+                            task[0].getReport().phase,
+                            "Task should report the error");
+                }).thenSucceed();
+    }
+
+    @GameTest(template = TEMPLATE, timeoutTicks = 560)
+    public static void deferredRecoveryRetainsAndRetriesRemainder(GameTestHelper helper) {
+        Fixture fixture = placeFixture(helper);
+        ItemStack constrainedCell = cell1k();
+        ItemStack overflowCell = cell1k();
+        insertItems(helper, constrainedCell, Blocks.cobblestone, TARGET_FILLER_COUNT);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for deferred recovery network activation",
+                        40,
+                        () -> { assertFixtureActive(helper, fixture); })
+                .thenExecute(
+                        "install constrained recovery destination",
+                        () -> { helper.setSlot(TARGET_DRIVE, 0, constrainedCell); })
+                .thenWaitUntil(
+                        "wait for constrained recovery contents",
+                        20,
+                        () -> assertNetworkStoredAmount(
+                                helper,
+                                fixture.controller,
+                                Blocks.cobblestone,
+                                TARGET_FILLER_COUNT))
+                .thenExecute("seed deferred recovery queue", () -> {
+                    IItemList<IAEStack<?>> pending = new IAEStackList();
+                    pending.add(itemStack(Blocks.cobblestone, 128));
+                    NBTTagCompound tag = new NBTTagCompound();
+                    tag.setTag("cantInject", Platform.writeAEStackListNBT(pending));
+                    fixture.reshuffler.readFromNBT_TileStorageReshuffle(tag);
+                }).thenWaitUntil("wait for partial deferred recovery", 260, () -> {
+                    assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 8128);
+                    helper.assertEquals(
+                            32L,
+                            pendingAmount(fixture.reshuffler, Blocks.cobblestone),
+                            "Rejected recovery remainder should persist");
+                })
+                .thenExecute(
+                        "install destination for recovery remainder",
+                        () -> { helper.setSlot(SOURCE_DRIVE, 0, overflowCell); })
+                .thenWaitUntil("wait for recovery remainder retry", 260, () -> {
+                    assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 8160);
+                    helper.assertEquals(
+                            0L,
+                            pendingAmount(fixture.reshuffler, Blocks.cobblestone),
+                            "Recovered remainder should leave the pending queue");
+                }).thenSucceed();
+    }
+
     private static Fixture placeFixture(GameTestHelper helper) {
         return new Fixture(
                 helper.assertTileEntityPresent(TileDrive.class, SOURCE_DRIVE),
@@ -358,6 +440,17 @@ public final class StorageReshuffleTests {
         } catch (GridAccessException e) {
             throw new AssertionError("Network storage should be accessible", e);
         }
+    }
+
+    private static long pendingAmount(TileStorageReshuffle reshuffler, Block block) {
+        NBTTagCompound tag = new NBTTagCompound();
+        reshuffler.writeToNBT_TileStorageReshuffle(tag);
+        return storedAmount(Platform.readAEStackListNBT(tag.getTagList("cantInject", NBT.TAG_COMPOUND)), block);
+    }
+
+    private static long storedAmount(IItemList<IAEStack<?>> stacks, Block block) {
+        IAEStack<?> stack = stacks.findPrecise(itemStack(block, 1));
+        return stack == null ? 0 : stack.getStackSize();
     }
 
     private static final class Fixture {
