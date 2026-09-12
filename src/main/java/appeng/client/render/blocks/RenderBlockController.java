@@ -19,7 +19,7 @@ import net.minecraft.world.IBlockAccess;
 import appeng.block.networking.BlockController;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
-import appeng.core.AEConfig;
+import appeng.core.settings.ControllerAnimation;
 import appeng.tile.networking.TileController;
 
 public class RenderBlockController extends BaseBlockRender<BlockController, TileController> {
@@ -121,9 +121,9 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
         final boolean out = renderer.renderStandardBlock(blk, x, y, z);
 
         if (lights != null) {
-            final IIcon lightIcon = isConflict || AEConfig.instance.controllerAnimation.usesOriginalTexture()
-                    ? lights.getIcon()
-                    : blk.getLightTexture(textureId, controller.getColor());
+            final ControllerAnimation animation = controller.getControllerAnimation();
+            final IIcon lightIcon = isConflict || animation.usesOriginalTexture() ? lights.getIcon()
+                    : blk.getLightTexture(textureId, controller.getColor(), animation);
             final Tessellator tess = Tessellator.instance;
             tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
             tess.setBrightness(14 << 20 | 14 << 4);

@@ -960,6 +960,14 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.PinsSectionHint);
 
             this.registerApp(
+                    255,
+                    Settings.ACTIONS,
+                    ActionItems.CONTROLLER_ANIMATION,
+                    ButtonToolTips.ControllerAnimation,
+                    ButtonToolTips.ControllerAnimationActive,
+                    ButtonToolTips.ControllerAnimationHint);
+
+            this.registerApp(
                     16 * 3 + 7,
                     Settings.ACTIONS,
                     ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_ON,

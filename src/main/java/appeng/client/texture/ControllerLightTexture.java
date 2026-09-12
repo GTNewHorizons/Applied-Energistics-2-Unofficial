@@ -25,7 +25,7 @@ public class ControllerLightTexture extends TextureAtlasSprite {
     private final ControllerAnimation style;
 
     public ControllerLightTexture(final String source, final AEColor color, final ControllerAnimation style) {
-        super("appliedenergistics2:" + source + "_" + color.name());
+        super("appliedenergistics2:" + source + "_" + style.ordinal() + "_" + color.name());
         this.source = new ResourceLocation("appliedenergistics2", "textures/blocks/" + source + ".png");
         this.color = color;
         this.style = style;

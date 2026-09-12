@@ -31,6 +31,7 @@ import appeng.api.networking.events.MENetworkPowerStorage.PowerEventType;
 import appeng.api.networking.pathing.ControllerState;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
+import appeng.core.settings.ControllerAnimation;
 import appeng.me.GridAccessException;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
@@ -44,9 +45,12 @@ public class TileController extends AENetworkPowerTile implements IColorableTile
 
     private static final IInventory NULL_INVENTORY = new AppEngInternalInventory(null, 0);
     private static final int[] ACCESSIBLE_SLOTS_BY_SIDE = {};
+    private static final String ANIMATION_NBT_KEY = "controllerAnimation";
+    private static final String PLAYER_DEFAULT_NBT_KEY = "ae2.controllerAnimationDefault";
 
     private boolean isValid = false;
     private AEColor paintedColor = AEColor.Transparent;
+    private ControllerAnimation controllerAnimation = ControllerAnimation.ORIGINAL_RAINBOW;
 
     public TileController() {
         this.setInternalMaxPower(8000);
@@ -63,14 +67,17 @@ public class TileController extends AENetworkPowerTile implements IColorableTile
     @TileEvent(TileEventType.NETWORK_WRITE)
     public void writeToStream_TileController(final ByteBuf data) {
         data.writeByte(this.paintedColor.ordinal());
+        data.writeByte(this.controllerAnimation.ordinal());
     }
 
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileController(final ByteBuf data) {
         final AEColor oldPaintedColor = this.paintedColor;
+        final ControllerAnimation oldAnimation = this.controllerAnimation;
         this.paintedColor = AEColor.fromOrdinal(data.readByte());
+        this.controllerAnimation = ControllerAnimation.fromOrdinal(data.readByte());
         this.getProxy().setColor(this.paintedColor);
-        return oldPaintedColor != this.paintedColor;
+        return oldPaintedColor != this.paintedColor || oldAnimation != this.controllerAnimation;
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
@@ -79,11 +86,43 @@ public class TileController extends AENetworkPowerTile implements IColorableTile
             this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
             this.getProxy().setColor(this.paintedColor);
         }
+        if (data.hasKey(ANIMATION_NBT_KEY)) {
+            this.controllerAnimation = ControllerAnimation.fromName(data.getString(ANIMATION_NBT_KEY));
+        }
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileController(final NBTTagCompound data) {
         data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
+        data.setString(ANIMATION_NBT_KEY, this.controllerAnimation.name());
+    }
+
+    @Override
+    public void onPlacement(final ItemStack stack, final EntityPlayer player, final int side) {
+        super.onPlacement(stack, player, side);
+        if (!this.worldObj.isRemote && player != null) {
+            this.setControllerAnimation(getPlayerDefaultAnimation(player));
+        }
+    }
+
+    public static ControllerAnimation getPlayerDefaultAnimation(final EntityPlayer player) {
+        return ControllerAnimation.fromOrdinal(player.getEntityData().getByte(PLAYER_DEFAULT_NBT_KEY));
+    }
+
+    public static void setPlayerDefaultAnimation(final EntityPlayer player, final String animation) {
+        player.getEntityData()
+                .setByte(PLAYER_DEFAULT_NBT_KEY, (byte) ControllerAnimation.fromName(animation).ordinal());
+    }
+
+    public ControllerAnimation getControllerAnimation() {
+        return this.controllerAnimation;
+    }
+
+    public void setControllerAnimation(final ControllerAnimation animation) {
+        if (this.controllerAnimation == animation) return;
+        this.controllerAnimation = animation;
+        this.markDirty();
+        this.markForUpdate();
     }
 
     @Override
