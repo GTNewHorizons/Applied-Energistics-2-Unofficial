@@ -203,10 +203,12 @@ public final class StorageReshuffleTests {
     @GameTest(template = TEMPLATE, timeoutTicks = 100)
     public static void missingDestinationRestoresItemsToTheirSource(GameTestHelper helper) {
         Fixture fixture = placeFixture(helper);
-        ItemStack sourceCell = cell1k();
-        insertItems(helper, sourceCell, Blocks.cobblestone, 64);
+        ItemStack firstSourceCell = cell1k();
+        ItemStack secondSourceCell = cell1k();
+        insertItems(helper, firstSourceCell, Blocks.cobblestone, 64);
+        insertItems(helper, secondSourceCell, Blocks.cobblestone, 32);
         ReshuffleTask[] task = new ReshuffleTask[1];
-        ItemStack[] removedSourceCell = new ItemStack[1];
+        ItemStack[] removedSourceCells = new ItemStack[2];
         IItemList<IAEStack<?>> cantInject = new IAEStackList();
 
         helper.startSequence()
@@ -214,19 +216,25 @@ public final class StorageReshuffleTests {
                         "wait for rollback network activation",
                         40,
                         () -> { assertFixtureActive(helper, fixture); })
-                .thenExecute("install rollback source", () -> { helper.setSlot(ME_CHEST, 1, sourceCell); })
+                .thenExecute("install rollback sources", () -> {
+                    helper.setSlot(SOURCE_DRIVE, 0, firstSourceCell);
+                    helper.setSlot(ME_CHEST, 1, secondSourceCell);
+                })
                 .thenWaitUntil(
                         "wait for rollback source contents",
                         20,
-                        () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 64))
-                .thenExecute("extract then remove the destination", () -> {
+                        () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 96))
+                .thenExecute("extract then remove the destinations", () -> {
                     task[0] = createTask(fixture.controller, cantInject, new AEStackTypeFilter(), false);
                     advanceToPhase(helper, task[0], ReshufflePhase.INJECTION);
-                    removedSourceCell[0] = fixture.meChest.getStackInSlot(1);
+                    removedSourceCells[0] = fixture.sourceDrive.getStackInSlot(0);
+                    removedSourceCells[1] = fixture.meChest.getStackInSlot(1);
+                    helper.clearSlot(SOURCE_DRIVE, 0);
                     helper.clearSlot(ME_CHEST, 1);
                     finishTask(helper, task[0]);
                 }).thenExecute("verify source rollback", () -> {
-                    assertStoredAmount(helper, removedSourceCell[0], Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, removedSourceCells[0], Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, removedSourceCells[1], Blocks.cobblestone, 32);
                     helper.assertTrue(cantInject.isEmpty(), "Direct rollback should not leave pending items");
                     helper.assertEquals(ReshufflePhase.DONE, task[0].getReport().phase, "Task should finish cleanly");
                 }).thenSucceed();
@@ -268,8 +276,10 @@ public final class StorageReshuffleTests {
     @GameTest(template = TEMPLATE, timeoutTicks = 100)
     public static void pendingItemsSerializeExactlyOnce(GameTestHelper helper) {
         Fixture fixture = placeFixture(helper);
-        ItemStack sourceCell = cell1k();
-        insertItems(helper, sourceCell, Blocks.cobblestone, 64);
+        ItemStack firstSourceCell = cell1k();
+        ItemStack secondSourceCell = cell1k();
+        insertItems(helper, firstSourceCell, Blocks.cobblestone, 64);
+        insertItems(helper, secondSourceCell, Blocks.cobblestone, 32);
         ReshuffleTask[] task = new ReshuffleTask[1];
 
         helper.startSequence()
@@ -277,11 +287,14 @@ public final class StorageReshuffleTests {
                         "wait for persistence network activation",
                         40,
                         () -> { assertFixtureActive(helper, fixture); })
-                .thenExecute("install persistence source", () -> { helper.setSlot(SOURCE_DRIVE, 0, sourceCell); })
+                .thenExecute("install persistence sources", () -> {
+                    helper.setSlot(SOURCE_DRIVE, 0, firstSourceCell);
+                    helper.setSlot(TARGET_DRIVE, 0, secondSourceCell);
+                })
                 .thenWaitUntil(
                         "wait for persistence source contents",
                         20,
-                        () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 64))
+                        () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 96))
                 .thenExecute("serialize pending extraction", () -> {
                     task[0] = createTask(fixture.controller, new IAEStackList(), new AEStackTypeFilter(), false);
                     advanceToPhase(helper, task[0], ReshufflePhase.INJECTION);
@@ -293,16 +306,17 @@ public final class StorageReshuffleTests {
                     IAEStack<?> pending = restored.findPrecise(itemStack(Blocks.cobblestone, 1));
 
                     helper.assertNotNull(pending, "Serialized task should contain the pending stack");
-                    helper.assertEquals(64L, pending.getStackSize(), "Pending stack should be serialized once");
+                    helper.assertEquals(96L, pending.getStackSize(), "Pending stack should contain both sources");
                     helper.assertEquals(1, restored.size(), "Recovery list should contain one stack type");
+                    helper.assertEquals(
+                            1,
+                            tag.getTagList("injectQueue", NBT.TAG_COMPOUND).tagCount(),
+                            "Identical stacks should use one injection operation");
                     task[0].cancel();
-                })
-                .thenExecute(
-                        "verify persistence cleanup",
-                        () -> {
-                            assertStoredAmount(helper, fixture.sourceDrive.getStackInSlot(0), Blocks.cobblestone, 64);
-                        })
-                .thenSucceed();
+                }).thenExecute("verify persistence cleanup", () -> {
+                    assertStoredAmount(helper, fixture.sourceDrive.getStackInSlot(0), Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, fixture.targetDrive.getStackInSlot(0), Blocks.cobblestone, 32);
+                }).thenSucceed();
     }
 
     @GameTest(template = TEMPLATE, timeoutTicks = 100)

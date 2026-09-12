@@ -2,8 +2,10 @@ package appeng.helpers;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -54,6 +56,7 @@ public class ReshuffleTask {
     private final IItemList<IAEStack<?>> stackLookup = new IAEStackList();
 
     private final List<PendingInjection> injectQueue = new ArrayList<>();
+    private final Map<IAEStack<?>, PendingInjection> injectLookup = new HashMap<>();
 
     private Iterator<Iterator<IMEInventoryHandler>> netTypesIterator = null;
     private Iterator<IMEInventoryHandler> typeInvHandlersIterator = null;
@@ -64,11 +67,21 @@ public class ReshuffleTask {
     private static class PendingInjection {
 
         private IAEStack<?> stack;
-        private final IMEInventoryHandler source;
+        private final List<SourceContribution> sources = new ArrayList<>();
 
-        private PendingInjection(IAEStack<?> stack, IMEInventoryHandler source) {
+        private PendingInjection(IAEStack<?> stack) {
             this.stack = stack;
+        }
+    }
+
+    private static class SourceContribution {
+
+        private final IMEInventoryHandler source;
+        private final long amount;
+
+        private SourceContribution(IMEInventoryHandler source, long amount) {
             this.source = source;
+            this.amount = amount;
         }
     }
 
@@ -182,8 +195,14 @@ public class ReshuffleTask {
                                 this.cantExtract.add(aes);
                             }
                             this.extractedItems += extracted.getStackSize();
-                            this.injectQueue.add(new PendingInjection(extracted, cellHandler));
                             target.add(extracted);
+                            PendingInjection pending = this.injectLookup.get(extracted);
+                            if (pending == null) {
+                                pending = new PendingInjection(target.findPrecise(extracted));
+                                this.injectLookup.put(pending.stack, pending);
+                                this.injectQueue.add(pending);
+                            }
+                            pending.sources.add(new SourceContribution(cellHandler, extracted.getStackSize()));
                         }
 
                         this.extractedTypes = this.extracted.size();
@@ -203,6 +222,7 @@ public class ReshuffleTask {
     }
 
     private void toQueueList() {
+        this.injectLookup.clear();
         final Iterator<IAEStack<?>> i = this.extracted.iterator();
         while (i.hasNext()) {
             i.next();
@@ -277,6 +297,7 @@ public class ReshuffleTask {
     public void cancel() {
         this.phase = ReshufflePhase.CANCEL;
         this.returnPendingItems(this.injectQueue.iterator());
+        this.injectLookup.clear();
     }
 
     public void nbt(NBTTagCompound tag) {
@@ -299,6 +320,7 @@ public class ReshuffleTask {
             if (pending.stack != null) this.cantInject.add(pending.stack);
         }
         this.injectQueue.clear();
+        this.injectLookup.clear();
         this.injectIterator = null;
     }
 
@@ -313,16 +335,27 @@ public class ReshuffleTask {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void returnPendingItem(PendingInjection pending) {
-        try {
-            pending.stack = pending.source.injectItems(pending.stack, Actionable.MODULATE, this.src);
-        } catch (Exception e) {
-            AELog.error(e, "Failed to restore a storage reshuffle stack to its source");
+        long remaining = pending.stack.getStackSize();
+        for (SourceContribution source : pending.sources) {
+            if (remaining == 0) break;
+
+            final long amount = Math.min(remaining, source.amount);
+            final IAEStack<?> stack = pending.stack.copy().setStackSize(amount);
+            IAEStack<?> rejected = stack;
+            try {
+                rejected = source.source.injectItems(stack, Actionable.MODULATE, this.src);
+            } catch (Exception e) {
+                AELog.error(e, "Failed to restore a storage reshuffle stack to its source");
+            }
+
+            if (rejected != null) this.cantInject.add(rejected);
+            remaining -= amount;
         }
 
-        if (pending.stack != null) {
-            this.cantInject.add(pending.stack);
-            pending.stack = null;
+        if (remaining > 0) {
+            this.cantInject.add(pending.stack.copy().setStackSize(remaining));
         }
+        pending.stack = null;
     }
 
     private void finalizeReport() {
