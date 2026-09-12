@@ -40,6 +40,8 @@ import appeng.util.item.ItemFilterList;
 
 public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
 
+    private static final int CACHE_REFRESH_INTERVAL = 256;
+
     private final InventoryAdaptor adaptor;
     private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
     private final HashMap<IMEMonitorHandlerReceiver, Object> listeners = new HashMap<>();
@@ -47,6 +49,7 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
     private BaseActionSource mySource;
     private StorageFilter mode = StorageFilter.EXTRACTABLE_ONLY;
     private boolean init = false;
+    private int ticksSinceCacheRefresh = 0;
 
     public MEMonitorIInventory(final InventoryAdaptor adaptor) {
         this.adaptor = adaptor;
@@ -123,8 +126,7 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
 
         final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
-        this.list.resetStatus();
-        int high = 0;
+        int high = -1;
         boolean changed = false;
         for (final ItemSlot is : this.adaptor) {
             final CachedItemStack old = this.memory.get(is.getSlot());
@@ -145,7 +147,6 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
 
                 if (cis.aeStack != null) {
                     changes.add(cis.aeStack);
-                    this.list.add(cis.aeStack);
                 }
 
                 changed = true;
@@ -153,19 +154,11 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
                 final int newSize = (newIS == null ? 0 : newIS.stackSize);
                 final int diff = newSize - (oldIS == null ? 0 : oldIS.stackSize);
 
-                final IAEItemStack stack = (old == null || old.aeStack == null
-                        ? AEApi.instance().storage().createItemStack(newIS)
-                        : old.aeStack.copy());
-                if (stack != null) {
-                    stack.setStackSize(newSize);
-                    this.list.add(stack);
-                }
-
-                if (diff != 0 && stack != null) {
+                if (diff != 0 && old != null && old.aeStack != null) {
                     final CachedItemStack cis = new CachedItemStack(is.getItemStack());
                     this.memory.put(is.getSlot(), cis);
 
-                    final IAEItemStack a = stack.copy();
+                    final IAEItemStack a = old.aeStack.copy();
                     a.setStackSize(diff);
                     changes.add(a);
                     changed = true;
@@ -185,6 +178,18 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
                 }
             }
             end.clear();
+        }
+
+        if (++this.ticksSinceCacheRefresh >= CACHE_REFRESH_INTERVAL) {
+            this.list.resetStatus();
+            for (final CachedItemStack cached : this.memory.values()) {
+                this.list.add(cached.aeStack);
+            }
+            this.ticksSinceCacheRefresh = 0;
+        } else {
+            for (final IAEStack<?> change : changes) {
+                this.list.add((IAEItemStack) change);
+            }
         }
 
         if (!changes.isEmpty()) {
