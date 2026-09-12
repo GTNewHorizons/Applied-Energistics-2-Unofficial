@@ -724,7 +724,7 @@ public class CraftingGridCache
         if (cpuCluster != null) {
             ICraftingLink submittedJob = cpuCluster.submitJob(this.grid, job, src, requestingMachine);
 
-            if (src instanceof PlayerSource playerSource && followCraft) {
+            if (submittedJob != null && src instanceof PlayerSource playerSource && followCraft) {
                 cpuCluster.togglePlayerFollowStatus(playerSource.player.getCommandSenderName());
             }
 
