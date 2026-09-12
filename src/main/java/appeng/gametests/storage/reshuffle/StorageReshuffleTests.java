@@ -17,6 +17,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.Constants.NBT;
 
+import com.github.bsideup.jabel.Desugar;
 import com.gtnewhorizons.horizonqa.api.GameTestArguments;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
@@ -496,21 +497,9 @@ public final class StorageReshuffleTests {
         }
     }
 
-    private static final class Fixture {
+    @Desugar
+    private record Fixture(TileDrive sourceDrive, TileDrive targetDrive, TileController controller,
+            TileStorageReshuffle reshuffler, TileChest meChest) {
 
-        private final TileDrive sourceDrive;
-        private final TileDrive targetDrive;
-        private final TileController controller;
-        private final TileStorageReshuffle reshuffler;
-        private final TileChest meChest;
-
-        private Fixture(TileDrive sourceDrive, TileDrive targetDrive, TileController controller,
-                TileStorageReshuffle reshuffler, TileChest meChest) {
-            this.sourceDrive = sourceDrive;
-            this.targetDrive = targetDrive;
-            this.controller = controller;
-            this.reshuffler = reshuffler;
-            this.meChest = meChest;
-        }
     }
 }
