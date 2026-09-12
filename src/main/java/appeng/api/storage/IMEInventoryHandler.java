@@ -95,6 +95,11 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
         return false;
     }
 
+    /** READ permits reshuffler extraction; WRITE permits reshuffler insertion. */
+    default AccessRestriction getReshuffleAccess() {
+        return AccessRestriction.READ_WRITE;
+    }
+
     /** returns internal IMEInventory if it has one */
     default IMEInventory<StackType> getInternal() {
         return null;

@@ -11,9 +11,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 
+import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.ReshufflePhase;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
@@ -34,7 +36,8 @@ public class ReshuffleTask {
     // slowdown because working too fast, nobody gonna believe that real working
     public static final long stacks_per_tick = 8;
 
-    private final BaseActionSource src;
+    private final ReshuffleActionSource src;
+    private final MachineSource rollbackSrc;
     private final IStorageGrid sg;
 
     private final AEStackTypeFilter typeFilters;
@@ -104,8 +107,9 @@ public class ReshuffleTask {
     }
 
     public ReshuffleTask(AEStackTypeFilter typeFilters, IStorageGrid sg, IItemList<IAEStack<?>> cantInject,
-            BaseActionSource src, boolean includeSubnets, boolean insertOrder) {
+            ReshuffleActionSource src, boolean includeSubnets, boolean insertOrder) {
         this.src = src;
+        this.rollbackSrc = new MachineSource(src.via);
         this.sg = sg;
         this.cantInject = cantInject;
         this.typeFilters = typeFilters;
@@ -170,7 +174,9 @@ public class ReshuffleTask {
 
         while (i.hasNext()) {
             final IMEInventoryHandler cellHandler = i.next();
-            if (cellHandler == null || cellHandler.isAutoCraftingInventory()) continue;
+            if (cellHandler == null || cellHandler.isAutoCraftingInventory()
+                    || !cellHandler.getReshuffleAccess().hasPermission(AccessRestriction.READ))
+                continue;
             final IAEStackType<?> currentType = cellHandler.getStackType();
             final IMENetworkInventory<?> subnet = cellHandler.getExternalNetworkInventory();
             if (subnet instanceof NetworkInventoryHandler nextNetwork) {
@@ -343,7 +349,7 @@ public class ReshuffleTask {
             final IAEStack<?> stack = pending.stack.copy().setStackSize(amount);
             IAEStack<?> rejected = stack;
             try {
-                rejected = source.source.injectItems(stack, Actionable.MODULATE, this.src);
+                rejected = source.source.injectItems(stack, Actionable.MODULATE, this.rollbackSrc);
             } catch (Exception e) {
                 AELog.error(e, "Failed to restore a storage reshuffle stack to its source");
             }

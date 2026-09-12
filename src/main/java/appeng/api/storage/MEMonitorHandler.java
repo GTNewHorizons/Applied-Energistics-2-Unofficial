@@ -187,6 +187,11 @@ public class MEMonitorHandler<StackType extends IAEStack<?>> implements IMEMonit
     }
 
     @Override
+    public AccessRestriction getReshuffleAccess() {
+        return this.internalHandler.getReshuffleAccess();
+    }
+
+    @Override
     public @NotNull IAEStackType<?> getStackType() {
         return this.getHandler().getStackType();
     }

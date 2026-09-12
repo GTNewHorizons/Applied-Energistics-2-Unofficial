@@ -11,6 +11,10 @@ import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemInventory;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.simulateInjectIntoGrid;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
+import java.util.Arrays;
+import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -22,16 +26,28 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Actionable;
+import appeng.api.config.ReshufflePhase;
+import appeng.api.config.Settings;
+import appeng.api.networking.security.ReshuffleActionSource;
+import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IItemList;
 import appeng.core.AppEng;
+import appeng.helpers.ReshuffleTask;
+import appeng.me.GridAccessException;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
+import appeng.util.AEStackTypeFilter;
+import appeng.util.item.IAEStackList;
 
 @GameTestHolder(AppEng.MOD_ID)
 public class DriveAndCellTests {
@@ -58,6 +74,102 @@ public class DriveAndCellTests {
                         20,
                         () -> assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100))
                 .thenSucceed();
+    }
+
+    @GameTest(template = "drive_cells", timeoutTicks = 100)
+    public static void driveAndChestSupportAllReshuffleAccessModes(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        TileDrive drive = getDrive(helper);
+        TileChest meChest = getMEChest(helper);
+        ItemStack driveCell = cell1k();
+        ItemStack chestCell = cell1k();
+        insertItems(helper, driveCell, Blocks.cobblestone, 64);
+        insertItems(helper, chestCell, Blocks.dirt, 64);
+
+        helper.startSequence().thenWaitUntil("wait for storage network activation", 40, () -> {
+            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+            assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
+            assertActive(helper, meChest.getProxy(), "ME chest grid proxy should become active");
+        }).thenExecute("insert cells", () -> {
+            helper.setSlot(DRIVE_LABEL, 0, driveCell);
+            helper.setSlot(ME_CHEST_LABEL, 1, chestCell);
+        }).thenWaitUntil("wait for both cells to become network-visible", 20, () -> {
+            helper.assertFalse(drive.getCellArray(ITEM_STACK_TYPE).isEmpty(), "Drive cell should be available");
+            helper.assertFalse(meChest.getCellArray(ITEM_STACK_TYPE).isEmpty(), "ME chest cell should be available");
+        }).thenExecute("verify all reshuffler access modes", () -> {
+            ReshuffleActionSource source = new ReshuffleActionSource(controller);
+            IMEInventoryHandler<IAEItemStack> driveInventory = drive.getCellArray(ITEM_STACK_TYPE).get(0);
+            IMEInventoryHandler<IAEItemStack> chestInventory = meChest.getCellArray(ITEM_STACK_TYPE).get(0);
+            List<IMEInventoryHandler<IAEItemStack>> inventories = Arrays.asList(driveInventory, chestInventory);
+            Block[] storedBlocks = { Blocks.cobblestone, Blocks.dirt };
+            Block[] insertedBlocks = { Blocks.dirt, Blocks.cobblestone };
+
+            for (AccessRestriction access : AccessRestriction.values()) {
+                drive.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, access);
+                meChest.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, access);
+
+                for (int i = 0; i < inventories.size(); i++) {
+                    IMEInventoryHandler<IAEItemStack> inventory = inventories.get(i);
+                    boolean extractionAllowed = inventory
+                            .extractItems(itemStack(storedBlocks[i], 1), Actionable.SIMULATE, source) != null;
+                    boolean insertionAllowed = inventory
+                            .injectItems(itemStack(insertedBlocks[i], 1), Actionable.SIMULATE, source) == null;
+
+                    helper.assertEquals(access, inventory.getReshuffleAccess(), "Storage should report " + access);
+                    helper.assertEquals(
+                            access.hasPermission(AccessRestriction.READ),
+                            extractionAllowed,
+                            access + " should control reshuffler extraction");
+                    helper.assertEquals(
+                            access.hasPermission(AccessRestriction.WRITE),
+                            insertionAllowed,
+                            access + " should control reshuffler insertion");
+                }
+            }
+        }).thenSucceed();
+    }
+
+    @GameTest(template = "drive_cells", timeoutTicks = 100)
+    public static void reshuffleRestoresItemsWhenExtractOnlyStorageHasNoDestination(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        TileChest meChest = getMEChest(helper);
+        ItemStack chestCell = cell1k();
+        insertItems(helper, chestCell, Blocks.cobblestone, 64);
+        ReshuffleTask[] task = new ReshuffleTask[1];
+        IItemList<IAEStack<?>> cantInject = new IAEStackList();
+
+        helper.startSequence().thenWaitUntil("wait for storage network activation", 40, () -> {
+            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+            assertActive(helper, meChest.getProxy(), "ME chest grid proxy should become active");
+        }).thenExecute("install source storage", () -> { helper.setSlot(ME_CHEST_LABEL, 1, chestCell); })
+                .thenWaitUntil(
+                        "wait for contents to become network-visible",
+                        20,
+                        () -> assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 64))
+                .thenExecute("start reshuffle", () -> {
+                    task[0] = new ReshuffleTask(
+                            new AEStackTypeFilter(),
+                            getStorageGrid(controller),
+                            cantInject,
+                            new ReshuffleActionSource(controller),
+                            false,
+                            false);
+                    task[0].initialize();
+                    for (int i = 0; i < 20 && task[0].getReport().phase != ReshufflePhase.INJECTION; i++) {
+                        task[0].processNextBatch();
+                    }
+                    helper.assertEquals(
+                            ReshufflePhase.INJECTION,
+                            task[0].getReport().phase,
+                            "Reshuffle should reach injection");
+                    helper.setSlot(ME_CHEST_LABEL, 1, null);
+                }).thenWaitUntil("wait for reshuffle rollback", 30, () -> {
+                    task[0].processNextBatch();
+                    helper.assertFalse(task[0].isRunning(), "Reshuffle should finish after restoring rejected items");
+                }).thenExecute("verify rejected items were restored", () -> {
+                    assertStoredAmount(helper, chestCell, Blocks.cobblestone, 64);
+                    helper.assertTrue(cantInject.isEmpty(), "Rollback should not leave items in the pending buffer");
+                }).thenSucceed();
     }
 
     // A partitioned cell should accept only stacks matching its configured partition list.
@@ -465,6 +577,14 @@ public class DriveAndCellTests {
 
     private static TileChest getMEChest(GameTestHelper helper) {
         return helper.assertTileEntityPresent(TileChest.class, ME_CHEST_LABEL);
+    }
+
+    private static IStorageGrid getStorageGrid(TileController controller) {
+        try {
+            return controller.getProxy().getStorage();
+        } catch (GridAccessException e) {
+            throw new AssertionError("Network storage should be accessible", e);
+        }
     }
 
     private static void installStickyCard(GameTestHelper helper, ItemStack cell) {
