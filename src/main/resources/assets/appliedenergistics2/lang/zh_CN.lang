@@ -689,6 +689,7 @@ waila.appliedenergistics2.Waiting=Waiting:
 
 # Baubles Extended
 slot.Terminal=§aTerminal§7
+slot.PortableCellWorkbench=§a便携元件工作台§7
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k-ME存储元件
@@ -863,6 +864,7 @@ item.appliedenergistics2.ToolNetherQuartzWrench.name=下界石英扳手
 
 item.appliedenergistics2.ItemPaintBall.name=染色球
 item.appliedenergistics2.ToolPortableCell.name=便携元件
+item.appliedenergistics2.ToolPortableCellWorkbench.name=便携元件工作台
 item.appliedenergistics2.ToolNetworkTool.name=网络工具
 item.appliedenergistics2.ToolAdvancedNetworkTool.name=高级网络工具
 item.appliedenergistics2.ToolChargedStaff.name=充能手杖
@@ -957,6 +959,7 @@ key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=切换是否选中搜索框
 key.search_connected_inventories.desc=Search network inventories for item
 key.control_operation.desc=Control operation
+key.open_portable_cell_workbench.desc=打开便携元件工作台
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern
