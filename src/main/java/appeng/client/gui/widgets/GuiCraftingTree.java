@@ -86,7 +86,12 @@ public class GuiCraftingTree {
         public final void drawParentLine() {
             if (visible) {
                 if (parentNode != null) {
-                    drawTreeLine(x + 8, y - 3, parentNode.x + 8, parentNode.y + 18, getStatusColor(0xFFDDDDDD));
+                    drawTreeLine(
+                            x + 8,
+                            y - 3,
+                            parentNode.x + 8,
+                            parentNode.y + 18,
+                            getStatusColor(ColorUtils.craftingTreeLine.getColor()));
                 }
             }
         }
@@ -142,7 +147,7 @@ public class GuiCraftingTree {
 
         @Override
         public void drawImpl() {
-            drawBackground(0xAAAAAA, false);
+            drawBackground(ColorUtils.craftingTreeRequest.getColor(), false);
             drawStack(x, y, getDisplayItemForRequest(request), true);
             if (childrenCollapsed) {
                 parent.bindTexture("guis/states.png");
@@ -175,7 +180,7 @@ public class GuiCraftingTree {
 
         @Override
         public void drawImpl() {
-            drawBackground(0x777777, true);
+            drawBackground(ColorUtils.craftingTreeTask.getColor(), true);
 
             long displayCount = resolver.resolvedStack.getStackSize();
             if (resolver.task instanceof ExtractItemTask) {
@@ -527,12 +532,12 @@ public class GuiCraftingTree {
                     (int) (widgetX + scrollXPct * (widgetW - 24)),
                     (int) (widgetX + scrollXPct * (widgetW - 24)) + 24,
                     widgetY + widgetH - 2,
-                    0xFFDDDDDD);
+                    ColorUtils.craftingTreeScrollbar.getColor());
             parent.drawVerticalLine(
                     widgetX + widgetW - 2,
                     (int) (widgetY + scrollYPct * (widgetH - 24)),
                     (int) (widgetY + scrollYPct * (widgetH - 24)) + 24,
-                    0xFFDDDDDD);
+                    ColorUtils.craftingTreeScrollbar.getColor());
         }
         GL11.glPopAttrib();
     }
@@ -703,7 +708,7 @@ public class GuiCraftingTree {
     private void drawSmallStackCount(final int x, final int y, long count, int textColor) {
         if (count < 0) {
             count = -count;
-            textColor = 0xFF0000;
+            textColor = ColorUtils.craftingTreeNegativeCount.getColor();
         }
         final String countText = ReadableNumberConverter.INSTANCE.toWideReadableForm(count);
         drawSmallStackCount(x, y, countText, textColor);

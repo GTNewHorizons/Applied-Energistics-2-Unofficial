@@ -40,6 +40,9 @@ public class ColorUtils {
         wirelessKitBad                      = color.rgb("wirelessKitBad",                       "0xFF003C"),
         contextMenuText                     = color.rgb("contextMenuText",                      "0x404040"),
         interfaceStuck                      = color.rgb("interfaceStuck",                       "0xff8080"),
+        craftingTreeRequest                 = color.rgb("craftingTreeRequest",                  "0xAAAAAA"),
+        craftingTreeTask                    = color.rgb("craftingTreeTask",                     "0x777777"),
+        craftingTreeNegativeCount           = color.rgb("craftingTreeNegativeCount",            "0xFF0000"),
 
         searchboxFocused                    = color.argb("searchboxFocused",                    "0x6E000000"),
         searchboxUnfocused                  = color.argb("searchboxUnfocused",                  "0x00000000"),
@@ -49,6 +52,8 @@ public class ColorUtils {
         craftConfirmMissingItem             = color.argb("craftConfirmMissingItem",             "0x1AFF0000"),
         craftingTreeMissing                 = color.argb("craftingTreeMissing",                 "0xFFE34444"),
         craftingTreeBlocked                 = color.argb("craftingTreeBlocked",                 "0xFFFFD54A"),
+        craftingTreeLine                    = color.argb("craftingTreeLine",                    "0xFFDDDDDD"),
+        craftingTreeScrollbar               = color.argb("craftingTreeScrollbar",               "0xFFDDDDDD"),
         craftingCPUActive                   = color.argb("craftingCPUActive",                   "0x5A45A021"),
         craftingCPUInactive                 = color.argb("craftingCPUInactive",                 "0x5AFFF7AA"),
         craftingCPUUnsupportedStack         = color.argb("craftingCPUUnsupportedStack",         "0x5AE07070"),
