@@ -1,7 +1,7 @@
 // Add your dependencies here
 
 dependencies {
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.130-GTNH:dev')
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.136-GTNH:dev')
     implementation("com.github.GTNewHorizons:GTNHLib:0.11.45:dev")
     implementation('curse.maven:cofh-core-69162:2388751')
 
