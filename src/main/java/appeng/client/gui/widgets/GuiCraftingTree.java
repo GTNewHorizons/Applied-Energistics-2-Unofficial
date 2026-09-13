@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -32,8 +31,6 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-
-import com.mojang.realmsclient.util.Pair;
 
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -61,19 +58,20 @@ public class GuiCraftingTree {
 
     // Y -> list of nodes sorted by X
     private final TreeMap<Integer, ArrayList<Node>> treeNodes = new TreeMap<>();
+    // Parents precede their children, including nodes hidden by collapsed branches.
+    private final List<Node> allNodes = new ArrayList<>();
     private int treeWidth, treeHeight;
 
     public static final int X_SPACING = 24;
     public static final int REQUEST_RESOLVER_Y_SPACING = 10;
     public static final int RESOLVER_CHILD_Y_SPACING = 12;
-    public final int textColor = ColorUtils.searchboxText.getColor();
     private static long animationFrame = System.currentTimeMillis() / 500;
     private String search = "";
     private ArrayList<Node> goToData = new ArrayList<Node>();
     private int searchGotoIndex = -1;
     private Node needHighlight;
 
-    private abstract class Node {
+    abstract class Node {
 
         public boolean visible = true;
         public int x, y;
@@ -81,11 +79,14 @@ public class GuiCraftingTree {
         public final Node parentNode;
         public final List<Node> childNodes = new ArrayList<>(1);
         public boolean childrenCollapsed = false;
+        public boolean missing;
+        public boolean hasMissing;
+        private int subtreeWidth;
 
         public final void drawParentLine() {
             if (visible) {
                 if (parentNode != null) {
-                    drawTreeLine(x + 8, y - 3, parentNode.x + 8, parentNode.y + 18);
+                    drawTreeLine(x + 8, y - 3, parentNode.x + 8, parentNode.y + 18, getStatusColor(0xFFDDDDDD));
                 }
             }
         }
@@ -106,6 +107,22 @@ public class GuiCraftingTree {
 
         protected abstract void drawTooltipImpl(int mouseX, int mouseY);
 
+        private int getStatusColor(int defaultColor) {
+            if (missing) return ColorUtils.craftingTreeMissing.getColor();
+            if (hasMissing) return ColorUtils.craftingTreeBlocked.getColor();
+            return defaultColor;
+        }
+
+        protected final void drawBackground(int defaultColor, boolean operation) {
+            int color = getStatusColor(defaultColor);
+            if (!search.isEmpty() && goToData.contains(this)) {
+                color = this == needHighlight ? ColorUtils.searchGoToHighlight.getColor()
+                        : ColorUtils.searchHighlight.getColor();
+            }
+            drawSlotOutline(x, y, color, operation);
+            GL11.glColor4f(1, 1, 1, 1);
+        }
+
         public Node(int x, int y, Node parentNode) {
             this.x = x;
             this.y = y;
@@ -125,29 +142,13 @@ public class GuiCraftingTree {
 
         @Override
         public void drawImpl() {
-            int color = request.wasSimulated ? 0xCCAAAA : 0xAAAAAA;
-            if (!search.isEmpty() && goToData.contains(this)) {
-                if (needHighlight.equals(this)) {
-                    color = ColorUtils.searchGoToHighlight.getColor();
-                } else {
-                    color = ColorUtils.searchHighlight.getColor();
-                }
-            }
-            drawSlotOutline(x, y, color, false);
+            drawBackground(0xAAAAAA, false);
             drawStack(x, y, getDisplayItemForRequest(request), true);
-
-            if (hasMultipleRequestNodesInChildren()) {
+            if (childrenCollapsed) {
                 parent.bindTexture("guis/states.png");
                 GL11.glScalef(0.25f, 0.25f, 1.0f);
-                drawIcon(4 * (x + 3), 4 * (y + 19), 14 * 16 + (childrenCollapsed ? 14 : 13));
+                drawIcon(4 * (x + 3), 4 * (y + 19), 14 * 16 + 14);
                 GL11.glScalef(4.0f, 4.0f, 1.0f);
-            }
-
-            if (request.wasSimulated) {
-                parent.bindTexture("guis/states.png");
-                GL11.glScalef(0.5f, 0.5f, 1.0f);
-                drawIcon(2 * x + 16, 2 * y, 8 * 16);
-                GL11.glScalef(2.0f, 2.0f, 1.0f);
             }
         }
 
@@ -157,11 +158,6 @@ public class GuiCraftingTree {
                 tooltip = request.getTooltipText();
             }
             parent.drawTooltip(mouseX, mouseY, tooltip);
-        }
-
-        private boolean hasMultipleRequestNodesInChildren() {
-            return !childNodes.isEmpty() && childNodes.get(0) instanceof TaskNode taskNode
-                    && taskNode.childNodes.size() > 1;
         }
     }
 
@@ -173,20 +169,13 @@ public class GuiCraftingTree {
         public TaskNode(int x, int y, Node parentNode, UsedResolverEntry resolver) {
             super(x, y, parentNode);
             this.resolver = resolver;
+            missing = resolver.task instanceof SimulateMissingItemResolver.ConjureItemTask
+                    || resolver.task instanceof IgnoreMissingItemTask;
         }
 
         @Override
         public void drawImpl() {
-            parent.bindTexture("guis/states.png");
-            int color = 0x777777;
-            if (!search.isEmpty() && goToData.contains(this)) {
-                if (needHighlight.equals(this)) {
-                    color = ColorUtils.searchGoToHighlight.getColor();
-                } else {
-                    color = ColorUtils.searchHighlight.getColor();
-                }
-            }
-            drawSlotOutline(x, y, color, true);
+            drawBackground(0x777777, true);
 
             long displayCount = resolver.resolvedStack.getStackSize();
             if (resolver.task instanceof ExtractItemTask) {
@@ -212,7 +201,7 @@ public class GuiCraftingTree {
             } else if (resolver.task instanceof IgnoreMissingItemTask) {
                 drawIcon(x, y, 9 * 16 + 1);
             }
-            drawSmallStackCount(x, y, displayCount, textColor);
+            drawSmallStackCount(x, y, displayCount, ColorUtils.searchboxText.getColor());
         }
 
         @Override
@@ -352,15 +341,13 @@ public class GuiCraftingTree {
         search = s;
         if (search.isEmpty()) return;
 
-        for (ArrayList<Node> row : treeNodes.values()) {
-            for (Node node : row) {
-                if (node instanceof TaskNode tNode && getTaskNodeDescription(tNode).toLowerCase().contains(search)) {
-                    goToData.add(node);
-                } else if (node instanceof RequestNode rNode
-                        && Platform.getItemDisplayName(rNode.request.stack).toLowerCase().contains(search)) {
-                            goToData.add(node);
-                        }
-            }
+        for (Node node : allNodes) {
+            if (node instanceof TaskNode tNode && getTaskNodeDescription(tNode).toLowerCase().contains(search)) {
+                goToData.add(node);
+            } else if (node instanceof RequestNode rNode
+                    && Platform.getItemDisplayName(rNode.request.stack).toLowerCase().contains(search)) {
+                        goToData.add(node);
+                    }
         }
         searchGoTo(true);
     }
@@ -375,6 +362,10 @@ public class GuiCraftingTree {
             searchGotoIndex--;
         }
         final Node nd = goToData.get(searchGotoIndex);
+        for (Node ancestor = nd.parentNode; ancestor != null; ancestor = ancestor.parentNode) {
+            ancestor.childrenCollapsed = false;
+        }
+        rebuildLayout();
         needHighlight = nd;
         scrollX = nd.x - nd.height;
         scrollY = nd.y - nd.width;
@@ -385,6 +376,7 @@ public class GuiCraftingTree {
         this.request = request;
         if (isDifferent) {
             this.treeNodes.clear();
+            this.allNodes.clear();
             this.treeWidth = 0;
             this.treeHeight = 0;
             final ArrayList<NodeBuilderTask> tasks = new ArrayList<>();
@@ -394,20 +386,33 @@ public class GuiCraftingTree {
             }
             for (ArrayList<Node> row : treeNodes.values()) {
                 for (Node node : row) {
+                    allNodes.add(node);
                     if (node.parentNode != null) {
                         node.parentNode.childNodes.add(node);
                     }
-                    treeWidth = Math.max(treeWidth, node.x + node.width);
-                    treeHeight = Math.max(treeHeight, node.y + node.height);
                 }
             }
+            for (int i = allNodes.size() - 1; i >= 0; i--) {
+                Node node = allNodes.get(i);
+                node.hasMissing |= node.missing;
+                if (node.parentNode != null) {
+                    node.parentNode.hasMissing |= node.hasMissing;
+                    if (node instanceof TaskNode && node.missing) {
+                        node.parentNode.missing = true;
+                    }
+                }
+            }
+            rebuildLayout();
+            updateSearchGoToList(search);
         }
     }
 
     private float zoomLevel = 1.0f;
     private float lastDragX = Float.NEGATIVE_INFINITY;
     private float lastDragY = Float.NEGATIVE_INFINITY;
-    private boolean wasLmbPressed;
+    private float dragStartX, dragStartY;
+    private boolean dragging;
+    private Node pressedNode;
 
     private Node tooltipNode;
 
@@ -448,28 +453,11 @@ public class GuiCraftingTree {
         animationFrame = System.currentTimeMillis() / 500;
 
         // Drag'n'drop handling here, because mouse movement events don't get fired often enough
-        final float mouseX = (float) Mouse.getX() * (float) parent.width / (float) parent.mc.displayWidth;
-        final float mouseY = parent.height
-                - (float) Mouse.getY() * (float) parent.height / (float) parent.mc.displayHeight
-                - 1;
-        final boolean lmbPressed = Mouse.isButtonDown(0);
-        if (lmbPressed && !wasLmbPressed) {
-            if (isPointInWidget(guiMouseX - parent.getGuiLeft(), guiMouseY - parent.getGuiTop())) {
-                lastDragX = mouseX;
-                lastDragY = mouseY;
-            }
-        } else if (!lmbPressed) {
-            lastDragX = Float.NEGATIVE_INFINITY;
-            lastDragY = Float.NEGATIVE_INFINITY;
-        } else if (lmbPressed && lastDragX != Float.NEGATIVE_INFINITY) {
-            scrollX -= 1.0f / zoomLevel * (mouseX - lastDragX);
-            scrollY -= 1.0f / zoomLevel * (mouseY - lastDragY);
-            lastDragX = mouseX;
-            lastDragY = mouseY;
+        if (!inScreenshotMode && Mouse.isButtonDown(0)) {
+            mouseDragged(guiMouseX - parent.getGuiLeft(), guiMouseY - parent.getGuiTop());
         }
         scrollX = MathHelper.clamp_float(scrollX, -widgetW / zoomLevel + 4, treeWidth - 4);
         scrollY = MathHelper.clamp_float(scrollY, -widgetH / zoomLevel + 4, treeHeight - 4);
-        wasLmbPressed = lmbPressed;
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 
@@ -504,7 +492,20 @@ public class GuiCraftingTree {
         }
 
         SortedMap<Integer, ArrayList<Node>> rows = inScreenshotMode ? treeNodes : treeNodes.subMap(cropYMin, cropYMax);
-        tooltipNode = null;
+        // Draw ordinary paths first, then blocked paths, and missing ingredients last.
+        for (int pass = 0; pass < 3; pass++) {
+            for (ArrayList<Node> row : rows.values()) {
+                for (Node node : row) {
+                    int lineLayer = node.missing ? 2 : node.hasMissing ? 1 : 0;
+                    if (lineLayer == pass && (inScreenshotMode || (node.x + 8 >= cropXMin
+                            && (node.x <= cropXMax || (node.parentNode != null && node.parentNode.x <= cropXMax))))) {
+                        node.drawParentLine();
+                    }
+                }
+            }
+        }
+        tooltipNode = inScreenshotMode ? null
+                : getNodeAt(guiMouseX - parent.getGuiLeft(), guiMouseY - parent.getGuiTop());
         for (Entry<Integer, ArrayList<Node>> row : rows.entrySet()) {
             for (Node node : row.getValue()) {
                 if (!node.visible) {
@@ -512,27 +513,9 @@ public class GuiCraftingTree {
                 }
                 if (inScreenshotMode || node.x > cropXMin) {
                     if (!inScreenshotMode && node.x > cropXMax) {
-                        if (node.parentNode != null && node.parentNode.x < cropXMax) {
-                            node.drawParentLine();
-                        }
                         break;
                     }
                     node.draw();
-                    node.drawParentLine();
-                    final int widgetLeft = parent.getGuiLeft() + widgetX;
-                    final int nodeX = widgetLeft + (int) (node.x * zoomLevel) - (int) zScrollX;
-                    final int widgetTop = parent.getGuiTop() + widgetY;
-                    final int nodeY = widgetTop + (int) (node.y * zoomLevel) - (int) zScrollY;
-                    if (!inScreenshotMode && guiMouseX >= nodeX
-                            && guiMouseY >= nodeY
-                            && guiMouseX <= (nodeX + (int) (node.width * zoomLevel))
-                            && guiMouseY <= (nodeY + (int) (node.height * zoomLevel))
-                            && guiMouseX >= widgetLeft
-                            && guiMouseX <= (widgetLeft + widgetW)
-                            && guiMouseY >= widgetTop
-                            && guiMouseY <= (widgetTop + widgetH)) {
-                        tooltipNode = node;
-                    }
                 }
             }
         }
@@ -674,8 +657,7 @@ public class GuiCraftingTree {
         }
     }
 
-    private void drawTreeLine(final int x0, final int y0, final int x1, final int y1) {
-        final int color = 0xFFDDDDDD;
+    private void drawTreeLine(final int x0, final int y0, final int x1, final int y1, final int color) {
         if (x0 != x1) {
             final int midY = (y0 + y1) / 2;
             parent.drawVerticalLine(x0, y0, midY, color);
@@ -740,86 +722,89 @@ public class GuiCraftingTree {
         return x >= widgetX && y >= widgetY && x < (widgetX + widgetW) && y < (widgetY + widgetH);
     }
 
-    public void mouseClicked(int guiMouseX, int guiMouseY) {
-        final float zoomLevel = this.zoomLevel;
-
-        final float zScrollX = scrollX * zoomLevel;
-        final float zScrollY = scrollY * zoomLevel;
-        final int cropYMin = (int) ((zScrollY - 32) / zoomLevel) - 16;
-        final int cropYMax = (int) ((zScrollY + 32) / zoomLevel) + (int) (widgetH / zoomLevel) + 16;
-
-        RequestNode clickedNode = null;
-        final Map<Integer, ArrayList<Node>> nodeMap = treeNodes.subMap(cropYMin, cropYMax);
-        for (Entry<Integer, ArrayList<Node>> row : nodeMap.entrySet()) {
-            for (Node node : row.getValue()) {
-                if (!node.visible) {
-                    continue;
-                }
-                if (!(node instanceof RequestNode)) {
-                    continue;
-                }
-
-                final int widgetLeft = widgetX;
-                final int buttonX = widgetLeft + (int) ((node.x + 3) * zoomLevel) - (int) zScrollX;
-                final int widgetTop = widgetY;
-                final int buttonY = widgetTop + (int) ((node.y + 19) * zoomLevel) - (int) zScrollY;
-
-                if (guiMouseX >= buttonX && guiMouseY >= buttonY
-                        && guiMouseX <= (buttonX + (int) (4 * zoomLevel))
-                        && guiMouseY <= (buttonY + (int) (4 * zoomLevel))) {
-                    clickedNode = (RequestNode) node;
-                    break;
-                }
+    Node getNodeAt(int guiMouseX, int guiMouseY) {
+        if (!isPointInWidget(guiMouseX, guiMouseY)) return null;
+        float x = (guiMouseX - widgetX) / zoomLevel + scrollX;
+        float y = (guiMouseY - widgetY) / zoomLevel + scrollY;
+        for (ArrayList<Node> row : treeNodes.subMap((int) y - 24, (int) y + 4).values()) {
+            for (Node node : row) {
+                if (node.x - 3 > x) break;
+                if (x < node.x + 21 && y >= node.y - 3 && y < node.y + 21) return node;
             }
         }
-
-        if (clickedNode == null) {
-            return;
-        }
-
-        clickedNode.childrenCollapsed = !clickedNode.childrenCollapsed;
-        for (Node child : clickedNode.childNodes) {
-            changeNodeVisibilityWithChildren(child, !clickedNode.childrenCollapsed);
-        }
-
-        Pair<Integer, Integer> maxXYCoordinate = recalculateCoordinate(treeNodes.firstEntry().getValue().get(0), 0, 0);
-        treeWidth = maxXYCoordinate.first();
-        treeHeight = maxXYCoordinate.second();
+        return null;
     }
 
-    /**
-     * return max x and y
-     */
-    private Pair<Integer, Integer> recalculateCoordinate(Node node, int x, int y) {
-        node.x = x;
-        node.y = y;
-
-        if (node instanceof RequestNode requestNode && requestNode.childrenCollapsed) {
-            return Pair.of(x, y);
-        }
-
-        int childY = y + 16 + REQUEST_RESOLVER_Y_SPACING;
-        for (Node child : node.childNodes) {
-            Pair<Integer, Integer> re = recalculateCoordinate(child, x, childY);
-            x = re.first() + X_SPACING;
-            y = Math.max(y, re.second());
-        }
-        if (!node.childNodes.isEmpty()) {
-            x -= X_SPACING;
-        }
-
-        return Pair.of(x, y);
+    public void mouseClicked(int guiMouseX, int guiMouseY, int button) {
+        if (button != 0 || !isPointInWidget(guiMouseX, guiMouseY)) return;
+        dragStartX = lastDragX = guiMouseX;
+        dragStartY = lastDragY = guiMouseY;
+        dragging = false;
+        pressedNode = getNodeAt(guiMouseX, guiMouseY);
     }
 
-    private void changeNodeVisibilityWithChildren(Node node, boolean visible) {
-        node.visible = visible;
+    public void mouseDragged(int guiMouseX, int guiMouseY) {
+        if (lastDragX == Float.NEGATIVE_INFINITY) return;
+        float dx = guiMouseX - dragStartX;
+        float dy = guiMouseY - dragStartY;
+        if (!dragging && dx * dx + dy * dy <= 9) return;
+        dragging = true;
+        scrollX -= (guiMouseX - lastDragX) / zoomLevel;
+        scrollY -= (guiMouseY - lastDragY) / zoomLevel;
+        scrollX = MathHelper.clamp_float(scrollX, -widgetW / zoomLevel + 4, treeWidth - 4);
+        scrollY = MathHelper.clamp_float(scrollY, -widgetH / zoomLevel + 4, treeHeight - 4);
+        lastDragX = guiMouseX;
+        lastDragY = guiMouseY;
+    }
 
-        if (visible && node instanceof RequestNode rNode && rNode.childrenCollapsed) {
-            return;
+    public void mouseReleased(int guiMouseX, int guiMouseY, int button) {
+        if (button != 0) return;
+        mouseDragged(guiMouseX, guiMouseY);
+        if (!dragging && pressedNode instanceof RequestNode
+                && !pressedNode.childNodes.isEmpty()
+                && pressedNode == getNodeAt(guiMouseX, guiMouseY)) {
+            pressedNode.childrenCollapsed = !pressedNode.childrenCollapsed;
+            rebuildLayout();
         }
+        pressedNode = null;
+        lastDragX = lastDragY = Float.NEGATIVE_INFINITY;
+    }
 
-        for (Node child : node.childNodes) {
-            changeNodeVisibilityWithChildren(child, visible);
+    public void hideAvailable() {
+        for (Node node : allNodes) {
+            if (node instanceof RequestNode) {
+                node.childrenCollapsed = !node.hasMissing && !node.childNodes.isEmpty();
+            }
+        }
+        rebuildLayout();
+        scrollX = scrollY = -8;
+    }
+
+    private void rebuildLayout() {
+        for (int i = allNodes.size() - 1; i >= 0; i--) {
+            Node node = allNodes.get(i);
+            int width = 0;
+            if (!node.childrenCollapsed) {
+                for (Node child : node.childNodes) width += child.subtreeWidth;
+            }
+            node.subtreeWidth = Math.max(X_SPACING, width);
+        }
+        treeNodes.clear();
+        treeWidth = treeHeight = 0;
+        for (Node node : allNodes) {
+            node.visible = node.parentNode == null || (node.parentNode.visible && !node.parentNode.childrenCollapsed);
+            if (!node.visible) continue;
+            treeNodes.computeIfAbsent(node.y, ignored -> new ArrayList<>()).add(node);
+            treeWidth = Math.max(treeWidth, node.x + node.width);
+            treeHeight = Math.max(treeHeight, node.y + node.height);
+            int childX = node.x;
+            int childY = node.y + node.height
+                    + (node instanceof RequestNode ? REQUEST_RESOLVER_Y_SPACING : RESOLVER_CHILD_Y_SPACING);
+            for (Node child : node.childNodes) {
+                child.x = childX;
+                child.y = childY;
+                childX += child.subtreeWidth;
+            }
         }
     }
 }
