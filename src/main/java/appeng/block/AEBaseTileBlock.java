@@ -49,6 +49,7 @@ import appeng.core.features.AETileBlockFeatureHandler;
 import appeng.core.features.IAEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomCollision;
+import appeng.helpers.IInterfaceHost;
 import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
@@ -270,6 +271,10 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                                             (UpgradeInventory) iuh.getInventoryByName("upgrades"));
                                 }
 
+                                if (t instanceof IInterfaceHost iHost) {
+                                    ToolMemoryCard.savePatterns(data, iHost);
+                                }
+
                                 memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
                             }
                             return true;
@@ -289,6 +294,10 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                             // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore
                             // filters.
                             t.uploadSettings(SettingsFrom.MEMORY_CARD, data);
+
+                            if (t instanceof IInterfaceHost iHost) {
+                                ToolMemoryCard.insertPatterns(data, player, iHost);
+                            }
 
                             memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
                         } else {
