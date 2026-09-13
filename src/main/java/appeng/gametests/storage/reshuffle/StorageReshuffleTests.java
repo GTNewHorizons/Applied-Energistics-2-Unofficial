@@ -25,10 +25,13 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
 import appeng.api.AEApi;
+import appeng.api.config.Actionable;
 import appeng.api.config.ReshufflePhase;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.networking.storage.IStorageInterceptor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -37,8 +40,6 @@ import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ScanTask;
 import appeng.me.GridAccessException;
 import appeng.me.cache.NetworkMonitor;
-import appeng.me.storage.NetworkInventoryHandler;
-import appeng.me.storage.NullInventory;
 import appeng.tile.misc.TileStorageReshuffle;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileChest;
@@ -343,6 +344,7 @@ public final class StorageReshuffleTests {
     public static void errorMovesPendingItemsToRecoveryQueue(GameTestHelper helper) {
         Fixture fixture = placeFixture(helper);
         ItemStack sourceCell = cell1k();
+        FailingStorageInterceptor failingDestination = new FailingStorageInterceptor();
         insertItems(helper, sourceCell, Blocks.cobblestone, 64);
 
         helper.startSequence()
@@ -353,7 +355,7 @@ public final class StorageReshuffleTests {
                         20,
                         () -> assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 64))
                 .thenExecute("start reshuffle with a failing destination", () -> {
-                    installFailingDestination(helper, fixture.controller);
+                    itemNetworkMonitor(fixture.controller).addStorageInterceptor(failingDestination);
                     fixture.reshuffler.startReshuffle();
                 }).thenWaitUntil("wait for tile-tick failure handling", 40, () -> {
                     ReshuffleReport report = fixture.reshuffler.getReshuffleReport();
@@ -367,6 +369,7 @@ public final class StorageReshuffleTests {
                     helper.assertFalse(
                             itemNetworkMonitor(fixture.controller).isLocked(),
                             "Failure handling should unlock the item monitor");
+                    itemNetworkMonitor(fixture.controller).removeStorageInterceptor(failingDestination);
                 }).thenSucceed();
     }
 
@@ -451,13 +454,6 @@ public final class StorageReshuffleTests {
     }
 
     @SuppressWarnings("unchecked")
-    private static void installFailingDestination(GameTestHelper helper, TileController controller) {
-        Object handler = itemNetworkMonitor(controller).getHandler();
-        helper.assertTrue(handler instanceof NetworkInventoryHandler<?>, "Item monitor should use the network handler");
-        ((NetworkInventoryHandler<IAEItemStack>) handler).addNewStorage(new FailingInventory());
-    }
-
-    @SuppressWarnings("unchecked")
     private static NetworkMonitor<IAEItemStack> itemNetworkMonitor(TileController controller) {
         return (NetworkMonitor<IAEItemStack>) getStorageGrid(controller).getItemInventory();
     }
@@ -473,27 +469,21 @@ public final class StorageReshuffleTests {
         return stack == null ? 0 : stack.getStackSize();
     }
 
-    private static final class FailingInventory extends NullInventory<IAEItemStack> {
-
-        private boolean failed;
+    private static final class FailingStorageInterceptor implements IStorageInterceptor {
 
         @Override
-        public boolean canAccept(IAEItemStack input) {
-            if (!this.failed && input.isSameType(itemStack(Blocks.cobblestone, 1))) {
-                this.failed = true;
-                throw new IllegalStateException("Intentional reshuffle injection failure");
-            }
+        public boolean canAccept(IAEStack<?> input) {
+            return input.isSameType(itemStack(Blocks.cobblestone, 1));
+        }
+
+        @Override
+        public IAEStack<?> injectItems(IAEStack<?> input, Actionable type, BaseActionSource src) {
+            throw new IllegalStateException("Intentional reshuffle injection failure");
+        }
+
+        @Override
+        public boolean shouldRemoveInterceptor(IAEStack<?> stack) {
             return false;
-        }
-
-        @Override
-        public int getPriority() {
-            return Integer.MAX_VALUE;
-        }
-
-        @Override
-        public boolean validForPass(int pass) {
-            return pass == 1;
         }
     }
 
