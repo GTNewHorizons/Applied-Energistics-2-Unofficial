@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AE2 interface color variants</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #111318; color: #eef1f6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 32px clamp(20px, 4vw, 64px) 24px; background: #191c23; border-bottom: 1px solid #303540; }
+    h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 40px); }
+    p { margin: 0; color: #aeb6c5; max-width: 78ch; line-height: 1.5; }
+    .legend { display: flex; gap: 18px; margin-top: 18px; color: #cfd5df; font-size: 13px; }
+    .legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 2px; background: #8e96a5; }
+    main { padding: 24px clamp(12px, 3vw, 44px) 48px; overflow-x: auto; }
+    .matrix { display: grid; grid-template-columns: 190px repeat(16, 204px); width: max-content; border: 1px solid #303540; border-radius: 10px; overflow: hidden; background: #191c23; }
+    .head, .row-title, .cell { border-right: 1px solid #303540; border-bottom: 1px solid #303540; }
+    .head { position: sticky; top: 0; z-index: 2; padding: 11px 8px; background: #242832; text-align: center; font-size: 12px; font-weight: 700; }
+    .head:first-child { left: 0; z-index: 4; text-align: left; padding-left: 16px; }
+    .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; }
+    .row-title { position: sticky; left: 0; z-index: 3; padding: 16px; background: #20242c; }
+    .row-title strong { display: block; margin-bottom: 5px; font-size: 14px; }
+    .row-title small { color: #98a2b3; line-height: 1.35; }
+    .cell { min-height: 128px; padding: 15px 10px 11px; background: #171a20; text-align: center; }
+    .faces { display: flex; justify-content: center; gap: 6px; }
+    figure { margin: 0; }
+    canvas { width: 56px; height: 56px; image-rendering: pixelated; background: #0d0f12; border-radius: 3px; }
+    figcaption { margin-top: 4px; color: #7f8999; font: 10px/1 system-ui, sans-serif; }
+    .recommended { box-shadow: inset 3px 0 #67d4ee; }
+    .recommended strong::after { content: " suggested"; color: #67d4ee; font-size: 10px; text-transform: uppercase; }
+    @media (max-width: 700px) { .matrix { grid-template-columns: 150px repeat(16, 192px); } .row-title { padding: 12px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Interface color studies</h1>
+    <p>Seven ways to apply the controller palette while preserving the interface's brown outer rim and gray AE2 frame. Scroll horizontally to compare the same treatment across every color.</p>
+    <div class="legend"><span>F · front</span><span>S · side</span><span>A · side + arrow</span></div>
+  </header>
+  <main><div class="matrix" id="matrix"></div></main>
+
+  <script>
+    const textures = {
+      front: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAKlBMVEUrJh8zLiU3MScoJB2AgIA1LyaoqKg2LyVAQEBkZGQqJR04LyUyLSb///88NymLAAAAAWJLR0QN9rRh9QAAAAlwSFlzAAAOpgAADqYBh9ypbwAAAFlJREFUCNdjYBRUUlJUUlJmUHEBA0eGkDQwcGdQyegAgjYnBhEIwxEo0jlz5gygSAmEAVLTOS1zBkQKxHBCqBGBMeDmlEAYQF0QK5xgljoxLN8aHaReHhMIAFkuMdPiPWbqAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDEzLTAzLTEyVDA4OjMzOjE4LTA1OjAw1kXJvwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxMy0wMy0wNFQyMzowMzowNC0wNjowMPXVC68AAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAABJRU5ErkJggg==',
+      side: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACXBIWXMAAA6mAAAOpgGH3KlvAAAAGnRFWHRTb2Z0d2FyZQBQYWludC5ORVQgdjMuNS4xMDD0cqEAAACgSURBVDhPY9BWk/9vrKcKx+aG6hgYl7iGiux/BhAjJSWFLAwymMFUXw3MWbFiBUkYpMdMXxXhApBgQ0MDURhmAEgvA8gZ5BoA9gI2F+DyM1YXgPxBrgE4wwCmwcHBAYxxGUDQC4QMAHuB4jDAFgskGUBxOsAWC4QwzlggBWN4gRwMNkBLVRbsFAsgBmUsEIaxYdkWJA/DIHEjXYg6UAQAABHmO5b94MrQAAAAAElFTkSuQmCC',
+      arrow: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACXBIWXMAAA6mAAAOpgGH3KlvAAAAGnRFWHRTb2Z0d2FyZQBQYWludC5ORVQgdjMuNS4xMDD0cqEAAACXSURBVChTjVJJDoAgDOQjxoug0ShR43L0MT7E5/hMB+uB3U6aUEqHGRpEp8p5kBTbWNsRVpqqEFhONnCFWLRCdjOAtlXLTwH7KwsioFlAhU8wljwF8nq8oNwmGAXY4hMib8gTIpaOAL6lUMHujrzBm1LeUkQhheSU8gRnSr9wLDFhCK0sILRriV+IoIQ+M+oUqEy9OcWEHvpSNp9I/CULAAAAAElFTkSuQmCC'
+    };
+    const colors = [
+      ['Black', '#323232', '#595959', '#727272'], ['Blue', '#2d29a0', '#5b55ff', '#a8abff'],
+      ['Brown', '#6f4b35', '#b99a84', '#d0bbac'], ['Cyan', '#28768a', '#57adc9', '#8bc9e2'],
+      ['Gray', '#626262', '#a2a2a2', '#b9b9b9'], ['Green', '#3b8b25', '#69e43a', '#b1ec9f'],
+      ['Light Blue', '#5590ba', '#88b1e8', '#b7daf6'], ['Light Gray', '#929292', '#cfcfcf', '#e2e2e2'],
+      ['Lime', '#78a91f', '#a8db35', '#cded67'], ['Magenta', '#813584', '#b831b9', '#c06ec2'],
+      ['Orange', '#bc762e', '#f9b14d', '#f6cc93'], ['Pink', '#c481a4', '#f7b7d8', '#f7cee3'],
+      ['Purple', '#7f309e', '#a658cd', '#b985cc'], ['Red', '#a50029', '#ff1048', '#ff8faa'],
+      ['White', '#bebebe', '#dddddd', '#eeeeee'], ['Yellow', '#e2c629', '#e2c629', '#f3df63']
+    ];
+    const variants = [
+      ['Current PR', 'Bright inner face; included as the baseline.', 'current'],
+      ['Controller field', 'Dark color field around a neutral center.', 'field'],
+      ['Thin outer border', 'Colors only the gray line inside the dark outer frame.', 'border'],
+      ['Thin outer border · light', 'The same single-pixel border using the light tone.', 'borderLight'],
+      ['Two-tone outer border', 'Adds a darker colored pixel ring around the thin border.', 'borderTwo'],
+      ['Outer face', 'Color sits nearest the frame; center stays gray.', 'outer'],
+      ['Full face', 'Most color, shaded inward for depth.', 'full']
+    ];
+
+    const load = src => new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = src;
+    });
+    const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+    const mix = (hex, gray, amount) => rgb(hex).map(c => Math.round(c * amount + gray * (1 - amount)));
+    const ring = (x, y) => Math.min(x, y, 15 - x, 15 - y);
+
+    function replacement(mode, face, depth, color) {
+      const [controller, bright, light] = color.slice(1);
+      if (mode === 'current') {
+        if (face === 'front' && depth >= 5) return rgb(depth === 7 ? light : bright);
+        if (face !== 'front' && depth >= 3 && depth <= 6) return rgb(depth <= 4 ? light : bright);
+      }
+      if (mode === 'field' && depth >= 3 && depth <= 5) return mix(controller, 64 + depth * 7, .9);
+      if (mode === 'border' && depth === 2) return mix(controller, 110, .9);
+      if (mode === 'borderLight' && depth === 2) return rgb(light);
+      if (mode === 'borderTwo' && (depth === 1 || depth === 2)) return rgb(depth === 1 ? controller : controller === bright ? light : bright);
+      if (mode === 'outer' && (depth === 3 || depth === 4)) return mix(controller, 90, .84);
+      if (mode === 'full' && depth >= 3) return mix(controller, 70 + (depth - 3) * 28, .82 - (depth - 3) * .07);
+      return null;
+    }
+
+    function paint(canvas, base, reference, mode, face, color) {
+      const work = document.createElement('canvas');
+      work.width = work.height = 16;
+      const ctx = work.getContext('2d');
+      ctx.drawImage(base, 0, 0);
+      const pixels = ctx.getImageData(0, 0, 16, 16);
+      let referencePixels;
+      if (reference) {
+        const mask = document.createElement('canvas');
+        mask.width = mask.height = 16;
+        mask.getContext('2d').drawImage(reference, 0, 0);
+        referencePixels = mask.getContext('2d').getImageData(0, 0, 16, 16).data;
+      }
+      for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+        const i = (y * 16 + x) * 4, depth = ring(x, y), gray = pixels.data[i];
+        if (referencePixels && [0, 1, 2].some(channel => pixels.data[i + channel] !== referencePixels[i + channel])) continue;
+        if (pixels.data[i + 1] !== gray || pixels.data[i + 2] !== gray) continue;
+        const next = replacement(mode, face, depth, color);
+        if (next) [pixels.data[i], pixels.data[i + 1], pixels.data[i + 2]] = next;
+      }
+      ctx.putImageData(pixels, 0, 0);
+      canvas.width = canvas.height = 16;
+      canvas.getContext('2d').drawImage(work, 0, 0);
+    }
+
+    function face(label) {
+      const figure = document.createElement('figure');
+      const canvas = document.createElement('canvas');
+      const caption = document.createElement('figcaption');
+      caption.textContent = label;
+      figure.append(canvas, caption);
+      return [figure, canvas];
+    }
+
+    Promise.all([
+      load(textures.front),
+      load(textures.side),
+      load(textures.arrow)
+    ]).then(([front, side, arrow]) => {
+      const matrix = document.querySelector('#matrix');
+      matrix.insertAdjacentHTML('beforeend', '<div class="head">Treatment</div>' + colors.map(c =>
+        '<div class="head"><i class="swatch" style="background:' + c[1] + '"></i>' + c[0] + '</div>'
+      ).join(''));
+      for (const [name, note, mode] of variants) {
+        const title = document.createElement('div');
+        title.className = 'row-title' + (mode === 'field' ? ' recommended' : '');
+        title.innerHTML = '<strong>' + name + '</strong><small>' + note + '</small>';
+        matrix.append(title);
+        for (const color of colors) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          const faces = document.createElement('div');
+          faces.className = 'faces';
+          const [ff, fc] = face('F'), [sf, sc] = face('S'), [af, ac] = face('A');
+          faces.append(ff, sf, af);
+          cell.append(faces);
+          matrix.append(cell);
+          paint(fc, front, null, mode, 'front', color);
+          paint(sc, side, null, mode, 'side', color);
+          paint(ac, arrow, side, mode, 'arrow', color);
+        }
+      }
+      console.assert(colors.length === 16 && new Set(variants.map(v => v[2])).size === variants.length, 'variant matrix is incomplete');
+    }).catch(error => document.querySelector('#matrix').textContent = 'Could not load texture assets: ' + error);
+  </script>
+</body>
+</html>
