@@ -278,7 +278,9 @@ public class PartPlacement {
                     IPartHost oppositeHost = getExistingHost(opposite);
                     if (oppositeHost != null
                             && oppositeHost.getPart(ForgeDirection.UNKNOWN) instanceof PartCable oppositeCable) {
-                        if (host.getPart(s) == null && !host.isBlocked(s) && oppositeHost.getPart(s.getOpposite()) == null && !oppositeHost.isBlocked(s.getOpposite())) {
+                        if (host.getPart(s) == null && !host.isBlocked(s)
+                                && oppositeHost.getPart(s.getOpposite()) == null
+                                && !oppositeHost.isBlocked(s.getOpposite())) {
                             if (host.getColor().matches(oppositeCable.getColor())) {
                                 cable.addConnection(s);
                                 oppositeCable.addConnection(s.getOpposite());
