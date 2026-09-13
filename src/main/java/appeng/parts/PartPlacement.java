@@ -53,6 +53,7 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBuildCraftTransport;
 import appeng.integration.abstraction.IFMP;
 import appeng.integration.abstraction.IImmibisMicroblocks;
+import appeng.parts.networking.PartCable;
 import appeng.util.LookDirection;
 import appeng.util.Platform;
 import cpw.mods.fml.common.eventhandler.EventPriority;
@@ -271,6 +272,17 @@ public class PartPlacement {
         }
         final ForgeDirection mySide = host.addPart(held, side, player);
         if (mySide != null) {
+            if (world.isRemote && host.getPart(mySide) instanceof PartCable cable) {
+                TileEntity opposite = world.getTileEntity(x + side.offsetX, y + side.offsetY, z + side.offsetZ);
+                IPartHost oppositeHost = getExistingHost(opposite);
+                if (oppositeHost != null
+                        && oppositeHost.getPart(ForgeDirection.UNKNOWN) instanceof PartCable oppositeCable) {
+                    if (host.getPart(side) == null && oppositeHost.getPart(side.getOpposite()) == null) {
+                        cable.addConnection(side);
+                        oppositeCable.addConnection(side.getOpposite());
+                    }
+                }
+            }
             for (final Block multiPartBlock : multiPart.maybeBlock().asSet()) {
                 final SoundType ss = multiPartBlock.stepSound;
 
