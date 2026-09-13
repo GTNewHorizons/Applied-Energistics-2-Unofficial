@@ -273,13 +273,15 @@ public class PartPlacement {
         final ForgeDirection mySide = host.addPart(held, side, player);
         if (mySide != null) {
             if (world.isRemote && host.getPart(mySide) instanceof PartCable cable) {
-                TileEntity opposite = world.getTileEntity(x + side.offsetX, y + side.offsetY, z + side.offsetZ);
-                IPartHost oppositeHost = getExistingHost(opposite);
-                if (oppositeHost != null
-                        && oppositeHost.getPart(ForgeDirection.UNKNOWN) instanceof PartCable oppositeCable) {
-                    if (host.getPart(side) == null && oppositeHost.getPart(side.getOpposite()) == null) {
-                        cable.addConnection(side);
-                        oppositeCable.addConnection(side.getOpposite());
+                for (ForgeDirection s : ForgeDirection.VALID_DIRECTIONS) {
+                    TileEntity opposite = world.getTileEntity(x + s.offsetX, y + s.offsetY, z + s.offsetZ);
+                    IPartHost oppositeHost = getExistingHost(opposite);
+                    if (oppositeHost != null
+                            && oppositeHost.getPart(ForgeDirection.UNKNOWN) instanceof PartCable oppositeCable) {
+                        if (host.getPart(s) == null && oppositeHost.getPart(s.getOpposite()) == null) {
+                            cable.addConnection(s);
+                            oppositeCable.addConnection(s.getOpposite());
+                        }
                     }
                 }
             }
