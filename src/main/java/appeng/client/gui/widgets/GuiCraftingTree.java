@@ -492,11 +492,12 @@ public class GuiCraftingTree {
         }
 
         SortedMap<Integer, ArrayList<Node>> rows = inScreenshotMode ? treeNodes : treeNodes.subMap(cropYMin, cropYMax);
-        // Draw highlighted paths last so available siblings cannot cover their shared lines.
-        for (int pass = 0; pass < 2; pass++) {
+        // Draw ordinary paths first, then blocked paths, and missing ingredients last.
+        for (int pass = 0; pass < 3; pass++) {
             for (ArrayList<Node> row : rows.values()) {
                 for (Node node : row) {
-                    if (node.hasMissing == (pass == 1) && (inScreenshotMode || (node.x + 8 >= cropXMin
+                    int lineLayer = node.missing ? 2 : node.hasMissing ? 1 : 0;
+                    if (lineLayer == pass && (inScreenshotMode || (node.x + 8 >= cropXMin
                             && (node.x <= cropXMax || (node.parentNode != null && node.parentNode.x <= cropXMax))))) {
                         node.drawParentLine();
                     }
