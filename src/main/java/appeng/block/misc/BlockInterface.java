@@ -83,20 +83,12 @@ public class BlockInterface extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     public IIcon getIcon(final IBlockAccess world, final int x, final int y, final int z, final int side) {
         final TileInterface tile = this.getTileEntity(world, x, y, z);
-        if (tile == null || tile.getColor() == AEColor.Transparent
-                || AEConfig.instance.highlightWhenSomethingStuckInInterface && tile.isStuck()) {
-            return super.getIcon(world, x, y, z, side);
-        }
-
-        if (tile.getForward() == ForgeDirection.UNKNOWN) {
+        if (tile != null && tile.getForward() == ForgeDirection.UNKNOWN
+                && tile.getColor() != AEColor.Transparent
+                && !(AEConfig.instance.highlightWhenSomethingStuckInInterface && tile.isStuck())) {
             return this.getRenderTexture(-1, tile.getColor());
         }
-
-        return this.getRenderTexture(switch (this.mapRotation(tile, ForgeDirection.getOrientation(side))) {
-            case DOWN -> -1;
-            case UP -> 0;
-            default -> 1;
-        }, tile.getColor());
+        return super.getIcon(world, x, y, z, side);
     }
 
     private ExtraBlockTextures getRenderTexture(final int id) {
