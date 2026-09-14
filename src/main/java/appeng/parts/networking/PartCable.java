@@ -801,7 +801,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     /**
-     * Only affect rendering, do not use this for connection logic
+     * Only affect rendering, do not use this for connection logic. Do not use this on server side at all.
      */
     @Internal
     public void addConnection(final ForgeDirection side) {
