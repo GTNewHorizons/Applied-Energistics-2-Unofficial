@@ -800,6 +800,9 @@ public class PartCable extends AEBasePart implements IPartCable {
         this.connections = connections;
     }
 
+    /**
+     * Only affect rendering, do not use this for connection logic
+     */
     @Internal
     public void addConnection(final ForgeDirection side) {
         connections.add(side);
