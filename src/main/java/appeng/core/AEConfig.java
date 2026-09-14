@@ -156,6 +156,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int maxMachineChecks = 10000;
     public boolean enableItemFlowTracking = true;
     public int itemFlowTrackingWindowMinutes = 2;
+    public boolean anchorsFunctionAsLadders = true;
 
     public AEConfig(final File configFile) {
         super(configFile);
@@ -300,6 +301,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.maxCraftingTreeVisualizationSize = this
                 .get("misc", "MaxCraftingTreeVisualizationSize", this.maxCraftingTreeVisualizationSize)
                 .getInt(this.maxCraftingTreeVisualizationSize);
+        this.anchorsFunctionAsLadders = this.get("misc", "anchorsFunctionAsLadders", true).getBoolean(true);
         // Clamp to 4kiB..1GiB
         this.maxCraftingTreeVisualizationSize = Math
                 .max(4096, Math.min(this.maxCraftingTreeVisualizationSize, 1024 * 1024 * 1024));
