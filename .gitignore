@@ -29,6 +29,7 @@ classes
 *.iws
 src/main/resources/mixins.*.json
 *.bat
+*.sh
 *.DS_Store
 !gradlew.bat
 layout.json
