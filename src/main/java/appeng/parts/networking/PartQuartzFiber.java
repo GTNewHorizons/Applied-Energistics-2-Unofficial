@@ -188,6 +188,15 @@ public class PartQuartzFiber extends AEBasePart implements IEnergyGridProvider {
         return acquiredPower;
     }
 
+    /** True unless both accessible endpoints are already visited. Lookup failures retain the normal path. */
+    public boolean hasUnvisitedEnergyGrid(final Set<IEnergyGrid> seen) {
+        try {
+            return !seen.contains(this.getProxy().getEnergy()) || !seen.contains(this.outerProxy.getEnergy());
+        } catch (final GridAccessException e) {
+            return true;
+        }
+    }
+
     @Override
     public double injectAEPower(final double amt, final Actionable mode, final Set<IEnergyGrid> seen) {
 

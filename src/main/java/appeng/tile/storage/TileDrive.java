@@ -127,7 +127,7 @@ public class TileDrive extends AENetworkInvTile
             return (this.state >> (slot * 3)) & 0b111;
         }
 
-        final ItemStack cell = this.inv.getStackInSlot(2);
+        final ItemStack cell = this.inv.getStackInSlot(slot);
         final ICellHandler ch = this.handlersBySlot[slot];
 
         final MEInventoryHandler<IAEItemStack> handler = this.invBySlot[slot];
