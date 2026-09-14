@@ -82,6 +82,18 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
     public void setHost(final IPartHost host) {
         this.tcb.clearContainer();
         this.tcb = host;
+        this.updatePartHostInfo();
+    }
+
+    /** Refreshes part bindings when the host or its backing tile changes, without restarting the parts. */
+    public void updatePartHostInfo() {
+        final TileEntity tile = this.getTile();
+        for (final ForgeDirection side : ForgeDirection.values()) {
+            final IPart part = this.getPart(side);
+            if (part != null) {
+                part.setPartHostInfo(side, this, tile);
+            }
+        }
     }
 
     public void rotateLeft() {
@@ -482,7 +494,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         this.inWorld = true;
         IS_LOADING.set(true);
 
-        final TileEntity te = this.getTile();
+        this.updatePartHostInfo();
 
         // start with the center, then install the side parts into the grid.
         for (int x = 6; x >= 0; x--) {
@@ -490,7 +502,6 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
             final IPart part = this.getPart(s);
 
             if (part != null) {
-                part.setPartHostInfo(s, this, te);
                 part.addToWorld();
 
                 if (s != ForgeDirection.UNKNOWN) {
