@@ -34,7 +34,6 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.MEMonitorHandler;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -52,7 +51,6 @@ import appeng.util.Platform;
 import appeng.util.item.IAEStackList;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 public class TileSuperMEReplenisher extends AENetworkTile
         implements IMEInventory<IAEStack<?>>, IIAEStackInventory, IPowerChannelState, IGridTickable {
@@ -380,7 +378,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
         final long stackSize = input.getStackSize();
         final int unusedCount = this.unusedCount.getOrDefault(stackType, 0);
 
-        if (freeBytes == 0 && unusedCount == 0) return input;
+        if (freeBytes < 0 || freeBytes == 0 && unusedCount == 0) return input;
 
         final int freeUnusedCount = unusedCount == 0 ? 0 : typeWeight - unusedCount;
 
@@ -389,7 +387,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
         if (stackSize > freeUnusedCount) {
             final long toCountSize = stackSize - freeUnusedCount;
             needBytes = bytesFor(toCountSize, typeWeight);
-            newUnusedCount = unusedInLastByte(toCountSize, typeWeight);
+            newUnusedCount = remainderInLastByte(toCountSize, typeWeight);
         } else {
             needBytes = 0;
             newUnusedCount = (int) ((unusedCount + stackSize) % typeWeight);
@@ -486,31 +484,31 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
     private void countUsedBytes() {
         this.usedBytes = 0;
+        this.unusedCount.clear();
 
-        final Object2LongOpenHashMap<IAEStackType<?>> unusedCount = new Object2LongOpenHashMap<>();
-        this.storage.forEach(aes -> {
-            final IAEStackType<?> stackType = aes.getStackType();
-            unusedCount.addTo(stackType, aes.getStackSize());
-        });
+        this.storage.forEach(this::countUsedBytes);
+        this.out.forEach(this::countUsedBytes);
 
-        this.out.forEach(aes -> {
-            final IAEStackType<?> stackType = aes.getStackType();
-            unusedCount.addTo(stackType, aes.getStackSize());
-        });
-
-        for (IAEStackType<?> stackType : AEStackTypeRegistry.getAllTypes()) {
-            final int typeWeight = stackType.getAmountPerByte();
-            final long count = unusedCount.getLong(stackType);
-            this.unusedCount.put(stackType, unusedInLastByte(count, typeWeight));
-            this.usedBytes += bytesFor(count, typeWeight);
+        for (final int remainder : this.unusedCount.values()) {
+            if (remainder != 0) this.usedBytes++;
         }
+    }
+
+    private void countUsedBytes(final IAEStack<?> stack) {
+        final IAEStackType<?> stackType = stack.getStackType();
+        final int typeWeight = stackType.getAmountPerByte();
+        final long count = stack.getStackSize();
+        final long remainder = this.unusedCount.getOrDefault(stackType, 0) + count % typeWeight;
+
+        this.usedBytes += count / typeWeight + remainder / typeWeight;
+        this.unusedCount.put(stackType, remainderInLastByte(remainder, typeWeight));
     }
 
     static long bytesFor(final long amount, final int amountPerByte) {
         return amount / amountPerByte + (amount % amountPerByte == 0 ? 0 : 1);
     }
 
-    static int unusedInLastByte(final long amount, final int amountPerByte) {
+    static int remainderInLastByte(final long amount, final int amountPerByte) {
         return (int) (amount % amountPerByte);
     }
 
