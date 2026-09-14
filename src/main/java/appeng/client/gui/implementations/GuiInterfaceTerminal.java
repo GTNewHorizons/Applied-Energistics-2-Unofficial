@@ -383,7 +383,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             renderToolTip(tooltipStack, mouseX, mouseY);
         }
     }
-    
+
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         guiButtonAssemblersOnly.set(
