@@ -376,8 +376,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 ColorUtils.guiTextColorGray.getColor());
         fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
-                GuiInterfaceTerminal.VIEW_LEFT + 2,
-                this.ySize - 96,
+                GuiInterfaceTerminal.VIEW_LEFT + 12,
+                this.ySize - 93,
                 ColorUtils.guiTextColorGray.getColor());
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
