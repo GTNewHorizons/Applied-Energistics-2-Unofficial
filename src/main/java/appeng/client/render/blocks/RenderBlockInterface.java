@@ -15,10 +15,10 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.util.AEColor;
 import appeng.block.misc.BlockInterface;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.render.BlockRenderInfo;
-import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.AEConfig;
 import appeng.core.localization.ColorUtils;
 import appeng.tile.misc.TileInterface;
@@ -34,12 +34,15 @@ public class RenderBlockInterface extends BaseBlockRender<BlockInterface, TileIn
             final int z, final RenderBlocks renderer) {
         final TileInterface ti = block.getTileEntity(world, x, y, z);
         final BlockRenderInfo info = block.getRendererInstance();
+        final boolean highlight = ti != null && AEConfig.instance.highlightWhenSomethingStuckInInterface
+                && ti.isStuck();
+        final AEColor color = ti == null || highlight ? AEColor.Transparent : ti.getColor();
 
         if (ti != null && ti.getForward() != ForgeDirection.UNKNOWN) {
-            final IIcon side = ExtraBlockTextures.BlockInterfaceAlternateArrow.getIcon();
+            final IIcon side = block.getRenderTexture(1, color);
             info.setTemporaryRenderIcons(
-                    ExtraBlockTextures.BlockInterfaceAlternate.getIcon(),
-                    block.getIcon(0, 0),
+                    block.getRenderTexture(0, color),
+                    block.getRenderTexture(-1, color),
                     side,
                     side,
                     side,
@@ -48,11 +51,11 @@ public class RenderBlockInterface extends BaseBlockRender<BlockInterface, TileIn
 
         this.preRenderInWorld(block, world, x, y, z, renderer);
         boolean fz;
-        if (AEConfig.instance.highlightWhenSomethingStuckInInterface && ti != null && ti.isStuck()) {
-            final int color = ColorUtils.interfaceStuck.getColor();
-            final float r = ((color >> 16) & 0xFF) / 255.0f;
-            final float g = ((color >> 8) & 0xFF) / 255.0f;
-            final float b = (color & 0xFF) / 255.0f;
+        if (highlight) {
+            final int stuckColor = ColorUtils.interfaceStuck.getColor();
+            final float r = ((stuckColor >> 16) & 0xFF) / 255.0f;
+            final float g = ((stuckColor >> 8) & 0xFF) / 255.0f;
+            final float b = (stuckColor & 0xFF) / 255.0f;
             fz = renderer.renderStandardBlockWithColorMultiplier(block, x, y, z, r, g, b);
         } else {
             fz = renderer.renderStandardBlock(block, x, y, z);

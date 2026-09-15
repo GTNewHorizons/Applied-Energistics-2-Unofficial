@@ -10,11 +10,15 @@
 
 package appeng.integration.abstraction;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.ForgeDirection;
 
 public interface IGT {
 
     boolean isGTMachine(TileEntity te);
 
     int getGTMachineHash(TileEntity te);
+
+    boolean removeColor(EntityPlayer player, int x, int y, int z, ForgeDirection side);
 }

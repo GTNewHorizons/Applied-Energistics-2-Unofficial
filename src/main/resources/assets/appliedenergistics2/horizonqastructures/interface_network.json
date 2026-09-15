@@ -21,6 +21,7 @@
       "adjacent_chest": [3, 0, 1],
       "assembler": [2, 0, 2],
       "block_interface": [2, 0, 1],
+      "block_interface_cable": [2, 0, 0],
       "controller": [0, 0, 0],
       "drive": [1, 0, 0],
       "part_interface_host": [4, 0, 1]

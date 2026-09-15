@@ -60,6 +60,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomNameObject;
+import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IOreFilterable;
 import appeng.helpers.IPriorityHost;
 import appeng.items.tools.ToolMemoryCard;
@@ -443,6 +444,10 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                     if (this.getInventoryByName("upgrades") instanceof UpgradeInventory ui)
                         ToolMemoryCard.setUpgradesInfo(data, ui);
 
+                    if (this instanceof IInterfaceHost iHost) {
+                        ToolMemoryCard.savePatterns(data, iHost);
+                    }
+
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
                 }
             } else {
@@ -456,6 +461,11 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
                     // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore filters.
                     this.uploadSettings(SettingsFrom.MEMORY_CARD, data);
+
+                    // After insertUpgrades for the same reason as above
+                    if (this instanceof IInterfaceHost iHost) {
+                        ToolMemoryCard.insertPatterns(data, player, iHost);
+                    }
 
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
                 } else {

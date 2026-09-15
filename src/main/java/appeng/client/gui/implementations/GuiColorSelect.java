@@ -13,6 +13,8 @@ import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 
 import org.lwjgl.opengl.GL11;
@@ -42,6 +44,14 @@ public class GuiColorSelect extends GuiScreen {
     private static final int TITLE_OFFSET_Y = 6;
     private static final int GRID_OFFSET_X = 9;
     private static final int GRID_OFFSET_Y = 20;
+
+    private static final ResourceLocation TEXTURE = new ResourceLocation(
+            "appliedenergistics2",
+            "textures/guis/colorApplicator.png");
+
+    private static final int BTN_TEX_V = 74;
+    private static final int BTN_TEX_U_NORMAL = 0;
+    private static final int BTN_TEX_U_SELECTED = 18;
 
     private final EntityPlayer player;
     private int guiLeft;
@@ -104,19 +114,11 @@ public class GuiColorSelect extends GuiScreen {
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        drawRect(
-                this.guiLeft,
-                this.guiTop,
-                this.guiLeft + GUI_WIDTH,
-                this.guiTop + GUI_HEIGHT,
-                ColorUtils.colorSelectBackground.getColor());
-        drawRect(
-                this.guiLeft + 1,
-                this.guiTop + 1,
-                this.guiLeft + GUI_WIDTH - 1,
-                this.guiTop + GUI_HEIGHT - 1,
-                ColorUtils.colorSelectBorder.getColor());
+        this.mc.getTextureManager().bindTexture(TEXTURE);
+        this.drawTexturedModalRect(this.guiLeft, this.guiTop, 0, 0, GUI_WIDTH, GUI_HEIGHT);
 
         GL11.glPopAttrib();
 
@@ -198,9 +200,10 @@ public class GuiColorSelect extends GuiScreen {
             tooltip.add(StatCollector.translateToLocal(this.aeColor.getUnlocalized()));
 
             if (!this.enabled) {
-                tooltip.add("§c" + StatCollector.translateToLocal("gui.appliedenergistics2.Empty"));
+                tooltip.add(EnumChatFormatting.RED + StatCollector.translateToLocal("gui.appliedenergistics2.Empty"));
             } else if (this.isSelected) {
-                tooltip.add("§a" + StatCollector.translateToLocal("gui.appliedenergistics2.Selected"));
+                tooltip.add(
+                        EnumChatFormatting.GREEN + StatCollector.translateToLocal("gui.appliedenergistics2.Selected"));
             }
             return tooltip;
         }
@@ -217,7 +220,7 @@ public class GuiColorSelect extends GuiScreen {
                     && mouseX < this.xPosition + this.width
                     && mouseY < this.yPosition + this.height;
 
-            drawBackground();
+            drawBackground(mc);
             drawIcon(mc);
 
             // Overlays (Disabled or Hovered)
@@ -235,30 +238,36 @@ public class GuiColorSelect extends GuiScreen {
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         }
 
-        private void drawBackground() {
-            final int borderColor;
+        private void drawBackground(Minecraft mc) {
+            mc.getTextureManager().bindTexture(TEXTURE);
 
             if (this.isSelected) {
-                borderColor = ColorUtils.colorSelectBtnBorderSelected.getColor();
-            } else if (!this.enabled) {
-                borderColor = ColorUtils.colorSelectBtnBorderDisabled.getColor();
-            } else {
-                borderColor = this.field_146123_n ? ColorUtils.colorSelectBtnBorderHover.getColor()
-                        : ColorUtils.colorSelectBtnBorder.getColor();
-            }
+                GL11.glDisable(GL11.GL_TEXTURE_2D);
+                drawRect(
+                        this.xPosition,
+                        this.yPosition,
+                        this.xPosition + this.width,
+                        this.yPosition + this.height,
+                        ColorUtils.colorSelectBtnBorderSelected.getColor());
+                GL11.glEnable(GL11.GL_TEXTURE_2D);
+                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-            drawRect(
-                    this.xPosition,
-                    this.yPosition,
-                    this.xPosition + this.width,
-                    this.yPosition + this.height,
-                    borderColor);
-            drawRect(
-                    this.xPosition + 1,
-                    this.yPosition + 1,
-                    this.xPosition + this.width - 1,
-                    this.yPosition + this.height - 1,
-                    ColorUtils.colorSelectBtnBg.getColor());
+                this.drawTexturedModalRect(
+                        this.xPosition + 1,
+                        this.yPosition + 1,
+                        BTN_TEX_U_SELECTED + 1,
+                        BTN_TEX_V + 1,
+                        this.width - 2,
+                        this.height - 2);
+            } else {
+                this.drawTexturedModalRect(
+                        this.xPosition,
+                        this.yPosition,
+                        BTN_TEX_U_NORMAL,
+                        BTN_TEX_V,
+                        this.width,
+                        this.height);
+            }
         }
 
         private void drawIcon(Minecraft mc) {
@@ -311,17 +320,17 @@ public class GuiColorSelect extends GuiScreen {
 
             if (!this.enabled) {
                 drawRect(
-                        this.xPosition + 1,
-                        this.yPosition + 1,
-                        this.xPosition + this.width - 1,
-                        this.yPosition + this.height - 1,
+                        this.xPosition,
+                        this.yPosition,
+                        this.xPosition + this.width,
+                        this.yPosition + this.height,
                         ColorUtils.colorSelectBtnOverlayDisabled.getColor());
             } else if (this.field_146123_n && !this.isSelected) {
                 drawRect(
-                        this.xPosition + 1,
-                        this.yPosition + 1,
-                        this.xPosition + this.width - 1,
-                        this.yPosition + this.height - 1,
+                        this.xPosition,
+                        this.yPosition,
+                        this.xPosition + this.width,
+                        this.yPosition + this.height,
                         ColorUtils.colorSelectBtnOverlayHover.getColor());
             }
 

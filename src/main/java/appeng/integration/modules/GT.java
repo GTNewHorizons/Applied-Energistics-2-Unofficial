@@ -1,6 +1,8 @@
 package appeng.integration.modules;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
 import appeng.api.exceptions.ModNotInstalled;
@@ -13,6 +15,7 @@ import appeng.integration.abstraction.IGT;
 import appeng.spatial.NBTSpatialHandler;
 import cpw.mods.fml.common.Loader;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
+import gregtech.api.util.ColoredBlockContainer;
 
 public class GT implements IIntegrationModule, IGT {
 
@@ -52,5 +55,10 @@ public class GT implements IIntegrationModule, IGT {
         // PartStorageBus uses 0 to represent 'no hash' so we offset the numbers up one here. They just need to be
         // distinct. This controls when the item IO is reset.
         return igte.canAccessData() ? 2 : 1;
+    }
+
+    @Override
+    public boolean removeColor(EntityPlayer player, int x, int y, int z, ForgeDirection side) {
+        return ColoredBlockContainer.getInstance(player, x, y, z, side).removeColor();
     }
 }

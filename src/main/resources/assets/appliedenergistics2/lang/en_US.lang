@@ -402,6 +402,7 @@ gui.appliedenergistics2.FromStoragePercent=Used
 gui.appliedenergistics2.ToCraft=To Craft
 gui.appliedenergistics2.ToCraftRequests=Steps
 gui.appliedenergistics2.CraftingPlan=Crafting Plan
+gui.appliedenergistics2.HideAllAvailable=Hide all available
 gui.appliedenergistics2.Automatic=Automatic
 gui.appliedenergistics2.Start=Start
 gui.appliedenergistics2.StartWithFollow=Start and follow

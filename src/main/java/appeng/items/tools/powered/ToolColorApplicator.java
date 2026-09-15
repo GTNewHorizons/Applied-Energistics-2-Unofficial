@@ -68,6 +68,9 @@ import appeng.core.sync.packets.PacketColorSelect;
 import appeng.helpers.IMouseWheelItem;
 import appeng.hooks.DispenserBlockTool;
 import appeng.hooks.IBlockTool;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
+import appeng.integration.abstraction.IGT;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellConfigLegacy;
 import appeng.items.contents.CellUpgrades;
@@ -216,16 +219,13 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (success) {
-            if (this.consumePowerAndItemsForTe(targetTe)) {
-                inv.extractItems(AEItemStack.create(paintSource), Actionable.MODULATE, new BaseActionSource());
-                this.extractAEPower(stack, POWER_PER_USE);
+            inv.extractItems(AEItemStack.create(paintSource), Actionable.MODULATE, new BaseActionSource());
+            this.extractAEPower(stack, POWER_PER_USE);
 
-                final IAEItemStack newStack = inv
-                        .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
-                if (newStack == null) {
-                    this.cycleColors(stack, this.getColor(stack), 1);
-
-                }
+            final IAEItemStack newStack = inv
+                    .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
+            if (newStack == null) {
+                this.cycleColors(stack, this.getColor(stack), 1);
             }
 
             // Retuning false when using offhand means only the normal hand animation will play
@@ -255,6 +255,22 @@ public class ToolColorApplicator extends AEBasePoweredItem
             }
         }
 
+        final IGT gt = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.GT);
+        if (gt != null && gt.removeColor(player, x, y, z, side)) {
+            return true;
+        }
+
+        final Block block = world.getBlock(x, y, z);
+        if (block == Blocks.stained_glass) {
+            return world.setBlock(x, y, z, Blocks.glass, 0, 3);
+        }
+        if (block == Blocks.stained_glass_pane) {
+            return world.setBlock(x, y, z, Blocks.glass_pane, 0, 3);
+        }
+        if (block == Blocks.stained_hardened_clay) {
+            return world.setBlock(x, y, z, Blocks.hardened_clay, 0, 3);
+        }
+
         int tx = x + side.offsetX;
         int ty = y + side.offsetY;
         int tz = z + side.offsetZ;
@@ -277,10 +293,6 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         return this.recolourBlock(block, side, world, x, y, z, side, color, player);
-    }
-
-    private boolean consumePowerAndItemsForTe(TileEntity tileEntity) {
-        return (tileEntity instanceof IColorableTile);
     }
 
     @Override
