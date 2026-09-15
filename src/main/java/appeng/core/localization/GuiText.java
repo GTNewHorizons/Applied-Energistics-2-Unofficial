@@ -265,6 +265,21 @@ public enum GuiText implements Localization {
 
     // oredictionary filter GUI label
     OreFilterLabel,
+    OreFilterCopy,
+    OreFilterCopyHint,
+    OreFilterPaste,
+    OreFilterPasteHint,
+    OreFilterClear,
+    OreFilterClearHint,
+    OreFilterCheck,
+    OreFilterCheckHint,
+    OreFilterSubmit,
+    OreFilterSubmitHint,
+    OreFilterParseOk,
+    OreFilterParseError,
+    OreFilterMatched,
+    OreFilterItems,
+    OreFilterTooLong,
 
     PriorityCard,
     PriorityCardTooltip,

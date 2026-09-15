@@ -1,12 +1,15 @@
 package appeng.integration.modules.NEIHelpers;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
+import appeng.api.AEApi;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.widgets.MEGuiTextField;
 import codechicken.nei.ItemList;
 import codechicken.nei.SearchField;
@@ -38,6 +41,25 @@ public class NEISearchField {
 
     public boolean existsSearchField() {
         return getSearchField() != null;
+    }
+
+    /**
+     * Counts the items of the NEI item panel that match an ore dictionary filter expression.
+     *
+     * @return the number of matching items, or -1 if the items cannot be enumerated.
+     */
+    public int countMatchingOreFilterItems(final Predicate<IAEItemStack> predicate) {
+        if (predicate == null || !existsSearchField()) return -1;
+
+        final List<ItemStack> items = ItemList.items;
+        if (items == null || items.isEmpty()) return -1;
+
+        int count = 0;
+        for (final ItemStack stack : items) {
+            if (stack != null && predicate.test(AEApi.instance().storage().createItemStack(stack))) count++;
+        }
+
+        return count;
     }
 
     public String getEscapedSearchText(String text) {
