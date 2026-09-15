@@ -134,7 +134,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
+    public IItemList<T> getAvailableItems(final IItemList out, int iteration) {
         return this.getHandler().getAvailableItems(out, iteration);
     }
 

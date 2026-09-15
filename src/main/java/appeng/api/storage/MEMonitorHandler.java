@@ -159,7 +159,7 @@ public class MEMonitorHandler<StackType extends IAEStack<?>> implements IMEMonit
     }
 
     @Override
-    public IItemList<StackType> getAvailableItems(final IItemList<StackType> out, int iteration) {
+    public IItemList<StackType> getAvailableItems(final IItemList out, int iteration) {
         return this.getHandler().getAvailableItems(out, iteration);
     }
 
