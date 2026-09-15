@@ -363,7 +363,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.waitingToSend.add(is);
 
         try {
-            this.gridProxy.getTick().wakeDevice(this.gridProxy.getNode());
+            this.gridProxy.getTick().alertDevice(this.gridProxy.getNode());
         } catch (final GridAccessException e) {
             // :P
         }
@@ -707,7 +707,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final boolean couldDoWork = this.updateStorage();
         final boolean hasWorkToDo = this.hasWorkToDo();
         return (hasWorkToDo || (sentItems && this.hasItemsToSend()))
-                ? (couldDoWork ? TickRateModulation.URGENT : TickRateModulation.SLOWER)
+                ? (couldDoWork || sentItems ? TickRateModulation.URGENT : TickRateModulation.SLOWER)
                 : TickRateModulation.SLEEP;
     }
 
