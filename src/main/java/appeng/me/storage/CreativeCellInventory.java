@@ -235,11 +235,16 @@ public class CreativeCellInventory<StackType extends IAEStack<StackType>>
 
     @Override
     public int getStatusForCell() {
-        return 0;
+        return 2;
     }
 
     @Override
     public String getOreFilter() {
         return "";
+    }
+
+    @Override
+    public boolean isOverflow() {
+        return true;
     }
 }

@@ -13,6 +13,7 @@
 
 package appeng.api.parts;
 
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public interface IPartCollisionHelper {
@@ -50,4 +51,8 @@ public interface IPartCollisionHelper {
      * @return true if this test is to get the BB Collision information.
      */
     boolean isBBCollision();
+
+    default IBlockAccess getBlockAccess() {
+        return null;
+    }
 }

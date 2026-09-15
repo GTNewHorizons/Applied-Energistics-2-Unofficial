@@ -1,6 +1,7 @@
 package appeng.util.inv;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import net.minecraft.item.ItemStack;
 
@@ -260,9 +261,10 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public @NotNull Iterator<ItemSlot> iterator() {
-        InventoryIterator iter = itemIO.sourceIterator();
+        InventoryIterator source = itemIO.sourceIterator();
+        InventoryIterator sink = itemIO.sinkIterator();
 
-        if (iter == null) return Iterators.emptyIterator();
+        if (source == null && sink == null) return Iterators.emptyIterator();
 
         return new Iterator<>() {
 
@@ -271,18 +273,32 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
             @Override
             public boolean hasNext() {
-                return iter.hasNext();
+                return (source != null && source.hasNext()) || (sink != null && sink.hasNext());
             }
 
             @Override
             public ItemSlot next() {
-                ImmutableItemStack stack = iter.next();
+                if (source != null && source.hasNext()) {
+                    ImmutableItemStack stack = source.next();
 
-                slot.setItemStack(stack == null ? null : stack.toStack());
-                slot.setExtractable(true);
-                slot.setSlot(i++);
+                    slot.setItemStack(stack == null ? null : stack.toStack());
+                    slot.setExtractable(true);
+                    slot.setSlot(i++);
 
-                return slot;
+                    return slot;
+                }
+
+                if (sink != null && sink.hasNext()) {
+                    ImmutableItemStack stack = sink.next();
+
+                    slot.setItemStack(stack == null ? null : stack.toStack());
+                    slot.setExtractable(false);
+                    slot.setSlot(i++);
+
+                    return slot;
+                }
+
+                throw new NoSuchElementException();
             }
         };
     }

@@ -159,6 +159,8 @@ public class PacketValueConfig extends AppEngPacket {
                 qk.toggleFlowTrackingMode();
             } else if (this.Value.equals("OpenReshuffle")) {
                 qk.openReshuffle(player);
+            } else if (this.Value.equals("ToggleLiteCrafting")) {
+                qk.toggleLiteCraftingMode();
             }
         } else if (c instanceof ContainerNetworkTool) {
             if (this.Name.equals("NetworkTool")) {

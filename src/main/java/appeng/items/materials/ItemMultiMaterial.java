@@ -250,7 +250,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     @Override
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
-        for (final MaterialType mat : MaterialType.values()) {
+        for (final MaterialType mat : MaterialType.VALUES) {
             if (mat.getDamageValue() >= 0 && mat.isRegistered() && mat.getItemInstance() == this) {
                 itemStacks.add(new ItemStack(this, 1, mat.getDamageValue()));
             }
@@ -259,7 +259,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
     @Override
     public void registerIcons(final IIconRegister icoRegister) {
-        for (final MaterialType mat : MaterialType.values()) {
+        for (final MaterialType mat : MaterialType.VALUES) {
             if (mat.getDamageValue() != -1) {
                 final ItemStack what = new ItemStack(this, 1, mat.getDamageValue());
                 if (this.getTypeByStack(what) != MaterialType.InvalidType) {

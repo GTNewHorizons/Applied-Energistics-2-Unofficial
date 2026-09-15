@@ -11,6 +11,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.parts.IPartCable;
+import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.IGridHost;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
@@ -224,24 +225,30 @@ public class RendererCable extends AbstractRendererPreview implements IRenderPre
 
     private boolean canConnectToGridHost(IGridHost gridHost, ForgeDirection side) {
         AECableType connectionType = gridHost.getCableConnectionType(side);
+        AEColor cableColor = ViewHelper.getCableColor(ViewHelper.getCachedItemStack());
+        AEColor gridHostColor = gridHost instanceof IColorableTile ? ((IColorableTile) gridHost).getColor()
+                : AEColor.Transparent;
 
         if (gridHost instanceof AENetworkInvTile) {
-            return hasConnectableSide(((AENetworkInvTile) gridHost)::getProxy, side);
+            return hasConnectableSide(((AENetworkInvTile) gridHost)::getProxy, side, cableColor, gridHostColor);
         }
 
         if (gridHost instanceof AENetworkPowerTile) {
-            return hasConnectableSide(((AENetworkPowerTile) gridHost)::getProxy, side);
+            return hasConnectableSide(((AENetworkPowerTile) gridHost)::getProxy, side, cableColor, gridHostColor);
         }
 
-        return connectionType != null && connectionType != AECableType.NONE;
+        return connectionType != null && connectionType != AECableType.NONE
+                && isColorCompatible(cableColor, gridHostColor);
     }
 
-    private boolean hasConnectableSide(Supplier<AENetworkProxy> proxySupplier, ForgeDirection side) {
+    private boolean hasConnectableSide(Supplier<AENetworkProxy> proxySupplier, ForgeDirection side, AEColor cableColor,
+            AEColor proxyColor) {
         EnumSet<ForgeDirection> connectableSides = proxySupplier.get().getConnectableSides();
         if (connectableSides.isEmpty()) {
             proxySupplier.get().onReady();
         }
-        return !connectableSides.isEmpty() && connectableSides.contains(side);
+        return !connectableSides.isEmpty() && connectableSides.contains(side)
+                && isColorCompatible(cableColor, proxyColor);
     }
 
     private AECableType getNeighborCableType(ForgeDirection direction) {

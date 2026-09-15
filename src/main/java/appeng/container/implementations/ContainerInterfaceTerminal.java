@@ -27,6 +27,8 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.primitives.Ints;
@@ -34,8 +36,10 @@ import com.google.common.primitives.Ints;
 import appeng.api.AEApi;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
+import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.DimensionalCoord;
@@ -146,6 +150,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     public void doAction(final EntityPlayerMP player, final InventoryAction action, final int slot, final long id) {
         final InvTracker inv = this.trackedById.get(id);
         if (inv != null) {
+            if (slot < 0 || slot >= inv.numSlots || slot >= inv.patterns.getSizeInventory()) return;
+
             final ItemStack handStack = player.inventory.getItemStack();
 
             if (handStack != null && !(handStack.getItem() instanceof ItemEncodedPattern)) {
@@ -235,25 +241,13 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                         isDirty = true;
                     }
                 }
-                case MULTIPLY_PATTERN -> {
-                    if (slotStack != null) {
-                        ItemStack copy = slotStack.copy();
-                        PatternMultiplierHelper.applyModification(copy, 1);
-                        inv.patterns.setInventorySlotContents(slot, copy);
-                        syncIfaceSlot(inv, id, slot, copy);
-                    }
-                }
-                case DIVIDE_PATTERN -> {
-                    if (slotStack != null) {
-                        ItemStack copy = slotStack.copy();
-                        PatternMultiplierHelper.applyModification(copy, -1);
-                        inv.patterns.setInventorySlotContents(slot, copy);
-                        syncIfaceSlot(inv, id, slot, copy);
-                    }
-                }
+                case MULTIPLY_PATTERN -> modifyPatternInSlot(inv, id, slot, slotStack, 1);
+                case DIVIDE_PATTERN -> modifyPatternInSlot(inv, id, slot, slotStack, -1);
                 case CREATIVE_DUPLICATE -> {
-                    if (player.capabilities.isCreativeMode) {
-                        playerHand.addItems(handStack);
+                    if (player.capabilities.isCreativeMode && handStack == null && slotStack != null) {
+                        final ItemStack duplicate = slotStack.copy();
+                        duplicate.stackSize = duplicate.getMaxStackSize();
+                        player.inventory.setItemStack(duplicate);
                     }
                 }
                 default -> {
@@ -263,6 +257,23 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
 
             this.updateHeld(player);
         }
+    }
+
+    private void modifyPatternInSlot(final InvTracker inv, final long id, final int slot, final ItemStack pattern,
+            final int multiplier) {
+        if (pattern == null || !(pattern.getItem() instanceof ICraftingPatternItem patternItem)) return;
+
+        final ICraftingPatternDetails details = patternItem.getPatternForItem(pattern, inv.world);
+        if (details == null || details.isCraftable()) return;
+
+        final int max = multiplier < 0 ? PatternMultiplierHelper.getMaxBitDivider(details)
+                : PatternMultiplierHelper.getMaxBitMultiplier(details);
+        if (max == 0) return;
+
+        final ItemStack modifiedPattern = pattern.copy();
+        PatternMultiplierHelper.applyModification(modifiedPattern, multiplier);
+        inv.patterns.setInventorySlotContents(slot, modifiedPattern);
+        syncIfaceSlot(inv, id, slot, modifiedPattern);
     }
 
     /**
@@ -344,7 +355,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
 
                         /* Name changed? */
                         String rawName = machine.getRawName();
-                        String suffix = machine.getNameSuffix();
+                        String suffix = serializeSuffix(machine.getNameSuffix());
 
                         if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
                             if (update == null) update = new PacketInterfaceTerminalUpdate();
@@ -456,6 +467,13 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         return !ItemStack.areItemStacksEqual(a, b);
     }
 
+    /**
+     * The suffix travels as a string, so components are serialized here and turned back into text on the client.
+     */
+    private static String serializeSuffix(final IChatComponent suffix) {
+        return suffix == null ? null : IChatComponent.Serializer.func_150696_a(suffix);
+    }
+
     private static class InvTracker {
 
         private final long id;
@@ -463,6 +481,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         private String name;
         private String suffix;
         private final IInventory patterns;
+        private final World world;
         private int rows;
         private int rowSize;
         private int numSlots;
@@ -482,8 +501,9 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
             this.id = id;
             this.shouldDisplay = getTerminalVisibility(machine);
             this.name = machine.getRawName();
-            this.suffix = machine.getNameSuffix();
+            this.suffix = serializeSuffix(machine.getNameSuffix());
             this.patterns = machine.getPatterns();
+            this.world = machine.getTileEntity().getWorldObj();
             this.rowSize = machine.rowSize();
             this.rows = machine.rows();
             this.numSlots = machine.numSlots();

@@ -28,6 +28,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -59,6 +60,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomNameObject;
+import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IOreFilterable;
 import appeng.helpers.IPriorityHost;
 import appeng.items.tools.ToolMemoryCard;
@@ -178,7 +180,12 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     @Override
     public void setCustomName(String name) {
-        this.getItemStack().setStackDisplayName(name);
+        // An empty name has to clear the display tag, otherwise hasDisplayName() keeps reporting a name
+        if (name == null || name.isEmpty()) {
+            this.getItemStack().func_135074_t();
+        } else {
+            this.getItemStack().setStackDisplayName(name);
+        }
     }
 
     @Override
@@ -415,6 +422,8 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 && memCardIS.getItem() instanceof IMemoryCard memoryCard) {
             if (ForgeEventFactory.onItemUseStart(player, memCardIS, 1) <= 0) return false;
 
+            if (player.worldObj.isRemote) return true;
+
             ItemStack is = this.getItemStack(PartItemStack.Network);
 
             // Blocks and parts share the same soul!
@@ -435,6 +444,10 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                     if (this.getInventoryByName("upgrades") instanceof UpgradeInventory ui)
                         ToolMemoryCard.setUpgradesInfo(data, ui);
 
+                    if (this instanceof IInterfaceHost iHost) {
+                        ToolMemoryCard.savePatterns(data, iHost);
+                    }
+
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
                 }
             } else {
@@ -448,6 +461,11 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
                     // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore filters.
                     this.uploadSettings(SettingsFrom.MEMORY_CARD, data);
+
+                    // After insertUpgrades for the same reason as above
+                    if (this instanceof IInterfaceHost iHost) {
+                        ToolMemoryCard.insertPatterns(data, player, iHost);
+                    }
 
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
                 } else {
@@ -551,6 +569,22 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     public void setRenderCache(final ISimplifiedBundle renderCache) {
         this.renderCache.set(renderCache);
+    }
+
+    protected IBlockAccess getRenderWorld(final IPartRenderHelper rh) {
+        final IBlockAccess w = rh.getBlockAccess();
+        return w != null ? w : this.getHostWorld();
+    }
+
+    protected IBlockAccess getRenderWorld(final IPartCollisionHelper bch) {
+        final IBlockAccess w = bch.getBlockAccess();
+        return w != null ? w : this.getHostWorld();
+    }
+
+    private IBlockAccess getHostWorld() {
+        final IPartHost host = this.getHost();
+        final TileEntity te = host != null ? host.getTile() : this.getTile();
+        return te != null ? te.getWorldObj() : null;
     }
 
     private static int getSideIndexFromDirection(ForgeDirection direction) {

@@ -187,6 +187,7 @@ public class Platform {
     public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
     public static final boolean isBackhandLoaded = Loader.isModLoaded("backhand");
+    public static final boolean isBogoLoaded = Loader.isModLoaded("bogosorter");
     public static final boolean isPosteaLoaded = Loader.isModLoaded("postea");
     public static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     public static final boolean isThaumicEnergisticsLoaded = Loader.isModLoaded("thaumicenergistics");
@@ -1135,10 +1136,8 @@ public class Platform {
                 } else if (mode == FuzzyMode.PERCENT_99) {
                     return (a.getItemDamageForDisplay() > 1) == (b.getItemDamageForDisplay() > 1);
                 } else {
-                    final float percentDamagedOfA = 1.0f
-                            - (float) a.getItemDamageForDisplay() / (float) a.getMaxDamage();
-                    final float percentDamagedOfB = 1.0f
-                            - (float) b.getItemDamageForDisplay() / (float) b.getMaxDamage();
+                    final float percentDamagedOfA = (float) a.getItemDamageForDisplay() / (float) a.getMaxDamage();
+                    final float percentDamagedOfB = (float) b.getItemDamageForDisplay() / (float) b.getMaxDamage();
 
                     return (percentDamagedOfA > mode.breakPoint) == (percentDamagedOfB > mode.breakPoint);
                 }
@@ -1440,17 +1439,33 @@ public class Platform {
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
             final IMEMonitorHandlerReceiver meMonitorPassthrough, final BaseActionSource source) {
+        IItemList<T> changeList = before;
+        if (!changeList.hasWriteAccess()) {
+            IAEStackType<T> stackType = before.getStackType();
+            if (stackType == null) {
+                stackType = after.getStackType();
+            }
+            if (stackType == null) {
+                return;
+            }
+
+            changeList = stackType.createPrimitiveList();
+            for (final T is : before) {
+                changeList.add(is);
+            }
+        }
+
         final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
-        for (final T is : before) {
+        for (final T is : changeList) {
             is.setStackSize(-is.getStackSize());
         }
 
         for (final T is : after) {
-            before.add(is);
+            changeList.add(is);
         }
 
-        for (final T is : before) {
+        for (final T is : changeList) {
             if (is.getStackSize() != 0) {
                 changes.add(is);
             }

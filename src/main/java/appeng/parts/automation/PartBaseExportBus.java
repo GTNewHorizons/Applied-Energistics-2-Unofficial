@@ -224,7 +224,7 @@ public abstract class PartBaseExportBus<StackType extends IAEStack<StackType>> e
     @Override
     public IAEStack<?> injectCraftedItems(final ICraftingLink link, final IAEStack<?> items, final Actionable mode) {
         if (!(this.getTarget() instanceof InventoryAdaptor d)) {
-            throw new IllegalStateException("Target is not a InventoryAdaptor");
+            return items;
         }
 
         try {

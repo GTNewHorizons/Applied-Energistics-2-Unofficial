@@ -22,6 +22,9 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.chunk.IChunkProvider;
 
 import appeng.api.AEApi;
 import appeng.api.util.WorldCoord;
@@ -29,6 +32,8 @@ import appeng.core.stats.Achievements;
 import appeng.util.Platform;
 
 public class StorageHelper {
+
+    private static final int CHUNK_COORDINATE_SHIFT = 4;
 
     private static StorageHelper instance;
 
@@ -173,6 +178,9 @@ public class StorageHelper {
             , final World dst/** storage cell **/
             ,final int x, final int y, final int z, final int i, final int j, final int k, final int scaleX,
             final int scaleY, final int scaleZ) {
+        ensureRegionLoaded(src.getChunkProvider(), x - 1, z - 1, x + scaleX + 1, z + scaleZ + 1);
+        ensureRegionLoaded(dst.getChunkProvider(), i - 1, k - 1, i + scaleX + 1, k + scaleZ + 1);
+
         for (final Block matrixFrameBlock : AEApi.instance().definitions().blocks().matrixFrame().maybeBlock()
                 .asSet()) {
             this.transverseEdges(
@@ -241,6 +249,24 @@ public class StorageHelper {
          * ChunkProviderServer srv = (ChunkProviderServer) cp; srv.unloadAllChunks(); } cp.unloadQueuedChunks();
          */
 
+    }
+
+    static void ensureRegionLoaded(final IChunkProvider chunkProvider, final int minBlockX, final int minBlockZ,
+            final int maxBlockX, final int maxBlockZ) {
+        final int minChunkX = minBlockX >> CHUNK_COORDINATE_SHIFT;
+        final int minChunkZ = minBlockZ >> CHUNK_COORDINATE_SHIFT;
+        final int maxChunkX = maxBlockX >> CHUNK_COORDINATE_SHIFT;
+        final int maxChunkZ = maxBlockZ >> CHUNK_COORDINATE_SHIFT;
+
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                final Chunk chunk = chunkProvider.loadChunk(chunkX, chunkZ);
+                if (chunk == null || chunk instanceof EmptyChunk || !chunk.isAtLocation(chunkX, chunkZ)) {
+                    throw new IllegalStateException(
+                            "Unable to load chunk " + chunkX + ", " + chunkZ + " for spatial transfer");
+                }
+            }
+        }
     }
 
     private static class TriggerUpdates implements ISpatialVisitor {

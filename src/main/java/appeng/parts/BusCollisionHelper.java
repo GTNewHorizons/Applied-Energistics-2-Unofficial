@@ -14,6 +14,7 @@ import java.util.List;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.parts.IPartCollisionHelper;
@@ -28,15 +29,22 @@ public class BusCollisionHelper implements IPartCollisionHelper {
 
     private final Entity entity;
     private final boolean isVisual;
+    private final IBlockAccess blockAccess;
 
     public BusCollisionHelper(final List<AxisAlignedBB> boxes, final ForgeDirection x, final ForgeDirection y,
             final ForgeDirection z, final Entity e, final boolean visual) {
+        this(boxes, x, y, z, e, visual, null);
+    }
+
+    public BusCollisionHelper(final List<AxisAlignedBB> boxes, final ForgeDirection x, final ForgeDirection y,
+            final ForgeDirection z, final Entity e, final boolean visual, final IBlockAccess blockAccess) {
         this.boxes = boxes;
         this.x = x;
         this.y = y;
         this.z = z;
         this.entity = e;
         this.isVisual = visual;
+        this.blockAccess = blockAccess;
     }
 
     public BusCollisionHelper(final List<AxisAlignedBB> boxes, final ForgeDirection s, final Entity e,
@@ -44,6 +52,7 @@ public class BusCollisionHelper implements IPartCollisionHelper {
         this.boxes = boxes;
         this.entity = e;
         this.isVisual = visual;
+        this.blockAccess = null;
 
         switch (s) {
             case DOWN -> {
@@ -151,5 +160,10 @@ public class BusCollisionHelper implements IPartCollisionHelper {
     @Override
     public boolean isBBCollision() {
         return !this.isVisual;
+    }
+
+    @Override
+    public IBlockAccess getBlockAccess() {
+        return this.blockAccess;
     }
 }

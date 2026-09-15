@@ -71,7 +71,7 @@ public class WirelessDataProvider extends BaseWailaDataProvider {
             currentToolTip.add(WailaText.wireless_notconnected.getLocal());
         }
 
-        AEColor color = AEColor.values()[tag.getInteger("color")];
+        AEColor color = AEColor.VALUES[tag.getInteger("color")];
         if (color != AEColor.Transparent) {
             currentToolTip.add(StatCollector.translateToLocal("gui.appliedenergistics2." + color.name()));
         }

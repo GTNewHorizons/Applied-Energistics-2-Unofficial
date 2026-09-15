@@ -24,9 +24,8 @@ import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.PowerUnits;
-import appeng.api.definitions.IBlockDefinition;
 import appeng.api.implementations.items.IAEItemPowerStorage;
-import appeng.core.Api;
+import appeng.block.networking.BlockEnergyCell;
 import appeng.core.localization.GuiText;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -61,13 +60,9 @@ public class AEBaseItemBlockChargeable extends AEBaseItemBlock implements IAEIte
 
     private double getMaxEnergyCapacity() {
         final Block blockID = Block.getBlockFromItem(this);
-        final IBlockDefinition energyCell = Api.INSTANCE.definitions().blocks().energyCell();
-        for (final Block block : energyCell.maybeBlock().asSet()) {
-            if (blockID == block) {
-                return 200000;
-            } else {
-                return 8 * 200000;
-            }
+        // The block capacity is already scaled by the power multiplier.
+        if (blockID instanceof BlockEnergyCell energyCell) {
+            return energyCell.getMaxPower();
         }
 
         return 0;

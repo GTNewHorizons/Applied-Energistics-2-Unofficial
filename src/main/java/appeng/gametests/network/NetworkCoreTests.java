@@ -5,7 +5,6 @@ import static appeng.gametests.AEGameTestHelpers.assertInactive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
-import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 
 import java.util.ArrayList;
@@ -19,6 +18,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -28,7 +28,6 @@ import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
@@ -70,6 +69,30 @@ public class NetworkCoreTests {
                     assertActive(helper, deviceA, "Device A should receive a channel");
                     assertActive(helper, deviceB, "Device B should receive a channel");
                 }).thenSucceed();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 20)
+    public static void coloredControllersStayDisconnected(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        Block controllerBlock = AEApi.instance().definitions().blocks().controller().maybeBlock().get();
+        helper.setBlock("cable_1", controllerBlock);
+        TileController other = helper.assertTileEntityPresent(TileController.class, "cable_1");
+        helper.assertTrue(
+                controller.recolourBlock(ForgeDirection.EAST, AEColor.Red, null),
+                "Controller should accept paint");
+        helper.assertTrue(
+                other.recolourBlock(ForgeDirection.WEST, AEColor.Blue, null),
+                "Controller should accept paint");
+        helper.assertFalse(
+                controller.isColorCompatible(other),
+                "Different-colored controllers should not share connected textures");
+        helper.onEachTick(
+                "different colors stay on separate grids",
+                () -> helper.assertNotSame(
+                        controller.getProxy().getNode().getGrid(),
+                        other.getProxy().getNode().getGrid(),
+                        "Different-colored controllers should not connect"));
+        helper.succeedAtTimeout();
     }
 
     // Splits the drive off the controller, then reconnects it without losing stored cell contents.
@@ -135,10 +158,8 @@ public class NetworkCoreTests {
         installCableLine(helper, DOWNSTREAM_CABLE_LINE);
         IPart upstreamDevice = placePart(helper, DEVICE_A_LABEL, ForgeDirection.UP, terminal());
         IPart downstreamDevice = placePart(helper, DEVICE_B_LABEL, ForgeDirection.UP, terminal());
-        ContinuousInvariant unpoweredToggleBusGatesDownstream = continuousInvariant(
-                helper,
-                "unpowered toggle bus must keep only the upstream network active",
-                () -> {
+        TickCallbackHandle unpoweredToggleBusGatesDownstream = helper
+                .onEachTickDisabled("unpowered toggle bus gates downstream", () -> {
                     assertActive(helper, controller.getProxy(), "Controller side should remain active");
                     assertActive(helper, upstreamDevice, "Upstream device should remain active");
                     assertInactive(helper, drive.getProxy(), "Drive should remain gated");

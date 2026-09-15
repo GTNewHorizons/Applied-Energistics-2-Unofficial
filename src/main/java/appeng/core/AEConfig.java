@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -39,6 +40,7 @@ import appeng.api.config.YesNo;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.core.features.AEFeature;
+import appeng.core.settings.ControllerAnimation;
 import appeng.core.settings.TickRates;
 import appeng.items.materials.MaterialType;
 import appeng.util.ConfigManager;
@@ -48,6 +50,8 @@ import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public final class AEConfig extends Configuration implements IConfigurableObject, IConfigManagerHost {
 
@@ -86,6 +90,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             "Brass", "Platinum", "Nickel", "Invar", "Aluminium", "Electrum", "Osmium", "Zinc" };
     public double oreDoublePercentage = 90.0;
     public boolean enableEffects = true;
+    public ControllerAnimation controllerAnimation = ControllerAnimation.ORIGINAL_RAINBOW;
     public boolean useColoredCraftingStatus;
     public boolean previewBlocks;
     public int previewLineWidth;
@@ -387,6 +392,19 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.disableColoredCableRecipesInNEI = this.get("Client", "disableColoredCableRecipesInNEI", true)
                 .getBoolean(true);
         this.enableEffects = this.get("Client", "enableEffects", true).getBoolean(true);
+        final Property controllerAnimationProperty = this.get(
+                "Client",
+                "controllerAnimation",
+                ControllerAnimation.ORIGINAL_RAINBOW.name(),
+                "Powered controller animation. Changes apply when the config GUI is closed.");
+        controllerAnimationProperty
+                .setValidValues(Arrays.stream(ControllerAnimation.values()).map(Enum::name).toArray(String[]::new));
+        try {
+            this.controllerAnimation = ControllerAnimation.valueOf(controllerAnimationProperty.getString());
+        } catch (IllegalArgumentException e) {
+            this.controllerAnimation = ControllerAnimation.ORIGINAL_RAINBOW;
+            controllerAnimationProperty.set(this.controllerAnimation.name());
+        }
         this.useColoredCraftingStatus = this.get("Client", "useColoredCraftingStatus", true).getBoolean(true);
         this.previewBlocks = this.get("Client", "previewBlocks", true).getBoolean(true);
         this.previewLineWidth = this.get("Client", "previewLineWidth", 3).getInt(3);
@@ -561,9 +579,14 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public class EventHandler {
 
         @SubscribeEvent
+        @SideOnly(Side.CLIENT)
         public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
             if (eventArgs.modID.equals(AppEng.MOD_ID)) {
+                final ControllerAnimation previousAnimation = AEConfig.this.controllerAnimation;
                 AEConfig.this.clientSync();
+                if (previousAnimation != AEConfig.this.controllerAnimation) {
+                    Minecraft.getMinecraft().refreshResources();
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package appeng.util.prioitylist;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,6 +22,8 @@ import codechicken.nei.FormattedTextField.TextFormatter;
 import cpw.mods.fml.common.Optional;
 
 public class OreFilteredList implements IPartitionList<IAEItemStack> {
+
+    private static final Pattern BOOLEAN_OPERAND_PATTERN = Pattern.compile("[^&|]+");
 
     @Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.FormattedTextField.TextFormatter")
     public static class OreFilterTextFormatter implements TextFormatter {
@@ -123,31 +126,34 @@ public class OreFilteredList implements IPartitionList<IAEItemStack> {
             matcher = (is) -> is != null
                     && IntStream.of(OreDictionary.getOreIDs(is)).mapToObj(OreDictionary::getOreName).anyMatch(test);
         } else if (!f.isEmpty()) {
-            String[] filters = f.split("[&|]");
-            String lastFilter = null;
+            matcher = makeBooleanMatcher(f, OreFilteredList::filterToItemStackPredicate);
+        }
+        return matcher;
+    }
 
-            for (String filter : filters) {
-                filter = filter.trim();
-                if (filter.isEmpty()) continue;
-                boolean negated = filter.startsWith("!");
-                if (negated) filter = filter.substring(1);
+    static <T> Predicate<T> makeBooleanMatcher(String f, Function<String, Predicate<T>> predicateFactory) {
+        Predicate<T> matcher = null;
+        final Matcher operands = BOOLEAN_OPERAND_PATTERN.matcher(f);
+        int endLast = 0;
 
-                Predicate<ItemStack> test = filterToItemStackPredicate(filter);
+        while (operands.find()) {
+            String filter = operands.group().trim();
+            if (filter.isEmpty()) continue;
+            boolean negated = filter.startsWith("!");
+            if (negated) filter = filter.substring(1);
 
-                if (negated) test = test.negate();
+            Predicate<T> test = predicateFactory.apply(filter);
 
-                if (matcher == null) {
-                    matcher = test;
-                    lastFilter = filter;
-                } else {
-                    int endLast = f.indexOf(lastFilter) + lastFilter.length();
-                    int startThis = f.indexOf(filter);
-                    lastFilter = filter;
-                    if (startThis <= endLast) continue;
-                    boolean or = f.substring(endLast, startThis).contains("|");
-                    matcher = or ? matcher.or(test) : matcher.and(test);
-                }
+            if (negated) test = test.negate();
+
+            if (matcher == null) {
+                matcher = test;
+            } else {
+                boolean or = f.substring(endLast, operands.start()).contains("|");
+                matcher = or ? matcher.or(test) : matcher.and(test);
             }
+
+            endLast = operands.end();
         }
         return matcher;
     }

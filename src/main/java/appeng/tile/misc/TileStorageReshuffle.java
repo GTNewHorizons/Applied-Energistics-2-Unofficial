@@ -139,7 +139,7 @@ public class TileStorageReshuffle extends AENetworkTile
             } else {
                 if (!this.cantInject.isEmpty() && this.count >= 240) {
                     this.count = 0;
-                    this.returnPendingItems();
+                    if (this.returnPendingItems()) this.markDirty();
                 } else this.count++;
             }
         } catch (final Exception ignored) {
@@ -147,6 +147,8 @@ public class TileStorageReshuffle extends AENetworkTile
             this.reshuffleReport = this.activeTask.getReport();
             this.activeTask = null;
             this.unlockStorage();
+            this.markDirty();
+            this.markForUpdate();
         }
     }
 
@@ -240,7 +242,8 @@ public class TileStorageReshuffle extends AENetworkTile
         }
     }
 
-    private void returnPendingItems() {
+    private boolean returnPendingItems() {
+        boolean changed = false;
         try {
             final Iterator<IAEStack<?>> i = this.cantInject.iterator();
             while (i.hasNext()) {
@@ -250,12 +253,17 @@ public class TileStorageReshuffle extends AENetworkTile
                 if (monitor != null) {
                     final IAEStack<?> res = monitor
                             .injectItems(aes, Actionable.MODULATE, new ReshuffleActionSource(this));
-                    if (res != null) this.cantInject.add(res);
-
-                    i.remove();
+                    if (res == null) {
+                        i.remove();
+                        changed = true;
+                    } else if (aes.getStackSize() != res.getStackSize()) {
+                        aes.setStackSize(res.getStackSize());
+                        changed = true;
+                    }
                 }
             }
         } catch (Exception ignored) {}
+        return changed;
     }
 
     public ScanTask getScan() {

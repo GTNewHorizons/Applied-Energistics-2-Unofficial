@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.opengl.GL11;
@@ -79,8 +80,9 @@ public class PartDenseCableCovered extends PartCable {
             }
         }
 
+        final IBlockAccess w = this.getRenderWorld(bch);
         for (final ForgeDirection of : this.getConnections()) {
-            if (this.isDense(of)) {
+            if (this.isDense(w, of)) {
                 switch (of) {
                     case DOWN -> bch.addBox(min, 0.0, min, max, min, max);
                     case EAST -> bch.addBox(max, min, min, 16.0, max, max);
@@ -115,7 +117,7 @@ public class PartDenseCableCovered extends PartCable {
 
         OffsetIcon main = new OffsetIcon(this.getTexture(this.getCableColor()), offU, offV);
 
-        for (final ForgeDirection side : EnumSet.of(ForgeDirection.UP, ForgeDirection.DOWN)) {
+        for (final ForgeDirection side : Y_AXIS_DIRECTIONS) {
             rh.renderInventoryFace(main, side, renderer);
         }
 
@@ -123,13 +125,13 @@ public class PartDenseCableCovered extends PartCable {
         offV = 0;
         main = new OffsetIcon(this.getTexture(this.getCableColor()), offU, offV);
 
-        for (final ForgeDirection side : EnumSet.of(ForgeDirection.EAST, ForgeDirection.WEST)) {
+        for (final ForgeDirection side : X_AXIS_DIRECTIONS) {
             rh.renderInventoryFace(main, side, renderer);
         }
 
         main = new OffsetIcon(this.getTexture(this.getCableColor()), 0, 0);
 
-        for (final ForgeDirection side : EnumSet.of(ForgeDirection.SOUTH, ForgeDirection.NORTH)) {
+        for (final ForgeDirection side : Z_AXIS_DIRECTIONS) {
             rh.renderInventoryFace(main, side, renderer);
         }
 
@@ -153,18 +155,21 @@ public class PartDenseCableCovered extends PartCable {
         this.setRenderCache(rh.useSimplifiedRendering(x, y, z, this, this.getRenderCache()));
         rh.setTexture(this.getTexture(this.getCableColor()));
 
-        final EnumSet<ForgeDirection> sides = this.getConnections().clone();
+        final EnumSet<ForgeDirection> connections = this.getConnections();
+
+        final IBlockAccess w = this.getRenderWorld(rh);
 
         boolean hasBuses = false;
-        for (final ForgeDirection of : this.getConnections()) {
-            if (!this.isDense(of)) {
+        for (final ForgeDirection of : ForgeDirection.VALID_DIRECTIONS) {
+            if (connections.contains(of) && !this.isDense(w, of)) {
                 hasBuses = true;
             }
         }
 
-        if (sides.size() != 2 || !this.nonLinear(sides) || hasBuses) {
-            for (final ForgeDirection of : this.getConnections()) {
-                if (this.isDense(of)) {
+        if (connections.size() != 2 || !this.nonLinear(connections) || hasBuses) {
+            for (final ForgeDirection of : ForgeDirection.VALID_DIRECTIONS) {
+                if (!connections.contains(of)) continue;
+                if (this.isDense(w, of)) {
                     this.renderDenseCoveredConnection(x, y, z, rh, renderer, of);
                 } else {
                     this.renderCoveredConnection(x, y, z, rh, renderer, this.getChannelsOnSide()[of.ordinal()], of);
@@ -177,9 +182,11 @@ public class PartDenseCableCovered extends PartCable {
         } else {
             ForgeDirection selectedSide = ForgeDirection.UNKNOWN;
 
-            for (final ForgeDirection of : this.getConnections()) {
-                selectedSide = of;
-                break;
+            for (final ForgeDirection of : ForgeDirection.VALID_DIRECTIONS) {
+                if (connections.contains(of)) {
+                    selectedSide = of;
+                    break;
+                }
             }
 
             final IIcon def = this.getTexture(this.getCableColor());
@@ -226,12 +233,11 @@ public class PartDenseCableCovered extends PartCable {
     @SideOnly(Side.CLIENT)
     private void renderDenseCoveredConnection(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer, final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj()
-                .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
+        final TileEntity te = this.getRenderWorld(rh).getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;
 
-        rh.setFacesToRender(EnumSet.complementOf(EnumSet.of(of, of.getOpposite())));
+        rh.setFacesToRender(renderFacesExceptAxis(of));
         if (ghh != null && partHost != null
                 && ghh.getCableConnectionType(of) != AECableType.GLASS
                 && partHost.getColor() != AEColor.Transparent
@@ -254,7 +260,7 @@ public class PartDenseCableCovered extends PartCable {
         }
 
         rh.renderBlock(x, y, z, renderer);
-        rh.setFacesToRender(EnumSet.allOf(ForgeDirection.class));
+        rh.setFacesToRender(ALL_RENDER_FACES);
     }
 
     protected IIcon getDenseCoveredTexture(final AEColor c) {
@@ -279,8 +285,8 @@ public class PartDenseCableCovered extends PartCable {
         });
     }
 
-    private boolean isDense(final ForgeDirection of) {
-        final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+    private boolean isDense(final IBlockAccess w, final ForgeDirection of) {
+        final TileEntity te = w.getTileEntity(
                 this.getTile().xCoord + of.offsetX,
                 this.getTile().yCoord + of.offsetY,
                 this.getTile().zCoord + of.offsetZ);

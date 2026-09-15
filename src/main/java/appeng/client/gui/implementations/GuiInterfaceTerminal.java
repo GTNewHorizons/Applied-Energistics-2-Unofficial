@@ -40,6 +40,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -148,9 +149,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private List<String> pendingSectionTooltip;
     private int pendingSectionTooltipX;
     private int pendingSectionTooltipY;
-    private List<String> pendingHideButtonTooltip;
-    private int pendingHideButtonTooltipX;
-    private int pendingHideButtonTooltipY;
+    private List<String> pendingEntryButtonTooltip;
+    private int pendingEntryButtonTooltipX;
+    private int pendingEntryButtonTooltipY;
     private final boolean neiPresent;
     protected static String searchFieldInputsText = "";
     protected static String searchFieldOutputsText = "";
@@ -167,7 +168,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private static final float SLOT_Z = 0.5f;
     private static final float ITEM_STACK_OVERLAY_Z = 200.0f;
     private static final float SLOT_HOVER_Z = 310.0f;
-    private static final float TOOLTIP_Z = 410.0f;
     private static final float STEP_Z = 10.0f;
     private static final float MAGIC_RENDER_ITEM_Z = 50.0f;
 
@@ -376,8 +376,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 ColorUtils.guiTextColorGray.getColor());
         fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
-                GuiInterfaceTerminal.VIEW_LEFT + 2,
-                this.ySize - 96,
+                GuiInterfaceTerminal.VIEW_LEFT + 12,
+                this.ySize - 93,
                 ColorUtils.guiTextColorGray.getColor());
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
@@ -423,20 +423,20 @@ public class GuiInterfaceTerminal extends AEBaseGui
             pendingSectionTooltip = null;
         }
 
-        if (pendingHideButtonTooltip != null) {
+        if (pendingEntryButtonTooltip != null) {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             GL11.glDisable(GL11.GL_LIGHTING);
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
             drawHoveringText(
-                    pendingHideButtonTooltip,
-                    pendingHideButtonTooltipX,
-                    pendingHideButtonTooltipY,
+                    pendingEntryButtonTooltip,
+                    pendingEntryButtonTooltipX,
+                    pendingEntryButtonTooltipY,
                     fontRendererObj);
 
             GL11.glPopAttrib();
-            pendingHideButtonTooltip = null;
+            pendingEntryButtonTooltip = null;
         }
 
     }
@@ -577,7 +577,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
         pendingSectionTooltip = null;
-        pendingHideButtonTooltip = null;
+        pendingEntryButtonTooltip = null;
 
         /*
          * Render each section
@@ -877,20 +877,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (activeButton.getMouseIn()
                     && relMouseY >= Math.max(titleBottom - viewY + activeButton.yPosition, activeButton.yPosition)) {
                 if (altHeld) {
-                    pendingHideButtonTooltip = buildInterfaceTerminalVisibilityTooltip(entry.hideButton);
-                    pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
-                    pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                    pendingEntryButtonTooltip = buildInterfaceTerminalVisibilityTooltip(entry.hideButton);
                 } else if (shiftHeld) {
-                    pendingHideButtonTooltip = Collections.singletonList(ButtonToolTips.RenameInterface.getLocal());
-                    pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
-                    pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                    pendingEntryButtonTooltip = Collections.singletonList(ButtonToolTips.RenameInterface.getLocal());
                 } else {
-                    GL11.glTranslatef(0f, 0f, TOOLTIP_Z);
-                    GL11.glDisable(GL11.GL_SCISSOR_TEST);
-                    drawHoveringText(extraOptionsText, relMouseX, relMouseY);
-                    GL11.glTranslatef(0f, 0f, -TOOLTIP_Z);
-                    GL11.glEnable(GL11.GL_SCISSOR_TEST);
+                    pendingEntryButtonTooltip = extraOptionsText;
                 }
+                pendingEntryButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                pendingEntryButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
             }
         } else {
             entry.optionsButton.yPosition = -1;
@@ -1188,9 +1182,22 @@ public class GuiInterfaceTerminal extends AEBaseGui
             }
         }
         if (suffix != null && !suffix.isEmpty()) {
-            return translatedName + suffix;
+            return translatedName + resolveSuffix(suffix);
         }
         return translatedName;
+    }
+
+    /**
+     * Turns the serialized {@link IChatComponent} suffix back into text, so that it is localized with the client's
+     * language rather than the server's. A suffix that fails to deserialize is shown as raw text.
+     */
+    private static String resolveSuffix(String suffix) {
+        try {
+            final IChatComponent component = IChatComponent.Serializer.func_150699_a(suffix);
+            return component != null ? component.getUnformattedText() : suffix;
+        } catch (Exception e) {
+            return suffix;
+        }
     }
 
     private void parsePacketCmd(PacketInterfaceTerminalUpdate.PacketEntry cmd) {
@@ -1812,6 +1819,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             final int newHasItem = stack != null ? 1 : 0;
 
             inv.setInventorySlotContents(idx, stack);
+            brokenRecipes[idx] = null;
             numItems += newHasItem - oldHasItem;
             assert numItems >= 0;
         }

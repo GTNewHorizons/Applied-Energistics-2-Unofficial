@@ -696,7 +696,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         renderer.renderAllFaces = true;
 
         final Tessellator tess = Tessellator.instance;
-        tess.setBrightness(rh.getBlock().getMixedBrightnessForBlock(this.getHost().getTile().getWorldObj(), x, y, z));
+        tess.setBrightness(rh.getBlock().getMixedBrightnessForBlock(this.getRenderWorld(rh), x, y, z));
         tess.setColorOpaque_F(1.0F, 1.0F, 1.0F);
 
         this.renderTorchAtAngle(x, y, z);

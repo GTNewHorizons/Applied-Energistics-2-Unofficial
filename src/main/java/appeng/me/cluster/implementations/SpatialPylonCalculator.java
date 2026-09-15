@@ -44,6 +44,12 @@ public class SpatialPylonCalculator extends MBCalculator {
     }
 
     @Override
+    protected boolean matchesExistingCluster(final IAECluster cluster, final WorldCoord min, final WorldCoord max) {
+        final SpatialPylonCluster pylonCluster = (SpatialPylonCluster) cluster;
+        return pylonCluster.getMin().isEqual(min) && pylonCluster.getMax().isEqual(max);
+    }
+
+    @Override
     public boolean verifyInternalStructure(final World w, final WorldCoord min, final WorldCoord max) {
 
         for (int x = min.x; x <= max.x; x++) {

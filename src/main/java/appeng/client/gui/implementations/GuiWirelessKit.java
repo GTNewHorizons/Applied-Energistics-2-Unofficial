@@ -190,8 +190,8 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     this.guiTop + TOP_OFFSET + 8 + (9 * i),
                     8,
                     8,
-                    AEColor.values()[i],
-                    AEColor.values()[i].toString());
+                    AEColor.VALUES[i],
+                    AEColor.VALUES[i].toString());
             this.buttonList.add(this.colorButtons[i]);
         }
 
@@ -202,8 +202,8 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     this.guiTop + TOP_OFFSET + 8 + (9 * (i - 8)),
                     8,
                     8,
-                    AEColor.values()[i],
-                    AEColor.values()[i].toString());
+                    AEColor.VALUES[i],
+                    AEColor.VALUES[i].toString());
             this.buttonList.add(this.colorButtons[i]);
         }
 
@@ -213,8 +213,8 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                 this.guiTop + TOP_OFFSET - 1,
                 8,
                 8,
-                AEColor.values()[16],
-                AEColor.values()[16].toString());
+                AEColor.VALUES[16],
+                AEColor.VALUES[16].toString());
 
         this.buttonList.add(this.colorButtons[16]);
 
@@ -768,29 +768,29 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             GL11.glScaled(0.45, 0.45, 0.45);
             if (byColor) {
                 if (includeHubs) {
-                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(data.color.ordinal() + 17));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionY + 2, icons.get(data.color.ordinal() + 17));
                 } else {
-                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(data.color.ordinal()));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionY + 2, icons.get(data.color.ordinal()));
                 }
                 if (includeConnectors) {
-                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(data.color.ordinal()));
-                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(data.color.ordinal()));
+                    drawItem(scaleCorrectionX, scaleCorrectionY + 14, icons.get(data.color.ordinal()));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionY + 14, icons.get(data.color.ordinal()));
                 } else {
-                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(data.color.ordinal() + 17));
-                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(data.color.ordinal() + 17));
+                    drawItem(scaleCorrectionX, scaleCorrectionY + 14, icons.get(data.color.ordinal() + 17));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionY + 14, icons.get(data.color.ordinal() + 17));
                 }
             } else {
                 if (includeHubs) {
-                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(17));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionY + 2, icons.get(17));
                 } else {
-                    drawItem(scaleCorrectionX + 7, scaleCorrectionX + 2, icons.get(0));
+                    drawItem(scaleCorrectionX + 7, scaleCorrectionY + 2, icons.get(0));
                 }
                 if (includeConnectors) {
-                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(1));
-                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(2));
+                    drawItem(scaleCorrectionX, scaleCorrectionY + 14, icons.get(1));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionY + 14, icons.get(2));
                 } else {
-                    drawItem(scaleCorrectionX, scaleCorrectionX + 14, icons.get(1 + 17));
-                    drawItem(scaleCorrectionX + 14, scaleCorrectionX + 14, icons.get(2 + 17));
+                    drawItem(scaleCorrectionX, scaleCorrectionY + 14, icons.get(1 + 17));
+                    drawItem(scaleCorrectionX + 14, scaleCorrectionY + 14, icons.get(2 + 17));
                 }
             }
 
@@ -1206,7 +1206,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
                     new SavedName(
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
                             tag.getString("networkName"),
-                            AEColor.values()[tag.getInteger("color")],
+                            AEColor.VALUES[tag.getInteger("color")],
                             tag.hasKey("color"),
                             tag.getString("colorName")));
         }
@@ -1219,7 +1219,7 @@ public class GuiWirelessKit extends AEBaseGui implements IConfigManagerHost {
             savedPins.add(
                     new SavedPin(
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("network")),
-                            AEColor.values()[tag.getInteger("color")],
+                            AEColor.VALUES[tag.getInteger("color")],
                             PinType.values()[tag.getInteger("type")],
                             DimensionalCoord.readFromNBT(tag.getCompoundTag("coord")),
                             !tag.hasKey("incCon"),

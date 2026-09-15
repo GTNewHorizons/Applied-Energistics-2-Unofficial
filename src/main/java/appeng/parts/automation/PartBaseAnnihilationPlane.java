@@ -4,6 +4,7 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -45,27 +46,28 @@ public abstract class PartBaseAnnihilationPlane extends PartBasicState {
 
             final ForgeDirection e = bch.getWorldX();
             final ForgeDirection u = bch.getWorldY();
+            final IBlockAccess w = this.getRenderWorld(bch);
 
             if (this.isAnnihilationPlane(
-                    te.getWorldObj().getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ),
+                    w.getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ),
                     this.getSide())) {
                 minX = 0;
             }
 
             if (this.isAnnihilationPlane(
-                    te.getWorldObj().getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ),
+                    w.getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ),
                     this.getSide())) {
                 maxX = 16;
             }
 
             if (this.isAnnihilationPlane(
-                    te.getWorldObj().getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ),
+                    w.getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ),
                     this.getSide())) {
                 minY = 0;
             }
 
             if (this.isAnnihilationPlane(
-                    te.getWorldObj().getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ),
+                    w.getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ),
                     this.getSide())) {
                 maxY = 16;
             }
@@ -101,32 +103,24 @@ public abstract class PartBaseAnnihilationPlane extends PartBasicState {
         final ForgeDirection e = rh.getWorldX();
         final ForgeDirection u = rh.getWorldY();
 
-        final TileEntity te = this.getHost().getTile();
+        final IBlockAccess w = this.getRenderWorld(rh);
 
-        if (this.isAnnihilationPlane(
-                te.getWorldObj().getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ),
-                this.getSide())) {
+        if (this.isAnnihilationPlane(w.getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ), this.getSide())) {
             minX = 0;
         }
 
         int maxX = 15;
-        if (this.isAnnihilationPlane(
-                te.getWorldObj().getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ),
-                this.getSide())) {
+        if (this.isAnnihilationPlane(w.getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ), this.getSide())) {
             maxX = 16;
         }
 
         int minY = 1;
-        if (this.isAnnihilationPlane(
-                te.getWorldObj().getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ),
-                this.getSide())) {
+        if (this.isAnnihilationPlane(w.getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ), this.getSide())) {
             minY = 0;
         }
 
         int maxY = 15;
-        if (this.isAnnihilationPlane(
-                te.getWorldObj().getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ),
-                this.getSide())) {
+        if (this.isAnnihilationPlane(w.getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ), this.getSide())) {
             maxY = 16;
         }
 

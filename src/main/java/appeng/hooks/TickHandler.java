@@ -41,9 +41,11 @@ import appeng.core.worlddata.WorldData;
 import appeng.entity.EntityFloatingItem;
 import appeng.me.Grid;
 import appeng.me.NetworkList;
+import appeng.recipes.ores.OreDictionaryHandler;
 import appeng.tile.AEBaseTile;
 import appeng.util.IWorldCallable;
 import appeng.util.Platform;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
@@ -163,6 +165,11 @@ public class TickHandler {
 
     @SubscribeEvent
     public void onTick(final TickEvent ev) {
+
+        if ((ev.type == Type.CLIENT || ev.type == Type.SERVER) && ev.phase == Phase.START
+                && ev.side == FMLCommonHandler.instance().getSide()) {
+            OreDictionaryHandler.INSTANCE.onTick();
+        }
 
         if (ev.type == Type.CLIENT && ev.phase == Phase.START) {
             this.tickColors(this.cliPlayerColors);

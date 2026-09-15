@@ -14,6 +14,7 @@ import java.io.IOException;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 
@@ -50,10 +51,12 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiImgButton extractionMode;
     private VirtualMEPhantomSlot[] configSlots;
     private final ContainerStorageBus containerStorageBus;
+    private final IStorageBus storageBus;
 
     public GuiStorageBus(final InventoryPlayer inventoryPlayer, final IStorageBus te) {
         super(new ContainerStorageBus(inventoryPlayer, te));
         this.containerStorageBus = (ContainerStorageBus) inventorySlots;
+        this.storageBus = te;
         this.ySize = 251;
     }
 
@@ -114,7 +117,7 @@ public class GuiStorageBus extends GuiUpgradeable {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.fontRendererObj.drawString(
-                this.getGuiDisplayName(GuiText.StorageBus.getLocal()),
+                this.getGuiDisplayName(this.storageBus.getPartName()),
                 8,
                 6,
                 ColorUtils.guiTextColorGray.getColor());
@@ -231,6 +234,27 @@ public class GuiStorageBus extends GuiUpgradeable {
         for (VirtualMEPhantomSlot slot : this.configSlots) {
             slot.setHidden(slot.getSlotIndex() >= (18 + (9 * capacity)));
         }
+    }
+
+    public boolean handleBookmarkGroupDrop(int mouseX, int mouseY, Iterable<ItemStack> stacks) {
+        final int x = mouseX - this.guiLeft + 1;
+        final int y = mouseY - this.guiTop + 1;
+        this.updateSlotVisibility();
+
+        int slotIndex = -1;
+        for (VirtualMEPhantomSlot slot : this.configSlots) {
+            if (slot.isHovered(x, y)) {
+                slotIndex = slot.getSlotIndex();
+                break;
+            }
+        }
+        if (slotIndex < 0) return false;
+
+        for (ItemStack stack : stacks) {
+            if (slotIndex >= this.configSlots.length || this.configSlots[slotIndex].isHidden()) break;
+            this.configSlots[slotIndex++].handleMouseClicked(stack, false, 0);
+        }
+        return true;
     }
 
     private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {

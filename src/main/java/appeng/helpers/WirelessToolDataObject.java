@@ -65,7 +65,7 @@ public class WirelessToolDataObject {
                 coord,
                 isConnected,
                 targets,
-                AEColor.values()[buf.readInt()],
+                AEColor.VALUES[buf.readInt()],
                 buf.readInt(),
                 isHub,
                 buf.readInt());

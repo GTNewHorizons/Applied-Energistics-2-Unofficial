@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MathHelper;
@@ -134,7 +134,7 @@ public class BlockPosHighlighter implements IHighlighter {
         Minecraft mc = Minecraft.getMinecraft();
         dimension = mc.theWorld.provider.dimensionId;
 
-        EntityPlayerSP p = mc.thePlayer;
+        EntityLivingBase p = mc.renderViewEntity;
         doubleX = p.lastTickPosX + (p.posX - p.lastTickPosX) * event.partialTicks;
         doubleY = p.lastTickPosY + (p.posY - p.lastTickPosY) * event.partialTicks;
         doubleZ = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * event.partialTicks;

@@ -38,6 +38,7 @@ import appeng.client.gui.widgets.GuiSimpleImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerInterface;
+import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
@@ -46,9 +47,11 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
+import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.InventoryAction;
 
 public class GuiInterface extends GuiUpgradeable {
 
@@ -288,6 +291,19 @@ public class GuiInterface extends GuiUpgradeable {
     @Override
     protected String getBackground() {
         return "guis/interface.png";
+    }
+
+    @Override
+    protected boolean mouseWheelEvent(final int mouseX, final int mouseY, final int wheel) {
+        final Slot slot = this.getSlot(mouseX, mouseY);
+        if (isCtrlKeyDown() && slot instanceof OptionalSlotRestrictedInput && slot.getHasStack()) {
+            final InventoryAction action = wheel > 0 ? InventoryAction.MULTIPLY_PATTERN
+                    : InventoryAction.DIVIDE_PATTERN;
+            NetworkHandler.instance.sendToServer(new PacketInventoryAction(action, slot.slotNumber, 0));
+            return true;
+        }
+
+        return super.mouseWheelEvent(mouseX, mouseY, wheel);
     }
 
     @Override

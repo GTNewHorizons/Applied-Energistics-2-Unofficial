@@ -31,5 +31,9 @@ public interface ICellInventoryHandler<StackType extends IAEStack<StackType>> ex
         return false;
     }
 
+    default boolean isOverflow() {
+        return false;
+    }
+
     IncludeExclude getIncludeExcludeMode();
 }

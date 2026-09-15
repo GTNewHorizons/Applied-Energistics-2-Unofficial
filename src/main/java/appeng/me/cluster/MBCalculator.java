@@ -70,7 +70,10 @@ public abstract class MBCalculator {
 
                     boolean updateGrid = false;
                     IAECluster cluster = this.target.getCluster();
-                    if (cluster == null) {
+                    if (cluster == null || !this.matchesExistingCluster(cluster, min, max)) {
+                        if (cluster != null) {
+                            cluster.destroy();
+                        }
                         cluster = this.createCluster(world, min, max);
                         this.updateTiles(cluster, world, min, max);
                         updateGrid = true;
@@ -119,6 +122,10 @@ public abstract class MBCalculator {
      * @return created cluster
      */
     public abstract IAECluster createCluster(World w, WorldCoord min, WorldCoord max);
+
+    protected boolean matchesExistingCluster(final IAECluster cluster, final WorldCoord min, final WorldCoord max) {
+        return true;
+    }
 
     public abstract boolean verifyInternalStructure(World worldObj, WorldCoord min, WorldCoord max);
 

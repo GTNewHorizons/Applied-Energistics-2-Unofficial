@@ -65,7 +65,7 @@ public class WirelessKitCommand {
             if (buf.readBoolean()) cmd.setNetworkPos(DimensionalCoord.readFromPacket(buf));
             if (buf.readBoolean()) cmd.includeConnectors();
             if (buf.readBoolean()) cmd.includeHubs();
-            if (buf.readBoolean()) cmd.setColor(AEColor.values()[buf.readInt()]);
+            if (buf.readBoolean()) cmd.setColor(AEColor.VALUES[buf.readInt()]);
             if (buf.readBoolean()) cmd.setGroupBy(PinType.values()[buf.readInt()]);
 
             return cmd;
@@ -141,7 +141,7 @@ public class WirelessKitCommand {
         final WirelessKitCommand command = new WirelessKitCommand(WirelessKitCommands.values()[buf.readInt()]);
         command.setName(ByteBufUtils.readUTF8String(buf));
 
-        if (buf.readBoolean()) command.setColor(AEColor.values()[buf.readInt()]);
+        if (buf.readBoolean()) command.setColor(AEColor.VALUES[buf.readInt()]);
         if (buf.readBoolean()) command.setNetworkPos(DimensionalCoord.readFromPacket(buf));
         final boolean pin = buf.readBoolean();
         if (buf.readBoolean()) {

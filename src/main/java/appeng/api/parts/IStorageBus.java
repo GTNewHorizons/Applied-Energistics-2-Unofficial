@@ -16,6 +16,8 @@ import appeng.tile.inventory.IIAEStackInventory;
 import appeng.transformer.annotations.Integration.Interface;
 import appeng.util.IConfigManagerHost;
 import buildcraft.api.transport.IPipeConnection;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 @Interface(iname = IntegrationType.BuildCraftTransport, iface = "buildcraft.api.transport.IPipeConnection")
 public interface IStorageBus
@@ -33,4 +35,7 @@ public interface IStorageBus
     default IItemList getItemList() {
         return getStackType().createList();
     }
+
+    @SideOnly(Side.CLIENT)
+    String getPartName();
 }

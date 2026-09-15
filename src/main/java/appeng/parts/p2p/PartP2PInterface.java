@@ -129,10 +129,16 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         public void addDrops(final List<ItemStack> drops) {
             if (!isOutput()) {
                 super.addDrops(drops);
-                try {
-                    for (PartP2PInterface p2p : getOutputs()) p2p.duality.addDrops(drops);
-                } catch (GridAccessException ignored) {}
             } else {
+                // Linked outputs alias the input's storage. Once unshared, this storage is local to the output.
+                if (!this.sharedInventory) {
+                    for (final ItemStack is : this.getStorage()) {
+                        if (is != null) {
+                            drops.add(is);
+                        }
+                    }
+                }
+
                 if (this.getWaitingToSend() != null) {
                     for (final IAEStack<?> is : this.getWaitingToSend()) {
                         if (is != null) {

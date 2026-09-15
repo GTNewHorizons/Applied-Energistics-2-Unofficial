@@ -229,7 +229,7 @@ public abstract class GuiUpgradeable extends AEBaseGui {
             return;
         }
 
-        for (final MaterialType materialType : MaterialType.values()) {
+        for (final MaterialType materialType : MaterialType.VALUES) {
             if (!materialType.isRegistered() || materialType.getItemInstance() == null) {
                 continue;
             }

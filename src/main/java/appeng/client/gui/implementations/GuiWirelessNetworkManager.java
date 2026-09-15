@@ -54,7 +54,7 @@ public class GuiWirelessNetworkManager extends AEBaseGui {
                     this.guiTop + 5 + (14 * y),
                     96,
                     12,
-                    AEColor.values()[y],
+                    AEColor.VALUES[y],
                     keyStatus.value(),
                     GuiText.WirelessManagerToolTips.getLocal(
                             GameSettings.getKeyDisplayString(ServerHelper.WIRELESS_EXTRA_ACTION.getKeyCode())));

@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Set;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
@@ -90,7 +90,7 @@ public class NetworkVisualiserRender {
     @SubscribeEvent
     public void renderNetwork(RenderWorldLastEvent ev) {
         Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayerSP p = mc.thePlayer;
+        EntityLivingBase p = mc.renderViewEntity;
         double viewX = p.lastTickPosX + (p.posX - p.lastTickPosX) * ev.partialTicks;
         double viewY = p.lastTickPosY + (p.posY - p.lastTickPosY) * ev.partialTicks;
         double viewZ = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * ev.partialTicks;

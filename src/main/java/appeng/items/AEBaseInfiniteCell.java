@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.StatCollector;
 
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
@@ -59,6 +60,9 @@ public abstract class AEBaseInfiniteCell extends AEBaseItem implements IStorageC
 
             }
         }
+        lines.add(GuiText.FakeUpgrade.getLocal());
+        lines.add(
+                " - " + StatCollector.translateToLocal("item.appliedenergistics2.ItemMaterial.CardVoidOverflow.name"));
     }
 
     @Override

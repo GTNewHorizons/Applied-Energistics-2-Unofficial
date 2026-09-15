@@ -44,8 +44,11 @@ import appeng.core.sync.packets.PacketValueConfig;
 
 public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder, IGuiSub {
 
+    private static final String ELLIPSIS = "...";
+    private static final int CPU_BUTTON_TEXT_PADDING = 6;
+
     private final ContainerCraftingStatus status;
-    private GuiButton selectCPU;
+    private GuiAeButton selectCPU;
     private GuiAeButton follow;
     private final GuiCraftingCPUTable cpuTable;
 
@@ -109,13 +112,14 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 
         if (status.getPrimaryGuiIcon() != null) initPrimaryGuiButton();
 
-        this.selectCPU = new GuiButton(
+        this.selectCPU = new GuiAeButton(
                 0,
                 this.guiLeft + 8,
                 this.guiTop + this.ySize - 25,
                 50,
                 20,
-                GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs);
+                GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs,
+                null);
         this.buttonList.add(this.selectCPU);
 
         this.follow = new GuiAeButton(
@@ -214,8 +218,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
         if (selectedSerial >= 0) {
             String selectedCPUName = cpuTable.getSelectedCPUName();
             if (selectedCPUName != null && selectedCPUName.length() > 0) {
-                final String name = selectedCPUName.substring(0, Math.min(20, selectedCPUName.length()));
-                btnTextText = GuiText.CPUs.getLocal() + ": " + name;
+                btnTextText = GuiText.CPUs.getLocal() + ": " + selectedCPUName;
             } else {
                 btnTextText = GuiText.CPUs.getLocal() + ": #" + selectedSerial;
             }
@@ -225,7 +228,18 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
             btnTextText = GuiText.NoCraftingJobs.getLocal();
         }
 
-        this.selectCPU.displayString = btnTextText;
+        this.selectCPU.displayString = truncateCPUButtonText(btnTextText);
+        this.selectCPU.setTootipString(btnTextText);
+    }
+
+    private String truncateCPUButtonText(final String text) {
+        final int maxWidth = this.selectCPU.width - CPU_BUTTON_TEXT_PADDING;
+        if (this.fontRendererObj.getStringWidth(text) <= maxWidth) {
+            return text;
+        }
+
+        final int ellipsisWidth = this.fontRendererObj.getStringWidth(ELLIPSIS);
+        return this.fontRendererObj.trimStringToWidth(text, maxWidth - ellipsisWidth) + ELLIPSIS;
     }
 
     private void updateFollowButtonText() {

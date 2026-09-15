@@ -133,20 +133,7 @@ public class MEIInventoryWrapper implements IMEInventory<IAEItemStack> {
                         reqNum = Req.stackSize;
                     }
 
-                    ItemStack retrieved = null;
-
-                    if (sub.stackSize < Req.stackSize) {
-                        retrieved = Platform.cloneItemStack(sub);
-                        sub.stackSize = 0;
-                    } else {
-                        retrieved = sub.splitStack(Req.stackSize);
-                    }
-
-                    if (sub.stackSize <= 0) {
-                        this.target.setInventorySlotContents(x, null);
-                    } else {
-                        this.target.setInventorySlotContents(x, sub);
-                    }
+                    ItemStack retrieved = this.target.decrStackSize(x, reqNum);
 
                     if (retrieved != null) {
                         Gathered.stackSize += retrieved.stackSize;

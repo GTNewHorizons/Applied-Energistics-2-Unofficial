@@ -8,6 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -135,28 +136,21 @@ public abstract class PartBaseFormationPlane extends PartUpgradeable
 
             final ForgeDirection e = bch.getWorldX();
             final ForgeDirection u = bch.getWorldY();
+            final IBlockAccess w = this.getRenderWorld(bch);
 
-            if (this.isTransitionPlane(
-                    te.getWorldObj().getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ),
-                    this.getSide())) {
+            if (this.isTransitionPlane(w.getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ), this.getSide())) {
                 minX = 0;
             }
 
-            if (this.isTransitionPlane(
-                    te.getWorldObj().getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ),
-                    this.getSide())) {
+            if (this.isTransitionPlane(w.getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ), this.getSide())) {
                 maxX = 16;
             }
 
-            if (this.isTransitionPlane(
-                    te.getWorldObj().getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ),
-                    this.getSide())) {
+            if (this.isTransitionPlane(w.getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ), this.getSide())) {
                 minY = 0;
             }
 
-            if (this.isTransitionPlane(
-                    te.getWorldObj().getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ),
-                    this.getSide())) {
+            if (this.isTransitionPlane(w.getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ), this.getSide())) {
                 maxY = 16;
             }
         }
@@ -192,32 +186,24 @@ public abstract class PartBaseFormationPlane extends PartUpgradeable
         final ForgeDirection e = rh.getWorldX();
         final ForgeDirection u = rh.getWorldY();
 
-        final TileEntity te = this.getHost().getTile();
+        final IBlockAccess w = this.getRenderWorld(rh);
 
-        if (this.isTransitionPlane(
-                te.getWorldObj().getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ),
-                this.getSide())) {
+        if (this.isTransitionPlane(w.getTileEntity(x - e.offsetX, y - e.offsetY, z - e.offsetZ), this.getSide())) {
             minX = 0;
         }
 
         int maxX = 15;
-        if (this.isTransitionPlane(
-                te.getWorldObj().getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ),
-                this.getSide())) {
+        if (this.isTransitionPlane(w.getTileEntity(x + e.offsetX, y + e.offsetY, z + e.offsetZ), this.getSide())) {
             maxX = 16;
         }
 
         int minY = 1;
-        if (this.isTransitionPlane(
-                te.getWorldObj().getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ),
-                this.getSide())) {
+        if (this.isTransitionPlane(w.getTileEntity(x - u.offsetX, y - u.offsetY, z - u.offsetZ), this.getSide())) {
             minY = 0;
         }
 
         int maxY = 15;
-        if (this.isTransitionPlane(
-                te.getWorldObj().getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ),
-                this.getSide())) {
+        if (this.isTransitionPlane(w.getTileEntity(x + u.offsetX, y + u.offsetY, z + u.offsetZ), this.getSide())) {
             maxY = 16;
         }
 

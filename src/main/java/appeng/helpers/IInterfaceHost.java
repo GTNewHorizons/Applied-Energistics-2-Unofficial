@@ -15,6 +15,7 @@ import java.util.EnumSet;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.Settings;
@@ -73,7 +74,7 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
      * Optional suffix to append after translation on client.
      */
     @Override
-    default String getNameSuffix() {
+    default IChatComponent getNameSuffix() {
         return getInterfaceDuality().getAdjacentNameSuffix();
     }
 

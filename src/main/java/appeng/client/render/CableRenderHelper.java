@@ -17,6 +17,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.parts.IFacadeContainer;
@@ -35,6 +36,11 @@ public class CableRenderHelper {
     }
 
     public void renderStatic(final CableBusContainer cableBusContainer, final IFacadeContainer iFacadeContainer) {
+        this.renderStatic(cableBusContainer, iFacadeContainer, Minecraft.getMinecraft().theWorld);
+    }
+
+    public void renderStatic(final CableBusContainer cableBusContainer, final IFacadeContainer iFacadeContainer,
+            final IBlockAccess world) {
         final TileEntity te = cableBusContainer.getTile();
         final RenderBlocksWorkaround renderer = BusRenderer.INSTANCE.getRenderer();
         final BusRenderHelper busRenderHelper = BusRenderHelper.instances.get();
@@ -42,113 +48,121 @@ public class CableRenderHelper {
             busRenderHelper.setPass(0);
         }
 
-        renderer.blockAccess = Minecraft.getMinecraft().theWorld;
-
-        for (final ForgeDirection s : FORGE_DIRECTIONS) {
-            final IPart part = cableBusContainer.getPart(s);
-            if (part != null) {
-                this.setSide(s);
-                renderer.renderAllFaces = true;
-
-                renderer.flipTexture = false;
-                renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
-
-                part.renderStatic(te.xCoord, te.yCoord, te.zCoord, busRenderHelper, renderer);
-
-                renderer.setFaces(EnumSet.allOf(ForgeDirection.class));
-                renderer.setCalculations(true);
-                renderer.setUseTextures(true);
-            }
-        }
-
-        if (!iFacadeContainer.isEmpty()) {
-            /**
-             * snag list of boxes...
-             */
-            final List<AxisAlignedBB> boxes = new ArrayList<>();
+        final IBlockAccess previousBlockAccess = renderer.blockAccess;
+        final EnumSet<ForgeDirection> previousRenderFaces = renderer.getRenderFaces();
+        renderer.beginLightingHashCache();
+        try {
+            renderer.blockAccess = world;
 
             for (final ForgeDirection s : FORGE_DIRECTIONS) {
                 final IPart part = cableBusContainer.getPart(s);
                 if (part != null) {
-                    this.setSide(s);
-                    final BusCollisionHelper bch = new BusCollisionHelper(
-                            boxes,
-                            busRenderHelper.getWorldX(),
-                            busRenderHelper.getWorldY(),
-                            busRenderHelper.getWorldZ(),
-                            null,
-                            true);
-                    part.getBoxes(bch);
-                }
-            }
-
-            boolean useThinFacades = false;
-            final double min = 2.0 / 16.0;
-            final double max = 14.0 / 16.0;
-
-            for (final AxisAlignedBB bb : boxes) {
-                int o = 0;
-                o += bb.maxX > max ? 1 : 0;
-                o += bb.maxY > max ? 1 : 0;
-                o += bb.maxZ > max ? 1 : 0;
-                o += bb.minX < min ? 1 : 0;
-                o += bb.minY < min ? 1 : 0;
-                o += bb.minZ < min ? 1 : 0;
-
-                if (o >= 2) {
-                    useThinFacades = true;
-                    break;
-                }
-            }
-
-            for (final ForgeDirection s : ForgeDirection.VALID_DIRECTIONS) {
-                final IFacadePart fPart = iFacadeContainer.getFacade(s);
-
-                if (fPart != null) {
-                    fPart.setThinFacades(useThinFacades);
-                    final AxisAlignedBB pb = fPart.getPrimaryBox();
-                    AxisAlignedBB b = null;
-                    for (final AxisAlignedBB bb : boxes) {
-                        if (bb.intersectsWith(pb)) {
-                            if (b == null) {
-                                b = bb;
-                            } else {
-                                b.maxX = Math.max(b.maxX, bb.maxX);
-                                b.maxY = Math.max(b.maxY, bb.maxY);
-                                b.maxZ = Math.max(b.maxZ, bb.maxZ);
-                                b.minX = Math.min(b.minX, bb.minX);
-                                b.minY = Math.min(b.minY, bb.minY);
-                                b.minZ = Math.min(b.minZ, bb.minZ);
-                            }
-                        }
-                    }
+                    this.setSide(busRenderHelper, s);
+                    renderer.renderAllFaces = true;
 
                     renderer.flipTexture = false;
                     renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
 
-                    this.setSide(s);
-                    fPart.renderStatic(
-                            te.xCoord,
-                            te.yCoord,
-                            te.zCoord,
-                            busRenderHelper,
-                            renderer,
-                            iFacadeContainer,
-                            b,
-                            cableBusContainer.getPart(s) == null);
+                    part.renderStatic(te.xCoord, te.yCoord, te.zCoord, busRenderHelper, renderer);
+
+                    renderer.setFaces(EnumSet.allOf(ForgeDirection.class));
+                    renderer.setCalculations(true);
+                    renderer.setUseTextures(true);
                 }
             }
 
-            renderer.setFacade(false);
-            renderer.enableAO = false;
-            renderer.setTexture(null);
-            renderer.setCalculations(true);
+            if (!iFacadeContainer.isEmpty()) {
+                /**
+                 * snag list of boxes...
+                 */
+                final List<AxisAlignedBB> boxes = new ArrayList<>();
+
+                for (final ForgeDirection s : FORGE_DIRECTIONS) {
+                    final IPart part = cableBusContainer.getPart(s);
+                    if (part != null) {
+                        this.setSide(busRenderHelper, s);
+                        final BusCollisionHelper bch = new BusCollisionHelper(
+                                boxes,
+                                busRenderHelper.getWorldX(),
+                                busRenderHelper.getWorldY(),
+                                busRenderHelper.getWorldZ(),
+                                null,
+                                true,
+                                world);
+                        part.getBoxes(bch);
+                    }
+                }
+
+                boolean useThinFacades = false;
+                final double min = 2.0 / 16.0;
+                final double max = 14.0 / 16.0;
+
+                for (final AxisAlignedBB bb : boxes) {
+                    int o = 0;
+                    o += bb.maxX > max ? 1 : 0;
+                    o += bb.maxY > max ? 1 : 0;
+                    o += bb.maxZ > max ? 1 : 0;
+                    o += bb.minX < min ? 1 : 0;
+                    o += bb.minY < min ? 1 : 0;
+                    o += bb.minZ < min ? 1 : 0;
+
+                    if (o >= 2) {
+                        useThinFacades = true;
+                        break;
+                    }
+                }
+
+                for (final ForgeDirection s : ForgeDirection.VALID_DIRECTIONS) {
+                    final IFacadePart fPart = iFacadeContainer.getFacade(s);
+
+                    if (fPart != null) {
+                        fPart.setThinFacades(useThinFacades);
+                        final AxisAlignedBB pb = fPart.getPrimaryBox();
+                        AxisAlignedBB b = null;
+                        for (final AxisAlignedBB bb : boxes) {
+                            if (bb.intersectsWith(pb)) {
+                                if (b == null) {
+                                    b = bb;
+                                } else {
+                                    b.maxX = Math.max(b.maxX, bb.maxX);
+                                    b.maxY = Math.max(b.maxY, bb.maxY);
+                                    b.maxZ = Math.max(b.maxZ, bb.maxZ);
+                                    b.minX = Math.min(b.minX, bb.minX);
+                                    b.minY = Math.min(b.minY, bb.minY);
+                                    b.minZ = Math.min(b.minZ, bb.minZ);
+                                }
+                            }
+                        }
+
+                        renderer.flipTexture = false;
+                        renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
+
+                        this.setSide(busRenderHelper, s);
+                        fPart.renderStatic(
+                                te.xCoord,
+                                te.yCoord,
+                                te.zCoord,
+                                busRenderHelper,
+                                renderer,
+                                iFacadeContainer,
+                                b,
+                                cableBusContainer.getPart(s) == null);
+                    }
+                }
+
+                renderer.setFacade(false);
+                renderer.enableAO = false;
+                renderer.setTexture(null);
+                renderer.setCalculations(true);
+            }
+        } finally {
+            renderer.blockAccess = previousBlockAccess;
+            renderer.setRenderFaces(previousRenderFaces);
+            renderer.endLightingHashCache();
         }
-        renderer.blockAccess = null;
     }
 
-    private void setSide(final ForgeDirection s) {
-        final BusRenderHelper busRenderHelper = BusRenderHelper.instances.get();
+    private void setSide(final BusRenderHelper busRenderHelper, final ForgeDirection s) {
         final ForgeDirection ax;
         final ForgeDirection ay;
         final ForgeDirection az;
@@ -198,55 +212,15 @@ public class CableRenderHelper {
             final double z) {
         final RenderBlocksWorkaround renderer = BusRenderer.INSTANCE.getRenderer();
         final BusRenderHelper busRenderHelper = BusRenderHelper.instances.get();
+        renderer.blockAccess = cableBusContainer.getTile().getWorldObj();
         for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = cableBusContainer.getPart(s);
 
             if (part != null) {
-                final ForgeDirection ax;
-                final ForgeDirection ay;
-                final ForgeDirection az;
-
-                switch (s) {
-                    case DOWN -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.NORTH;
-                        az = ForgeDirection.DOWN;
-                    }
-                    case UP -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.SOUTH;
-                        az = ForgeDirection.UP;
-                    }
-                    case EAST -> {
-                        ax = ForgeDirection.SOUTH;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.EAST;
-                    }
-                    case WEST -> {
-                        ax = ForgeDirection.NORTH;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.WEST;
-                    }
-                    case NORTH -> {
-                        ax = ForgeDirection.WEST;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.NORTH;
-                    }
-                    case SOUTH -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.SOUTH;
-                    }
-                    default -> {
-                        ax = ForgeDirection.EAST;
-                        ay = ForgeDirection.UP;
-                        az = ForgeDirection.SOUTH;
-                    }
-                }
-
-                busRenderHelper.setOrientation(ax, ay, az);
+                this.setSide(busRenderHelper, s);
                 part.renderDynamic(x, y, z, busRenderHelper, renderer);
             }
         }
+        renderer.blockAccess = null;
     }
 }
