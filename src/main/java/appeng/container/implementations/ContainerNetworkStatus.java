@@ -34,6 +34,7 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.energy.IEnergyGrid;
+import appeng.api.networking.pathing.IPathingGrid;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -41,6 +42,7 @@ import appeng.api.util.NamedDimensionalCoord;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.AEConfig;
+import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
@@ -48,6 +50,7 @@ import appeng.helpers.ICustomNameObject;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cache.GridStorageCache;
 import appeng.me.cache.ItemFlowGridCache;
+import appeng.me.cache.PathGridCache;
 import appeng.tile.misc.TileStorageReshuffle;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -168,6 +171,9 @@ public class ContainerNetworkStatus extends AEBaseContainer {
     @GuiSync(37)
     public boolean liteCraftingDefault;
 
+    @GuiSync(38)
+    public int controllerAnimation;
+
     private IGrid network;
     private int delay = 40;
     private boolean isConsume = true;
@@ -262,6 +268,33 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         super.detectAndSendChanges();
     }
 
+    private PathGridCache getPathGridCache() {
+        if (this.network == null) return null;
+        final IPathingGrid pathingGrid = this.network.getCache(IPathingGrid.class);
+        return pathingGrid instanceof PathGridCache cache ? cache : null;
+    }
+
+    private void refreshControllerAnimation() {
+        final PathGridCache cache = this.getPathGridCache();
+        this.controllerAnimation = cache == null ? 0 : cache.getControllerAnimation().ordinal();
+    }
+
+    public void cycleControllerAnimation(final boolean backwards) {
+        final PathGridCache cache = this.getPathGridCache();
+        if (cache == null) return;
+        cache.cycleControllerAnimation(backwards);
+        this.refreshControllerAnimation();
+        super.detectAndSendChanges();
+    }
+
+    public void setControllerAnimation(final ControllerAnimation animation) {
+        final PathGridCache cache = this.getPathGridCache();
+        if (cache == null) return;
+        cache.setControllerAnimation(animation);
+        this.refreshControllerAnimation();
+        super.detectAndSendChanges();
+    }
+
     @Override
     public void detectAndSendChanges() {
         this.delay++;
@@ -271,6 +304,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             this.refreshDiagnosticsState();
             this.refreshLiteCrafingState();
             this.refreshFlowTrackingState();
+            this.refreshControllerAnimation();
 
             final IEnergyGrid eg = this.network.getCache(IEnergyGrid.class);
             if (eg != null) {
