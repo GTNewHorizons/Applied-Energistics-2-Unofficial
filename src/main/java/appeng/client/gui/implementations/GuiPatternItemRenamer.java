@@ -1,5 +1,6 @@
 package appeng.client.gui.implementations;
 
+import appeng.api.storage.data.IAEFluidStack;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -66,9 +67,13 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
     @Override
     protected void keyTyped(final char character, final int key) {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
+            IAEStack<?> nameStack = getNewNameStack();
+            if (nameStack == null) {
+                return;
+            }
             NetworkHandler.instance.sendToServer(
                     new PacketPatternValueSet(
-                            getNewNameStack(),
+                            nameStack,
                             this.container.getInvName(),
                             this.container.getSlotIndex()));
         } else if (!textField.textboxKeyTyped(character, key)) {
@@ -77,8 +82,12 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
     }
 
     private IAEStack<?> getNewNameStack() {
+        IAEStack<?> aeStack = this.container.getAEStack();
+        if (aeStack instanceof IAEFluidStack) {
+            return null; // Fluid renaming is not supported
+        }
         return AEItemStack.create(
-                ((IAEItemStack) this.container.getAEStack()).getItemStack().setStackDisplayName(textField.getText()));
+                ((IAEItemStack) aeStack).getItemStack().setStackDisplayName(textField.getText()));
     }
 
     public boolean isOverTextField(final int mousex, final int mousey) {
