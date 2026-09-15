@@ -30,6 +30,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.OptionalInt;
 
+import appeng.util.inv.AdaptorP2PFluid;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -1063,6 +1064,12 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return isEmpty;
+        }
+
+        if (ad instanceof AdaptorP2PFluid adaptorP2PFluid) {
+            if(adaptorP2PFluid.containsItems()) {
+                return false;
+            }
         }
 
         return hasOnlyIgnoredItems;
