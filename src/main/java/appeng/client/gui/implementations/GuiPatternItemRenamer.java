@@ -80,8 +80,8 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
 
     private IAEStack<?> getNewNameStack() {
         IAEStack<?> aeStack = this.container.getAEStack();
-        if (aeStack instanceof IAEFluidStack) {
-            return null; // Fluid renaming is not supported
+        if (!(aeStack instanceof IAEItemStack)) {
+            return null; // Only item renaming is supported
         }
         return AEItemStack.create(((IAEItemStack) aeStack).getItemStack().setStackDisplayName(textField.getText()));
     }
