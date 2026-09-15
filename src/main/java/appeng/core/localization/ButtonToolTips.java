@@ -263,6 +263,10 @@ public enum ButtonToolTips implements Localization {
     FlowRateTooltipShort,
 
     CPUName,
+    CPUPriorityDisplay,
+    CPUPriorityDisplay_Badge,
+    CPUPriorityDisplay_Compact,
+    CPUPriorityDisplay_Off,
     CPUCrafting,
     Automation,
     ResetStats,
