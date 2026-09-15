@@ -6,7 +6,6 @@ import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Keyboard;
 
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.GuiSub;
