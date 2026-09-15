@@ -221,7 +221,9 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
     @Override
     public void registerIcons(final IIconRegister iconRegister) {
         for (final Entry<Integer, PartTypeWithVariant> part : this.registered.entrySet()) {
-            final String tex = "appliedenergistics2:" + this.getName(new ItemStack(this, 1, part.getKey()));
+            final String override = part.getValue().part.getIconName();
+            final String tex = "appliedenergistics2:"
+                    + (override != null ? override : this.getName(new ItemStack(this, 1, part.getKey())));
             part.getValue().ico = iconRegister.registerIcon(tex);
         }
     }

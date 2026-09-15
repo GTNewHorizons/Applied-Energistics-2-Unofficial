@@ -42,7 +42,9 @@ public enum TickRates {
 
     PressureTunnel(1, 120),
 
-    ThroughputMonitor(20, 100);
+    ThroughputMonitor(20, 100),
+
+    WirelessLink(1, 20);
 
     private int min;
     private int max;
