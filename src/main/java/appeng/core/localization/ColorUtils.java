@@ -20,6 +20,8 @@ public class ColorUtils {
         craftConfirmPercent75               = color.rgb("craftConfirmPercent75",                "0xe3940b"),
         craftConfirmPercent100              = color.rgb("craftConfirmPercent100",               "0x660f0f"),
         oreFilterTextLengthFull             = color.rgb("oreFilterTextLengthFull",              "0xff0000"),
+        oreFilterParseOk                    = color.rgb("oreFilterParseOk",                    "0x00AA00"),
+        oreFilterParseError                 = color.rgb("oreFilterParseError",                 "0xCC0000"),
         neiGrindstoneRecipeChance           = color.rgb("neiGrindstoneRecipeChance",            "0x000000"),
         neiGrindstoneNoSecondOutput         = color.rgb("neiGrindstoneNoSecondOutput",          "0x000000"),
         neiCellView                         = color.rgb("neiCellView",                          "0x000000"),
