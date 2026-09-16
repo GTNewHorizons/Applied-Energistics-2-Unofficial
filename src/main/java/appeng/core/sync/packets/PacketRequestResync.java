@@ -1,9 +1,12 @@
 package appeng.core.sync.packets;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.World;
 
+import appeng.api.parts.IPartHost;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
+import appeng.parts.PartPlacement;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -34,6 +37,12 @@ public class PacketRequestResync extends AppEngPacket {
 
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
-        player.worldObj.markBlockForUpdate(x, y, z);
+        final World world = player.worldObj;
+        final IPartHost host = PartPlacement.getExistingHost(world.getTileEntity(x, y, z));
+        if (host != null) {
+            host.markForUpdate();
+        } else {
+            world.markBlockForUpdate(x, y, z);
+        }
     }
 }
