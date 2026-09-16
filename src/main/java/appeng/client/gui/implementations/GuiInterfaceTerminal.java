@@ -98,6 +98,7 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
+import gregtech.api.enums.ItemList;
 
 /**
  * Interface Terminal GUI <br/>
@@ -1637,10 +1638,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 if (!entry.online || entry.p2pOutput) continue;
                 if (!entry.terminalVisible && !showHidden) continue;
 
-                var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
-                entry.dispY = -9999;
-                if (onlyMolecularAssemblers
-                        && (!moleAss.isPresent() || !Platform.isSameItem(moleAss.get(), entry.dispRep))) {
+                if (onlyMolecularAssemblers && !isMolecularAssembler(entry)) {
                     continue;
                 }
                 if (AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal
@@ -1675,6 +1673,23 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 }
                 visibleEntries.add(entry);
             }
+        }
+
+        private boolean isMolecularAssembler(InterfaceTerminalEntry entry) {
+            var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
+            entry.dispY = -9999;
+            if (moleAss.isPresent() && Platform.isSameItem(moleAss.get(), entry.dispRep)) {
+                return true;
+            }
+
+            if (Platform.isGTLoaded) {
+                var largeMoleAss = ItemList.LargeMolecularAssembler.get(1);
+                if (entry.dispName.equals(largeMoleAss.getDisplayName())) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void addEntry(InterfaceTerminalEntry entry) {
