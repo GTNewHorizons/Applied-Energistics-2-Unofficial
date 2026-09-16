@@ -82,7 +82,7 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
         if (!(aeStack instanceof IAEItemStack)) {
             return null; // Only item renaming is supported
         }
-        return AEItemStack.create(((IAEItemStack) aeStack).getItemStack().setStackDisplayName(textField.getText()));
+        return AEItemStack.create(aeStack.getItemStack().setStackDisplayName(textField.getText());
     }
 
     public boolean isOverTextField(final int mousex, final int mousey) {
