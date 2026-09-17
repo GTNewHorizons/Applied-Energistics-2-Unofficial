@@ -61,6 +61,7 @@ import appeng.core.sync.packets.PacketPatternValueSet;
 import appeng.core.sync.packets.PacketPickBlock;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketRemoteRename;
+import appeng.core.sync.packets.PacketRequestResync;
 import appeng.core.sync.packets.PacketSpatialAction;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -93,6 +94,8 @@ public class AppEngPacketHandlerBase {
         PACKET_PART_INTERACTION(PacketPartInteraction.class),
 
         PACKET_PART_PLACEMENT(PacketPartPlacement.class),
+
+        PACKET_REQUEST_RESYNC(PacketRequestResync.class),
 
         PACKET_LIGHTNING(PacketLightning.class),
 
