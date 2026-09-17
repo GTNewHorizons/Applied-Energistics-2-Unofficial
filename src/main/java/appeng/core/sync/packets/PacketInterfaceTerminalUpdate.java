@@ -162,10 +162,12 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
     /**
      * Rename the entry. {@code newName} should be the raw (untranslated) name, {@code suffix} is optional (pass null if
-     * not needed). The client will translate the name and append the suffix.
+     * not needed). The client will translate the name and append the suffix. {@code dispRep} is the icon of the
+     * machine the interface faces, which travels along because the name of a machine that has no key of its own is
+     * read from it.
      */
-    public void addRenamedEntry(long id, String newName, String suffix) {
-        commands.add(new PacketRename(id, newName, suffix));
+    public void addRenamedEntry(long id, String newName, String suffix, ItemStack dispRep) {
+        commands.add(new PacketRename(id, newName, suffix, dispRep));
     }
 
     /**
@@ -717,11 +719,14 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public String newName;
         /** Optional suffix appended after translation on the client. May be null. */
         public String suffix;
+        /** Icon of the faced machine, may be null. The name is read from it when there is no key to translate. */
+        public ItemStack dispRep;
 
-        protected PacketRename(long id, String newName, String suffix) {
+        protected PacketRename(long id, String newName, String suffix, ItemStack dispRep) {
             super(id);
             this.newName = newName;
             this.suffix = suffix;
+            this.dispRep = dispRep;
         }
 
         protected PacketRename(ByteBuf buf) throws IOException {
@@ -735,6 +740,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             // newName is raw/untranslated; suffix is optional (empty string = no suffix)
             ByteBufUtils.writeUTF8String(buf, newName != null ? newName : "");
             ByteBufUtils.writeUTF8String(buf, suffix != null ? suffix : "");
+            ByteBufUtils.writeItemStack(buf, dispRep);
         }
 
         @Override
@@ -743,6 +749,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             // empty string means no suffix
             String rawSuffix = ByteBufUtils.readUTF8String(buf);
             this.suffix = rawSuffix.isEmpty() ? null : rawSuffix;
+            this.dispRep = ByteBufUtils.readItemStack(buf);
         }
 
         @Override
