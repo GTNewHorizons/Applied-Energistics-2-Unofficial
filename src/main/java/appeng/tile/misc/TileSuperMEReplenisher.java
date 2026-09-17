@@ -1,6 +1,8 @@
 package appeng.tile.misc;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -353,6 +355,20 @@ public class TileSuperMEReplenisher extends AENetworkTile
     public IItemList<IAEStack<?>> getAvailableItems(IItemList<IAEStack<?>> out, int iteration) {
         final IAEStackType<?> outStackType = out.getStackType();
         this.storage.forEach(aes -> { if (aes.getStackType().equals(outStackType)) out.add(aes); });
+        return out;
+    }
+
+    @Override
+    public IItemList<IAEStack<?>> getAvailableItems(IItemList<IAEStack<?>> out, int iteration,
+            Optional<Predicate<IAEStack<?>>> filter) {
+        final IAEStackType<?> outStackType = out.getStackType();
+        this.storage.forEach(aes -> {
+            if (aes.getStackType().equals(outStackType)) {
+                if (!filter.isPresent() || filter.get().test(aes)) {
+                    out.add(aes);
+                }
+            }
+        });
         return out;
     }
 

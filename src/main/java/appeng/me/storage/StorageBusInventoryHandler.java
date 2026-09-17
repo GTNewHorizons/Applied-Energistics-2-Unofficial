@@ -24,35 +24,36 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
     }
 
     @Override
-    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
-        Predicate<T> filterCondition = preFilter.orElse(null);
+        Predicate<T> storageBusFilter = null;
 
         if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
-            Predicate<T> extractFilter = this.getExtractFilterCondition();
-            filterCondition = filterCondition == null ? extractFilter : extractFilter.and(filterCondition);
+            storageBusFilter = this.getExtractFilterCondition();
         }
 
-        final IItemList<T> availableItems = this.getInternal().getAvailableItems(
-                (IItemList<T>) this.getStackType().createList(),
-                iteration,
-                Optional.ofNullable(filterCondition));
+        final IItemList<T> availableItems = this.getInternal()
+                .getAvailableItems((IItemList<T>) this.getStackType().createList(), iteration, filter);
 
-        if (availableItems instanceof NetworkItemList) {
+        if (availableItems instanceof NetworkItemList networkItemList) {
             // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to
             // avoid modifying the passed in list which belongs to a different network (and would cause double-counting
             // for triangle-shaped networks)
-            return availableItems;
+            NetworkItemList<T> itemList = new NetworkItemList<>(networkItemList);
+            itemList.addFilter(storageBusFilter);
+            return itemList;
         } else {
             // for non-cross-network dives, we need to honor the "out" contract
             // and put the results in the passed in list
             for (T items : availableItems) {
-                out.add(items);
+                if (storageBusFilter == null || storageBusFilter.test(items)) {
+                    out.add(items);
+                }
             }
             return out;
         }
