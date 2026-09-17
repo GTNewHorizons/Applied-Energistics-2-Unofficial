@@ -75,6 +75,10 @@ public interface IInterfaceViewable extends IGridHost {
         return true;
     }
 
+    default boolean isCraftingPatternProvider() {
+        return false;
+    }
+
     default IAEStackType<?>[] getSupportedStackTypes() {
         return new IAEStackType<?>[] { ITEM_STACK_TYPE };
     }

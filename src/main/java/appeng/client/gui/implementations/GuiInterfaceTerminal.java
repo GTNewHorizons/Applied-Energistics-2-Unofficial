@@ -98,7 +98,6 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
-import gregtech.api.enums.ItemList;
 
 /**
  * Interface Terminal GUI <br/>
@@ -1217,6 +1216,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             entry.terminalVisible = addCmd.terminalVisible;
+            entry.isCraftingPatternProvider = addCmd.isCraftingPatternProvider;
             entry.hideButton.set(entry.terminalVisible ? YesNo.YES : YesNo.NO);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1638,7 +1638,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 if (!entry.online || entry.p2pOutput) continue;
                 if (!entry.terminalVisible && !showHidden) continue;
 
-                if (onlyMolecularAssemblers && !isMolecularAssembler(entry)) {
+                if (onlyMolecularAssemblers && !entry.isCraftingPatternProvider) {
                     continue;
                 }
                 if (AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal
@@ -1673,23 +1673,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 }
                 visibleEntries.add(entry);
             }
-        }
-
-        private boolean isMolecularAssembler(InterfaceTerminalEntry entry) {
-            var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
-            entry.dispY = -9999;
-            if (moleAss.isPresent() && Platform.isSameItem(moleAss.get(), entry.dispRep)) {
-                return true;
-            }
-
-            if (Platform.isGTLoaded) {
-                var largeMoleAss = ItemList.LargeMolecularAssembler.get(1);
-                if (entry.dispName.equals(largeMoleAss.getDisplayName())) {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         public void addEntry(InterfaceTerminalEntry entry) {
@@ -1748,6 +1731,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         boolean online;
         boolean p2pOutput;
         boolean terminalVisible = true;
+        boolean isCraftingPatternProvider = false;
         IAEStackType<?>[] supportedStackTypes;
         private Boolean[] brokenRecipes;
         int numItems = 0;

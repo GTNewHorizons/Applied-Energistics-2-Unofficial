@@ -248,7 +248,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int numSlots;
         public boolean online;
         public boolean p2pOutput;
-        public boolean terminalVisible = true;
+        public boolean terminalVisible;
+        public boolean isCraftingPatternProvider;
         public IAEStackType<?>[] supportedStackTypes;
         public int priority;
         public ItemStack selfRep, dispRep;
@@ -271,6 +272,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
         public PacketAdd setTerminalVisible(boolean terminalVisible) {
             this.terminalVisible = terminalVisible;
+            return this;
+        }
+
+        public PacketAdd setIsCraftingPatternProvider(boolean isCraftingPatternProvider) {
+            this.isCraftingPatternProvider = isCraftingPatternProvider;
             return this;
         }
 
@@ -339,6 +345,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeBoolean(online);
             buf.writeBoolean(p2pOutput);
             buf.writeBoolean(terminalVisible);
+            buf.writeBoolean(isCraftingPatternProvider);
             IAEStackType<?>[] types = supportedStackTypes != null ? supportedStackTypes : new IAEStackType<?>[0];
             buf.writeByte(types.length);
             for (IAEStackType<?> type : types) {
@@ -384,6 +391,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.online = buf.readBoolean();
             this.p2pOutput = buf.readBoolean();
             this.terminalVisible = buf.readBoolean();
+            this.isCraftingPatternProvider = buf.readBoolean();
             int numTypes = buf.readByte() & 0xFF;
             this.supportedStackTypes = new IAEStackType<?>[numTypes];
             for (int i = 0; i < numTypes; i++) {
@@ -519,6 +527,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int priority;
         public boolean terminalVisibleValid;
         public boolean terminalVisible;
+        public boolean isCraftingPatternProviderValid;
+        public boolean isCraftingPatternProvider;
 
         protected PacketOverwrite(long id) {
             super(id);
@@ -545,6 +555,12 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public PacketOverwrite setTerminalVisible(boolean terminalVisible) {
             this.terminalVisibleValid = true;
             this.terminalVisible = terminalVisible;
+            return this;
+        }
+
+        public PacketOverwrite setIsCraftingPatternProvider(boolean isCraftingPatternProvider) {
+            this.isCraftingPatternProviderValid = true;
+            this.isCraftingPatternProvider = isCraftingPatternProvider;
             return this;
         }
 
