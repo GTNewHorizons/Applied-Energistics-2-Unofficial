@@ -47,12 +47,14 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketPartInteraction;
 import appeng.core.sync.packets.PacketPartPlacement;
+import appeng.core.sync.packets.PacketRequestResync;
 import appeng.facade.IFacadeItem;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBuildCraftTransport;
 import appeng.integration.abstraction.IFMP;
 import appeng.integration.abstraction.IImmibisMicroblocks;
+import appeng.parts.networking.PartCable;
 import appeng.util.LookDirection;
 import appeng.util.Platform;
 import cpw.mods.fml.common.eventhandler.EventPriority;
@@ -271,6 +273,27 @@ public class PartPlacement {
         }
         final ForgeDirection mySide = host.addPart(held, side, player);
         if (mySide != null) {
+            if (world.isRemote && host.getPart(mySide) instanceof PartCable cable) {
+                for (ForgeDirection s : ForgeDirection.VALID_DIRECTIONS) {
+                    int nx = x + s.offsetX;
+                    int ny = y + s.offsetY;
+                    int nz = z + s.offsetZ;
+                    TileEntity opposite = world.getTileEntity(nx, ny, nz);
+                    IPartHost oppositeHost = getExistingHost(opposite);
+                    if (oppositeHost != null
+                            && oppositeHost.getPart(ForgeDirection.UNKNOWN) instanceof PartCable oppositeCable) {
+                        if (host.getPart(s) == null && !host.isBlocked(s)
+                                && oppositeHost.getPart(s.getOpposite()) == null
+                                && !oppositeHost.isBlocked(s.getOpposite())) {
+                            if (host.getColor().matches(oppositeCable.getColor())) {
+                                cable.addConnection(s);
+                                oppositeCable.addConnection(s.getOpposite());
+                                NetworkHandler.instance.sendToServer(new PacketRequestResync(nx, ny, nz));
+                            }
+                        }
+                    }
+                }
+            }
             for (final Block multiPartBlock : multiPart.maybeBlock().asSet()) {
                 final SoundType ss = multiPartBlock.stepSound;
 
