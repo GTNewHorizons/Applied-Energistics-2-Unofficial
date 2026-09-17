@@ -162,9 +162,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
     /**
      * Rename the entry. {@code newName} should be the raw (untranslated) name, {@code suffix} is optional (pass null if
-     * not needed). The client will translate the name and append the suffix. {@code dispRep} is the icon of the
-     * machine the interface faces, which travels along because the name of a machine that has no key of its own is
-     * read from it.
+     * not needed). The client will translate the name and append the suffix. {@code dispRep} is the icon of the machine
+     * the interface faces, which travels along because the name of a machine that has no key of its own is read from
+     * it.
      */
     public void addRenamedEntry(long id, String newName, String suffix, ItemStack dispRep) {
         commands.add(new PacketRename(id, newName, suffix, dispRep));
