@@ -129,6 +129,7 @@ import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.AdaptorMEChest;
+import appeng.util.inv.AdaptorP2PFluid;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.MEInventoryCrafting;
@@ -363,7 +364,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.waitingToSend.add(is);
 
         try {
-            this.gridProxy.getTick().wakeDevice(this.gridProxy.getNode());
+            this.gridProxy.getTick().alertDevice(this.gridProxy.getNode());
         } catch (final GridAccessException e) {
             // :P
         }
@@ -707,7 +708,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final boolean couldDoWork = this.updateStorage();
         final boolean hasWorkToDo = this.hasWorkToDo();
         return (hasWorkToDo || (sentItems && this.hasItemsToSend()))
-                ? (couldDoWork ? TickRateModulation.URGENT : TickRateModulation.SLOWER)
+                ? (couldDoWork || sentItems ? TickRateModulation.URGENT : TickRateModulation.SLOWER)
                 : TickRateModulation.SLEEP;
     }
 
@@ -1063,6 +1064,12 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return isEmpty;
+        }
+
+        if (ad instanceof AdaptorP2PFluid adaptorP2PFluid) {
+            if (adaptorP2PFluid.containsItems()) {
+                return false;
+            }
         }
 
         return hasOnlyIgnoredItems;
