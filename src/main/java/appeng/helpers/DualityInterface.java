@@ -129,6 +129,7 @@ import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.AdaptorMEChest;
+import appeng.util.inv.AdaptorP2PFluid;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.MEInventoryCrafting;
@@ -1063,6 +1064,12 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return isEmpty;
+        }
+
+        if (ad instanceof AdaptorP2PFluid adaptorP2PFluid) {
+            if (adaptorP2PFluid.containsItems()) {
+                return false;
+            }
         }
 
         return hasOnlyIgnoredItems;
