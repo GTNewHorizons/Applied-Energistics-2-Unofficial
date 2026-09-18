@@ -93,6 +93,16 @@ public class PacketValueConfig extends AppEngPacket {
             si.onWheel(is, this.Value.equals("WheelUp"));
         } else if (this.Name.equals("CPUTable.Cpu.Set") && c instanceof final ICraftingCPUSelectorContainer qk) {
             qk.selectCPU(Integer.parseInt(this.Value));
+        } else if (this.Name.equals("CPUTable.Cpu.Priority") && c instanceof final ICraftingCPUSelectorContainer qk) {
+            // value is "<cpuSerial>:<delta>".
+            final String[] parts = this.Value.split(":", 2);
+            if (parts.length == 2) {
+                try {
+                    qk.adjustCpuPriority(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+                } catch (final NumberFormatException ignored) {
+                    // malformed
+                }
+            }
         } else if (this.Name.equals("Terminal.StartWithFollow") && c instanceof final ContainerCraftConfirm qk) {
             qk.startJob(true);
         } else if (this.Name.equals("Terminal.Start") && c instanceof final ContainerCraftConfirm qk) {

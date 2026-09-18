@@ -118,6 +118,11 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
     }
 
     @Override
+    public void adjustCpuPriority(int serial, int delta) {
+        this.cpuTable.adjustCpuPriority(serial, delta);
+    }
+
+    @Override
     public void setCpuSortDirection(int mode) {
         this.cpuTable.setCpuSortDirection(mode);
     }

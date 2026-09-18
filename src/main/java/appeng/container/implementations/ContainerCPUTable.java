@@ -10,6 +10,8 @@ import java.util.WeakHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 
 import com.google.common.collect.ImmutableSet;
@@ -26,6 +28,7 @@ import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingCPUTableUpdate;
+import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
 
 public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
@@ -37,6 +40,9 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
     private final WeakHashMap<ICraftingCPU, Integer> cpuSerialMap = new WeakHashMap<>();
     private int nextCpuSerial = 1;
     private int lastUpdate = 0;
+
+    /// Value for {@link #lastUpdate} that forces {@link #detectAndSendChanges} to resend on its next call.
+    private static final int REFRESH_NOW = 21;
 
     @GuiSync(0)
     public int selectedCpuSerial = -1;
@@ -258,7 +264,7 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
         }
         this.cpuSortMode = values[mode];
         this.sortCPUs();
-        this.lastUpdate = 21;
+        this.lastUpdate = REFRESH_NOW;
     }
 
     @Override
@@ -272,7 +278,41 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
         }
         this.cpuSortDirection = values[mode];
         this.sortCPUs();
-        this.lastUpdate = 21;
+        this.lastUpdate = REFRESH_NOW;
+    }
+
+    @Override
+    public void adjustCpuPriority(int serial, int delta) {
+        if (!Platform.isServer() || delta == 0) {
+            return;
+        }
+
+        final ICraftingCPU cpu = findCpuBySerial(serial);
+
+        if (cpu == null) {
+            return;
+        }
+
+        cpu.setPriority(CraftingCPUCluster.clampPriority((long) cpu.getPriority() + delta));
+
+        // rebuild and resend on the next tick
+        updateCpuList();
+        this.lastUpdate = REFRESH_NOW;
+    }
+
+    @Nullable
+    private ICraftingCPU findCpuBySerial(int serial) {
+        if (lastCpuSet == null) {
+            return null;
+        }
+
+        for (ICraftingCPU cpu : lastCpuSet) {
+            if (cpuSerialMap.getOrDefault(cpu, -1) == serial) {
+                return cpu;
+            }
+        }
+
+        return null;
     }
 
     public List<CraftingCPUStatus> getCPUs() {

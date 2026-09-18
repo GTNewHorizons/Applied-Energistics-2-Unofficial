@@ -64,6 +64,11 @@ public class ContainerCraftingStatus extends ContainerCraftingCPU
     }
 
     @Override
+    public void adjustCpuPriority(int serial, int delta) {
+        cpuTable.adjustCpuPriority(serial, delta);
+    }
+
+    @Override
     public void setCpuSortDirection(int mode) {
         cpuTable.setCpuSortDirection(mode);
     }

@@ -37,6 +37,7 @@ public enum Settings {
     CRAFTING_SORT_BY(EnumSet.allOf(CraftingSortOrder.class)),
     CPU_SORT_BY(EnumSet.allOf(CPUSortBy.class)),
     CPU_SORT_DIRECTION(EnumSet.allOf(SortDir.class)),
+    CPU_PRIORITY_DISPLAY(EnumSet.allOf(CPUPriorityDisplay.class)),
 
     SEARCH_TOOLTIPS(EnumSet.of(YesNo.YES, YesNo.NO)),
     VIEW_MODE(EnumSet.allOf(ViewItems.class)),
