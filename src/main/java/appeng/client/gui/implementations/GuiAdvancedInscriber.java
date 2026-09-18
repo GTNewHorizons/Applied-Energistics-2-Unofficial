@@ -34,11 +34,15 @@ public class GuiAdvancedInscriber extends AEBaseGui {
         super(new ContainerAdvancedInscriber(inventoryPlayer, te));
         this.container = (ContainerAdvancedInscriber) this.inventorySlots;
         this.ySize = 176;
-        this.xSize = this.hasToolbox() ? 246 : 211;
+        this.xSize = !this.hasToolbox() ? 211 : this.getToolboxSize() == 5 ? 290 : 246;
     }
 
     private boolean hasToolbox() {
         return ((ContainerUpgradeable) this.inventorySlots).hasToolbox();
+    }
+
+    private int getToolboxSize() {
+        return ((ContainerUpgradeable) this.inventorySlots).getToolboxSize();
     }
 
     @Override
@@ -90,7 +94,10 @@ public class GuiAdvancedInscriber extends AEBaseGui {
         this.bindTexture("guis/mac.png");
         this.drawTexturedModalRect(offsetX + 179, offsetY, 179, 0, 32, 104);
 
-        if (this.hasToolbox()) {
+        if (this.hasToolbox() && this.getToolboxSize() == 5) {
+            this.bindTexture("guis/advanced_toolbox.png");
+            this.drawTexturedModalRect(offsetX + 178, offsetY + 105 - 7, 0, 0, 104, 104);
+        } else if (this.hasToolbox()) {
             this.bindTexture("guis/inscriber.png");
             this.drawTexturedModalRect(offsetX + 178, offsetY + 105, 178, this.ySize - 90, 68, 68);
         }
