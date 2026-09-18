@@ -24,10 +24,13 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.pathing.IPathingGrid;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
+import appeng.core.settings.ControllerAnimation;
+import appeng.me.cache.PathGridCache;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
@@ -119,6 +122,65 @@ public class NetworkCoreTests {
                     assertActive(helper, drive.getProxy(), "Drive grid proxy should reactivate after merge");
                     assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100);
                     assertStoredAmount(helper, drive.getStackInSlot(0), Blocks.cobblestone, 100);
+                }).thenSucceed();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 140)
+    public static void controllerAnimationFollowsNetworkAcrossMergeAndSplit(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        TileDrive drive = getDrive(helper);
+        installCableLine(helper, FULL_CABLE_LINE);
+        TileController[] placedController = new TileController[1];
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for the original network to form",
+                        40,
+                        () -> helper.assertSame(
+                                controller.getProxy().getNode().getGrid(),
+                                drive.getProxy().getNode().getGrid(),
+                                "Controller and drive should share a grid"))
+                .thenExecute("place a controller with a different local default", () -> {
+                    PathGridCache path = (PathGridCache) controller.getProxy().getNode().getGrid()
+                            .getCache(IPathingGrid.class);
+                    path.setControllerAnimation(ControllerAnimation.ORIGINAL_RAINBOW);
+                    path.cycleControllerAnimation(true);
+                    helper.assertEquals(
+                            ControllerAnimation.CIRCUIT_TRACE,
+                            path.getControllerAnimation(),
+                            "Backwards cycling should wrap to the last animation");
+                    path.cycleControllerAnimation(false);
+                    helper.assertEquals(
+                            ControllerAnimation.ORIGINAL_RAINBOW,
+                            path.getControllerAnimation(),
+                            "Forward cycling should wrap to the first animation");
+                    path.setControllerAnimation(ControllerAnimation.WAVE);
+                    helper.setBlock("cable_8", AEApi.instance().definitions().blocks().controller().maybeBlock().get());
+                    placedController[0] = helper.assertTileEntityPresent(TileController.class, "cable_8");
+                    placedController[0].setControllerAnimation(ControllerAnimation.BREATHING);
+                }).thenWaitUntil("wait for the placed controller to inherit the network animation", 40, () -> {
+                    IGridNode placedNode = placedController[0].getProxy().getNode();
+                    helper.assertNotNull(placedNode, "Placed controller should have a grid node");
+                    helper.assertSame(
+                            controller.getProxy().getNode().getGrid(),
+                            placedNode.getGrid(),
+                            "Placed controller should join the original grid");
+                    helper.assertEquals(
+                            ControllerAnimation.WAVE,
+                            placedController[0].getControllerAnimation(),
+                            "Existing network animation should override the placement default");
+                }).thenExecute("split the two controllers", () -> removeBlock(helper, BREAKABLE_CABLE_LABEL))
+                .thenWaitUntil("wait for the split controller to retain its animation", 40, () -> {
+                    IGridNode placedNode = placedController[0].getProxy().getNode();
+                    helper.assertNotNull(placedNode, "Split controller should retain its grid node");
+                    helper.assertNotSame(
+                            controller.getProxy().getNode().getGrid(),
+                            placedNode.getGrid(),
+                            "Controllers should be on separate grids after the split");
+                    helper.assertEquals(
+                            ControllerAnimation.WAVE,
+                            placedController[0].getControllerAnimation(),
+                            "Split controller should retain the inherited animation");
                 }).thenSucceed();
     }
 
