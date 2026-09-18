@@ -444,4 +444,10 @@ public class PartInterface extends PartBasicState
 
         return super.getCapability(capability, side);
     }
+
+    @Override
+    public boolean isCraftingPatternProvider() {
+        var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
+        return moleAss.isPresent() && Platform.isSameItem(moleAss.get(), getDisplayRep());
+    }
 }
