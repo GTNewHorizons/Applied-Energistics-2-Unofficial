@@ -421,7 +421,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                                 .setReps(machine.getSelfRep(), machine.getDisplayRep())
                                 .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
                                 .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority)
-                                .setTerminalVisible(entry.shouldDisplay);
+                                .setTerminalVisible(entry.shouldDisplay)
+                                .setIsCraftingPatternProvider(entry.isCraftingPatternProvider);
                         // Ensure the client applies the correct visibility even if PacketAdd state gets corrupted
                         // client-side. PacketOverwrite handling is known to work reliably.
                         update.addOverwriteEntry(entry.id).setTerminalVisible(entry.shouldDisplay);
@@ -497,6 +498,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         private boolean online;
         private final IAEStackType<?>[] supportedStackTypes;
         private NBTTagList invNbt;
+        private boolean isCraftingPatternProvider;
 
         InvTracker(long id, IInterfaceViewable machine, boolean online) {
             DimensionalCoord location = machine.getLocation();
@@ -519,6 +521,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
             this.supportedStackTypes = machine.getSupportedStackTypes();
             this.priority = machine.getPriority();
             this.invNbt = new NBTTagList();
+            this.isCraftingPatternProvider = machine.isCraftingPatternProvider();
             updateNBT();
         }
 
