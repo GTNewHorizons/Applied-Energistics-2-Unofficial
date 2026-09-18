@@ -358,8 +358,11 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                         String suffix = serializeSuffix(machine.getNameSuffix());
 
                         if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
+                            // The icon is only fetched here, it is as expensive as the name itself and a machine that
+                            // changed its icon changed its name too.
+                            ItemStack dispRep = machine.getDisplayRep();
                             if (update == null) update = new PacketInterfaceTerminalUpdate();
-                            update.addRenamedEntry(known.id, rawName, suffix);
+                            update.addRenamedEntry(known.id, rawName, suffix, dispRep);
                             known.name = rawName;
                             known.suffix = suffix;
                         }
