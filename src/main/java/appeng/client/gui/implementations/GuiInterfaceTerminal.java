@@ -1219,6 +1219,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             entry.terminalVisible = addCmd.terminalVisible;
+            entry.isCraftingPatternProvider = addCmd.isCraftingPatternProvider;
             entry.hideButton.set(entry.terminalVisible ? YesNo.YES : YesNo.NO);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1643,10 +1644,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 if (!entry.online || entry.p2pOutput) continue;
                 if (!entry.terminalVisible && !showHidden) continue;
 
-                var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
-                entry.dispY = -9999;
-                if (onlyMolecularAssemblers
-                        && (!moleAss.isPresent() || !Platform.isSameItem(moleAss.get(), entry.dispRep))) {
+                if (onlyMolecularAssemblers && !entry.isCraftingPatternProvider) {
                     continue;
                 }
                 if (AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal
@@ -1742,6 +1740,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         boolean online;
         boolean p2pOutput;
         boolean terminalVisible = true;
+        boolean isCraftingPatternProvider = false;
         IAEStackType<?>[] supportedStackTypes;
         private Boolean[] brokenRecipes;
         int numItems = 0;
