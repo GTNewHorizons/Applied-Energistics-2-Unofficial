@@ -277,9 +277,7 @@ public enum GuiText implements Localization {
     OreFilterSubmitHint,
     OreFilterParseOk,
     OreFilterParseError,
-    OreFilterMatched,
-    OreFilterItems,
-    OreFilterTooLong,
+    OreFilterUnsaved,
 
     PriorityCard,
     PriorityCardTooltip,
