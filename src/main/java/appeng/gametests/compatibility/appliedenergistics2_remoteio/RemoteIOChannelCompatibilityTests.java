@@ -5,9 +5,7 @@ import static appeng.gametests.AEGameTestHelpers.assertActive;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
@@ -17,13 +15,12 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
 import appeng.api.networking.IGridNode;
-import appeng.api.util.AEColor;
 import appeng.core.AppEng;
-import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
 import remoteio.common.core.TransferType;
 import remoteio.common.lib.DimensionalCoords;
+import remoteio.common.lib.ModBlocks;
 import remoteio.common.lib.ModItems;
 import remoteio.common.tile.TileRemoteInterface;
 
@@ -54,11 +51,10 @@ public class RemoteIOChannelCompatibilityTests {
     @GameTest(template = "compatibility/remoteio/different_controller_faces", timeoutTicks = 100)
     public static void differentControllerFacesHaveIndependentChannels(GameTestHelper helper) {
         TileController controller = helper.assertTileEntityPresent(TileController.class, "controller");
+        moveSecondRemoteInterfaceToNorthSide(helper);
         List<TileDrive> devices = dualChannelDevices(helper);
-        helper.destroyBlock("dense_cable_b_3");
-        placeDenseCable(helper, "remote_interface_b_side_cable");
         connectRemoteInterface(helper, "remote_interface_a");
-        connectRemoteInterface(helper, "remote_interface_b");
+        connectRemoteInterface(helper, "remote_interface_b_north");
 
         assertActiveDevices(helper, controller, devices, 33);
     }
@@ -84,6 +80,13 @@ public class RemoteIOChannelCompatibilityTests {
                 .setInventorySlotContents(0, new ItemStack(ModItems.transferChip, 1, TransferType.NETWORK_AE));
         remoteInterface.setRemotePosition(
                 new DimensionalCoords(helper.getWorld(), controller.x(), controller.y(), controller.z()));
+    }
+
+    private static void moveSecondRemoteInterfaceToNorthSide(GameTestHelper helper) {
+        helper.destroyBlock("remote_interface_b");
+        helper.destroyBlock("remote_interface_b_north");
+        helper.setBlock("channel_device_b_4", AEApi.instance().definitions().blocks().drive().maybeBlock().get());
+        helper.setBlock("remote_interface_b_north", ModBlocks.remoteInterface);
     }
 
     private static void assertActiveDevices(GameTestHelper helper, TileController controller, List<TileDrive> devices,
@@ -113,12 +116,4 @@ public class RemoteIOChannelCompatibilityTests {
                 .thenExecute("finish stable channel-allocation observation", stableAllocation::disable).thenSucceed();
     }
 
-    private static void placeDenseCable(GameTestHelper helper, String label) {
-        Block cableBusBlock = AEApi.instance().definitions().blocks().multiPart().maybeBlock().get();
-        helper.setBlock(label, cableBusBlock);
-        TileCableBus cableBus = helper.assertTileEntityPresent(TileCableBus.class, label);
-        ItemStack cable = AEApi.instance().definitions().parts().cableDense().stack(AEColor.Transparent, 1);
-        ForgeDirection side = cableBus.addPart(cable, ForgeDirection.UNKNOWN, null);
-        helper.assertNotNull(side, "Dense cable should be accepted by the cable bus");
-    }
 }

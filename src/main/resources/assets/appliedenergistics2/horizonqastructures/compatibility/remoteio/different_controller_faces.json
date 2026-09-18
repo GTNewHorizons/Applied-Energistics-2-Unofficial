@@ -49,7 +49,7 @@
       "channel_device_b_17": [11, 0, 8],
       "channel_device_b_2": [12, 0, 4],
       "channel_device_b_3": [13, 0, 4],
-      "channel_device_b_4": [14, 0, 4],
+      "channel_device_b_4": [13, 0, 2],
       "channel_device_b_5": [11, 0, 5],
       "channel_device_b_6": [12, 0, 5],
       "channel_device_b_7": [13, 0, 5],
@@ -68,7 +68,7 @@
       "dense_cable_b_4": [14, 0, 3],
       "remote_interface_a": [1, 0, 2],
       "remote_interface_b": [13, 0, 2],
-      "remote_interface_b_side_cable": [14, 0, 2]
+      "remote_interface_b_north": [14, 0, 4]
     }
   }
 }
