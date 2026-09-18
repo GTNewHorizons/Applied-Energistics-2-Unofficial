@@ -31,17 +31,19 @@ public class GuiAdvancedLevelEmitter extends AEBaseGui {
     private static final int SLOT_Y = 24;
     private static final int FIELD_X = 54;
     private static final int FIELD_Y = 26;
-    private static final int FIELD_W = 90;
+    private static final int FIELD_W = 67;
     private static final int FIELD_H = 12;
     private static final int INVERT_X = 149;
     private static final int INVERT_Y = 24;
     private static final int PLAYER_INV_Y = 153;
+    private static final int COMPARISON_SLOT_X = 126;
 
     private final ContainerAdvancedLevelEmitter container;
 
     private final GuiImgButton[] toggleButtons = new GuiImgButton[SLOTS];
     private final GuiImgButton[] invertButtons = new GuiImgButton[SLOTS];
     private final MEGuiTextField[] amountFields = new MEGuiTextField[SLOTS];
+    private final VirtualMEPhantomSlot[] comparisonSlots = new VirtualMEPhantomSlot[SLOTS];
 
     private GuiImgButton logicMode;
 
@@ -101,6 +103,16 @@ public class GuiAdvancedLevelEmitter extends AEBaseGui {
                             this.container.configSync,
                             slot,
                             GuiAdvancedLevelEmitter::acceptType));
+
+            final VirtualMEPhantomSlot comparisonSlot = new VirtualMEPhantomSlot(
+                    COMPARISON_SLOT_X,
+                    SLOT_Y + y,
+                    this.container.configSync,
+                    slot + IAdvancedLevelEmitter.COMPARISON_SLOT_OFFSET,
+                    GuiAdvancedLevelEmitter::acceptType);
+
+            this.comparisonSlots[slot] = comparisonSlot;
+            this.registerVirtualSlots(comparisonSlot);
         }
     }
 
@@ -125,6 +137,13 @@ public class GuiAdvancedLevelEmitter extends AEBaseGui {
             if (this.invertButtons[slot] != null) {
                 this.invertButtons[slot]
                         .set(this.container.isSlotInverted(slot) ? RedstoneMode.LOW_SIGNAL : RedstoneMode.HIGH_SIGNAL);
+            }
+
+            final MEGuiTextField amountField = this.amountFields[slot];
+            final VirtualMEPhantomSlot comparisonSlot = this.comparisonSlots[slot];
+
+            if (amountField != null && comparisonSlot != null) {
+                amountField.setEnabled(comparisonSlot.getAEStack() == null);
             }
         }
     }
