@@ -58,6 +58,7 @@ dependencies {
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.6:dev")
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.34:dev') {transitive = false}
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:DuraDisplay:1.4.6:dev")
+	runtimeOnlyNonPublishable('com.github.GTNewHorizons:RemoteIO:2.7.10:dev') { transitive = false }
 	runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles-Expanded:2.2.23-GTNH:dev')
 	runtimeOnlyNonPublishable('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev') {
         exclude module: "Baubles"
