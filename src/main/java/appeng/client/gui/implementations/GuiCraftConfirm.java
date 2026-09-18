@@ -120,7 +120,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 this.ySize = tallMode ? height - 64 : TREE_VIEW_TEXTURE_HEIGHT;
                 this.rows = tallMode ? (ySize - 46) / LIST_VIEW_TEXTURE_ROW_HEIGHT : TREE_VIEW_DEFAULT_CPU_SLOTS;
                 this.craftingTree.widgetW = xSize - 35;
-                this.craftingTree.widgetH = ySize - 46;
+                this.craftingTree.widgetH = ySize - 68;
             }
         }
         GuiCraftingCPUTable.CPU_TABLE_SLOTS = this.rows;
@@ -157,6 +157,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     private GuiSimpleImgButton optimizeButton;
     private GuiAeButton findNext;
     private GuiAeButton findPrev;
+    private GuiAeButton hideAvailable;
     private MEGuiTextField searchField;
     private final List<IAEStack<?>> filteredVisual = new ArrayList<>();
     private int tooltip = -1;
@@ -166,7 +167,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
 
     public GuiCraftConfirm(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(new ContainerCraftConfirm(inventoryPlayer, te));
-        this.craftingTree = new GuiCraftingTree(this, 9, 19, 203, 192);
+        this.craftingTree = new GuiCraftingTree(this, 9, 41, 203, 170);
         this.tallMode = AEConfig.instance.getConfigManager().getSetting(Settings.TERMINAL_STYLE) == TerminalStyle.TALL;
         recalculateScreenSize();
         scrollbar = new GuiScrollbar();
@@ -317,6 +318,18 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         this.cpuTable.addButtons(this.buttonList, this.guiLeft, this.guiTop);
 
         if (displayMode == DisplayMode.TREE) {
+            this.hideAvailable = new GuiAeButton(
+                    0,
+                    this.guiLeft + 9,
+                    this.guiTop + 20,
+                    Math.min(
+                            this.craftingTree.widgetW,
+                            this.fontRendererObj.getStringWidth(GuiText.HideAllAvailable.getLocal()) + 10),
+                    18,
+                    GuiText.HideAllAvailable.getLocal(),
+                    "");
+            this.hideAvailable.enabled = false;
+            this.buttonList.add(this.hideAvailable);
             this.buttonList.add(this.findPrev);
             this.buttonList.add(this.findNext);
         }
@@ -366,6 +379,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 this.takeScreenshot.yPosition = this.guiTop + this.ySize - 18;
             }
             case TREE -> {
+                this.hideAvailable.enabled = jobTree != null && jobTree.getOutput() != null;
                 drawTreeScreen(mouseX, mouseY, btn);
                 this.takeScreenshot.xPosition = this.guiLeft - 36;
                 this.takeScreenshot.yPosition = this.guiTop + this.ySize - 18;
@@ -971,6 +985,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             this.searchField.setText("");
             updateFilteredList();
             this.setScrollBar();
+        } else if (btn == this.hideAvailable) {
+            craftingTree.hideAvailable();
         } else if (btn == this.takeScreenshot) {
             switch (displayMode) {
                 case LIST -> {
@@ -1044,7 +1060,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         cpuTable.mouseClicked(xCoord - guiLeft, yCoord - guiTop, btn);
         this.searchField.mouseClicked(xCoord, yCoord, btn);
         if (displayMode == DisplayMode.TREE && craftingTree != null) {
-            craftingTree.mouseClicked(xCoord - guiLeft, yCoord - guiTop);
+            craftingTree.mouseClicked(xCoord - guiLeft, yCoord - guiTop, btn);
         }
     }
 
@@ -1052,11 +1068,17 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     protected void mouseClickMove(int x, int y, int c, long d) {
         super.mouseClickMove(x, y, c, d);
         cpuTable.mouseClickMove(x - guiLeft, y - guiTop);
+        if (displayMode == DisplayMode.TREE && c == 0) {
+            craftingTree.mouseDragged(x - guiLeft, y - guiTop);
+        }
     }
 
     @Override
     protected void mouseMovedOrUp(int mouseX, int mouseY, int state) {
         super.mouseMovedOrUp(mouseX, mouseY, state);
+        if (displayMode == DisplayMode.TREE) {
+            craftingTree.mouseReleased(mouseX - guiLeft, mouseY - guiTop, state);
+        }
     }
 
     @Override
