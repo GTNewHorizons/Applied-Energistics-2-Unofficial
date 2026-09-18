@@ -76,6 +76,7 @@ public enum AEFeature {
     PartThroughputMonitor(Constants.CATEGORY_NETWORK_BUSES),
 
     PortableCell(Constants.CATEGORY_PORTABLE_CELL),
+    PortableCellWorkbench(Constants.CATEGORY_PORTABLE_CELL_WORKBENCH),
 
     StorageCells(Constants.CATEGORY_STORAGE),
     XtremeStorageCells(Constants.CATEGORY_STORAGE),
@@ -181,5 +182,6 @@ public enum AEFeature {
         private static final String CATEGORY_NETWORK_TOOL = "NetworkTool";
         private static final String CATEGORY_ADVANCED_NETWORK_TOOL = "AdvancedNetworkTool";
         private static final String CATEGORY_PORTABLE_CELL = "PortableCell";
+        protected static final String CATEGORY_PORTABLE_CELL_WORKBENCH = "PortableCellWorkbench";
     }
 }

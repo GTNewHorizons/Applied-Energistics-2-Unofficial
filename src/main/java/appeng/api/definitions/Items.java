@@ -66,6 +66,8 @@ public class Items {
 
     public AEItemDefinition itemPortableCell;
 
+    public AEItemDefinition itemPortableCellWorkbench;
+
     public AEItemDefinition itemCellCreative;
 
     public AEItemDefinition itemViewCell;
