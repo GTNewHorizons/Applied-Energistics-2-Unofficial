@@ -15,7 +15,7 @@ import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 public class FluidUtils {
 
     public static boolean isFluidContainer(@Nullable ItemStack itemStack) {
-        return itemStack != null && StackInfo.isFluidContainer(itemStack);
+        return itemStack != null && StackInfo.isFluidContainer(itemStack) && !StackInfo.isFluidDisplayItem(itemStack);
     }
 
     public static boolean isFilledFluidContainer(@Nullable ItemStack itemStack) {
