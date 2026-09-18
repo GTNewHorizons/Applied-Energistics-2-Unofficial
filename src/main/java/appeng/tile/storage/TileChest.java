@@ -138,6 +138,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.config.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.config.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.config.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
+        this.config.registerSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ_WRITE);
         this.setInternalPublicPowerStorage(true);
         this.setInternalPowerFlow(AccessRestriction.WRITE);
     }
@@ -682,7 +683,14 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     }
 
     @Override
-    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {}
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        this.markDirty();
+    }
+
+    @Override
+    public AccessRestriction getReshuffleAccess() {
+        return (AccessRestriction) this.config.getSetting(Settings.RESHUFFLE_ACCESS);
+    }
 
     public boolean openGui(final EntityPlayer p, final ICellHandler ch, final ItemStack cell, final int side) {
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {

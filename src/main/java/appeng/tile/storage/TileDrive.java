@@ -29,6 +29,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.IChestOrDrive;
 import appeng.api.implementations.tiles.IColorableTile;
@@ -59,6 +61,8 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
+import appeng.api.util.IConfigManager;
+import appeng.api.util.IConfigurableObject;
 import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.items.AEBaseCell;
@@ -71,12 +75,14 @@ import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.util.ConfigManager;
+import appeng.util.IConfigManagerHost;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
-public class TileDrive extends AENetworkInvTile
-        implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile, IPrimaryGuiIconProvider {
+public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile,
+        IPrimaryGuiIconProvider, IConfigurableObject, IConfigManagerHost {
 
     private static final int INV_SIZE = 10;
     /**
@@ -90,6 +96,7 @@ public class TileDrive extends AENetworkInvTile
     private final ICellHandler[] handlersBySlot = new ICellHandler[INV_SIZE];
     private final MEInventoryHandler<IAEItemStack>[] invBySlot = new MEInventoryHandler[INV_SIZE];
     private final BaseActionSource mySrc;
+    private final IConfigManager config = new ConfigManager(this);
     private boolean isCached = false;
     @SuppressWarnings("rawtypes")
     private final Map<IAEStackType<?>, List<IMEInventoryHandler>> cellsMap = new IdentityHashMap<>();
@@ -107,6 +114,7 @@ public class TileDrive extends AENetworkInvTile
     public TileDrive() {
         this.mySrc = new MachineSource(this);
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
+        this.config.registerSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ_WRITE);
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
@@ -204,6 +212,7 @@ public class TileDrive extends AENetworkInvTile
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileDrive(final NBTTagCompound data) {
         this.isCached = false;
+        this.config.readFromNBT(data);
         this.priority = data.getInteger("priority");
         if (data.hasKey("paintedColor")) {
             this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
@@ -213,6 +222,7 @@ public class TileDrive extends AENetworkInvTile
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileDrive(final NBTTagCompound data) {
+        this.config.writeToNBT(data);
         data.setInteger("priority", this.priority);
         data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
     }
@@ -386,6 +396,21 @@ public class TileDrive extends AENetworkInvTile
         } catch (final GridAccessException e) {
             // :P
         }
+    }
+
+    @Override
+    public IConfigManager getConfigManager() {
+        return this.config;
+    }
+
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        this.markDirty();
+    }
+
+    @Override
+    public AccessRestriction getReshuffleAccess() {
+        return (AccessRestriction) this.config.getSetting(Settings.RESHUFFLE_ACCESS);
     }
 
     @Override
