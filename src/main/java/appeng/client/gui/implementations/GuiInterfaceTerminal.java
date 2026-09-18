@@ -376,8 +376,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 ColorUtils.guiTextColorGray.getColor());
         fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
-                GuiInterfaceTerminal.VIEW_LEFT + 2,
-                this.ySize - 96,
+                GuiInterfaceTerminal.VIEW_LEFT + 12,
+                this.ySize - 93,
                 ColorUtils.guiTextColorGray.getColor());
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
@@ -1168,7 +1168,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         this.masterList.markDirty();
     }
 
-    private static String translateRawName(String rawName, String suffix) {
+    private static String translateRawName(String rawName, String suffix, ItemStack dispRep) {
         if (rawName == null || rawName.isEmpty()) return "";
         String translatedName;
         if (StatCollector.canTranslate(rawName)) {
@@ -1178,7 +1178,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (StatCollector.canTranslate(fallback)) {
                 translatedName = StatCollector.translateToLocal(fallback);
             } else {
-                translatedName = StatCollector.translateToFallback(rawName);
+                // Machines that build their name instead of reading one key per instance, GregTech hatches among
+                // them, have no key to translate. Their icon knows the name, so ask it rather than print the key.
+                translatedName = dispRep != null ? dispRep.getDisplayName()
+                        : StatCollector.translateToFallback(rawName);
             }
         }
         if (suffix != null && !suffix.isEmpty()) {
@@ -1259,7 +1262,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             InterfaceTerminalEntry entry = masterList.list.get(id);
 
             if (entry != null) {
-                entry.dispName = translateRawName(renameCmd.newName, renameCmd.suffix);
+                entry.rawName = renameCmd.newName;
+                entry.rawSuffix = renameCmd.suffix;
+                entry.dispRep = renameCmd.dispRep;
+                entry.dispName = translateRawName(entry.rawName, entry.rawSuffix, entry.dispRep);
                 masterList.moveEntry(entry);
             }
             masterList.isDirty = true;
@@ -1722,6 +1728,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
         ItemStack selfRep;
         /** Nullable - icon that represents the interface's "target" */
         ItemStack dispRep;
+        /** Kept so that the name can be built again once the icons arrive, see {@link #setIcons} */
+        String rawName;
+        String rawSuffix;
         InterfaceSection section;
         long id;
         int x, y, z, dim, side;
@@ -1744,7 +1753,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
         InterfaceTerminalEntry(long id, String name, String suffix, int rows, int rowSize, int numSlots, boolean online,
                 boolean p2pOutput, IAEStackType<?>[] supportedStackTypes, int priority) {
             this.id = id;
-            this.dispName = translateRawName(name, suffix);
+            this.rawName = name;
+            this.rawSuffix = suffix;
+            this.dispName = translateRawName(name, suffix, null);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
             this.rows = rows;
             this.rowSize = rowSize;
@@ -1783,6 +1794,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             // Kotlin would make this pretty easy :(
             this.selfRep = selfRep;
             this.dispRep = dispRep;
+            // The name may need the icon, so it is built again now that we have it.
+            this.dispName = translateRawName(this.rawName, this.rawSuffix, dispRep);
 
             return this;
         }

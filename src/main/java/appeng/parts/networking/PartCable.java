@@ -21,6 +21,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.AEApi;
@@ -797,5 +798,13 @@ public class PartCable extends AEBasePart implements IPartCable {
 
     void setConnections(final EnumSet<ForgeDirection> connections) {
         this.connections = connections;
+    }
+
+    /**
+     * Only affect rendering, do not use this for connection logic. Do not use this on server side at all.
+     */
+    @Internal
+    public void addConnection(final ForgeDirection side) {
+        connections.add(side);
     }
 }
