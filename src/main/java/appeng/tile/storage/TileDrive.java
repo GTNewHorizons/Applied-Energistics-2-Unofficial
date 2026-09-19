@@ -179,8 +179,12 @@ public class TileDrive extends AENetworkInvTile
         return this.invBySlot[slot];
     }
 
+    public ItemStack[] getStorageTypes() {
+        return this.storageTypes;
+    }
+
     @Nullable
-    public ItemStack getStorageType(final int slot) {
+    public ItemStack getPoweredStorageType(final int slot) {
         return this.isPowered() ? this.storageTypes[slot] : null;
     }
 
