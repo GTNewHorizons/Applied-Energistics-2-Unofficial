@@ -35,6 +35,7 @@ public enum GuiText implements Localization {
     Interface,
     Config,
     StoredItems,
+    HideAllAvailable,
     StoredStacks,
     Patterns,
     ImportBus,
