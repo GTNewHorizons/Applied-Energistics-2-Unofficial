@@ -31,7 +31,7 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
-        Predicate<T> storageBusFilter = null;
+        Predicate<T> storageBusFilter = $ -> true;
 
         if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
             storageBusFilter = this.getExtractFilterCondition();

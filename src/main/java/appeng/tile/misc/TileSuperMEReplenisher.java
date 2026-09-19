@@ -352,6 +352,13 @@ public class TileSuperMEReplenisher extends AENetworkTile
     }
 
     @Override
+    public IAEStack<?> getAvailableItem(final IAEStack<?> aes, int iteration) {
+        IAEStack<?> result = this.storage.findPrecise(aes);
+        if (result == null) return null;
+        return result.copy();
+    }
+
+    @Override
     public IItemList<IAEStack<?>> getAvailableItems(IItemList<IAEStack<?>> out, int iteration) {
         final IAEStackType<?> outStackType = out.getStackType();
         this.storage.forEach(aes -> { if (aes.getStackType().equals(outStackType)) out.add(aes); });
