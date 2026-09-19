@@ -88,6 +88,14 @@ public interface IParts {
 
     IItemDefinition cableAnchor();
 
+    IItemDefinition wirelessConnectorFixture();
+
+    IItemDefinition wirelessHubFixture();
+
+    IItemDefinition wirelessConnectorFixtureOuter();
+
+    IItemDefinition wirelessHubFixtureOuter();
+
     IItemDefinition monitor();
 
     IItemDefinition semiDarkMonitor();
