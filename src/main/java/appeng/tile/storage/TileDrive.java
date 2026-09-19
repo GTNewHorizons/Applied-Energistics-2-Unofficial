@@ -19,9 +19,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -87,6 +89,7 @@ public class TileDrive extends AENetworkInvTile
 
     private final int[] sides = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, INV_SIZE);
+    private final ItemStack[] storageTypes = new ItemStack[INV_SIZE];
     private final ICellHandler[] handlersBySlot = new ICellHandler[INV_SIZE];
     private final MEInventoryHandler<IAEItemStack>[] invBySlot = new MEInventoryHandler[INV_SIZE];
     private final BaseActionSource mySrc;
@@ -114,6 +117,13 @@ public class TileDrive extends AENetworkInvTile
         data.writeInt(this.state);
         data.writeInt(this.type);
         data.writeByte(this.paintedColor.ordinal());
+
+        for (int slot = 0; slot < INV_SIZE; slot++) {
+            final ItemStack cell = this.inv.getStackInSlot(slot);
+            data.writeInt(
+                    cell == null ? 0
+                            : (cell.getItemDamage() << Platform.DEF_OFFSET) | Item.getIdFromItem(cell.getItem()));
+        }
     }
 
     @Override
@@ -169,6 +179,11 @@ public class TileDrive extends AENetworkInvTile
         return this.invBySlot[slot];
     }
 
+    @Nullable
+    public ItemStack getStorageType(final int slot) {
+        return this.isPowered() ? this.storageTypes[slot] : null;
+    }
+
     @Override
     public TickingRequest getTickingRequest(IGridNode node) {
         return new TickingRequest(15, 15, false, false);
@@ -198,7 +213,20 @@ public class TileDrive extends AENetworkInvTile
         final AEColor oldPaintedColor = this.paintedColor;
         this.paintedColor = AEColor.fromOrdinal(data.readByte());
         this.getProxy().setColor(this.paintedColor);
-        return oldPaintedColor != this.paintedColor || this.state != oldState || this.type != oldType;
+
+        boolean changed = oldPaintedColor != this.paintedColor || this.state != oldState || this.type != oldType;
+        for (int slot = 0; slot < INV_SIZE; slot++) {
+            final int cell = data.readInt();
+            final ItemStack oldCell = this.storageTypes[slot];
+            final int oldCellId = oldCell == null ? 0
+                    : (oldCell.getItemDamage() << Platform.DEF_OFFSET) | Item.getIdFromItem(oldCell.getItem());
+            if (cell != oldCellId) {
+                this.storageTypes[slot] = cell == 0 ? null
+                        : new ItemStack(Item.getItemById(cell & 0xffff), 1, cell >> Platform.DEF_OFFSET);
+                changed = true;
+            }
+        }
+        return changed;
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
