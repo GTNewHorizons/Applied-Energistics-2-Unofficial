@@ -45,11 +45,13 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.client.gui.widgets.ISortSource;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
+import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
@@ -69,6 +71,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private GuiToggleButton diagnostics;
     private GuiToggleButton liteCrafting;
     private GuiToggleButton flowTracking;
+    private final MEGuiTextField searchField;
     private int tooltip = -1;
     private final DecimalFormat df;
     private final boolean isAdvanced;
@@ -90,6 +93,15 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.df = new DecimalFormat("#.##");
         this.setScrollBar(scrollbar);
         this.repo = new ItemRepo(scrollbar, this);
+        this.searchField = new MEGuiTextField(90, 12, ButtonToolTips.SearchStringTooltip.getLocal()) {
+
+            @Override
+            public void onTextChange(final String oldText) {
+                repo.setSearchString(getText().trim());
+                repo.updateView();
+                setScrollBar();
+            }
+        };
         this.ySize = 183;
         this.xSize = 195;
         this.repo.setRowSize(5);
@@ -135,6 +147,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         if (menu.mouseClick(xCoord, yCoord, btn)) {
             return;
         }
+
+        this.searchField.mouseClicked(xCoord, yCoord, btn);
 
         ItemStack is = null;
         if (tooltip > -1) {
@@ -245,6 +259,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     public void initGui() {
         super.initGui();
+        this.searchField.x = this.guiLeft + this.xSize - this.searchField.w - 8;
+        this.searchField.y = this.guiTop + 4;
         this.units = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 8,
@@ -355,6 +371,13 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     }
 
     @Override
+    protected void keyTyped(final char character, final int key) {
+        if (!this.searchField.textboxKeyTyped(character, key)) {
+            super.keyTyped(character, key);
+        }
+    }
+
+    @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         if (this.isConsume) drawConsume();
         else {
@@ -371,6 +394,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.bindTexture("guis/networkstatus.png");
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
+        this.searchField.drawTextBox();
     }
 
     public void postUpdate(final List<IAEStack<?>> list) {
