@@ -437,14 +437,20 @@ public class GridStorageCache implements IStorageGrid {
     }
 
     private void updateCellsStatusFromRegistry(final ICellCacheRegistry iccr, final ItemStack newCellStack) {
+        final long reportedTotalTypes = iccr.getTotalTypes();
+        // Void cells are the only cells with a maximum type count; revisit this if a finite cell ever uses one.
+        final boolean isVoidCell = reportedTotalTypes == Integer.MAX_VALUE || reportedTotalTypes == Long.MAX_VALUE;
+        final long totalTypes = isVoidCell ? 0 : reportedTotalTypes;
+        final long usedTypes = isVoidCell ? 0 : iccr.getUsedTypes();
+
         switch (iccr.getCellType()) {
             case ITEM -> {
                 this.updateItemCellStatus(
                         iccr.getTotalBytes(),
                         iccr.getUsedBytes(),
                         iccr.getCellStatus(),
-                        iccr.getTotalTypes(),
-                        iccr.getUsedTypes());
+                        totalTypes,
+                        usedTypes);
                 this.putItemStackIntoMap(itemCells, newCellStack, iccr.getCellStatus());
             }
             case FLUID -> {
@@ -452,8 +458,8 @@ public class GridStorageCache implements IStorageGrid {
                         iccr.getTotalBytes(),
                         iccr.getUsedBytes(),
                         iccr.getCellStatus(),
-                        iccr.getTotalTypes(),
-                        iccr.getUsedTypes());
+                        totalTypes,
+                        usedTypes);
                 this.putItemStackIntoMap(fluidCells, newCellStack, iccr.getCellStatus());
             }
             case ESSENTIA -> {
@@ -461,8 +467,8 @@ public class GridStorageCache implements IStorageGrid {
                         iccr.getTotalBytes(),
                         iccr.getUsedBytes(),
                         iccr.getCellStatus(),
-                        iccr.getTotalTypes(),
-                        iccr.getUsedTypes());
+                        totalTypes,
+                        usedTypes);
                 this.putItemStackIntoMap(essentiaCells, newCellStack, iccr.getCellStatus());
             }
         }
