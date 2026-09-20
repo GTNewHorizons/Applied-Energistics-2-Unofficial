@@ -42,6 +42,10 @@ public enum ExtraBlockTextures {
     BlockCreativeEnergyControllerPowered("BlockCreativeEnergyControllerPowered"),
     BlockCreativeEnergyControllerColumnPowered("BlockCreativeEnergyControllerColumnPowered"),
     BlockCreativeEnergyControllerColumn("BlockCreativeEnergyControllerColumn"),
+    BlockCreativeEnergyControllerLights("BlockCreativeEnergyControllerLights"),
+    BlockCreativeEnergyControllerColumnLights("BlockCreativeEnergyControllerColumnLights"),
+    BlockCreativeEnergyControllerColumnConflict("BlockCreativeEnergyControllerColumnConflict"),
+    BlockCreativeEnergyControllerConflict("BlockCreativeEnergyControllerConflict"),
     BlockCreativeEnergyControllerInsideA("BlockCreativeEnergyControllerInsideA"),
     BlockCreativeEnergyControllerInsideB("BlockCreativeEnergyControllerInsideB"),
 
