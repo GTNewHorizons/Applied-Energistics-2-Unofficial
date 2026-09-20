@@ -671,6 +671,10 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     }
 
     public ItemStack getStorageType() {
+        return this.storageType;
+    }
+
+    public ItemStack getPoweredStorageType() {
         if (this.isPowered()) {
             return this.storageType;
         }

@@ -2,9 +2,11 @@ package appeng.me.storage;
 
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -166,27 +168,32 @@ public class MEMonitorIFluidHandler implements IStorageBusMonitor<IAEFluidStack>
             }
         }
 
-        // make diff between cache and new contents
-        IItemList<IAEStack<?>> changes = AEApi.instance().storage().createAEStackList();
-        // using non-enhanced for to prevent concurrency errors
-        for (Iterator<IAEFluidStack> iter = this.cache.iterator(); iter.hasNext();) {
-            IAEFluidStack copy = iter.next().copy();
-            copy.setStackSize(-copy.getStackSize());
-            changes.add(copy);
+        List<IAEStack<?>> changes = null;
+        for (IAEFluidStack previous : this.cache) {
+            IAEFluidStack current = currentlyOnStorage.findPrecise(previous);
+            long currentSize = current == null ? 0 : current.getStackSize();
+            long difference = currentSize - previous.getStackSize();
+            if (difference != 0) {
+                if (changes == null) {
+                    changes = new ArrayList<>();
+                }
+                IAEFluidStack change = previous.copy();
+                change.setStackSize(difference);
+                changes.add(change);
+            }
         }
-        for (IAEFluidStack is : currentlyOnStorage) {
-            changes.add(is);
+        for (IAEFluidStack current : currentlyOnStorage) {
+            if (this.cache.findPrecise(current) == null) {
+                if (changes == null) {
+                    changes = new ArrayList<>();
+                }
+                changes.add(current.copy());
+            }
         }
         // update cache as soon as possible
         this.cache = currentlyOnStorage;
-        // remove unchanged values
-        for (Iterator<IAEStack<?>> iter = changes.iterator(); iter.hasNext();) {
-            if (iter.next().getStackSize() == 0L) {
-                iter.remove();
-            }
-        }
 
-        if (!changes.isEmpty()) {
+        if (changes != null) {
             this.postDifference(changes);
             return TickRateModulation.URGENT;
         }
