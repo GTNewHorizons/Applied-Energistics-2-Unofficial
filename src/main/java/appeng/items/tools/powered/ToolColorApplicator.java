@@ -420,12 +420,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     public void setColor(final ItemStack is, final AEColor newColor) {
-        if (newColor == AEColor.Transparent) {
-            setColor(is, (ItemStack) null);
-        } else {
-            final ItemStack paintBall = AEApi.instance().definitions().items().coloredPaintBall().stack(newColor, 1);
-            setColor(is, paintBall);
-        }
+        this.setColor(is, this.getColorStack(newColor));
     }
 
     private void setColor(final ItemStack is, final ItemStack newColor) {
