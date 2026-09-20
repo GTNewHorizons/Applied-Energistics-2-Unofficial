@@ -259,7 +259,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     public void initGui() {
         super.initGui();
-        this.searchField.x = this.guiLeft + this.xSize - this.searchField.w - 8;
+        this.searchField.x = this.guiLeft + this.xSize - this.searchField.w - 7;
         this.searchField.y = this.guiTop + 4;
         this.units = new GuiImgButton(
                 this.guiLeft - 18,
