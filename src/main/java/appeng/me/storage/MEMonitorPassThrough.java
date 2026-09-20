@@ -13,6 +13,8 @@ package appeng.me.storage;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
@@ -78,6 +80,19 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
             return super.getAvailableItems(out, iterator);
         }
         IItemList<T> ret = super.getAvailableItems(new ItemListIgnoreCrafting(out), iterator);
+        if (ret instanceof ItemListIgnoreCrafting) {
+            return out;
+        } else {
+            return ret;
+        }
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iterator, Optional<Predicate<T>> filter) {
+        if (out instanceof ItemFilterList) {
+            return super.getAvailableItems(out, iterator, filter);
+        }
+        IItemList<T> ret = super.getAvailableItems(new ItemListIgnoreCrafting(out), iterator, filter);
         if (ret instanceof ItemListIgnoreCrafting) {
             return out;
         } else {

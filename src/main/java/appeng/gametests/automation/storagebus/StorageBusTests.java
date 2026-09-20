@@ -332,6 +332,16 @@ public class StorageBusTests {
         helper.succeed();
     }
 
+    @GameTest(template = "multi_storage_bus")
+    public static void multipleStorageBusReadCorrectly(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        helper.startSequence().thenWaitUntil("wait network to wake up and expose correct items", 60, () -> {
+            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+            assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 128);
+            assertNetworkMonitorStoredAmount(helper, controller, Blocks.dirt, 128);
+        }).thenSucceed();
+    }
+
     private static TileController getController(GameTestHelper helper) {
         return helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
     }

@@ -358,8 +358,11 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                         String suffix = serializeSuffix(machine.getNameSuffix());
 
                         if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
+                            // The icon is only fetched here, it is as expensive as the name itself and a machine that
+                            // changed its icon changed its name too.
+                            ItemStack dispRep = machine.getDisplayRep();
                             if (update == null) update = new PacketInterfaceTerminalUpdate();
-                            update.addRenamedEntry(known.id, rawName, suffix);
+                            update.addRenamedEntry(known.id, rawName, suffix, dispRep);
                             known.name = rawName;
                             known.suffix = suffix;
                         }
@@ -418,7 +421,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                                 .setReps(machine.getSelfRep(), machine.getDisplayRep())
                                 .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
                                 .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority)
-                                .setTerminalVisible(entry.shouldDisplay);
+                                .setTerminalVisible(entry.shouldDisplay)
+                                .setIsCraftingPatternProvider(entry.isCraftingPatternProvider);
                         // Ensure the client applies the correct visibility even if PacketAdd state gets corrupted
                         // client-side. PacketOverwrite handling is known to work reliably.
                         update.addOverwriteEntry(entry.id).setTerminalVisible(entry.shouldDisplay);
@@ -494,6 +498,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         private boolean online;
         private final IAEStackType<?>[] supportedStackTypes;
         private NBTTagList invNbt;
+        private boolean isCraftingPatternProvider;
 
         InvTracker(long id, IInterfaceViewable machine, boolean online) {
             DimensionalCoord location = machine.getLocation();
@@ -516,6 +521,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
             this.supportedStackTypes = machine.getSupportedStackTypes();
             this.priority = machine.getPriority();
             this.invNbt = new NBTTagList();
+            this.isCraftingPatternProvider = machine.isCraftingPatternProvider();
             updateNBT();
         }
 

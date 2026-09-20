@@ -22,12 +22,15 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
+import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.storage.ICellCacheRegistry;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AppEng;
+import appeng.me.cache.GridStorageCache;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileChest;
@@ -58,6 +61,28 @@ public class DriveAndCellTests {
                         20,
                         () -> assertNetworkStoredAmount(helper, controller, Blocks.cobblestone, 100))
                 .thenSucceed();
+    }
+
+    @GameTest(template = "drive_cells", timeoutTicks = 100)
+    public static void voidCellIsDisplayedWithoutAddingTypes(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        TileDrive drive = getDrive(helper);
+        ItemStack storageCell = cell1k();
+        ItemStack voidCell = AEApi.instance().definitions().items().cellVoid().maybeStack(1).get();
+        long expectedTypes = ((ICellCacheRegistry) itemInventory(helper, storageCell)).getTotalTypes();
+
+        helper.startSequence().thenWaitUntil("wait for drive network activation", 40, () -> {
+            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+            assertActive(helper, drive.getProxy(), "Drive grid proxy should become active");
+        }).thenExecute("insert storage and void cells", () -> {
+            helper.setSlot(DRIVE_LABEL, 0, storageCell);
+            helper.setSlot(DRIVE_LABEL, 1, voidCell);
+        }).thenWaitUntil("wait for network cell statistics", 40, () -> {
+            GridStorageCache storageGrid = controller.getProxy().getNode().getGrid().getCache(IStorageGrid.class);
+            helper.assertEquals(expectedTypes, storageGrid.getItemTypesTotal(), "Void cell should not add item types");
+            helper.assertEquals(2L, storageGrid.getItemCellCount(), "Void cell should add to the cell count");
+            helper.assertTrue(storageGrid.getItemCells().containsKey(voidCell), "Void cell should remain in cell list");
+        }).thenSucceed();
     }
 
     // A partitioned cell should accept only stacks matching its configured partition list.

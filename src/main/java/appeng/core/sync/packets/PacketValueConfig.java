@@ -90,7 +90,7 @@ public class PacketValueConfig extends AppEngPacket {
                 && player.getHeldItem().getItem() instanceof IMouseWheelItem) {
             final ItemStack is = player.getHeldItem();
             final IMouseWheelItem si = (IMouseWheelItem) is.getItem();
-            si.onWheel(is, this.Value.equals("WheelUp"));
+            si.onWheel(player, is, this.Value.equals("WheelUp"));
         } else if (this.Name.equals("CPUTable.Cpu.Set") && c instanceof final ICraftingCPUSelectorContainer qk) {
             qk.selectCPU(Integer.parseInt(this.Value));
         } else if (this.Name.equals("Terminal.StartWithFollow") && c instanceof final ContainerCraftConfirm qk) {

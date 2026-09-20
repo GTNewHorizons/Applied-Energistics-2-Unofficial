@@ -1,0 +1,24 @@
+{
+  "format_version": 2,
+  "size": [2, 1, 5],
+  "palette": {
+    "A": {"name": "appliedenergistics2:tile.BlockCableBus", "meta": 0, "label": "AE2 Cable and/or Bus"},
+    "B": {"name": "appliedenergistics2:tile.BlockChest", "meta": 0, "label": "ME Chest"},
+    "C": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
+    "D": {"name": "appliedenergistics2:tile.BlockInterface", "meta": 0, "label": "ME Interface"}
+  },
+  "layers": [
+    [
+      "CB",
+      "DA",
+      "DA",
+      "DA",
+      ".C"
+    ]
+  ],
+  "annotations": {
+    "labels": {
+      "controller": [1, 0, 4]
+    }
+  }
+}
