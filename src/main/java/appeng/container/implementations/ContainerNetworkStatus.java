@@ -378,7 +378,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                     ArrayList<NamedDimensionalCoord> dcl = dcMap.get(ais);
                     if (dcl != null) {
                         ItemStack is = ais.getItemStack();
-                        NBTTagCompound tag = new NBTTagCompound();
+                        NBTTagCompound tag = is.hasTagCompound() ? is.getTagCompound() : new NBTTagCompound();
                         NamedDimensionalCoord.writeListToNBTNamed(tag, dcl);
                         is.setTagCompound(tag);
                         piu.appendItem(AEItemStack.create(is).setCountRequestable(ais.getCountRequestable()));
