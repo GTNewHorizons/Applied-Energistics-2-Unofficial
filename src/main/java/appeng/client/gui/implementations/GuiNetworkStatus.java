@@ -365,6 +365,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                             : ActionItems.OPEN_RESHUFFLE_OFF);
         }
 
+        this.handleTooltip(mouseX, mouseY, this.searchField);
+
         super.drawScreen(mouseX, mouseY, btn);
 
         menu.draw(mouseX, mouseY);
@@ -602,12 +604,17 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         }
     }
 
+    private void drawStorageHeading() {
+        final int maxWidth = this.searchField.x - this.guiLeft - 8;
+        final String heading = this.fontRendererObj.trimStringToWidth(GuiText.NetworkBytesDetails.getLocal(), maxWidth);
+        this.fontRendererObj.drawString(heading, 8, 6, ColorUtils.guiTextColorGray.getColor());
+    }
+
     private void drawItemInfo() {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
         double tempDouble;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, ColorUtils.guiTextColorGray.getColor());
+        this.drawStorageHeading();
         this.fontRendererObj.drawString(
                 GuiText.NetworkItemCellCount.getLocal() + " : " + ns.getItemCellCount(),
                 13,
@@ -650,8 +657,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
         double tempDouble;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, ColorUtils.guiTextColorGray.getColor());
+        this.drawStorageHeading();
         this.fontRendererObj.drawString(
                 GuiText.NetworkFluidCellCount.getLocal() + " : " + ns.getFluidCellCount(),
                 13,
@@ -694,8 +700,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
         String tempStr;
         double tempDouble;
-        this.fontRendererObj
-                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, ColorUtils.guiTextColorGray.getColor());
+        this.drawStorageHeading();
         this.fontRendererObj.drawString(
                 GuiText.NetworkEssentiaCellCount.getLocal() + " : " + ns.getEssentiaCellCount(),
                 13,
