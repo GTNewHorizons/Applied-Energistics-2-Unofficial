@@ -1,0 +1,71 @@
+{
+  "format_version": 2,
+  "size": [9, 1, 8],
+  "palette": {
+    "A": {"name": "RIO:tile.remote_interface", "meta": 0, "label": "Remote Interface"},
+    "B": {"name": "appliedenergistics2:tile.BlockCableBus", "meta": 0, "label": "AE2 Cable and/or Bus"},
+    "C": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
+    "D": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"}
+  },
+  "layers": [
+    [
+      "....C....",
+      ".........",
+      "....A....",
+      "BBBBBBBBB",
+      "DDDDDDDDD",
+      "DDDDDDDDD",
+      "DDDDDDDDD",
+      "DDDDDD..."
+    ]
+  ],
+  "annotations": {
+    "labels": {
+      "channel_device_1": [0, 0, 4],
+      "channel_device_10": [0, 0, 5],
+      "channel_device_11": [1, 0, 5],
+      "channel_device_12": [2, 0, 5],
+      "channel_device_13": [3, 0, 5],
+      "channel_device_14": [4, 0, 5],
+      "channel_device_15": [5, 0, 5],
+      "channel_device_16": [6, 0, 5],
+      "channel_device_17": [7, 0, 5],
+      "channel_device_18": [8, 0, 5],
+      "channel_device_19": [0, 0, 6],
+      "channel_device_2": [1, 0, 4],
+      "channel_device_20": [1, 0, 6],
+      "channel_device_21": [2, 0, 6],
+      "channel_device_22": [3, 0, 6],
+      "channel_device_23": [4, 0, 6],
+      "channel_device_24": [5, 0, 6],
+      "channel_device_25": [6, 0, 6],
+      "channel_device_26": [7, 0, 6],
+      "channel_device_27": [8, 0, 6],
+      "channel_device_28": [0, 0, 7],
+      "channel_device_29": [1, 0, 7],
+      "channel_device_3": [2, 0, 4],
+      "channel_device_30": [2, 0, 7],
+      "channel_device_31": [3, 0, 7],
+      "channel_device_32": [4, 0, 7],
+      "channel_device_33": [5, 0, 7],
+      "channel_device_4": [3, 0, 4],
+      "channel_device_5": [4, 0, 4],
+      "channel_device_6": [5, 0, 4],
+      "channel_device_7": [6, 0, 4],
+      "channel_device_8": [7, 0, 4],
+      "channel_device_9": [8, 0, 4],
+      "controller": [4, 0, 0],
+      "controller_face": [4, 0, 1],
+      "dense_cable_1": [0, 0, 3],
+      "dense_cable_2": [1, 0, 3],
+      "dense_cable_3": [2, 0, 3],
+      "dense_cable_4": [3, 0, 3],
+      "dense_cable_5": [4, 0, 3],
+      "dense_cable_6": [5, 0, 3],
+      "dense_cable_7": [6, 0, 3],
+      "dense_cable_8": [7, 0, 3],
+      "dense_cable_9": [8, 0, 3],
+      "remote_interface": [4, 0, 2]
+    }
+  }
+}
