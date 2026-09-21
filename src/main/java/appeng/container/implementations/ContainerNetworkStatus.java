@@ -27,6 +27,7 @@ import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
 import appeng.api.AEApi;
 import appeng.api.config.CellType;
 import appeng.api.config.PowerMultiplier;
+import appeng.api.config.SecurityPermissions;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridBlock;
@@ -35,6 +36,7 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.pathing.IPathingGrid;
+import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -274,12 +276,19 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         return pathingGrid instanceof PathGridCache cache ? cache : null;
     }
 
+    private boolean hasControllerAnimationPermission() {
+        if (!Platform.isServer() || this.network == null) return false;
+        final ISecurityGrid security = this.network.getCache(ISecurityGrid.class);
+        return security != null && security.hasPermission(this.getInventoryPlayer().player, SecurityPermissions.BUILD);
+    }
+
     private void refreshControllerAnimation() {
         final PathGridCache cache = this.getPathGridCache();
         this.controllerAnimation = cache == null ? 0 : cache.getControllerAnimation().ordinal();
     }
 
     public void cycleControllerAnimation(final boolean backwards) {
+        if (!this.hasControllerAnimationPermission()) return;
         final PathGridCache cache = this.getPathGridCache();
         if (cache == null) return;
         cache.cycleControllerAnimation(backwards);
@@ -288,6 +297,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
     }
 
     public void setControllerAnimation(final ControllerAnimation animation) {
+        if (!this.hasControllerAnimationPermission()) return;
         final PathGridCache cache = this.getPathGridCache();
         if (cache == null) return;
         cache.setControllerAnimation(animation);

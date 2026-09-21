@@ -7,13 +7,18 @@ import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
@@ -23,13 +28,17 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.IGridStorage;
 import appeng.api.networking.pathing.IPathingGrid;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
 import appeng.core.settings.ControllerAnimation;
+import appeng.core.sync.packets.PacketValueConfig;
+import appeng.me.GridStorage;
 import appeng.me.cache.PathGridCache;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
@@ -129,6 +138,8 @@ public class NetworkCoreTests {
     public static void controllerAnimationFollowsNetworkAcrossMergeAndSplit(GameTestHelper helper) {
         TileController controller = getController(helper);
         TileDrive drive = getDrive(helper);
+        FakePlayer player = helper.spawnFakePlayer("controller_animation");
+        synchronizePlayerDefault(helper, player, ControllerAnimation.BREATHING);
         installCableLine(helper, FULL_CABLE_LINE);
         TileController[] placedController = new TileController[1];
 
@@ -155,9 +166,15 @@ public class NetworkCoreTests {
                             path.getControllerAnimation(),
                             "Forward cycling should wrap to the first animation");
                     path.setControllerAnimation(ControllerAnimation.WAVE);
-                    helper.setBlock("cable_8", AEApi.instance().definitions().blocks().controller().maybeBlock().get());
-                    placedController[0] = helper.assertTileEntityPresent(TileController.class, "cable_8");
-                    placedController[0].setControllerAnimation(ControllerAnimation.BREATHING);
+                    helper.assertEquals(
+                            ControllerAnimation.WAVE,
+                            controller.getControllerAnimation(),
+                            "Changing the network animation should update the existing controller");
+                    placedController[0] = placeController(helper, "cable_8", player);
+                    helper.assertEquals(
+                            ControllerAnimation.BREATHING,
+                            placedController[0].getControllerAnimation(),
+                            "Controller placement should apply the placing player's synchronized default");
                 }).thenWaitUntil("wait for the placed controller to inherit the network animation", 40, () -> {
                     IGridNode placedNode = placedController[0].getProxy().getNode();
                     helper.assertNotNull(placedNode, "Placed controller should have a grid node");
@@ -169,6 +186,35 @@ public class NetworkCoreTests {
                             ControllerAnimation.WAVE,
                             placedController[0].getControllerAnimation(),
                             "Existing network animation should override the placement default");
+                    helper.assertEquals(
+                            ControllerAnimation.WAVE,
+                            ((PathGridCache) placedNode.getGrid().getCache(IPathingGrid.class))
+                                    .getControllerAnimation(),
+                            "Placed controller's grid cache should inherit the existing network animation");
+                }).thenExecute("round-trip controller and grid animation state", () -> {
+                    IGrid grid = controller.getProxy().getNode().getGrid();
+                    PathGridCache path = (PathGridCache) grid.getCache(IPathingGrid.class);
+
+                    NBTTagCompound controllerData = new NBTTagCompound();
+                    placedController[0].writeToNBT(controllerData);
+                    TileController reloadedController = new TileController();
+                    reloadedController.readFromNBT(controllerData);
+                    helper.assertEquals(
+                            ControllerAnimation.WAVE,
+                            reloadedController.getControllerAnimation(),
+                            "Controller animation should survive tile save and reload");
+
+                    GridStorage gridStorage = new GridStorage();
+                    path.populateGridStorage(gridStorage);
+                    String persistedGridStorage = gridStorage.getValue();
+                    helper.assertNotNull(persistedGridStorage, "Network animation should be written to grid storage");
+                    IGridStorage reloadedGridStorage = new GridStorage(persistedGridStorage, gridStorage.getID(), null);
+                    PathGridCache reloadedPath = new PathGridCache(grid);
+                    reloadedPath.onJoin(reloadedGridStorage);
+                    helper.assertEquals(
+                            ControllerAnimation.WAVE,
+                            reloadedPath.getControllerAnimation(),
+                            "Network animation should survive grid storage save and reload");
                 }).thenExecute("split the two controllers", () -> removeBlock(helper, BREAKABLE_CABLE_LABEL))
                 .thenWaitUntil("wait for the split controller to retain its animation", 40, () -> {
                     IGridNode placedNode = placedController[0].getProxy().getNode();
@@ -181,6 +227,11 @@ public class NetworkCoreTests {
                             ControllerAnimation.WAVE,
                             placedController[0].getControllerAnimation(),
                             "Split controller should retain the inherited animation");
+                    helper.assertEquals(
+                            ControllerAnimation.WAVE,
+                            ((PathGridCache) placedNode.getGrid().getCache(IPathingGrid.class))
+                                    .getControllerAnimation(),
+                            "Split controller grid cache should retain the inherited animation");
                 }).thenSucceed();
     }
 
@@ -271,6 +322,41 @@ public class NetworkCoreTests {
 
     private static TileDrive getDrive(GameTestHelper helper) {
         return helper.assertTileEntityPresent(TileDrive.class, DRIVE_LABEL);
+    }
+
+    private static void synchronizePlayerDefault(GameTestHelper helper, EntityPlayer player,
+            ControllerAnimation animation) {
+        try {
+            new PacketValueConfig(PacketValueConfig.CONTROLLER_ANIMATION_DEFAULT, animation.name())
+                    .serverPacketData(null, null, player);
+        } catch (IOException e) {
+            throw new AssertionError("Player controller animation default should synchronize", e);
+        }
+        helper.assertEquals(
+                animation,
+                TileController.getPlayerDefaultAnimation(player),
+                "Player controller animation default should be synchronized");
+    }
+
+    private static TileController placeController(GameTestHelper helper, String label, FakePlayer player) {
+        TestPos position = helper.absolute(label);
+        helper.destroyBlock(label);
+        ItemStack stack = AEApi.instance().definitions().blocks().controller().maybeStack(1).get();
+        helper.assertTrue(
+                ((ItemBlock) stack.getItem()).placeBlockAt(
+                        stack,
+                        player,
+                        helper.getWorld(),
+                        position.x(),
+                        position.y(),
+                        position.z(),
+                        ForgeDirection.UP.ordinal(),
+                        0.5F,
+                        0.5F,
+                        0.5F,
+                        0),
+                "Controller item placement should succeed");
+        return helper.assertTileEntityPresent(TileController.class, label);
     }
 
     private static void installCableLine(GameTestHelper helper, String... cableRoles) {
