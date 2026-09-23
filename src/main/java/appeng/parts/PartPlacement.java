@@ -49,6 +49,7 @@ import appeng.core.sync.packets.PacketPartInteraction;
 import appeng.core.sync.packets.PacketPartPlacement;
 import appeng.core.sync.packets.PacketRequestResync;
 import appeng.facade.IFacadeItem;
+import appeng.fmp.FMPPlacementHelper;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBuildCraftTransport;
@@ -271,6 +272,10 @@ public class PartPlacement {
             host = getExistingHost(world.getTileEntity(x, y, z));
             if (host == null) return false;
         }
+        // FMP does not support client side prediction, assume placement is successful on the client side to stop
+        // interaction pipeline on the client side. Item use is the last item in the pipeline, we possibly skip
+        // some offhand client prediction here as well but this only happen when we place on FMP blocks.
+        if (world.isRemote && host instanceof FMPPlacementHelper) return true;
         final ForgeDirection mySide = host.addPart(held, side, player);
         if (mySide != null) {
             if (world.isRemote && host.getPart(mySide) instanceof PartCable cable) {
