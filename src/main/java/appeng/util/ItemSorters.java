@@ -12,6 +12,8 @@ package appeng.util;
 
 import java.util.Comparator;
 
+import com.gtnewhorizon.gtnhlib.util.font.FontRendering;
+
 import appeng.api.config.SortDir;
 import appeng.api.storage.data.IAEStack;
 
@@ -20,11 +22,11 @@ public class ItemSorters {
     private static SortDir direction = SortDir.ASCENDING;
 
     public static final Comparator<IAEStack<?>> CONFIG_BASED_SORT_BY_NAME = Comparator
-            .comparing(IAEStack::getDisplayName, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint);
+            .comparing(ItemSorters::getSortName, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint);
 
     public static final Comparator<IAEStack<?>> CONFIG_BASED_SORT_BY_MOD = Comparator
             .comparing((IAEStack<?> stack) -> stack.getModId(), (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint)
-            .thenComparing(IAEStack::getDisplayName);
+            .thenComparing(ItemSorters::getSortName);
 
     public static final Comparator<IAEStack<?>> CONFIG_BASED_SORT_BY_SIZE = Comparator
             .comparing(IAEStack::getStackSize, (a, b) -> Long.compare(b, a) * direction.sortHint);
@@ -41,6 +43,25 @@ public class ItemSorters {
                     * direction.sortHint;
         }
     };
+
+    /** Display name without format codes, so &-styled or colored names sort by their visible text. */
+    private static String getSortName(final IAEStack<?> stack) {
+        final String name = FontRendering.preprocessText(stack.getDisplayName());
+        if (name == null || name.indexOf('\u00a7') == -1) {
+            return name;
+        }
+
+        final StringBuilder sb = new StringBuilder(name.length());
+        for (int i = 0; i < name.length(); i++) {
+            final char c = name.charAt(i);
+            if (c == '\u00a7' && i + 1 < name.length()) {
+                i++;
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
 
     public static int compareInt(final int a, final int b) {
         // for backwards compat for ext mods...
