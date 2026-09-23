@@ -132,7 +132,11 @@ public abstract class AbstractRendererPreview {
                 .getTileEntity(ViewHelper.getPreviewX(), ViewHelper.getPreviewY(), ViewHelper.getPreviewZ());
 
         if (!(te instanceof IPartHost partHost)) {
-            return !canPlaceBlockAt(ViewHelper.getWorld(), ViewHelper.getPreviewX(), ViewHelper.getPreviewY(), ViewHelper.getPreviewZ());
+            return !canPlaceBlockAt(
+                    ViewHelper.getWorld(),
+                    ViewHelper.getPreviewX(),
+                    ViewHelper.getPreviewY(),
+                    ViewHelper.getPreviewZ());
         }
 
         IPart existingPart = partHost.getPart(ViewHelper.getPlacementSide());
