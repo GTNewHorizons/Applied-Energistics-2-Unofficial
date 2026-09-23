@@ -20,6 +20,8 @@ import appeng.api.util.AEColor;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
 import appeng.parts.networking.PartCable;
+import appeng.tile.crafting.TileCraftingTile;
+import appeng.tile.spatial.TileSpatialPylon;
 
 public class RendererCable extends AbstractRendererPreview implements IRenderPreview {
 
@@ -227,6 +229,18 @@ public class RendererCable extends AbstractRendererPreview implements IRenderPre
         AEColor cableColor = ViewHelper.getCableColor(ViewHelper.getCachedItemStack());
         AEColor gridHostColor = gridHost instanceof IColorableTile ? ((IColorableTile) gridHost).getColor()
                 : AEColor.Transparent;
+
+        if (gridHost instanceof TileCraftingTile craftingTile) {
+            return craftingTile.isFormed() && connectionType != null
+                    && connectionType != AECableType.NONE
+                    && isColorCompatible(cableColor, gridHostColor);
+        }
+
+        if (gridHost instanceof TileSpatialPylon spatialPylon) {
+            return (spatialPylon.getDisplayBits() & TileSpatialPylon.MB_STATUS) != 0 && connectionType != null
+                    && connectionType != AECableType.NONE
+                    && isColorCompatible(cableColor, gridHostColor);
+        }
 
         if (gridHost instanceof IGridProxyable proxyable && proxyable.getProxy() != null) {
             return hasConnectableSide(proxyable::getProxy, side, cableColor, gridHostColor);
