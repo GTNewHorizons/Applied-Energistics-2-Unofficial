@@ -451,6 +451,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     }
 
     @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+        this.searchField.setFocused(false);
+    }
+
+    @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         if (this.isConsume) drawConsume();
         else {
@@ -684,7 +690,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.fontRendererObj.drawString(
                 GuiText.NetworkItemCellCount.getLocal() + " : " + ns.getItemCellCount(),
                 13,
-                16,
+                18,
                 ColorUtils.guiTextColorGray.getColor());
 
         this.drawAllCellCount(ns.getItemCellG(), ns.getItemCellB(), ns.getItemCellO(), ns.getItemCellR());
@@ -728,7 +734,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.fontRendererObj.drawString(
                 GuiText.NetworkFluidCellCount.getLocal() + " : " + ns.getFluidCellCount(),
                 13,
-                16,
+                18,
                 ColorUtils.guiTextColorGray.getColor());
 
         this.drawAllCellCount(ns.getFluidCellG(), ns.getFluidCellB(), ns.getFluidCellO(), ns.getFluidCellR());
@@ -772,7 +778,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.fontRendererObj.drawString(
                 GuiText.NetworkEssentiaCellCount.getLocal() + " : " + ns.getEssentiaCellCount(),
                 13,
-                16,
+                18,
                 ColorUtils.guiTextColorGray.getColor());
 
         this.drawAllCellCount(
@@ -814,29 +820,29 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private void drawAllCellCount(final long greenCellNum, final long blueCellNum, final long orangeCellNum,
             final long redCellNum) {
         this.fontRendererObj
-                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 27, ColorUtils.guiTextColorGray.getColor());
+                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 29, ColorUtils.guiTextColorGray.getColor());
 
         int numStartAt = this.fontRendererObj.getStringWidth(GuiText.NetworkCellStatus.getLocal() + ":") + 20;
 
         this.fontRendererObj.drawString(
                 String.valueOf(greenCellNum),
                 numStartAt + this.counterNumberGap * 0,
-                27,
+                29,
                 ColorUtils.cellStatusGreen.getColor());
         this.fontRendererObj.drawString(
                 String.valueOf(blueCellNum),
                 numStartAt + this.counterNumberGap * 1,
-                27,
+                29,
                 ColorUtils.cellStatusBlue.getColor());
         this.fontRendererObj.drawString(
                 String.valueOf(orangeCellNum),
                 numStartAt + this.counterNumberGap * 2,
-                27,
+                29,
                 ColorUtils.cellStatusOrange.getColor());
         this.fontRendererObj.drawString(
                 String.valueOf(redCellNum),
                 numStartAt + this.counterNumberGap * 3,
-                27,
+                29,
                 ColorUtils.cellStatusRed.getColor());
 
     }
