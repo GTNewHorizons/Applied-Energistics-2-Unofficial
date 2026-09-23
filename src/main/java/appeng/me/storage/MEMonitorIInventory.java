@@ -127,8 +127,10 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
         final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
         int high = -1;
+        int slots = 0;
         boolean changed = false;
         for (final ItemSlot is : this.adaptor) {
+            slots++;
             final CachedItemStack old = this.memory.get(is.getSlot());
             high = Math.max(high, is.getSlot());
 
@@ -180,7 +182,8 @@ public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
             end.clear();
         }
 
-        if (++this.ticksSinceCacheRefresh >= CACHE_REFRESH_INTERVAL) {
+        // Bound zero-count entries under item-type churn without scanning the list on every poll.
+        if (++this.ticksSinceCacheRefresh >= CACHE_REFRESH_INTERVAL || this.list.size() > slots) {
             this.list.resetStatus();
             for (final CachedItemStack cached : this.memory.values()) {
                 this.list.add(cached.aeStack);
