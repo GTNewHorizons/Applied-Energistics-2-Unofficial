@@ -11,6 +11,7 @@
 package appeng.util;
 
 import java.util.Comparator;
+import java.util.regex.Pattern;
 
 import com.gtnewhorizon.gtnhlib.util.font.FontRendering;
 
@@ -18,6 +19,8 @@ import appeng.api.config.SortDir;
 import appeng.api.storage.data.IAEStack;
 
 public class ItemSorters {
+
+    private static final Pattern FORMATTING_PATTERN = Pattern.compile("(?s)" + '\u00a7' + ".");
 
     private static SortDir direction = SortDir.ASCENDING;
 
@@ -46,21 +49,7 @@ public class ItemSorters {
 
     /** Display name without format codes, so &-styled or colored names sort by their visible text. */
     private static String getSortName(final IAEStack<?> stack) {
-        final String name = FontRendering.preprocessText(stack.getDisplayName());
-        if (name == null || name.indexOf('\u00a7') == -1) {
-            return name;
-        }
-
-        final StringBuilder sb = new StringBuilder(name.length());
-        for (int i = 0; i < name.length(); i++) {
-            final char c = name.charAt(i);
-            if (c == '\u00a7' && i + 1 < name.length()) {
-                i++;
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
+        return FORMATTING_PATTERN.matcher(FontRendering.preprocessText(stack.getDisplayName())).replaceAll("");
     }
 
     public static int compareInt(final int a, final int b) {
