@@ -139,6 +139,12 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     protected static final String LOG_MARK_AS_COMPLETE = "Completed job for %s.";
 
+    /// Minimal bound for {@link #getPriority()}.
+    public static final int MIN_PRIORITY = -999;
+    /// Maximal bound for {@link #getPriority()}.
+    public static final int MAX_PRIORITY = 999;
+    private static final String NBT_PRIORITY = "priority";
+
     protected final WorldCoord min;
     protected final WorldCoord max;
     protected final int[] usedOps = new int[3];
@@ -156,6 +162,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     protected String myName = "";
     protected boolean isDestroyed = false;
     protected boolean suspended = false;
+    protected int priority = 0;
     /**
      * crafting job info
      */
@@ -1372,6 +1379,43 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return this.myName;
     }
 
+    public static int clampPriority(final long priority) {
+        return (int) Math.max(MIN_PRIORITY, Math.min(MAX_PRIORITY, priority));
+    }
+
+    @Override
+    public int getPriority() {
+        return this.priority;
+    }
+
+    @Override
+    public void setPriority(final int priority) {
+        final int clamped = clampPriority(priority);
+
+        if (clamped == this.priority) {
+            return;
+        }
+
+        this.priority = clamped;
+        this.invalidateGridTickOrder();
+
+        if (this.machineSrc != null) {
+            this.markDirty();
+        }
+    }
+
+    private void invalidateGridTickOrder() {
+        final IGrid grid = this.getGrid();
+
+        if (grid == null) {
+            return;
+        }
+
+        if (grid.getCache(ICraftingGrid.class) instanceof CraftingGridCache cache) {
+            cache.invalidateCpuTickOrder();
+        }
+    }
+
     public boolean isActive() {
         final TileCraftingTile core = this.getCore();
 
@@ -1560,6 +1604,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setBoolean("waiting", this.waiting);
         data.setBoolean("isComplete", this.isComplete);
         data.setBoolean("suspended", this.suspended);
+        data.setInteger(NBT_PRIORITY, this.priority);
         data.setLong("usedStorage", this.usedStorage);
         data.setBoolean("isMissingMode", this.isMissingMode);
         data.setInteger("craftingAllowMode", this.craftingAllowMode.ordinal());
@@ -1658,6 +1703,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.waiting = data.getBoolean("waiting");
         this.isComplete = data.getBoolean("isComplete");
         this.suspended = data.getBoolean("suspended");
+        this.priority = clampPriority(data.getInteger(NBT_PRIORITY));
         this.usedStorage = data.getLong("usedStorage");
         this.craftingAllowMode = CraftingAllow.values()[(data.getInteger("craftingAllowMode"))];
         if (data.hasKey("sourcePlayer", NBT.TAG_STRING)) {

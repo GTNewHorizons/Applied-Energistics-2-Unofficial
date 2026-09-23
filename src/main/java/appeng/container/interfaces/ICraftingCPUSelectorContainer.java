@@ -7,4 +7,6 @@ public interface ICraftingCPUSelectorContainer {
     void setCpuSortMode(int mode);
 
     void setCpuSortDirection(int mode);
+
+    void adjustCpuPriority(int serial, int delta);
 }
