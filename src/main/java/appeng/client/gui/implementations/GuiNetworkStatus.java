@@ -19,10 +19,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.input.Mouse;
@@ -30,6 +33,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.gtnewhorizon.gtnhlib.color.ColorResource;
 
+import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
@@ -38,7 +42,10 @@ import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.util.AEColor;
 import appeng.api.util.NamedDimensionalCoord;
+import appeng.block.networking.BlockController;
+import appeng.client.ClientHelper;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -47,12 +54,15 @@ import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
+import appeng.client.texture.ExtraBlockTextures;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
+import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
+import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
@@ -69,6 +79,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private GuiToggleButton diagnostics;
     private GuiToggleButton liteCrafting;
     private GuiToggleButton flowTracking;
+    private GuiImgButton controllerAnimation;
+    private final BlockController controllerPreview;
     private int tooltip = -1;
     private final DecimalFormat df;
     private final boolean isAdvanced;
@@ -95,6 +107,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.repo.setRowSize(5);
         this.isAdvanced = te.getSize() != 3;
         this.isConsume = true;
+        this.controllerPreview = (BlockController) AEApi.instance().definitions().blocks().controller().maybeBlock()
+                .get();
         menu = new GuiContextMenu(5) {
 
             @Override
@@ -231,6 +245,17 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     // XD
                 }
             }
+        } else if (btn == this.controllerAnimation) {
+            try {
+                NetworkHandler.instance.sendToServer(
+                        new PacketValueConfig(
+                                "NetworkStatus",
+                                isShiftKeyDown() && !backwards ? PacketValueConfig.APPLY_CONTROLLER_ANIMATION_DEFAULT
+                                        : backwards ? PacketValueConfig.CYCLE_CONTROLLER_ANIMATION_BACKWARDS
+                                                : PacketValueConfig.CYCLE_CONTROLLER_ANIMATION));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         }
 
         if (oldConsume != this.isConsume) {
@@ -294,6 +319,19 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     GuiText.ItemFlowTrackingHint.getLocal());
             this.buttonList.add(this.flowTracking);
         }
+
+        this.controllerAnimation = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + (this.isAdvanced ? 128 : 88),
+                Settings.ACTIONS,
+                ActionItems.CONTROLLER_ANIMATION) {
+
+            @Override
+            public void drawButton(final Minecraft mc, final int mouseX, final int mouseY) {
+                GuiNetworkStatus.this.drawControllerAnimationPreview();
+            }
+        };
+        this.buttonList.add(this.controllerAnimation);
     }
 
     @Override
@@ -349,9 +387,44 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                             : ActionItems.OPEN_RESHUFFLE_OFF);
         }
 
+        final ControllerAnimation animation = ControllerAnimation
+                .fromOrdinal(((ContainerNetworkStatus) this.inventorySlots).controllerAnimation);
+        final ControllerAnimation playerDefault = ClientHelper.getControllerAnimationDefault();
+        this.controllerAnimation.setFillVar(
+                (animation == playerDefault ? ButtonToolTips.ControllerAnimationStatusDefault
+                        : ButtonToolTips.ControllerAnimationStatus).getLocal(animation.getLocal()));
+
         super.drawScreen(mouseX, mouseY, btn);
 
         menu.draw(mouseX, mouseY);
+    }
+
+    private void drawControllerAnimationPreview() {
+        final ControllerAnimation animation = ControllerAnimation
+                .fromOrdinal(((ContainerNetworkStatus) this.inventorySlots).controllerAnimation);
+        final IIcon lights = animation.usesOriginalTexture() ? ExtraBlockTextures.BlockControllerLights.getIcon()
+                : this.controllerPreview.getLightTexture(0, AEColor.Transparent, animation);
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_CURRENT_BIT);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        this.mc.getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+        this.drawTexturedModelRectFromIcon(
+                this.controllerAnimation.xPosition,
+                this.controllerAnimation.yPosition,
+                this.controllerPreview.getRenderTexture(0, AEColor.Transparent),
+                16,
+                16);
+        this.drawTexturedModelRectFromIcon(
+                this.controllerAnimation.xPosition,
+                this.controllerAnimation.yPosition,
+                lights,
+                16,
+                16);
+        GL11.glPopAttrib();
     }
 
     @Override
