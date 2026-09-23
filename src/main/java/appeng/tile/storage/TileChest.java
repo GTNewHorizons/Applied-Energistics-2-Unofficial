@@ -245,7 +245,13 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             return null;
         }
 
-        final MEInventoryHandler ih = new MEInventoryHandler(h, h.getStackType());
+        final MEInventoryHandler ih = new MEInventoryHandler(h, h.getStackType()) {
+
+            @Override
+            public AccessRestriction getReshuffleAccess() {
+                return TileChest.this.getReshuffleAccess();
+            }
+        };
         ih.setPriority(this.priority);
 
         final MEMonitorHandler<StackType> g = new ChestMonitorHandler<StackType>(ih);

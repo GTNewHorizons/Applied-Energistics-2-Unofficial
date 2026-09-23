@@ -366,7 +366,8 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
 
                                 final MEInventoryHandler<IAEItemStack> ih = new DriveWatcher<IAEItemStack>(
                                         cell,
-                                        cell.getStackType());
+                                        cell.getStackType(),
+                                        this);
                                 ih.setPriority(this.priority);
                                 this.invBySlot[x] = ih;
                                 this.cellsMap.get(type).add(ih);
@@ -388,8 +389,16 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     /// https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/issues/1225
     private static class DriveWatcher<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
-        public DriveWatcher(final IMEInventory<T> i, final IAEStackType<T> type) {
+        private final TileDrive drive;
+
+        public DriveWatcher(final IMEInventory<T> i, final IAEStackType<T> type, final TileDrive drive) {
             super(i, type);
+            this.drive = drive;
+        }
+
+        @Override
+        public AccessRestriction getReshuffleAccess() {
+            return this.drive.getReshuffleAccess();
         }
     }
 

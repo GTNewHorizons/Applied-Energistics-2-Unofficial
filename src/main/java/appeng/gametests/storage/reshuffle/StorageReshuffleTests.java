@@ -32,6 +32,7 @@ import appeng.api.config.ReshufflePhase;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.storage.IStorageInterceptor;
@@ -120,6 +121,69 @@ public final class StorageReshuffleTests {
                                     access.hasPermission(AccessRestriction.WRITE),
                                     insertionAllowed,
                                     access + " should control reshuffler insertion");
+                        }
+                    }
+                }).thenSucceed();
+    }
+
+    @GameTest(template = TEMPLATE, timeoutTicks = 100)
+    public static void voidCellsRespectDriveAndChestReshuffleAccess(GameTestHelper helper) {
+        Fixture fixture = placeFixture(helper);
+        ItemStack driveCell = AEApi.instance().definitions().items().cellVoid().maybeStack(1).get();
+        ItemStack chestCell = AEApi.instance().definitions().items().cellVoid().maybeStack(1).get();
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for void cell network activation",
+                        40,
+                        () -> { assertFixtureActive(helper, fixture); })
+                .thenExecute("install void cells", () -> {
+                    helper.setSlot(SOURCE_DRIVE, 0, driveCell);
+                    helper.setSlot(ME_CHEST, 1, chestCell);
+                }).thenWaitUntil("wait for void cell handlers", 20, () -> {
+                    helper.assertFalse(
+                            fixture.sourceDrive.getCellArray(ITEM_STACK_TYPE).isEmpty(),
+                            "Drive void cell missing");
+                    helper.assertFalse(
+                            fixture.meChest.getCellArray(ITEM_STACK_TYPE).isEmpty(),
+                            "Chest void cell missing");
+                }).thenExecute("verify void cell access", () -> {
+                    ReshuffleActionSource reshuffleSource = new ReshuffleActionSource(fixture.controller);
+                    MachineSource ordinarySource = new MachineSource(fixture.controller);
+                    IMEInventoryHandler<IAEItemStack> driveInventory = fixture.sourceDrive.getCellArray(ITEM_STACK_TYPE)
+                            .get(0);
+                    IMEInventoryHandler<IAEItemStack> chestInventory = fixture.meChest.getCellArray(ITEM_STACK_TYPE)
+                            .get(0);
+                    List<IMEInventoryHandler<IAEItemStack>> inventories = Arrays.asList(driveInventory, chestInventory);
+                    AccessRestriction[] accessModes = AccessRestriction.values();
+
+                    for (int i = 0; i < accessModes.length; i++) {
+                        AccessRestriction[] configuredAccess = { accessModes[i],
+                                accessModes[(i + 1) % accessModes.length] };
+                        fixture.sourceDrive.getConfigManager()
+                                .putSetting(Settings.RESHUFFLE_ACCESS, configuredAccess[0]);
+                        fixture.meChest.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, configuredAccess[1]);
+
+                        for (int host = 0; host < inventories.size(); host++) {
+                            IMEInventoryHandler<IAEItemStack> inventory = inventories.get(host);
+                            AccessRestriction access = configuredAccess[host];
+                            helper.assertEquals(
+                                    access,
+                                    inventory.getReshuffleAccess(),
+                                    "Void cell access should follow host");
+                            helper.assertEquals(
+                                    access.hasPermission(AccessRestriction.WRITE),
+                                    inventory.injectItems(
+                                            itemStack(Blocks.cobblestone, 1),
+                                            Actionable.SIMULATE,
+                                            reshuffleSource) == null,
+                                    "Void cell should enforce reshuffler insertion access");
+                            helper.assertTrue(
+                                    inventory.injectItems(
+                                            itemStack(Blocks.cobblestone, 1),
+                                            Actionable.SIMULATE,
+                                            ordinarySource) == null,
+                                    "Ordinary insertion should remain allowed");
                         }
                     }
                 }).thenSucceed();
