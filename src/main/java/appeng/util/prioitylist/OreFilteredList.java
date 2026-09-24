@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.IntStream;
 
 import net.minecraft.item.Item;
@@ -109,13 +110,83 @@ public class OreFilteredList implements IPartitionList<IAEItemStack> {
     }
 
     public static Predicate<IAEItemStack> makeFilter(String f) {
+        return parse(f).getPredicate();
+    }
+
+    /**
+     * Parses an ore dictionary filter expression and reports whether it is valid. In contrast to
+     * {@link #makeFilter(String)} the reason why an expression could not be parsed is kept, so that a GUI can show it
+     * to the player.
+     */
+    public static ParseResult parse(String f) {
         try {
             Predicate<ItemStack> matcher = makeMatcher(f);
-            if (matcher == null) return null;
-            return new OreListMatcher(matcher);
+            if (matcher == null) return ParseResult.empty();
+            return ParseResult.success(new OreListMatcher(matcher));
         } catch (Exception ex) {
             AELog.debug(ex);
-            return null;
+            return ParseResult.error(describeError(ex));
+        }
+    }
+
+    private static String describeError(Exception ex) {
+        if (ex instanceof PatternSyntaxException syntaxError) {
+            final String description = syntaxError.getDescription();
+            final int index = syntaxError.getIndex();
+            return index < 0 ? description : description + " (" + index + ")";
+        }
+
+        final String message = ex.getMessage();
+        return message == null || message.isEmpty() ? ex.getClass().getSimpleName() : message;
+    }
+
+    /**
+     * The outcome of {@link #parse(String)}. Either a predicate that can be used to test item stacks, or - if the
+     * expression is malformed - the reason why it could not be parsed. An empty result without an error is a valid,
+     * empty filter that matches nothing.
+     */
+    public static final class ParseResult {
+
+        private static final ParseResult EMPTY = new ParseResult(null, null);
+
+        private final Predicate<IAEItemStack> predicate;
+        private final String error;
+
+        private ParseResult(final Predicate<IAEItemStack> predicate, final String error) {
+            this.predicate = predicate;
+            this.error = error;
+        }
+
+        private static ParseResult empty() {
+            return EMPTY;
+        }
+
+        private static ParseResult success(final Predicate<IAEItemStack> predicate) {
+            return new ParseResult(predicate, null);
+        }
+
+        private static ParseResult error(final String error) {
+            return new ParseResult(null, error);
+        }
+
+        /** @return true if the expression could be parsed, even if it is empty. */
+        public boolean isSuccess() {
+            return this.error == null;
+        }
+
+        /** @return true if the expression was valid but does not contain any filter. */
+        public boolean isEmpty() {
+            return isSuccess() && this.predicate == null;
+        }
+
+        /** @return the reason why the expression could not be parsed, or null if it could be parsed. */
+        public String getError() {
+            return this.error;
+        }
+
+        /** @return the predicate of the parsed expression, or null if it is empty or malformed. */
+        public Predicate<IAEItemStack> getPredicate() {
+            return this.predicate;
         }
     }
 
