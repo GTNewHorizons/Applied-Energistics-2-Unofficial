@@ -496,6 +496,7 @@ public final class Registration {
         target.itemWirelessTerminal = this.converter.of(source.wirelessTerminal());
         target.itemNetworkTool = this.converter.of(source.networkTool());
         target.itemPortableCell = this.converter.of(source.portableCell());
+        target.itemPortableCellWorkbench = this.converter.of(source.portableCellWorkbench());
         target.itemBiometricCard = this.converter.of(source.biometricCard());
 
         target.itemFacade = this.converter.of(source.facade());

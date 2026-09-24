@@ -13,7 +13,9 @@ import com.gtnewhorizon.gtnhlib.event.PickBlockEvent;
 import appeng.core.CommonHelper;
 import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketOpenPortableCellWorkbench;
 import appeng.core.sync.packets.PacketPickBlock;
+import appeng.server.ServerHelper;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.relauncher.Side;
@@ -30,6 +32,7 @@ public class KeyBindHandler {
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event) {
         handleControllerAnimationKey();
+        handlePortableCellWorkbenchKey();
         if (CommonHelper.proxy.isKeyPressed(ActionKey.PICK_BLOCK) && !arePickBlockBindsEqual()) {
             handlePickBlock();
         }
@@ -39,6 +42,7 @@ public class KeyBindHandler {
     @SubscribeEvent
     public void onMouseInput(InputEvent.MouseInputEvent event) {
         handleControllerAnimationKey();
+        handlePortableCellWorkbenchKey();
         if (CommonHelper.proxy.isKeyPressed(ActionKey.PICK_BLOCK) && !arePickBlockBindsEqual()) {
             handlePickBlock();
         }
@@ -47,6 +51,14 @@ public class KeyBindHandler {
     static boolean arePickBlockBindsEqual() {
         return Minecraft.getMinecraft().gameSettings.keyBindPickBlock.getKeyCode()
                 == CommonHelper.proxy.getKeybind(ActionKey.PICK_BLOCK);
+    }
+
+    public static void handlePortableCellWorkbenchKey() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.currentScreen != null || minecraft.thePlayer == null || NetworkHandler.instance == null) return;
+        if (!ServerHelper.OPEN_PORTABLE_CELL_WORKBENCH.isKeyDown(minecraft.thePlayer)) return;
+
+        NetworkHandler.instance.sendToServer(new PacketOpenPortableCellWorkbench());
     }
 
     private static void handleControllerAnimationKey() {
