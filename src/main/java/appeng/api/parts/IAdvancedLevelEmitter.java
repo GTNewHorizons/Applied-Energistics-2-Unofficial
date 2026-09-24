@@ -10,6 +10,7 @@ public interface IAdvancedLevelEmitter
         extends IStackWatcherHost, IGridTickable, IUpgradeableHost, IIAEStackInventory, ILevelViewable {
 
     int SLOT_COUNT = 6;
+    int COMPARISON_SLOT_OFFSET = SLOT_COUNT;
 
     long getReportingValue(int slot);
 
