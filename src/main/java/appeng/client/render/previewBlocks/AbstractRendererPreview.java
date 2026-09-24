@@ -155,28 +155,18 @@ public abstract class AbstractRendererPreview {
     }
 
     protected boolean canPlace(World world, ForgeDirection side, int x, int y, int z) {
+        if (!shouldPlaceOnNeighborBlock()) {
+            return true;
+        }
+
         int neighborX = x + side.offsetX;
         int neighborY = y + side.offsetY;
         int neighborZ = z + side.offsetZ;
 
-        TileEntity te = world.getTileEntity(x, y, z);
-        TileEntity neighborTe = world.getTileEntity(neighborX, neighborY, neighborZ);
-        boolean canPlaceOnNeighbor = canPlaceBlockAt(world, neighborX, neighborY, neighborZ);
+        TileEntity te = world.getTileEntity(neighborX, neighborY, neighborZ);
 
-        if (!shouldPlaceOnNeighborBlock() && checkTe(te, side, canPlaceOnNeighbor)) {
-            return true;
-        }
-
-        return checkTe(neighborTe, side, canPlaceOnNeighbor);
-    }
-
-    protected boolean checkTe(TileEntity te, ForgeDirection side, boolean canPlaceOnNeighbor) {
         if (!(te instanceof IPartHost partHost)) {
-            return canPlaceOnNeighbor;
-        }
-
-        if (partHost.getPart(side) != null && !shouldPlaceOnNeighborBlock()) {
-            return false;
+            return canPlaceBlockAt(world, neighborX, neighborY, neighborZ);
         }
 
         if (partHost.getPart(side.getOpposite()) != null) {
