@@ -52,6 +52,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.client.gui.widgets.ISortSource;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.client.texture.ExtraBlockTextures;
@@ -79,6 +80,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private GuiToggleButton diagnostics;
     private GuiToggleButton liteCrafting;
     private GuiToggleButton flowTracking;
+    private final MEGuiTextField searchField;
     private GuiImgButton controllerAnimation;
     private final BlockController controllerPreview;
     private int tooltip = -1;
@@ -102,6 +104,15 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.df = new DecimalFormat("#.##");
         this.setScrollBar(scrollbar);
         this.repo = new ItemRepo(scrollbar, this);
+        this.searchField = new MEGuiTextField(64, 12, ButtonToolTips.SearchStringTooltip.getLocal()) {
+
+            @Override
+            public void onTextChange(final String oldText) {
+                repo.setSearchString(getText().trim());
+                repo.updateView();
+                setScrollBar();
+            }
+        };
         this.ySize = 183;
         this.xSize = 195;
         this.repo.setRowSize(5);
@@ -149,6 +160,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         if (menu.mouseClick(xCoord, yCoord, btn)) {
             return;
         }
+
+        this.searchField.mouseClicked(xCoord, yCoord, btn);
 
         ItemStack is = null;
         if (tooltip > -1) {
@@ -270,6 +283,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     public void initGui() {
         super.initGui();
+        this.searchField.x = this.guiLeft + this.xSize - this.searchField.w - 7;
+        this.searchField.y = this.guiTop + 4;
         this.units = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 8,
@@ -387,6 +402,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                             : ActionItems.OPEN_RESHUFFLE_OFF);
         }
 
+        this.handleTooltip(mouseX, mouseY, this.searchField);
         final ControllerAnimation animation = ControllerAnimation
                 .fromOrdinal(((ContainerNetworkStatus) this.inventorySlots).controllerAnimation);
         final ControllerAnimation playerDefault = ClientHelper.getControllerAnimationDefault();
@@ -428,6 +444,19 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     }
 
     @Override
+    protected void keyTyped(final char character, final int key) {
+        if (!this.searchField.textboxKeyTyped(character, key)) {
+            super.keyTyped(character, key);
+        }
+    }
+
+    @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+        this.searchField.setFocused(false);
+    }
+
+    @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         if (this.isConsume) drawConsume();
         else {
@@ -444,6 +473,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.bindTexture("guis/networkstatus.png");
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
+        this.searchField.drawTextBox();
     }
 
     public void postUpdate(final List<IAEStack<?>> list) {
@@ -660,7 +690,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.fontRendererObj.drawString(
                 GuiText.NetworkItemCellCount.getLocal() + " : " + ns.getItemCellCount(),
                 13,
-                16,
+                18,
                 ColorUtils.guiTextColorGray.getColor());
 
         this.drawAllCellCount(ns.getItemCellG(), ns.getItemCellB(), ns.getItemCellO(), ns.getItemCellR());
@@ -704,7 +734,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.fontRendererObj.drawString(
                 GuiText.NetworkFluidCellCount.getLocal() + " : " + ns.getFluidCellCount(),
                 13,
-                16,
+                18,
                 ColorUtils.guiTextColorGray.getColor());
 
         this.drawAllCellCount(ns.getFluidCellG(), ns.getFluidCellB(), ns.getFluidCellO(), ns.getFluidCellR());
@@ -748,7 +778,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.fontRendererObj.drawString(
                 GuiText.NetworkEssentiaCellCount.getLocal() + " : " + ns.getEssentiaCellCount(),
                 13,
-                16,
+                18,
                 ColorUtils.guiTextColorGray.getColor());
 
         this.drawAllCellCount(
@@ -790,29 +820,29 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private void drawAllCellCount(final long greenCellNum, final long blueCellNum, final long orangeCellNum,
             final long redCellNum) {
         this.fontRendererObj
-                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 27, ColorUtils.guiTextColorGray.getColor());
+                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 29, ColorUtils.guiTextColorGray.getColor());
 
         int numStartAt = this.fontRendererObj.getStringWidth(GuiText.NetworkCellStatus.getLocal() + ":") + 20;
 
         this.fontRendererObj.drawString(
                 String.valueOf(greenCellNum),
                 numStartAt + this.counterNumberGap * 0,
-                27,
+                29,
                 ColorUtils.cellStatusGreen.getColor());
         this.fontRendererObj.drawString(
                 String.valueOf(blueCellNum),
                 numStartAt + this.counterNumberGap * 1,
-                27,
+                29,
                 ColorUtils.cellStatusBlue.getColor());
         this.fontRendererObj.drawString(
                 String.valueOf(orangeCellNum),
                 numStartAt + this.counterNumberGap * 2,
-                27,
+                29,
                 ColorUtils.cellStatusOrange.getColor());
         this.fontRendererObj.drawString(
                 String.valueOf(redCellNum),
                 numStartAt + this.counterNumberGap * 3,
-                27,
+                29,
                 ColorUtils.cellStatusRed.getColor());
 
     }
