@@ -13,19 +13,26 @@ package appeng.client.gui.implementations;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
+import org.lwjgl.input.Mouse;
+
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Settings;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerChest;
 import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.tile.storage.TileChest;
 
 public class GuiChest extends AEBaseGui {
 
     private GuiTabButton priority;
+    private GuiImgButton reshuffleAccess;
 
     public GuiChest(final InventoryPlayer inventoryPlayer, final TileChest te) {
         super(new ContainerChest(inventoryPlayer, te));
@@ -36,8 +43,13 @@ public class GuiChest extends AEBaseGui {
     protected void actionPerformed(final GuiButton par1GuiButton) {
         super.actionPerformed(par1GuiButton);
 
+        final boolean backwards = Mouse.isButtonDown(1);
+
         if (par1GuiButton == this.priority) {
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_PRIORITY));
+        }
+        if (par1GuiButton == this.reshuffleAccess) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(Settings.RESHUFFLE_ACCESS, backwards));
         }
     }
 
@@ -52,10 +64,17 @@ public class GuiChest extends AEBaseGui {
                         2 + 4 * 16,
                         GuiText.Priority.getLocal(),
                         itemRender));
+        this.buttonList.add(
+                this.reshuffleAccess = new GuiImgButton(
+                        this.guiLeft - 18,
+                        this.guiTop + 8,
+                        Settings.RESHUFFLE_ACCESS,
+                        AccessRestriction.READ_WRITE));
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        this.reshuffleAccess.set(((ContainerChest) this.inventorySlots).getReshuffleAccess());
         this.fontRendererObj.drawString(
                 this.getGuiDisplayName(GuiText.Chest.getLocal()),
                 8,
