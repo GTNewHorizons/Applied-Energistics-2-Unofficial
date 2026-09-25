@@ -144,6 +144,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     public static final int NUMBER_OF_CONFIG_SLOTS = 9;
     public static final int NUMBER_OF_PATTERN_SLOTS = 9;
 
+    private static final String NBT_ADVANCED_BLOCKING_MIGRATED = "advancedBlockingMigrated";
+
     private static final Collection<Block> BAD_BLOCKS = new HashSet<>(100);
     private final int[] sides = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
     private final IAEItemStack[] requireWork = { null, null, null, null, null, null, null, null, null };
@@ -186,7 +188,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.cm.registerSetting(Settings.SMART_BLOCK, YesNo.NO);
         this.cm.registerSetting(Settings.INTERFACE_TERMINAL, YesNo.YES);
         this.cm.registerSetting(Settings.INSERTION_MODE, InsertionMode.DEFAULT);
-        this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
+        this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.NONE);
         this.cm.registerSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.NONE);
         this.cm.registerSetting(Settings.PATTERN_OPTIMIZATION, YesNo.YES);
         this.cm.registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
@@ -295,6 +297,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         }
         data.setTag("waitingToSend", waitingToSend);
+
+        data.setBoolean(NBT_ADVANCED_BLOCKING_MIGRATED, true);
     }
 
     public void readFromNBT(final NBTTagCompound data) {
@@ -348,6 +352,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.storage.readFromNBT(data, "storage");
         this.priority = data.getInteger("priority");
         this.cm.readFromNBT(data);
+        if (!data.getBoolean(NBT_ADVANCED_BLOCKING_MIGRATED)
+                && this.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) == 0) {
+            this.cm.putSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.NONE);
+        }
         this.readConfig();
         this.updateCraftingList();
     }
@@ -1076,7 +1084,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public void notifyPushedPattern(IInterfaceHost pushingHost) {
-        if (this.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) == 0) return;
+        if (!this.isAdvancedBlocking()) return;
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
@@ -1456,6 +1464,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.cm.getSetting(Settings.SMART_BLOCK) == YesNo.YES;
     }
 
+    private boolean isAdvancedBlocking() {
+        return this.cm.getSetting(Settings.ADVANCED_BLOCKING_MODE) != AdvancedBlockingMode.NONE;
+    }
+
     private InsertionMode getInsertionMode() {
         return (InsertionMode) cm.getSetting(Settings.INSERTION_MODE);
     }
@@ -1762,7 +1774,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
         if (te instanceof IInterfaceHost oppositeHost) {
             try {
-                if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                if (oppositeHost.getInterfaceDuality().isAdvancedBlocking()) {
                     oppositeHost.getInterfaceDuality().gridProxy.getGrid()
                             .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
                 }
@@ -1771,7 +1783,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         } else if (Platform.getPartFromTE(te, s) instanceof IInterfaceHost oppositeHost) {
             try {
-                if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                if (oppositeHost.getInterfaceDuality().isAdvancedBlocking()) {
                     oppositeHost.getInterfaceDuality().gridProxy.getGrid()
                             .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
                 }

@@ -29,6 +29,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -54,6 +55,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.features.IStackSrc;
 import appeng.core.features.MaterialStackSrc;
 import appeng.core.features.NameResolver;
+import appeng.core.localization.GuiText;
 import appeng.items.AEBaseItem;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
@@ -86,6 +88,11 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
         if (mt == MaterialType.NamePress) {
             lines.add(ItemStackNBT.getString(stack, "InscribeName"));
+        }
+
+        if (mt == MaterialType.CardAdvancedBlocking) {
+            lines.add(EnumChatFormatting.RED + GuiText.Deprecated.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.AdvancedBlockingCardDeprecated.getLocal());
         }
 
         final Upgrades u = this.getType(stack);
