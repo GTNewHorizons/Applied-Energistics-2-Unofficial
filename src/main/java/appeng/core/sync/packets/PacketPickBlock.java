@@ -16,7 +16,7 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.container.implementations.ContainerCraftAmount;
@@ -131,7 +131,7 @@ public class PacketPickBlock extends AppEngPacket {
             sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
             return;
         }
-        var wirelessGrid = getWirelessGrid(wirelessTerminal);
+        var wirelessGrid = getWirelessGrid(wirelessTerminal, sender);
         if (wirelessGrid == null) {
             movePickBlockItemStack(sender, pickBlockSlot);
             return;
@@ -184,7 +184,7 @@ public class PacketPickBlock extends AppEngPacket {
         movePickBlockItemStack(sender, pickBlockSlot);
     }
 
-    private IGrid getWirelessGrid(ItemStack wirelessTerminal) {
+    private IGrid getWirelessGrid(ItemStack wirelessTerminal, EntityPlayer player) {
         if (wirelessTerminal == null) {
             return null;
         }
@@ -222,7 +222,7 @@ public class PacketPickBlock extends AppEngPacket {
         return wirelessGrid;
     }
 
-    private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(IGrid wirelessGrid) {
+    private IMEMonitor<IAEItemStack> getWirelessItemInventory(IGrid wirelessGrid) {
         IStorageGrid wirelessGridCache = wirelessGrid.getCache(IStorageGrid.class);
         if (wirelessGridCache == null) {
             return null;
