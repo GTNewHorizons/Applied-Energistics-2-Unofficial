@@ -30,11 +30,15 @@ public class GuiInscriber extends AEBaseGui {
         super(new ContainerInscriber(inventoryPlayer, te));
         this.cvc = (ContainerInscriber) this.inventorySlots;
         this.ySize = 176;
-        this.xSize = this.hasToolbox() ? 246 : 211;
+        this.xSize = !this.hasToolbox() ? 211 : this.getToolboxSize() == 5 ? 290 : 246;
     }
 
     private boolean hasToolbox() {
         return ((ContainerUpgradeable) this.inventorySlots).hasToolbox();
+    }
+
+    private int getToolboxSize() {
+        return ((ContainerUpgradeable) this.inventorySlots).getToolboxSize();
     }
 
     @Override
@@ -72,7 +76,10 @@ public class GuiInscriber extends AEBaseGui {
         if (this.drawUpgrades()) {
             this.drawTexturedModalRect(offsetX + 177, offsetY, 177, 0, 35, 14 + this.cvc.availableUpgrades() * 18);
         }
-        if (this.hasToolbox()) {
+        if (this.hasToolbox() && this.getToolboxSize() == 5) {
+            this.bindTexture("guis/advanced_toolbox.png");
+            this.drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90 - 7, 0, 0, 104, 104);
+        } else if (this.hasToolbox()) {
             this.drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90, 178, this.ySize - 90, 68, 68);
         }
     }
