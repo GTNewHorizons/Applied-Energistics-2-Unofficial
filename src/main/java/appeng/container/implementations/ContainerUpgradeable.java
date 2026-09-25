@@ -100,6 +100,7 @@ public abstract class ContainerUpgradeable extends AEBaseContainer implements IO
             // For advanced toolbox to move down a little bit
             int yBias = size == 3 ? 0 : 7;
             int toolboxY = this.getToolboxY();
+            int toolboxX = this.getToolboxX();
             for (int v = 0; v < size; v++) {
                 for (int u = 0; u < size; u++) {
                     this.addSlotToContainer(
@@ -107,7 +108,7 @@ public abstract class ContainerUpgradeable extends AEBaseContainer implements IO
                                     SlotRestrictedInput.PlacableItemType.UPGRADES,
                                     this.tbInventory,
                                     u + v * size,
-                                    186 + u * 18,
+                                    toolboxX + u * 18,
                                     toolboxY - yBias + v * 18,
                                     this.getInventoryPlayer())).setPlayerSide());
                 }
@@ -137,6 +138,10 @@ public abstract class ContainerUpgradeable extends AEBaseContainer implements IO
 
     protected int getToolboxY() {
         return this.getHeight() - 82;
+    }
+
+    protected int getToolboxX() {
+        return 186;
     }
 
     protected void setupConfig() {

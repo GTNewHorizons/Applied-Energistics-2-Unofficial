@@ -34,7 +34,7 @@ public class GuiAdvancedInscriber extends AEBaseGui {
         super(new ContainerAdvancedInscriber(inventoryPlayer, te));
         this.container = (ContainerAdvancedInscriber) this.inventorySlots;
         this.ySize = 176;
-        this.xSize = !this.hasToolbox() ? 211 : this.getToolboxSize() == 5 ? 290 : 246;
+        this.xSize = !this.hasToolbox() ? 211 : this.getToolboxSize() == 5 ? 317 : 246;
     }
 
     private boolean hasToolbox() {
@@ -96,7 +96,7 @@ public class GuiAdvancedInscriber extends AEBaseGui {
 
         if (this.hasToolbox() && this.getToolboxSize() == 5) {
             this.bindTexture("guis/advanced_toolbox.png");
-            this.drawTexturedModalRect(offsetX + 178, offsetY + 105 - 7, 0, 0, 104, 104);
+            this.drawTexturedModalRect(offsetX + 213, offsetY + 64, 0, 0, 104, 104);
         } else if (this.hasToolbox()) {
             this.bindTexture("guis/inscriber.png");
             this.drawTexturedModalRect(offsetX + 178, offsetY + 105, 178, this.ySize - 90, 68, 68);
