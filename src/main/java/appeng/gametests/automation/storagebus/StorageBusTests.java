@@ -28,7 +28,10 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
+import appeng.api.config.Actionable;
 import appeng.api.config.Settings;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.parts.PartItemStack;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageName;
@@ -59,6 +62,117 @@ public class StorageBusTests {
             assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
             assertActive(helper, storageBus, "Storage bus should receive a channel");
             assertNetworkMonitorStoredAmount(helper, controller, Blocks.cobblestone, 64);
+        }).thenSucceed();
+    }
+
+    @GameTest(template = "storage_bus", timeoutTicks = 100)
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static void reshufflerAccessControlsExternalChest(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        PartStorageBus storageBus = getStorageBus(helper);
+        helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 64));
+
+        helper.startSequence().thenWaitUntil("wait for storage bus inventory", 60, () -> {
+            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+            assertActive(helper, storageBus, "Storage bus should receive a channel");
+            helper.assertFalse(storageBus.getCellArray(ITEM_STACK_TYPE).isEmpty(), "Storage bus inventory is missing");
+        }).thenExecute("verify reshuffler access modes", () -> {
+            IMEInventoryHandler inventory = storageBus.getCellArray(ITEM_STACK_TYPE).get(0);
+            ReshuffleActionSource reshuffleSource = new ReshuffleActionSource(controller);
+            MachineSource ordinarySource = new MachineSource(controller);
+
+            for (AccessRestriction access : AccessRestriction.values()) {
+                storageBus.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, access);
+
+                helper.assertEquals(access, inventory.getReshuffleAccess(), "Storage bus should report its access");
+                helper.assertEquals(
+                        access.hasPermission(AccessRestriction.READ),
+                        inventory.extractItems(itemStack(Blocks.cobblestone, 1), Actionable.SIMULATE, reshuffleSource)
+                                != null,
+                        access + " should control reshuffler extraction");
+                helper.assertEquals(
+                        access.hasPermission(AccessRestriction.WRITE),
+                        inventory.injectItems(itemStack(Blocks.dirt, 1), Actionable.SIMULATE, reshuffleSource) == null,
+                        access + " should control reshuffler insertion");
+                helper.assertNotNull(
+                        inventory.extractItems(itemStack(Blocks.cobblestone, 1), Actionable.SIMULATE, ordinarySource),
+                        "Ordinary extraction should remain allowed");
+                helper.assertNull(
+                        inventory.injectItems(itemStack(Blocks.dirt, 1), Actionable.SIMULATE, ordinarySource),
+                        "Ordinary insertion should remain allowed");
+            }
+
+            storageBus.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.NO_ACCESS);
+            helper.assertEquals(
+                    AccessRestriction.NO_ACCESS,
+                    reloadStorageBus(storageBus).getReshuffleAccess(),
+                    "Storage bus should retain reshuffler access after reload");
+        }).thenSucceed();
+    }
+
+    @GameTest(template = "storage_bus", timeoutTicks = 240)
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static void normalAccessAlsoRestrictsReshuffler(GameTestHelper helper) {
+        TileController controller = getController(helper);
+        PartStorageBus storageBus = getStorageBus(helper);
+        storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.WRITE);
+        helper.setSlot(EXTERNAL_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone, 64));
+
+        helper.startSequence().thenWaitUntil("wait for input-only storage bus", 80, () -> {
+            assertActive(helper, controller.getProxy(), "Controller grid proxy should become active");
+            assertActive(helper, storageBus, "Storage bus should receive a channel");
+            IMEInventoryHandler inventory = storageBus.getInternalHandler();
+            helper.assertNotNull(inventory, "Storage bus inventory is missing");
+            helper.assertEquals(AccessRestriction.WRITE, inventory.getAccess(), "Bus should be input-only");
+        }).thenExecute("verify input-only reshuffler access", () -> {
+            IMEInventoryHandler inventory = storageBus.getInternalHandler();
+            ReshuffleActionSource source = new ReshuffleActionSource(controller);
+            MachineSource ordinarySource = new MachineSource(controller);
+            helper.assertEquals(
+                    AccessRestriction.WRITE,
+                    inventory.getReshuffleAccess(),
+                    "Input-only bus should not be an extraction source, including during subnet traversal");
+            helper.assertNull(
+                    inventory.extractItems(itemStack(Blocks.cobblestone, 1), Actionable.SIMULATE, source),
+                    "Reshuffler should not extract through an input-only bus");
+            helper.assertNull(
+                    inventory.injectItems(itemStack(Blocks.dirt, 1), Actionable.SIMULATE, source),
+                    "Reshuffler should insert through an input-only bus");
+
+            storageBus.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ);
+            helper.assertEquals(
+                    AccessRestriction.NO_ACCESS,
+                    inventory.getReshuffleAccess(),
+                    "Input-only bus plus extract-only reshuffler access should deny both directions");
+            helper.assertNull(
+                    inventory.extractItems(itemStack(Blocks.cobblestone, 1), Actionable.SIMULATE, source),
+                    "Conflicting settings should deny reshuffler extraction");
+            helper.assertNotNull(
+                    inventory.injectItems(itemStack(Blocks.dirt, 1), Actionable.SIMULATE, source),
+                    "Conflicting settings should deny reshuffler insertion");
+            helper.assertNull(
+                    inventory.injectItems(itemStack(Blocks.dirt, 1), Actionable.SIMULATE, ordinarySource),
+                    "Conflicting reshuffler setting should not prevent ordinary insertion");
+
+            storageBus.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ_WRITE);
+            storageBus.getConfigManager().putSetting(Settings.ACCESS, AccessRestriction.READ);
+        }).thenWaitUntil("wait for output-only storage bus", 80, () -> {
+            IMEInventoryHandler inventory = storageBus.getInternalHandler();
+            helper.assertNotNull(inventory, "Storage bus inventory is missing");
+            helper.assertEquals(AccessRestriction.READ, inventory.getAccess(), "Bus should be output-only");
+        }).thenExecute("verify output-only reshuffler access", () -> {
+            IMEInventoryHandler inventory = storageBus.getInternalHandler();
+            ReshuffleActionSource source = new ReshuffleActionSource(controller);
+            helper.assertEquals(
+                    AccessRestriction.READ,
+                    inventory.getReshuffleAccess(),
+                    "Output-only bus should not be an injection target");
+            helper.assertNotNull(
+                    inventory.extractItems(itemStack(Blocks.cobblestone, 1), Actionable.SIMULATE, source),
+                    "Reshuffler should extract through an output-only bus");
+            helper.assertNotNull(
+                    inventory.injectItems(itemStack(Blocks.dirt, 1), Actionable.SIMULATE, source),
+                    "Reshuffler should not insert through an output-only bus");
         }).thenSucceed();
     }
 
