@@ -93,6 +93,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
         if (mt == MaterialType.CardAdvancedBlocking) {
             lines.add(EnumChatFormatting.RED + GuiText.Deprecated.getLocal());
             lines.add(EnumChatFormatting.GRAY + GuiText.AdvancedBlockingCardDeprecated.getLocal());
+            return;
         }
 
         final Upgrades u = this.getType(stack);
