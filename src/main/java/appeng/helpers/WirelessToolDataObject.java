@@ -4,24 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import appeng.api.util.AEColor;
-import appeng.api.util.DimensionalCoord;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 
 public class WirelessToolDataObject {
 
-    public final DimensionalCoord network;
+    public final WirelessAnchor network;
     public final String customName;
-    public final DimensionalCoord cord;
+    public final WirelessAnchor cord;
     public boolean isConnected;
-    public final List<DimensionalCoord> targets;
+    public final List<WirelessAnchor> targets;
     public final AEColor color;
     public final int channels;
     public final boolean isHub;
+    public final boolean external;
     public final int slots;
 
-    public WirelessToolDataObject(DimensionalCoord network, String name, DimensionalCoord cord, boolean isConnected,
-            List<DimensionalCoord> targets, AEColor color, int channels, boolean isHub, int slots) {
+    public WirelessToolDataObject(WirelessAnchor network, String name, WirelessAnchor cord, boolean isConnected,
+            List<WirelessAnchor> targets, AEColor color, int channels, boolean isHub, boolean external, int slots) {
         this.network = network;
         this.customName = name;
         this.cord = cord;
@@ -30,6 +30,7 @@ public class WirelessToolDataObject {
         this.color = color;
         this.channels = channels;
         this.isHub = isHub;
+        this.external = external;
         this.slots = slots;
     }
 
@@ -39,9 +40,10 @@ public class WirelessToolDataObject {
         this.cord.writeToPacket(buf);
         buf.writeBoolean(this.isConnected);
         buf.writeBoolean(this.isHub);
+        buf.writeBoolean(this.external);
 
         buf.writeInt(this.targets.size());
-        this.targets.forEach((dc) -> dc.writeToPacket(buf));
+        this.targets.forEach((anchor) -> anchor.writeToPacket(buf));
 
         buf.writeInt(this.color.ordinal());
         buf.writeInt(this.channels);
@@ -49,25 +51,27 @@ public class WirelessToolDataObject {
     }
 
     public static WirelessToolDataObject read(ByteBuf buf) {
-        final DimensionalCoord network = DimensionalCoord.readFromPacket(buf);
+        final WirelessAnchor network = WirelessAnchor.readFromPacket(buf);
         final String customName = ByteBufUtils.readUTF8String(buf);
-        final DimensionalCoord coord = DimensionalCoord.readFromPacket(buf);
+        final WirelessAnchor cord = WirelessAnchor.readFromPacket(buf);
         final boolean isConnected = buf.readBoolean();
         final boolean isHub = buf.readBoolean();
+        final boolean external = buf.readBoolean();
 
         final int targetsSize = buf.readInt();
-        final List<DimensionalCoord> targets = new ArrayList<>(targetsSize);
-        for (int i = 0; i < targetsSize; i++) targets.add(DimensionalCoord.readFromPacket(buf));
+        final List<WirelessAnchor> targets = new ArrayList<>(targetsSize);
+        for (int i = 0; i < targetsSize; i++) targets.add(WirelessAnchor.readFromPacket(buf));
 
         return new WirelessToolDataObject(
                 network,
                 customName,
-                coord,
+                cord,
                 isConnected,
                 targets,
                 AEColor.VALUES[buf.readInt()],
                 buf.readInt(),
                 isHub,
+                external,
                 buf.readInt());
     }
 

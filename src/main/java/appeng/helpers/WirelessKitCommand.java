@@ -3,7 +3,6 @@ package appeng.helpers;
 import java.util.ArrayList;
 
 import appeng.api.util.AEColor;
-import appeng.api.util.DimensionalCoord;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 
@@ -27,8 +26,8 @@ public class WirelessKitCommand {
 
     public static class SubCommand {
 
-        public DimensionalCoord coord = null;
-        public DimensionalCoord networkPos = null;
+        public WirelessAnchor coord = null;
+        public WirelessAnchor networkPos = null;
         public boolean includeConnectors = false;
         public boolean includeHubs = false;
         public AEColor color = null;
@@ -61,8 +60,8 @@ public class WirelessKitCommand {
 
         public static SubCommand read(ByteBuf buf) {
             SubCommand cmd = new SubCommand();
-            if (buf.readBoolean()) cmd.setCoord(DimensionalCoord.readFromPacket(buf));
-            if (buf.readBoolean()) cmd.setNetworkPos(DimensionalCoord.readFromPacket(buf));
+            if (buf.readBoolean()) cmd.setCoord(WirelessAnchor.readFromPacket(buf));
+            if (buf.readBoolean()) cmd.setNetworkPos(WirelessAnchor.readFromPacket(buf));
             if (buf.readBoolean()) cmd.includeConnectors();
             if (buf.readBoolean()) cmd.includeHubs();
             if (buf.readBoolean()) cmd.setColor(AEColor.VALUES[buf.readInt()]);
@@ -71,11 +70,11 @@ public class WirelessKitCommand {
             return cmd;
         }
 
-        public void setCoord(DimensionalCoord coord) {
+        public void setCoord(WirelessAnchor coord) {
             this.coord = coord;
         }
 
-        public void setNetworkPos(DimensionalCoord networkPos) {
+        public void setNetworkPos(WirelessAnchor networkPos) {
             this.networkPos = networkPos;
         }
 
@@ -99,7 +98,7 @@ public class WirelessKitCommand {
     public final WirelessKitCommands command;
     public String name = "";
     public AEColor color = null;
-    public DimensionalCoord networkPos = null;
+    public WirelessAnchor networkPos = null;
     public boolean pin = false;
     public SubCommand subCommand = null;
     public final ArrayList<SubCommand> toBindRow = new ArrayList<>();
@@ -142,7 +141,7 @@ public class WirelessKitCommand {
         command.setName(ByteBufUtils.readUTF8String(buf));
 
         if (buf.readBoolean()) command.setColor(AEColor.VALUES[buf.readInt()]);
-        if (buf.readBoolean()) command.setNetworkPos(DimensionalCoord.readFromPacket(buf));
+        if (buf.readBoolean()) command.setNetworkPos(WirelessAnchor.readFromPacket(buf));
         final boolean pin = buf.readBoolean();
         if (buf.readBoolean()) {
             final SubCommand subCommand = SubCommand.read(buf);
@@ -167,7 +166,7 @@ public class WirelessKitCommand {
         this.name = name;
     }
 
-    public void setNetworkPos(DimensionalCoord networkPos) {
+    public void setNetworkPos(WirelessAnchor networkPos) {
         this.networkPos = networkPos;
     }
 
