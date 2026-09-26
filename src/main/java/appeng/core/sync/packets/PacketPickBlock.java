@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -16,9 +17,11 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.parts.ICraftingTerminal;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.AppEngPacket;
@@ -26,6 +29,8 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.util.Platform;
 import appeng.util.PlayerInventoryUtil;
+import baubles.api.BaublesApi;
+import cpw.mods.fml.common.Optional;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -152,7 +157,7 @@ public class PacketPickBlock extends AppEngPacket {
             return;
         }
 
-        if (wirelessInventory.getStorageList().findPrecise(targetAeItemStack) == null
+        if (isMissingFromStorage(wirelessInventory.getStorageList().findPrecise(targetAeItemStack))
                 && openCraftAmountGui(sender, wirelessTerminal, targetAeItemStack, wirelessGrid)) {
             return;
         }
@@ -248,19 +253,52 @@ public class PacketPickBlock extends AppEngPacket {
             return false;
         }
 
+        // Unlike terminal clicks, pick block has no parent container to supply the return context.
+        // PacketCraftRequest passes this to the confirmation screen; a null context cancels the job.
+        PrimaryGui primaryGui = new PrimaryGui(
+                craftAmount.getTarget() instanceof ICraftingTerminal ? GuiBridge.GUI_CRAFTING_TERMINAL
+                        : GuiBridge.GUI_ME,
+                wirelessTerminal.copy(),
+                null,
+                ForgeDirection.UNKNOWN);
+        primaryGui.setSlotIndex(terminalSlot);
+        craftAmount.setPrimaryGui(primaryGui);
         craftAmount.setItemToCraft(itemToCraft);
         craftAmount.setInitialCraftAmount(1);
         craftAmount.detectAndSendChanges();
         return true;
     }
 
+    static boolean isMissingFromStorage(IAEItemStack stored) {
+        return stored == null || stored.getStackSize() <= 0;
+    }
+
     private int getInventorySlot(EntityPlayerMP player, ItemStack item) {
+        // Match getFirstWirelessTerminal: equipped terminals take priority over inventory terminals.
+        if (Platform.isBaublesLoaded) {
+            int slot = getBaublesSlot(player, item);
+            if (slot >= 0) return slot;
+        }
         for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
             if (player.inventory.mainInventory[slot] == item) {
                 return slot;
             }
         }
 
+        return -1;
+    }
+
+    @Optional.Method(modid = "Baubles|Expanded")
+    private int getBaublesSlot(EntityPlayerMP player, ItemStack item) {
+        return findSlot(BaublesApi.getBaubles(player), item, Platform.baublesSlotsOffset);
+    }
+
+    static int findSlot(IInventory inventory, ItemStack item, int offset) {
+        if (inventory != null && item != null) {
+            for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                if (inventory.getStackInSlot(slot) == item) return offset + slot;
+            }
+        }
         return -1;
     }
 
