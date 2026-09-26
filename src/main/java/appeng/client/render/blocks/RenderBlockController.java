@@ -17,9 +17,10 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 
 import appeng.block.networking.BlockController;
+import appeng.block.networking.BlockCreativeEnergyController;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
-import appeng.core.AEConfig;
+import appeng.core.settings.ControllerAnimation;
 import appeng.tile.networking.TileController;
 
 public class RenderBlockController extends BaseBlockRender<BlockController, TileController> {
@@ -54,9 +55,13 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
             if (hasPower) {
                 textureId = 1;
                 if (isConflict) {
-                    lights = ExtraBlockTextures.BlockControllerColumnConflict;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerColumnConflict
+                            : ExtraBlockTextures.BlockControllerColumnConflict;
                 } else {
-                    lights = ExtraBlockTextures.BlockControllerColumnLights;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerColumnLights
+                            : ExtraBlockTextures.BlockControllerColumnLights;
                 }
             } else {
                 textureId = 2;
@@ -70,9 +75,13 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
             if (hasPower) {
                 textureId = 1;
                 if (isConflict) {
-                    lights = ExtraBlockTextures.BlockControllerColumnConflict;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerColumnConflict
+                            : ExtraBlockTextures.BlockControllerColumnConflict;
                 } else {
-                    lights = ExtraBlockTextures.BlockControllerColumnLights;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerColumnLights
+                            : ExtraBlockTextures.BlockControllerColumnLights;
                 }
             } else {
                 textureId = 2;
@@ -84,9 +93,13 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
             if (hasPower) {
                 textureId = 1;
                 if (isConflict) {
-                    lights = ExtraBlockTextures.BlockControllerColumnConflict;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerColumnConflict
+                            : ExtraBlockTextures.BlockControllerColumnConflict;
                 } else {
-                    lights = ExtraBlockTextures.BlockControllerColumnLights;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerColumnLights
+                            : ExtraBlockTextures.BlockControllerColumnLights;
                 }
             } else {
                 textureId = 2;
@@ -110,9 +123,13 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
                 textureId = 0;
 
                 if (isConflict) {
-                    lights = ExtraBlockTextures.BlockControllerConflict;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerConflict
+                            : ExtraBlockTextures.BlockControllerConflict;
                 } else {
-                    lights = ExtraBlockTextures.BlockControllerLights;
+                    lights = (blk instanceof BlockCreativeEnergyController)
+                            ? ExtraBlockTextures.BlockCreativeEnergyControllerLights
+                            : ExtraBlockTextures.BlockControllerLights;
                 }
             }
         }
@@ -121,9 +138,9 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
         final boolean out = renderer.renderStandardBlock(blk, x, y, z);
 
         if (lights != null) {
-            final IIcon lightIcon = isConflict || AEConfig.instance.controllerAnimation.usesOriginalTexture()
-                    ? lights.getIcon()
-                    : blk.getLightTexture(textureId, controller.getColor());
+            final ControllerAnimation animation = controller.getControllerAnimation();
+            final IIcon lightIcon = isConflict || animation.usesOriginalTexture() ? lights.getIcon()
+                    : blk.getLightTexture(textureId, controller.getColor(), animation);
             final Tessellator tess = Tessellator.instance;
             tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
             tess.setBrightness(14 << 20 | 14 << 4);

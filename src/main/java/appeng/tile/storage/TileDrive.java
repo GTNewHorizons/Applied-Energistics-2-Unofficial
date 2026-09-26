@@ -19,9 +19,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -29,6 +31,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.IChestOrDrive;
 import appeng.api.implementations.tiles.IColorableTile;
@@ -59,6 +63,8 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
+import appeng.api.util.IConfigManager;
+import appeng.api.util.IConfigurableObject;
 import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.items.AEBaseCell;
@@ -71,12 +77,14 @@ import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.util.ConfigManager;
+import appeng.util.IConfigManagerHost;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
-public class TileDrive extends AENetworkInvTile
-        implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile, IPrimaryGuiIconProvider {
+public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile,
+        IPrimaryGuiIconProvider, IConfigurableObject, IConfigManagerHost {
 
     private static final int INV_SIZE = 10;
     /**
@@ -87,9 +95,11 @@ public class TileDrive extends AENetworkInvTile
 
     private final int[] sides = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, INV_SIZE);
+    private final ItemStack[] storageTypes = new ItemStack[INV_SIZE];
     private final ICellHandler[] handlersBySlot = new ICellHandler[INV_SIZE];
     private final MEInventoryHandler<IAEItemStack>[] invBySlot = new MEInventoryHandler[INV_SIZE];
     private final BaseActionSource mySrc;
+    private final IConfigManager config = new ConfigManager(this);
     private boolean isCached = false;
     @SuppressWarnings("rawtypes")
     private final Map<IAEStackType<?>, List<IMEInventoryHandler>> cellsMap = new IdentityHashMap<>();
@@ -107,6 +117,7 @@ public class TileDrive extends AENetworkInvTile
     public TileDrive() {
         this.mySrc = new MachineSource(this);
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
+        this.config.registerSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ_WRITE);
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
@@ -114,6 +125,13 @@ public class TileDrive extends AENetworkInvTile
         data.writeInt(this.state);
         data.writeInt(this.type);
         data.writeByte(this.paintedColor.ordinal());
+
+        for (int slot = 0; slot < INV_SIZE; slot++) {
+            final ItemStack cell = this.inv.getStackInSlot(slot);
+            data.writeInt(
+                    cell == null ? 0
+                            : (cell.getItemDamage() << Platform.DEF_OFFSET) | Item.getIdFromItem(cell.getItem()));
+        }
     }
 
     @Override
@@ -169,6 +187,15 @@ public class TileDrive extends AENetworkInvTile
         return this.invBySlot[slot];
     }
 
+    public ItemStack[] getStorageTypes() {
+        return this.storageTypes;
+    }
+
+    @Nullable
+    public ItemStack getPoweredStorageType(final int slot) {
+        return this.isPowered() ? this.storageTypes[slot] : null;
+    }
+
     @Override
     public TickingRequest getTickingRequest(IGridNode node) {
         return new TickingRequest(15, 15, false, false);
@@ -198,12 +225,26 @@ public class TileDrive extends AENetworkInvTile
         final AEColor oldPaintedColor = this.paintedColor;
         this.paintedColor = AEColor.fromOrdinal(data.readByte());
         this.getProxy().setColor(this.paintedColor);
-        return oldPaintedColor != this.paintedColor || this.state != oldState || this.type != oldType;
+
+        boolean changed = oldPaintedColor != this.paintedColor || this.state != oldState || this.type != oldType;
+        for (int slot = 0; slot < INV_SIZE; slot++) {
+            final int cell = data.readInt();
+            final ItemStack oldCell = this.storageTypes[slot];
+            final int oldCellId = oldCell == null ? 0
+                    : (oldCell.getItemDamage() << Platform.DEF_OFFSET) | Item.getIdFromItem(oldCell.getItem());
+            if (cell != oldCellId) {
+                this.storageTypes[slot] = cell == 0 ? null
+                        : new ItemStack(Item.getItemById(cell & 0xffff), 1, cell >> Platform.DEF_OFFSET);
+                changed = true;
+            }
+        }
+        return changed;
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileDrive(final NBTTagCompound data) {
         this.isCached = false;
+        this.config.readFromNBT(data);
         this.priority = data.getInteger("priority");
         if (data.hasKey("paintedColor")) {
             this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
@@ -213,6 +254,7 @@ public class TileDrive extends AENetworkInvTile
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileDrive(final NBTTagCompound data) {
+        this.config.writeToNBT(data);
         data.setInteger("priority", this.priority);
         data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
     }
@@ -324,7 +366,8 @@ public class TileDrive extends AENetworkInvTile
 
                                 final MEInventoryHandler<IAEItemStack> ih = new DriveWatcher<IAEItemStack>(
                                         cell,
-                                        cell.getStackType());
+                                        cell.getStackType(),
+                                        this);
                                 ih.setPriority(this.priority);
                                 this.invBySlot[x] = ih;
                                 this.cellsMap.get(type).add(ih);
@@ -346,8 +389,16 @@ public class TileDrive extends AENetworkInvTile
     /// https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/issues/1225
     private static class DriveWatcher<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
-        public DriveWatcher(final IMEInventory<T> i, final IAEStackType<T> type) {
+        private final TileDrive drive;
+
+        public DriveWatcher(final IMEInventory<T> i, final IAEStackType<T> type, final TileDrive drive) {
             super(i, type);
+            this.drive = drive;
+        }
+
+        @Override
+        public AccessRestriction getReshuffleAccess() {
+            return this.drive.getReshuffleAccess();
         }
     }
 
@@ -386,6 +437,21 @@ public class TileDrive extends AENetworkInvTile
         } catch (final GridAccessException e) {
             // :P
         }
+    }
+
+    @Override
+    public IConfigManager getConfigManager() {
+        return this.config;
+    }
+
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        this.markDirty();
+    }
+
+    @Override
+    public AccessRestriction getReshuffleAccess() {
+        return (AccessRestriction) this.config.getSetting(Settings.RESHUFFLE_ACCESS);
     }
 
     @Override

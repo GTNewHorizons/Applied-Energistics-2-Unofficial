@@ -960,6 +960,14 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.PinsSectionHint);
 
             this.registerApp(
+                    255,
+                    Settings.ACTIONS,
+                    ActionItems.CONTROLLER_ANIMATION,
+                    ButtonToolTips.ControllerAnimation,
+                    ButtonToolTips.ControllerAnimationActive,
+                    ButtonToolTips.ControllerAnimationHint);
+
+            this.registerApp(
                     16 * 3 + 7,
                     Settings.ACTIONS,
                     ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_ON,
@@ -1046,6 +1054,30 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     YesNo.NO,
                     ButtonToolTips.ReshuffleIncludeSubnets,
                     ButtonToolTips.ReshuffleIncludeSubnetsOff);
+            this.registerApp(
+                    8 * 16 + 8,
+                    Settings.RESHUFFLE_ACCESS,
+                    AccessRestriction.READ_WRITE,
+                    ButtonToolTips.ReshuffleAccess,
+                    ButtonToolTips.ReshuffleReadWrite);
+            this.registerApp(
+                    16 * 9 + 13,
+                    Settings.RESHUFFLE_ACCESS,
+                    AccessRestriction.WRITE,
+                    ButtonToolTips.ReshuffleAccess,
+                    ButtonToolTips.ReshuffleWrite);
+            this.registerApp(
+                    8 * 16 + 9,
+                    Settings.RESHUFFLE_ACCESS,
+                    AccessRestriction.NO_ACCESS,
+                    ButtonToolTips.ReshuffleAccess,
+                    ButtonToolTips.ReshuffleNone);
+            this.registerApp(
+                    16 * 9 + 12,
+                    Settings.RESHUFFLE_ACCESS,
+                    AccessRestriction.READ,
+                    ButtonToolTips.ReshuffleAccess,
+                    ButtonToolTips.ReshuffleRead);
             this.registerApp(
                     4 * 16 + 10,
                     Settings.CELL_HEALTH_SORT,
