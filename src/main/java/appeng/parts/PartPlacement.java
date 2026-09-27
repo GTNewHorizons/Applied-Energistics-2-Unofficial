@@ -10,6 +10,7 @@
 
 package appeng.parts;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -396,17 +397,29 @@ public class PartPlacement {
         final IPartHost host = getExistingHost(event.world.getTileEntity(event.x, event.y, event.z));
         if (host == null || !(host.getPart(ForgeDirection.UNKNOWN) instanceof PartCable oldCable)) return;
 
-        // Keep the color of the cable in the world, take the type from the held one
-        final int damage = held.getItemDamage() - item.variantOf(held.getItemDamage())
-                + oldCable.getCableColor().ordinal();
+        // Only swap when the player aims at the cable itself, not at a part or facade on it
+        final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
+        final MovingObjectPosition mop = event.world.getBlock(event.x, event.y, event.z)
+                .collisionRayTrace(event.world, event.x, event.y, event.z, dir.getA(), dir.getB());
+        if (mop == null) return;
+        final Vec3 hitVec = mop.hitVec.addVector(-event.x, -event.y, -event.z);
+        if (selectPart(player, host, hitVec).part != oldCable) return;
+
+        // Place exactly the held cable, like GT does
+        final ItemStack newStack = held.copy();
+        newStack.stackSize = 1;
         final ItemStack oldStack = oldCable.getItemStack(PartItemStack.Wrench).copy();
-        if (oldStack.getItemDamage() == damage) return;
+        if (newStack.isItemEqual(oldStack)) return;
 
         // Stop the block from being broken
         event.setCanceled(true);
 
         try {
-            if (!oldCable.getProxy().getSecurity().hasPermission(player, SecurityPermissions.BUILD)) return;
+            if (!oldCable.getProxy().getSecurity().hasPermission(player, SecurityPermissions.BUILD)) {
+                // In creative the client already removed the part, resync it
+                host.markForUpdate();
+                return;
+            }
         } catch (final GridAccessException e) {
             // no grid, no security to check
         }
@@ -420,20 +433,27 @@ public class PartPlacement {
                 event.world.getBlockMetadata(event.x, event.y, event.z),
                 player);
         MinecraftForge.EVENT_BUS.post(breakEvent);
-        if (breakEvent.isCanceled()) return;
+        if (breakEvent.isCanceled()) {
+            host.markForUpdate();
+            return;
+        }
 
         // Same check as CableBusContainer.canAddPart, done before removing so nothing has to be rolled back
-        final ItemStack newStack = new ItemStack(item, 1, damage);
         final IPartCable newCable = (IPartCable) item.createPartFromItemStack(newStack);
         for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
             final IPart part = host.getPart(side);
-            if (part != null && !part.canBePlacedOn(newCable.supportsBuses())) return;
+            if (part != null && !part.canBePlacedOn(newCable.supportsBuses())) {
+                host.markForUpdate();
+                return;
+            }
         }
 
         // Suppress updates, otherwise the host drops its facades while it has no center cable
         host.removePart(ForgeDirection.UNKNOWN, true);
         if (host.addPart(newStack, ForgeDirection.UNKNOWN, player) == null) {
-            host.addPart(oldStack, ForgeDirection.UNKNOWN, player);
+            if (host.addPart(oldStack, ForgeDirection.UNKNOWN, player) == null) {
+                Platform.spawnDrops(event.world, event.x, event.y, event.z, Collections.singletonList(oldStack));
+            }
             return;
         }
 
