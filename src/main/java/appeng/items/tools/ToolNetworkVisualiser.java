@@ -212,9 +212,9 @@ public class ToolNetworkVisualiser extends AEBaseItem {
     @Override
     public boolean onItemUse(ItemStack is, EntityPlayer p, World w, int x, int y, int z, int side, float xOff,
             float yOff, float zOff) {
-        if (Platform.isServer()) {
-            TileEntity te = w.getTileEntity(x, y, z);
-            if (te instanceof IGridHost) {
+        TileEntity te = w.getTileEntity(x, y, z);
+        if (te instanceof IGridHost) {
+            if (Platform.isServer()) {
                 if (!is.hasTagCompound()) is.setTagCompound(new NBTTagCompound());
                 DimensionalCoord dc = new DimensionalCoord(te);
                 dc.writeToNBT(is.getTagCompound());
@@ -222,8 +222,8 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                         new ChatComponentTranslation(
                                 "item.appliedenergistics2.ToolNetworkVisualiser.bound",
                                 dc.getGuiTextShortNoDim()));
-                return true;
             }
+            return true;
         }
         return false;
     }

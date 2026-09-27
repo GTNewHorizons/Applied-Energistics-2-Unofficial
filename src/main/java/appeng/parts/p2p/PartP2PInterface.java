@@ -647,4 +647,9 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     public ItemStack getPrimaryGuiIcon() {
         return AEApi.instance().definitions().parts().p2PTunnelMEInterface().maybeStack(1).orNull();
     }
+
+    @Override
+    public boolean isCraftingPatternProvider() {
+        return false;
+    }
 }

@@ -40,6 +40,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -148,9 +149,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private List<String> pendingSectionTooltip;
     private int pendingSectionTooltipX;
     private int pendingSectionTooltipY;
-    private List<String> pendingHideButtonTooltip;
-    private int pendingHideButtonTooltipX;
-    private int pendingHideButtonTooltipY;
+    private List<String> pendingEntryButtonTooltip;
+    private int pendingEntryButtonTooltipX;
+    private int pendingEntryButtonTooltipY;
     private final boolean neiPresent;
     protected static String searchFieldInputsText = "";
     protected static String searchFieldOutputsText = "";
@@ -167,7 +168,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private static final float SLOT_Z = 0.5f;
     private static final float ITEM_STACK_OVERLAY_Z = 200.0f;
     private static final float SLOT_HOVER_Z = 310.0f;
-    private static final float TOOLTIP_Z = 410.0f;
     private static final float STEP_Z = 10.0f;
     private static final float MAGIC_RENDER_ITEM_Z = 50.0f;
 
@@ -376,8 +376,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 ColorUtils.guiTextColorGray.getColor());
         fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
-                GuiInterfaceTerminal.VIEW_LEFT + 2,
-                this.ySize - 96,
+                GuiInterfaceTerminal.VIEW_LEFT + 12,
+                this.ySize - 93,
                 ColorUtils.guiTextColorGray.getColor());
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
@@ -423,20 +423,20 @@ public class GuiInterfaceTerminal extends AEBaseGui
             pendingSectionTooltip = null;
         }
 
-        if (pendingHideButtonTooltip != null) {
+        if (pendingEntryButtonTooltip != null) {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             GL11.glDisable(GL11.GL_LIGHTING);
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
             drawHoveringText(
-                    pendingHideButtonTooltip,
-                    pendingHideButtonTooltipX,
-                    pendingHideButtonTooltipY,
+                    pendingEntryButtonTooltip,
+                    pendingEntryButtonTooltipX,
+                    pendingEntryButtonTooltipY,
                     fontRendererObj);
 
             GL11.glPopAttrib();
-            pendingHideButtonTooltip = null;
+            pendingEntryButtonTooltip = null;
         }
 
     }
@@ -577,7 +577,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
         pendingSectionTooltip = null;
-        pendingHideButtonTooltip = null;
+        pendingEntryButtonTooltip = null;
 
         /*
          * Render each section
@@ -877,20 +877,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (activeButton.getMouseIn()
                     && relMouseY >= Math.max(titleBottom - viewY + activeButton.yPosition, activeButton.yPosition)) {
                 if (altHeld) {
-                    pendingHideButtonTooltip = buildInterfaceTerminalVisibilityTooltip(entry.hideButton);
-                    pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
-                    pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                    pendingEntryButtonTooltip = buildInterfaceTerminalVisibilityTooltip(entry.hideButton);
                 } else if (shiftHeld) {
-                    pendingHideButtonTooltip = Collections.singletonList(ButtonToolTips.RenameInterface.getLocal());
-                    pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
-                    pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                    pendingEntryButtonTooltip = Collections.singletonList(ButtonToolTips.RenameInterface.getLocal());
                 } else {
-                    GL11.glTranslatef(0f, 0f, TOOLTIP_Z);
-                    GL11.glDisable(GL11.GL_SCISSOR_TEST);
-                    drawHoveringText(extraOptionsText, relMouseX, relMouseY);
-                    GL11.glTranslatef(0f, 0f, -TOOLTIP_Z);
-                    GL11.glEnable(GL11.GL_SCISSOR_TEST);
+                    pendingEntryButtonTooltip = extraOptionsText;
                 }
+                pendingEntryButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                pendingEntryButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
             }
         } else {
             entry.optionsButton.yPosition = -1;
@@ -1174,7 +1168,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         this.masterList.markDirty();
     }
 
-    private static String translateRawName(String rawName, String suffix) {
+    private static String translateRawName(String rawName, String suffix, ItemStack dispRep) {
         if (rawName == null || rawName.isEmpty()) return "";
         String translatedName;
         if (StatCollector.canTranslate(rawName)) {
@@ -1184,13 +1178,29 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (StatCollector.canTranslate(fallback)) {
                 translatedName = StatCollector.translateToLocal(fallback);
             } else {
-                translatedName = StatCollector.translateToFallback(rawName);
+                // Machines that build their name instead of reading one key per instance, GregTech hatches among
+                // them, have no key to translate. Their icon knows the name, so ask it rather than print the key.
+                translatedName = dispRep != null ? dispRep.getDisplayName()
+                        : StatCollector.translateToFallback(rawName);
             }
         }
         if (suffix != null && !suffix.isEmpty()) {
-            return translatedName + suffix;
+            return translatedName + resolveSuffix(suffix);
         }
         return translatedName;
+    }
+
+    /**
+     * Turns the serialized {@link IChatComponent} suffix back into text, so that it is localized with the client's
+     * language rather than the server's. A suffix that fails to deserialize is shown as raw text.
+     */
+    private static String resolveSuffix(String suffix) {
+        try {
+            final IChatComponent component = IChatComponent.Serializer.func_150699_a(suffix);
+            return component != null ? component.getUnformattedText() : suffix;
+        } catch (Exception e) {
+            return suffix;
+        }
     }
 
     private void parsePacketCmd(PacketInterfaceTerminalUpdate.PacketEntry cmd) {
@@ -1209,6 +1219,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             entry.terminalVisible = addCmd.terminalVisible;
+            entry.isCraftingPatternProvider = addCmd.isCraftingPatternProvider;
             entry.hideButton.set(entry.terminalVisible ? YesNo.YES : YesNo.NO);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1252,7 +1263,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             InterfaceTerminalEntry entry = masterList.list.get(id);
 
             if (entry != null) {
-                entry.dispName = translateRawName(renameCmd.newName, renameCmd.suffix);
+                entry.rawName = renameCmd.newName;
+                entry.rawSuffix = renameCmd.suffix;
+                entry.dispRep = renameCmd.dispRep;
+                entry.dispName = translateRawName(entry.rawName, entry.rawSuffix, entry.dispRep);
                 masterList.moveEntry(entry);
             }
             masterList.isDirty = true;
@@ -1630,10 +1644,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 if (!entry.online || entry.p2pOutput) continue;
                 if (!entry.terminalVisible && !showHidden) continue;
 
-                var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
-                entry.dispY = -9999;
-                if (onlyMolecularAssemblers
-                        && (!moleAss.isPresent() || !Platform.isSameItem(moleAss.get(), entry.dispRep))) {
+                if (onlyMolecularAssemblers && !entry.isCraftingPatternProvider) {
                     continue;
                 }
                 if (AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal
@@ -1715,6 +1726,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
         ItemStack selfRep;
         /** Nullable - icon that represents the interface's "target" */
         ItemStack dispRep;
+        /** Kept so that the name can be built again once the icons arrive, see {@link #setIcons} */
+        String rawName;
+        String rawSuffix;
         InterfaceSection section;
         long id;
         int x, y, z, dim, side;
@@ -1726,6 +1740,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         boolean online;
         boolean p2pOutput;
         boolean terminalVisible = true;
+        boolean isCraftingPatternProvider = false;
         IAEStackType<?>[] supportedStackTypes;
         private Boolean[] brokenRecipes;
         int numItems = 0;
@@ -1737,7 +1752,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
         InterfaceTerminalEntry(long id, String name, String suffix, int rows, int rowSize, int numSlots, boolean online,
                 boolean p2pOutput, IAEStackType<?>[] supportedStackTypes, int priority) {
             this.id = id;
-            this.dispName = translateRawName(name, suffix);
+            this.rawName = name;
+            this.rawSuffix = suffix;
+            this.dispName = translateRawName(name, suffix, null);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
             this.rows = rows;
             this.rowSize = rowSize;
@@ -1776,6 +1793,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             // Kotlin would make this pretty easy :(
             this.selfRep = selfRep;
             this.dispRep = dispRep;
+            // The name may need the icon, so it is built again now that we have it.
+            this.dispName = translateRawName(this.rawName, this.rawSuffix, dispRep);
 
             return this;
         }
@@ -1812,6 +1831,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             final int newHasItem = stack != null ? 1 : 0;
 
             inv.setInventorySlotContents(idx, stack);
+            brokenRecipes[idx] = null;
             numItems += newHasItem - oldHasItem;
             assert numItems >= 0;
         }

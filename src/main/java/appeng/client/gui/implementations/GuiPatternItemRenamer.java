@@ -66,19 +66,21 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
     @Override
     protected void keyTyped(final char character, final int key) {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
+            IAEStack<?> nameStack = getNewNameStack();
+            if (nameStack == null) {
+                return;
+            }
             NetworkHandler.instance.sendToServer(
-                    new PacketPatternValueSet(
-                            getNewNameStack(),
-                            this.container.getInvName(),
-                            this.container.getSlotIndex()));
+                    new PacketPatternValueSet(nameStack, this.container.getInvName(), this.container.getSlotIndex()));
         } else if (!textField.textboxKeyTyped(character, key)) {
             super.keyTyped(character, key);
         }
     }
 
     private IAEStack<?> getNewNameStack() {
-        return AEItemStack.create(
-                ((IAEItemStack) this.container.getAEStack()).getItemStack().setStackDisplayName(textField.getText()));
+        IAEStack<?> aeStack = this.container.getAEStack();
+        if (!(aeStack instanceof IAEItemStack itemStack)) return null;
+        return AEItemStack.create(itemStack.getItemStack().setStackDisplayName(textField.getText()));
     }
 
     public boolean isOverTextField(final int mousex, final int mousey) {

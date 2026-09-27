@@ -151,7 +151,7 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
         tess.setColorOpaque_I(0xffffff);
         renderer.setRenderBounds(0, 0, 0, 1, 1, 1);
 
-        final ICellHandler ch = AEApi.instance().registries().cell().getHandler(sp.getStorageType());
+        final ICellHandler ch = AEApi.instance().registries().cell().getHandler(sp.getPoweredStorageType());
 
         tess.setColorOpaque_I(sp.getColor().whiteVariant);
         IIcon ico = ch == null ? null : ch.getTopTexture_Light();

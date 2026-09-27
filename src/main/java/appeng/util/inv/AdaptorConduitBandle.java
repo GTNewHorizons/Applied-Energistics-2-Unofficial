@@ -7,11 +7,14 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.util.InventoryAdaptor;
+import appeng.util.iterators.NullIterator;
 import crazypants.enderio.conduit.TileConduitBundle;
 import crazypants.enderio.conduit.item.IItemConduit;
 import crazypants.enderio.conduit.liquid.ILiquidConduit;
@@ -122,7 +125,7 @@ public class AdaptorConduitBandle extends InventoryAdaptor {
     }
 
     @Override
-    public Iterator<ItemSlot> iterator() {
-        return null;
+    public @NotNull Iterator<ItemSlot> iterator() {
+        return new NullIterator<>();
     }
 }

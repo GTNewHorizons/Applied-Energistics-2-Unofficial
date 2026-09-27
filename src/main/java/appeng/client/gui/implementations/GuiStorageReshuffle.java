@@ -587,7 +587,14 @@ public class GuiStorageReshuffle extends AEBaseGui {
                     barY + 6,
                     ColorUtils.reshuffleProgressFillStart.getColor(),
                     (ColorUtils.reshuffleProgressFillEnd.getColor() & 0xFFFFFF00) | alpha);
-            drawRect(barX + fill - 1, barY, barX + fill + 1, barY + 6, ColorUtils.reshuffleProgressMarker.getColor());
+            if (progressPercent < 100) {
+                drawRect(
+                        barX + fill - 1,
+                        barY,
+                        barX + fill + 1,
+                        barY + 6,
+                        ColorUtils.reshuffleProgressMarker.getColor());
+            }
         }
         this.fontRendererObj
                 .drawString(progressPercent + "%", barX + barW + 3, barY, ColorUtils.guiTextColorGray.getColor());

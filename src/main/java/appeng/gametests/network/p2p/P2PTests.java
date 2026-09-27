@@ -3,7 +3,6 @@ package appeng.gametests.network.p2p;
 import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.assertNetworkStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
-import static appeng.gametests.AEGameTestHelpers.continuousInvariant;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.part;
 
@@ -18,6 +17,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.TestPos;
+import com.gtnewhorizons.horizonqa.api.TickCallbackHandle;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 
@@ -27,7 +27,6 @@ import appeng.api.networking.IGridNode;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.core.AppEng;
-import appeng.gametests.AEGameTestHelpers.ContinuousInvariant;
 import appeng.me.GridAccessException;
 import appeng.parts.p2p.PartP2PInterface;
 import appeng.parts.p2p.PartP2PItems;
@@ -63,8 +62,8 @@ public class P2PTests {
         PartP2PItems input = inputTunnel(helper, PartP2PItems.class);
         PartP2PItems output = outputTunnel(helper, PartP2PItems.class);
         helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
-        ContinuousInvariant itemConservation = itemConservationInvariant(helper, 1);
-        itemConservation.enable();
+        TickCallbackHandle itemConservationWatcher = watchItemConservation(helper, 1);
+        itemConservationWatcher.enable();
 
         helper.startSequence().thenWaitUntil("wait for the item P2P pair to become active and linked", 60, () -> {
             assertCarrierActive(helper, controller);
@@ -73,7 +72,7 @@ public class P2PTests {
             helper.assertInventoryCount(SOURCE_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
             helper.assertInventoryCount(SOURCE_INSERTER_LABEL, new ItemStack(Blocks.cobblestone), 0);
             helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 1);
-        }).thenExecute("finish item-conservation observation", itemConservation::disable).thenSucceed();
+        }).thenExecute("finish item-conservation observation", itemConservationWatcher::disable).thenSucceed();
     }
 
     // P1: the outer ME connection must expose storage that is physically present only behind the output tunnel.
@@ -132,14 +131,11 @@ public class P2PTests {
         TileController controller = helper.assertTileEntityPresent(TileController.class, CONTROLLER_LABEL);
         PartP2PRedstone input = inputTunnel(helper, PartP2PRedstone.class);
         PartP2PRedstone output = outputTunnel(helper, PartP2PRedstone.class);
-        ContinuousInvariant unpoweredOutputStaysLow = continuousInvariant(
-                helper,
-                "an unpowered redstone P2P input must not produce output power",
-                () -> {
-                    assertCarrierActive(helper, controller);
-                    assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
-                    assertRedstonePower(helper, 0);
-                });
+        TickCallbackHandle unpoweredOutputStaysLow = helper.onEachTickDisabled("unpowered P2P output stays low", () -> {
+            assertCarrierActive(helper, controller);
+            assertLinkedPair(helper, input, output, REDSTONE_FREQUENCY);
+            assertRedstonePower(helper, 0);
+        });
 
         helper.startSequence().thenWaitUntil("wait for the linked redstone P2P pair to settle low", 60, () -> {
             assertCarrierActive(helper, controller);
@@ -168,10 +164,8 @@ public class P2PTests {
         PartP2PItems input = (PartP2PItems) inputTunnel(helper, PartP2PItems.class).unbind(null);
         PartP2PItems output = (PartP2PItems) outputTunnel(helper, PartP2PItems.class).unbind(null);
         helper.setSlot(SOURCE_CHEST_LABEL, 0, new ItemStack(Blocks.cobblestone));
-        ContinuousInvariant noUnboundTransfer = continuousInvariant(
-                helper,
-                "unbound item tunnels must neither transfer nor duplicate the supplied item",
-                () -> {
+        TickCallbackHandle noUnboundTransfer = helper
+                .onEachTickDisabled("unbound P2P tunnels do not transfer items", () -> {
                     assertUnboundPairOnCarrier(helper, controller, input, output);
                     helper.assertInventoryCount(DESTINATION_CHEST_LABEL, new ItemStack(Blocks.cobblestone), 0);
                     assertInventoryTotal(helper, Blocks.cobblestone, 1);
@@ -438,10 +432,9 @@ public class P2PTests {
         helper.assertNull(tunnel.getInput(), "Unbound tunnel should not resolve an input; role=" + role);
     }
 
-    private static ContinuousInvariant itemConservationInvariant(GameTestHelper helper, long expectedTotal) {
-        return continuousInvariant(
-                helper,
-                "item P2P transport must conserve the supplied stack on every tick",
+    private static TickCallbackHandle watchItemConservation(GameTestHelper helper, long expectedTotal) {
+        return helper.onEachTickDisabled(
+                "P2P item conservation",
                 () -> assertInventoryTotal(helper, Blocks.cobblestone, expectedTotal));
     }
 

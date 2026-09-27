@@ -234,6 +234,11 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
     }
 
     @Override
+    public boolean hasWriteAccess() {
+        return false;
+    }
+
+    @Override
     public void add(T option) {
         throw new UnsupportedOperationException();
     }

@@ -4,12 +4,14 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
 import com.gtnewhorizon.gtnhlib.event.PickBlockEvent;
 
 import appeng.core.CommonHelper;
+import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPickBlock;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -27,6 +29,7 @@ public class KeyBindHandler {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event) {
+        handleControllerAnimationKey();
         if (CommonHelper.proxy.isKeyPressed(ActionKey.PICK_BLOCK) && !arePickBlockBindsEqual()) {
             handlePickBlock();
         }
@@ -35,6 +38,7 @@ public class KeyBindHandler {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void onMouseInput(InputEvent.MouseInputEvent event) {
+        handleControllerAnimationKey();
         if (CommonHelper.proxy.isKeyPressed(ActionKey.PICK_BLOCK) && !arePickBlockBindsEqual()) {
             handlePickBlock();
         }
@@ -43,6 +47,16 @@ public class KeyBindHandler {
     static boolean arePickBlockBindsEqual() {
         return Minecraft.getMinecraft().gameSettings.keyBindPickBlock.getKeyCode()
                 == CommonHelper.proxy.getKeybind(ActionKey.PICK_BLOCK);
+    }
+
+    private static void handleControllerAnimationKey() {
+        if (!CommonHelper.proxy.isKeyPressed(ActionKey.CYCLE_CONTROLLER_ANIMATION)) return;
+        final Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.currentScreen != null || minecraft.thePlayer == null) return;
+
+        final ControllerAnimation animation = ClientHelper.cycleControllerAnimation();
+        minecraft.thePlayer.addChatMessage(
+                new ChatComponentTranslation("chat.appliedenergistics2.ControllerAnimation", animation.name()));
     }
 
     static boolean handlePickBlock() {

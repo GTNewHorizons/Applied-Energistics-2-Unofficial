@@ -17,8 +17,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -137,6 +139,11 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
+    public IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
+        return this.getHandler().getAvailableItems(out, iteration, filter);
+    }
+
+    @Override
     public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(int iteration) {
         return this.getHandler().getAvailableItemsWithPriority(iteration);
     }
@@ -251,10 +258,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         return this.listeners.entrySet().iterator();
     }
 
-    private T monitorDifference(final IAEStack original, final T leftOvers, final boolean extraction,
-            final BaseActionSource src) {
-        final T diff = (T) original.copy();
-
+    private T monitorDifference(final T diff, final T leftOvers, final boolean extraction, final BaseActionSource src) {
         if (extraction) {
             diff.setStackSize(leftOvers == null ? 0 : -leftOvers.getStackSize());
         } else if (leftOvers != null) {

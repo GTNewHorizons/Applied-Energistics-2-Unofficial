@@ -16,6 +16,8 @@ package appeng.api.storage.data;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -63,6 +65,25 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
      * @return the first item in the list
      */
     StackType getFirstItem();
+
+    /**
+     * Mirror of {@link appeng.api.storage.IMEInventory#getAvailableItems(IItemList, int, Optional)}.
+     */
+    default void getAvailableItems(IItemList<StackType> out, int iteration, Optional<Predicate<StackType>> filter) {
+        if (!filter.isPresent()) {
+            for (final StackType i : this) {
+                out.add(i);
+            }
+        } else {
+            Predicate<StackType> pred = filter.get();
+
+            for (final StackType i : this) {
+                if (pred.test(i)) {
+                    out.add(i);
+                }
+            }
+        }
+    }
 
     /**
      * @return the number of items in the list

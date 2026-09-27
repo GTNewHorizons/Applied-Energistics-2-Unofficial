@@ -1,0 +1,24 @@
+{
+  "format_version": 2,
+  "size": [5, 1, 1],
+  "palette": {
+    "A": {"name": "appliedenergistics2:tile.BlockChest", "meta": 0, "label": "ME Chest"},
+    "B": {"name": "appliedenergistics2:tile.BlockCreativeEnergyController", "meta": 1, "label": "ME Self-Powered Controller"},
+    "C": {"name": "appliedenergistics2:tile.BlockDrive", "meta": 0, "label": "ME Drive"},
+    "D": {"name": "appliedenergistics2:tile.BlockStorageReshuffle", "meta": 0, "label": "ME Storage Reshuffle"}
+  },
+  "layers": [
+    [
+      "CCBDA"
+    ]
+  ],
+  "annotations": {
+    "labels": {
+      "controller": [2, 0, 0],
+      "me_chest": [4, 0, 0],
+      "reshuffler": [3, 0, 0],
+      "source_drive": [0, 0, 0],
+      "target_drive": [1, 0, 0]
+    }
+  }
+}

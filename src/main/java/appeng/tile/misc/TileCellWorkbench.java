@@ -283,7 +283,7 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
 
     @Override
     public void setCellRestriction(ItemStack n, CellRestrictionData newRestriction) {
-        if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
+        if (newRestriction.isReset() || this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
             this.cellRestrictTypes = newRestriction.restrictionTypes;
             this.cellRestrictAmount = newRestriction.restrictionAmount;
         }

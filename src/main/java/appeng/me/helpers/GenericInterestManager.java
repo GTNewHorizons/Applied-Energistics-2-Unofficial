@@ -63,7 +63,7 @@ public class GenericInterestManager<T> {
 
     public boolean remove(final IAEStack stack, final T iw) {
         if (this.transactions != null) {
-            this.transactions.add(new SavedTransactions(true, stack, iw));
+            this.transactions.add(new SavedTransactions(false, stack, iw));
             return true;
         } else {
             return this.container.remove(stack, iw);

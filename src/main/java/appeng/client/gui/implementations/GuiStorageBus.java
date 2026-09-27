@@ -51,10 +51,12 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiImgButton extractionMode;
     private VirtualMEPhantomSlot[] configSlots;
     private final ContainerStorageBus containerStorageBus;
+    private final IStorageBus storageBus;
 
     public GuiStorageBus(final InventoryPlayer inventoryPlayer, final IStorageBus te) {
         super(new ContainerStorageBus(inventoryPlayer, te));
         this.containerStorageBus = (ContainerStorageBus) inventorySlots;
+        this.storageBus = te;
         this.ySize = 251;
     }
 
@@ -115,7 +117,7 @@ public class GuiStorageBus extends GuiUpgradeable {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.fontRendererObj.drawString(
-                this.getGuiDisplayName(GuiText.StorageBus.getLocal()),
+                this.getGuiDisplayName(this.storageBus.getPartName()),
                 8,
                 6,
                 ColorUtils.guiTextColorGray.getColor());

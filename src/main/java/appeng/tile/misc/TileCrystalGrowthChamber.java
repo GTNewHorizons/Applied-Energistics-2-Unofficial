@@ -233,7 +233,9 @@ public class TileCrystalGrowthChamber extends AENetworkPowerTile
                 new WrapperInventoryRange(this.inv, 0, this.inv.getSizeInventory(), true),
                 ForgeDirection.UNKNOWN);
 
-        if (adaptor.addItems(output) != null) return false;
+        if (adaptor.simulateAdd(output) != null) return false;
+
+        adaptor.addItems(output);
 
         decrStackSize(certusPos, 1);
         decrStackSize(netherPos, 1);

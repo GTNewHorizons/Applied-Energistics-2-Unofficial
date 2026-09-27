@@ -12,11 +12,16 @@ package appeng.tile.networking;
 
 import java.util.EnumSet;
 
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.Actionable;
+import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.events.MENetworkControllerChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -25,17 +30,27 @@ import appeng.api.networking.events.MENetworkPowerStorage;
 import appeng.api.networking.events.MENetworkPowerStorage.PowerEventType;
 import appeng.api.networking.pathing.ControllerState;
 import appeng.api.util.AECableType;
+import appeng.api.util.AEColor;
+import appeng.core.settings.ControllerAnimation;
 import appeng.me.GridAccessException;
+import appeng.tile.TileEvent;
+import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkPowerTile;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.util.Platform;
+import io.netty.buffer.ByteBuf;
 
-public class TileController extends AENetworkPowerTile {
+public class TileController extends AENetworkPowerTile implements IColorableTile {
 
     private static final IInventory NULL_INVENTORY = new AppEngInternalInventory(null, 0);
     private static final int[] ACCESSIBLE_SLOTS_BY_SIDE = {};
+    private static final String ANIMATION_NBT_KEY = "controllerAnimation";
+    private static final String PLAYER_DEFAULT_NBT_KEY = "ae2.controllerAnimationDefault";
 
     private boolean isValid = false;
+    private AEColor paintedColor = AEColor.Transparent;
+    private ControllerAnimation controllerAnimation = ControllerAnimation.ORIGINAL_RAINBOW;
 
     public TileController() {
         this.setInternalMaxPower(8000);
@@ -47,6 +62,67 @@ public class TileController extends AENetworkPowerTile {
     @Override
     public AECableType getCableConnectionType(final ForgeDirection dir) {
         return AECableType.DENSE;
+    }
+
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void writeToStream_TileController(final ByteBuf data) {
+        data.writeByte(this.paintedColor.ordinal());
+        data.writeByte(this.controllerAnimation.ordinal());
+    }
+
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean readFromStream_TileController(final ByteBuf data) {
+        final AEColor oldPaintedColor = this.paintedColor;
+        final ControllerAnimation oldAnimation = this.controllerAnimation;
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
+        this.controllerAnimation = ControllerAnimation.fromOrdinal(data.readByte());
+        this.getProxy().setColor(this.paintedColor);
+        return oldPaintedColor != this.paintedColor || oldAnimation != this.controllerAnimation;
+    }
+
+    @TileEvent(TileEventType.WORLD_NBT_READ)
+    public void readFromNBT_TileController(final NBTTagCompound data) {
+        if (data.hasKey("paintedColor")) {
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
+            this.getProxy().setColor(this.paintedColor);
+        }
+        if (data.hasKey(ANIMATION_NBT_KEY)) {
+            this.controllerAnimation = ControllerAnimation.fromName(data.getString(ANIMATION_NBT_KEY));
+        }
+    }
+
+    @TileEvent(TileEventType.WORLD_NBT_WRITE)
+    public void writeToNBT_TileController(final NBTTagCompound data) {
+        data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
+        data.setString(ANIMATION_NBT_KEY, this.controllerAnimation.name());
+    }
+
+    @Override
+    public void onPlacement(final ItemStack stack, final EntityPlayer player, final int side) {
+        super.onPlacement(stack, player, side);
+        if (!this.worldObj.isRemote && player != null) {
+            this.setControllerAnimation(getPlayerDefaultAnimation(player));
+        }
+    }
+
+    public static ControllerAnimation getPlayerDefaultAnimation(final EntityPlayer player) {
+        return ControllerAnimation.fromOrdinal(player.getEntityData().getByte(PLAYER_DEFAULT_NBT_KEY));
+    }
+
+    public static void setPlayerDefaultAnimation(final EntityPlayer player, final String animation) {
+        player.getEntityData()
+                .setByte(PLAYER_DEFAULT_NBT_KEY, (byte) ControllerAnimation.fromName(animation).ordinal());
+    }
+
+    public ControllerAnimation getControllerAnimation() {
+        return this.controllerAnimation;
+    }
+
+    public void setControllerAnimation(final ControllerAnimation animation) {
+        if (this.controllerAnimation == animation) return;
+        this.controllerAnimation = animation;
+        this.markDirty();
+        this.markForUpdate();
     }
 
     @Override
@@ -166,6 +242,35 @@ public class TileController extends AENetworkPowerTile {
         return ACCESSIBLE_SLOTS_BY_SIDE;
     }
 
+    @Override
+    public AEColor getColor() {
+        return this.paintedColor;
+    }
+
+    @Override
+    public boolean recolourBlock(final ForgeDirection side, final AEColor colour, final EntityPlayer who) {
+        if (this.paintedColor == colour) {
+            return false;
+        }
+        this.paintedColor = colour;
+        this.getProxy().setColor(colour);
+        this.onNeighborChange(true);
+        Platform.notifyBlocksOfNeighbors(this.worldObj, this.xCoord, this.yCoord, this.zCoord);
+        this.markDirty();
+        this.markForUpdate();
+        return true;
+    }
+
+    public boolean isColorCompatible(final TileController other) {
+        return other != null && this.paintedColor.matches(other.paintedColor);
+    }
+
+    @Override
+    public boolean shouldRefresh(final Block oldBlock, final Block newBlock, final int oldMeta, final int newMeta,
+            final World world, final int x, final int y, final int z) {
+        return oldBlock != newBlock;
+    }
+
     /**
      * Check for a controller at this coordinates as well as is it loaded.
      *
@@ -173,7 +278,8 @@ public class TileController extends AENetworkPowerTile {
      */
     private boolean checkController(final int x, final int y, final int z) {
         if (this.worldObj.getChunkProvider().chunkExists(this.xCoord >> 4, this.zCoord >> 4)) {
-            return this.worldObj.getTileEntity(x, y, z) instanceof TileController;
+            return this.worldObj.getTileEntity(x, y, z) instanceof TileController controller
+                    && this.isColorCompatible(controller);
         }
         return false;
     }

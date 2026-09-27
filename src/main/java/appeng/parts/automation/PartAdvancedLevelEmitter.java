@@ -143,7 +143,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
 
     @MENetworkEventSubscribe
     public void channelChanged(final MENetworkChannelsChanged c) {
-        this.updateState();
+        this.configureWatchers();
     }
 
     private void updateState() {
