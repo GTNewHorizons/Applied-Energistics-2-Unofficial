@@ -35,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
+import appeng.api.config.SecurityPermissions;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.definitions.IItems;
 import appeng.api.parts.IFacadePart;
@@ -43,6 +44,7 @@ import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartItemStack;
 import appeng.api.parts.SelectedPart;
 import appeng.core.CommonHelper;
+import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketPartInteraction;
@@ -54,6 +56,9 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBuildCraftTransport;
 import appeng.integration.abstraction.IFMP;
 import appeng.integration.abstraction.IImmibisMicroblocks;
+import appeng.items.parts.ItemMultiPart;
+import appeng.items.parts.PartType;
+import appeng.me.GridAccessException;
 import appeng.parts.networking.PartCable;
 import appeng.util.LookDirection;
 import appeng.util.Platform;
@@ -372,6 +377,54 @@ public class PartPlacement {
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void playerInteract(final ClientTickEvent event) {
         placing = false;
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void swapCable(final PlayerInteractEvent event) {
+        // Server only: cancelling on the client would stop the dig packet from reaching the server
+        if (event.world.isRemote || event.action != Action.LEFT_CLICK_BLOCK || !event.entityPlayer.isSneaking()) return;
+
+        final EntityPlayer player = event.entityPlayer;
+        final ItemStack held = player.getHeldItem();
+        if (held == null || !(held.getItem() instanceof ItemMultiPart item)) return;
+
+        final PartType type = item.getTypeByStack(held);
+        if (!type.isCable()) return;
+
+        final IPartHost host = getExistingHost(event.world.getTileEntity(event.x, event.y, event.z));
+        if (host == null || !(host.getPart(ForgeDirection.UNKNOWN) instanceof PartCable oldCable)) return;
+
+        // Keep the color of the cable in the world, take the type from the held one
+        final int damage = held.getItemDamage() - item.variantOf(held.getItemDamage())
+                + oldCable.getCableColor().ordinal();
+        final ItemStack oldStack = oldCable.getItemStack(PartItemStack.Wrench).copy();
+        if (oldStack.getItemDamage() == damage) return;
+
+        // Stop the block from being broken
+        event.setCanceled(true);
+
+        try {
+            if (!oldCable.getProxy().getSecurity().hasPermission(player, SecurityPermissions.BUILD)) return;
+        } catch (final GridAccessException e) {
+            // no grid, no security to check
+        }
+
+        host.removePart(ForgeDirection.UNKNOWN, false);
+        final ItemStack newStack = new ItemStack(item, 1, damage);
+        if (host.addPart(newStack, ForgeDirection.UNKNOWN, player) == null) {
+            // The new cable does not fit the attached buses, put the old one back
+            host.addPart(oldStack, ForgeDirection.UNKNOWN, player);
+            return;
+        }
+
+        player.addChatMessage(PlayerMessages.CableSwapped.toChat(oldStack.getDisplayName(), newStack.getDisplayName()));
+
+        decreaseHeldItem(held, player);
+        if (!player.capabilities.isCreativeMode) {
+            if (!player.inventory.addItemStackToInventory(oldStack)) {
+                player.dropPlayerItemWithRandomChoice(oldStack, false);
+            }
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
