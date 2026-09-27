@@ -38,7 +38,9 @@ import appeng.api.AEApi;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.definitions.IItems;
+import appeng.api.implementations.parts.IPartCable;
 import appeng.api.parts.IFacadePart;
+import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartItemStack;
@@ -409,10 +411,28 @@ public class PartPlacement {
             // no grid, no security to check
         }
 
-        host.removePart(ForgeDirection.UNKNOWN, false);
+        final BlockEvent.BreakEvent breakEvent = new BlockEvent.BreakEvent(
+                event.x,
+                event.y,
+                event.z,
+                event.world,
+                event.world.getBlock(event.x, event.y, event.z),
+                event.world.getBlockMetadata(event.x, event.y, event.z),
+                player);
+        MinecraftForge.EVENT_BUS.post(breakEvent);
+        if (breakEvent.isCanceled()) return;
+
+        // Same check as CableBusContainer.canAddPart, done before removing so nothing has to be rolled back
         final ItemStack newStack = new ItemStack(item, 1, damage);
+        final IPartCable newCable = (IPartCable) item.createPartFromItemStack(newStack);
+        for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+            final IPart part = host.getPart(side);
+            if (part != null && !part.canBePlacedOn(newCable.supportsBuses())) return;
+        }
+
+        // Suppress updates, otherwise the host drops its facades while it has no center cable
+        host.removePart(ForgeDirection.UNKNOWN, true);
         if (host.addPart(newStack, ForgeDirection.UNKNOWN, player) == null) {
-            // The new cable does not fit the attached buses, put the old one back
             host.addPart(oldStack, ForgeDirection.UNKNOWN, player);
             return;
         }
