@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -18,6 +19,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.me.helpers.AENetworkProxy;
+import appeng.parts.PartPlacement;
 import appeng.parts.networking.PartCable;
 import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.grid.AENetworkPowerTile;
@@ -61,6 +63,14 @@ public class RendererCable extends AbstractRendererPreview implements IRenderPre
         }
 
         if (te instanceof IPartHost partHost) {
+            final Vec3 hitVec = Minecraft.getMinecraft().objectMouseOver.hitVec;
+            if (PartPlacement.canReplaceCable(
+                    ViewHelper.getCachedItemStack(),
+                    ViewHelper.getPlayer(),
+                    partHost,
+                    Vec3.createVectorHelper(hitVec.xCoord - x, hitVec.yCoord - y, hitVec.zCoord - z))) {
+                return true;
+            }
             return handlePartHost(partHost, isDense, neighborTe, x, y, z, world, side);
         }
 

@@ -32,6 +32,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -190,7 +191,15 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             return false;
         }
 
-        return PartPlacement.placeItemPart(is, player, w, x, y, z, ForgeDirection.getOrientation(side));
+        return PartPlacement.placeItemPart(
+                is,
+                player,
+                w,
+                x,
+                y,
+                z,
+                ForgeDirection.getOrientation(side),
+                Vec3.createVectorHelper(hitX, hitY, hitZ));
     }
 
     @Override

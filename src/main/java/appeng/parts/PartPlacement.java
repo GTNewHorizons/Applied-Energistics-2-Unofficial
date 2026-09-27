@@ -10,8 +10,10 @@
 
 package appeng.parts;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Block.SoundType;
@@ -37,7 +39,9 @@ import com.google.common.base.Optional;
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.definitions.IItems;
+import appeng.api.implementations.parts.IPartCable;
 import appeng.api.parts.IFacadePart;
+import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartItemStack;
@@ -130,7 +134,7 @@ public class PartPlacement {
         if (pass == PlaceType.INTERACT_FIRST_PASS) return false;
 
         // analogous to onItemUse
-        return placeItemPart(held, player, world, x, y, z, side);
+        return placeItemPart(held, player, world, x, y, z, side, hitVec);
     }
 
     public static boolean wrenchLogic(EntityPlayer player, World world, int x, int y, int z, IPartHost host,
@@ -213,12 +217,14 @@ public class PartPlacement {
     }
 
     public static boolean placeItemPart(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
-            ForgeDirection side) {
+            ForgeDirection side, Vec3 hitVec) {
         if (held == null || !(held.getItem() instanceof IPartItem)) {
             return false;
         }
 
         IPartHost host = getOrCreateHost(world.getTileEntity(x, y, z), player, side.ordinal());
+
+        if (host != null && replaceCable(held, player, world, x, y, z, side, hitVec, host)) return true;
 
         // Try to add the part to the target block
         if (host != null && tryPlace(held, player, world, x, y, z, side, host)) return true;
@@ -233,6 +239,60 @@ public class PartPlacement {
         IPartHost targetHost = getOrCreateHost(te, player, opposite.ordinal());
 
         return tryPlace(held, player, world, tx, ty, tz, opposite, targetHost);
+    }
+
+    public static boolean canReplaceCable(ItemStack held, EntityPlayer player, IPartHost host, Vec3 hitVec) {
+        if (!player.isSneaking()) return false;
+
+        final IPart oldCable = host.getPart(ForgeDirection.UNKNOWN);
+        if (oldCable == null || selectPart(player, host, hitVec).part != oldCable) return false;
+        if (held.isItemEqual(oldCable.getItemStack(PartItemStack.Wrench))) return false;
+
+        final ItemStack is = held.copy();
+        is.stackSize = 1;
+        if (!(((IPartItem) Objects.requireNonNull(held.getItem()))
+                .createPartFromItemStack(is) instanceof IPartCable newCable))
+            return false;
+
+        for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
+            final IPart part = host.getPart(d);
+            if (part != null && !part.canBePlacedOn(newCable.supportsBuses())) return false;
+        }
+        return true;
+    }
+
+    private static boolean replaceCable(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
+            ForgeDirection side, Vec3 hitVec, IPartHost host) {
+        if (!canReplaceCable(held, player, host, hitVec)) return false;
+
+        final ItemStack oldStack = host.getPart(ForgeDirection.UNKNOWN).getItemStack(PartItemStack.Wrench);
+
+        BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(
+                x,
+                y,
+                z,
+                world,
+                world.getBlock(x, y, z),
+                world.getBlockMetadata(x, y, z),
+                player);
+        MinecraftForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) {
+            return false;
+        }
+
+        host.removePart(ForgeDirection.UNKNOWN, true);
+        if (!tryPlace(held, player, world, x, y, z, side, host)) {
+            if (host.addPart(oldStack, ForgeDirection.UNKNOWN, player) == null && !world.isRemote) {
+                Platform.spawnDrops(world, x, y, z, Collections.singletonList(oldStack));
+            }
+            return false;
+        }
+
+        if (!world.isRemote && !player.capabilities.isCreativeMode
+                && !player.inventory.addItemStackToInventory(oldStack)) {
+            player.entityDropItem(oldStack, 0);
+        }
+        return true;
     }
 
     public static boolean tryPlace(ItemStack held, EntityPlayer player, World world, int x, int y, int z,

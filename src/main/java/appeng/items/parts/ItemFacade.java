@@ -24,6 +24,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -66,7 +67,15 @@ public class ItemFacade extends AEBaseItem implements IFacadeItem, IAlphaPassIte
     @Override
     public boolean onItemUse(final ItemStack is, final EntityPlayer player, final World w, final int x, final int y,
             final int z, final int side, final float hitX, final float hitY, final float hitZ) {
-        return PartPlacement.placeItemPart(is, player, w, x, y, z, ForgeDirection.getOrientation(side));
+        return PartPlacement.placeItemPart(
+                is,
+                player,
+                w,
+                x,
+                y,
+                z,
+                ForgeDirection.getOrientation(side),
+                Vec3.createVectorHelper(hitX, hitY, hitZ));
     }
 
     @Override
