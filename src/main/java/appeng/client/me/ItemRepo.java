@@ -11,6 +11,7 @@
 package appeng.client.me;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
@@ -47,6 +49,7 @@ import appeng.util.Platform;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class ItemRepo implements IDisplayRepo {
@@ -67,6 +70,13 @@ public class ItemRepo implements IDisplayRepo {
     private IPartitionList myPartitionList;
     private boolean hasPower;
     private boolean paused = false;
+    private final Map<IAEStack<?>, SortKey> sortKeys = new Object2ObjectOpenHashMap<>();
+    private final Comparator<IAEStack<?>> sortByName = ItemSorters.sortByName(this::getSortKey, k -> k.name);
+    private final Comparator<IAEStack<?>> sortByMod = ItemSorters
+            .sortByMod(this::getSortKey, SortKey::getModId, k -> k.name);
+    private boolean viewStale;
+    private boolean sizesChanged;
+    private boolean flowRatesChanged;
 
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
@@ -184,10 +194,20 @@ public class ItemRepo implements IDisplayRepo {
         }
 
         if (st != null) {
+            final boolean wasMeaningful = st.isMeaningful();
+            final boolean wasCraftable = st.isCraftable();
+            final long oldSize = st.getStackSize();
             st.reset();
             st.add(is);
+            final long newSize = st.getStackSize();
+            if (st.isMeaningful() != wasMeaningful || st.isCraftable() != wasCraftable
+                    || (oldSize == 0) != (newSize == 0)) {
+                this.viewStale = true;
+            }
+            if (newSize != oldSize) this.sizesChanged = true;
         } else {
             this.list.add(is);
+            this.viewStale = true;
         }
     }
 
@@ -197,8 +217,24 @@ public class ItemRepo implements IDisplayRepo {
         this.updateView();
     }
 
+    /** Rebuilds only when a pending update can change visibility or order; returns whether it rebuilt. */
+    public boolean updateViewIfChanged() {
+        final Enum display = this.sortSrc.getSortDisplay();
+        final Enum sortBy = this.sortSrc.getSortBy();
+        if (this.viewStale || display == ViewItems.CRAFTABLE
+                || (this.flowRatesChanged && display == ViewItems.FLOWING)
+                || (this.sizesChanged && (sortBy == SortOrder.AMOUNT || sortBy == SortOrder.INVTWEAKS))) {
+            this.updateView();
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void updateView() {
+        this.viewStale = false;
+        this.sizesChanged = false;
+        this.flowRatesChanged = false;
         IItemList<IAEStack<?>> visiblePins = getPinsCache(!AEConfig.instance.showCraftingPinsItemsInMainView, true);
         if (this.paused) {
             for (int i = this.view.size() - 1; i >= 0; i--) {
@@ -234,15 +270,19 @@ public class ItemRepo implements IDisplayRepo {
             ItemSorters.setDirection((appeng.api.config.SortDir) SortDir);
 
             if (SortBy == SortOrder.MOD) {
-                this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_MOD);
+                this.view.sort(this.sortByMod);
             } else if (SortBy == SortOrder.AMOUNT) {
                 this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
             } else if (SortBy == SortOrder.INVTWEAKS) {
                 this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
             } else {
-                this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_NAME);
+                this.view.sort(this.sortByName);
             }
         }
+    }
+
+    private SortKey getSortKey(final IAEStack<?> stack) {
+        return this.sortKeys.computeIfAbsent(stack, SortKey::new);
     }
 
     private void addEntriesToView(Iterable<IAEStack<?>> entries, IItemList<IAEStack<?>> visiblePins) {
@@ -294,8 +334,8 @@ public class ItemRepo implements IDisplayRepo {
             if (viewMode == ViewItems.FLOWING && !this.flowRates.containsKey(is)) continue;
 
             if (is instanceof IAEItemStack ais) {
-                if (registry.isBlacklisted(ais.getItemStack().getItem())
-                        || registry.isBlacklisted(ais.getItemStack().getItem().getClass())) {
+                final Item item = ais.getItem();
+                if (registry.isBlacklisted(item) || registry.isBlacklisted(item.getClass())) {
                     continue;
                 }
             }
@@ -373,6 +413,7 @@ public class ItemRepo implements IDisplayRepo {
     @Override
     public void clear() {
         this.list.resetStatus();
+        this.viewStale = true;
     }
 
     @Override
@@ -441,5 +482,23 @@ public class ItemRepo implements IDisplayRepo {
     @Override
     public void updateFlowRates(final Map<IAEStack<?>, FlowRate> rates) {
         this.flowRates = rates;
+        this.flowRatesChanged = true;
+    }
+
+    private static final class SortKey {
+
+        private final IAEStack<?> stack;
+        private final String name;
+        private String modId;
+
+        private SortKey(final IAEStack<?> stack) {
+            this.stack = stack;
+            this.name = ItemSorters.getSortName(stack);
+        }
+
+        private String getModId() {
+            if (this.modId == null) this.modId = this.stack.getModId();
+            return this.modId;
+        }
     }
 }
