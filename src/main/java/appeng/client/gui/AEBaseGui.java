@@ -573,6 +573,14 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     @Override
+    protected void mouseMovedOrUp(final int mouseX, final int mouseY, final int state) {
+        if (state >= 0 && this.getScrollBar() != null) {
+            this.getScrollBar().release();
+        }
+        super.mouseMovedOrUp(mouseX, mouseY, state);
+    }
+
+    @Override
     protected void handleMouseClick(final Slot slot, final int slotIdx, final int clickedButton, final int clickType) {
         if (clickType == 0 && this.draggedSlots.add(slot)) {
             final ItemStack holding = this.holdingNEIItem != null ? this.holdingNEIItem

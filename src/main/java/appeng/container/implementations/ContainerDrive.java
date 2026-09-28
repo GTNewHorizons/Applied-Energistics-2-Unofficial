@@ -12,14 +12,27 @@ package appeng.container.implementations;
 
 import net.minecraft.entity.player.InventoryPlayer;
 
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Settings;
 import appeng.container.AEBaseContainer;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.sync.handlers.ConfigEnumSyncHandler;
 import appeng.tile.storage.TileDrive;
+import appeng.util.Platform;
 
 public class ContainerDrive extends AEBaseContainer {
 
+    private final TileDrive drive;
+    private final ConfigEnumSyncHandler<AccessRestriction> reshuffleAccessSync;
+
     public ContainerDrive(final InventoryPlayer ip, final TileDrive drive) {
         super(ip, drive);
+        this.drive = drive;
+        this.reshuffleAccessSync = this.syncRegistrar().configEnum(
+                "reshuffleAccess",
+                Settings.RESHUFFLE_ACCESS,
+                AccessRestriction.class,
+                drive.getConfigManager());
 
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 2; x++) {
@@ -35,5 +48,17 @@ public class ContainerDrive extends AEBaseContainer {
         }
 
         this.bindPlayerInventory(ip, 0, 199 - /* height of player inventory */ 82);
+    }
+
+    @Override
+    public void detectAndSendChanges() {
+        if (Platform.isServer()) {
+            this.reshuffleAccessSync.syncFromConfig();
+        }
+        super.detectAndSendChanges();
+    }
+
+    public AccessRestriction getReshuffleAccess() {
+        return this.reshuffleAccessSync.get();
     }
 }

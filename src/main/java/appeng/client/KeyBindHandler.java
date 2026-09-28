@@ -10,7 +10,6 @@ import net.minecraft.world.World;
 
 import com.gtnewhorizon.gtnhlib.event.PickBlockEvent;
 
-import appeng.core.AEConfig;
 import appeng.core.CommonHelper;
 import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.network.NetworkHandler;
@@ -55,16 +54,9 @@ public class KeyBindHandler {
         final Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft.currentScreen != null || minecraft.thePlayer == null) return;
 
-        final AEConfig config = AEConfig.instance;
-        config.controllerAnimation = config.controllerAnimation.next();
-        config.get("Client", "controllerAnimation", ControllerAnimation.WAVE.name())
-                .set(config.controllerAnimation.name());
-        config.save();
-        minecraft.refreshResources();
+        final ControllerAnimation animation = ClientHelper.cycleControllerAnimation();
         minecraft.thePlayer.addChatMessage(
-                new ChatComponentTranslation(
-                        "chat.appliedenergistics2.ControllerAnimation",
-                        config.controllerAnimation.name()));
+                new ChatComponentTranslation("chat.appliedenergistics2.ControllerAnimation", animation.name()));
     }
 
     static boolean handlePickBlock() {
