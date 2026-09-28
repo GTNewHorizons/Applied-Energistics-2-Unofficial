@@ -26,6 +26,8 @@ import javax.annotation.Nonnull;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import appeng.api.AEApi;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
@@ -54,6 +56,8 @@ import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class ItemRepo implements IDisplayRepo {
 
+    private static final int SORT_KEY_PRUNE_FLOOR = 256;
+
     private final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
     private IAEStack<?>[] pinsRepo = new IAEStack<?>[0];
     private int visibleCraftingRows = 0;
@@ -70,7 +74,7 @@ public class ItemRepo implements IDisplayRepo {
     private IPartitionList myPartitionList;
     private boolean hasPower;
     private boolean paused = false;
-    private final Map<IAEStack<?>, SortKey> sortKeys = new Object2ObjectOpenHashMap<>();
+    private Object2ObjectOpenHashMap<IAEStack<?>, SortKey> sortKeys = new Object2ObjectOpenHashMap<>();
     private final Comparator<IAEStack<?>> sortByName = ItemSorters.sortByName(this::getSortKey, k -> k.name);
     private final Comparator<IAEStack<?>> sortByMod = ItemSorters
             .sortByMod(this::getSortKey, SortKey::getModId, k -> k.name);
@@ -280,7 +284,30 @@ public class ItemRepo implements IDisplayRepo {
             } else {
                 this.view.sort(this.sortByName);
             }
+
+            this.pruneSortKeys();
         }
+    }
+
+    private void pruneSortKeys() {
+        final int live = this.list.size();
+        if (this.sortKeys.size() <= Math.max(SORT_KEY_PRUNE_FLOOR, 2 * live)) return;
+        final Object2ObjectOpenHashMap<IAEStack<?>, SortKey> kept = new Object2ObjectOpenHashMap<>(live);
+        for (final IAEStack<?> is : this.list) {
+            final SortKey key = this.sortKeys.get(is);
+            if (key != null) kept.put(is, key);
+        }
+        this.sortKeys = kept;
+    }
+
+    @VisibleForTesting
+    public int getSortKeyCount() {
+        return this.sortKeys.size();
+    }
+
+    @VisibleForTesting
+    public Object peekSortKey(final IAEStack<?> stack) {
+        return this.sortKeys.get(stack);
     }
 
     private SortKey getSortKey(final IAEStack<?> stack) {

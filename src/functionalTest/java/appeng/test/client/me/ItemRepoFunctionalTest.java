@@ -189,4 +189,77 @@ public class ItemRepoFunctionalTest {
         final IAEStack<?> last = after.get(after.size() - 1);
         assertTrue(last instanceof IAEItemStack ais && ais.getItem() == Items.bread);
     }
+
+    @Test
+    void sortKeysPrunedAfterChurn() {
+        final Fixture fixture = newFixture();
+
+        for (int meta = 1; meta <= 600; meta++) {
+            fixture.repo.postUpdate(AEItemStack.create(new ItemStack(Items.stick, 1, meta)));
+        }
+        fixture.repo.updateView();
+        assertEquals(603, fixture.repo.getSortKeyCount());
+
+        for (int meta = 1; meta <= 600; meta++) {
+            final AEItemStack gone = AEItemStack.create(new ItemStack(Items.stick, 1, meta));
+            gone.setStackSize(0);
+            fixture.repo.postUpdate(gone);
+        }
+        fixture.repo.updateView();
+        assertEquals(3, fixture.repo.getSortKeyCount());
+        assertNotNull(fixture.repo.peekSortKey(AEItemStack.create(new ItemStack(Items.apple, 1))));
+
+        for (int meta = 601; meta <= 1200; meta++) {
+            fixture.repo.postUpdate(AEItemStack.create(new ItemStack(Items.stick, 1, meta)));
+        }
+        fixture.repo.updateView();
+        assertEquals(603, fixture.repo.getSortKeyCount());
+        assertNameSorted(fixture.repo);
+    }
+
+    @Test
+    void bouncingItemKeepsSortKey() {
+        final Fixture fixture = newFixture();
+        final AEItemStack stick = AEItemStack.create(new ItemStack(Items.stick, 1));
+        final Object keyBefore = fixture.repo.peekSortKey(stick);
+        assertNotNull(keyBefore);
+
+        final IAEItemStack zeroStick = stick.copy();
+        zeroStick.setStackSize(0);
+        fixture.repo.postUpdate(zeroStick);
+        fixture.repo.updateView();
+        assertNull(findItem(fixture.repo, Items.stick));
+
+        fixture.repo.postUpdate(AEItemStack.create(new ItemStack(Items.stick, 4)));
+        fixture.repo.updateView();
+        assertSame(keyBefore, fixture.repo.peekSortKey(stick));
+    }
+
+    @Test
+    void pruneKeepsKeysOfFilteredLiveStacks() {
+        final Fixture fixture = newFixture();
+        final AEItemStack apple = AEItemStack.create(new ItemStack(Items.apple, 1));
+        final Object appleKey = fixture.repo.peekSortKey(apple);
+        assertNotNull(appleKey);
+
+        final IAEItemStack craftableApple = apple.copy();
+        craftableApple.setStackSize(0);
+        craftableApple.setCraftable(true);
+        fixture.repo.postUpdate(craftableApple);
+        fixture.sort.display = ViewItems.STORED;
+        for (int meta = 1; meta <= 600; meta++) {
+            fixture.repo.postUpdate(AEItemStack.create(new ItemStack(Items.stick, 1, meta)));
+        }
+        fixture.repo.updateView();
+        assertNull(findItem(fixture.repo, Items.apple));
+
+        for (int meta = 1; meta <= 600; meta++) {
+            final AEItemStack gone = AEItemStack.create(new ItemStack(Items.stick, 1, meta));
+            gone.setStackSize(0);
+            fixture.repo.postUpdate(gone);
+        }
+        fixture.repo.updateView();
+        assertEquals(3, fixture.repo.getSortKeyCount());
+        assertSame(appleKey, fixture.repo.peekSortKey(apple));
+    }
 }
