@@ -99,7 +99,7 @@ public interface IMEInventory<StackType extends IAEStack> {
      * @param out       the IItemList the results will be written to
      * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
      *                  conflicts
-     * @param filter    optional filter
+     * @param filter    optional filter, must be kept the same throughout an iteration if NetworkItemList might be made
      * @return returns same list that was passed in, is passed out. Network-aware implementations may instead return a
      *         filtered {@link NetworkItemList} to preserve per-network accounting during nested scans.
      */

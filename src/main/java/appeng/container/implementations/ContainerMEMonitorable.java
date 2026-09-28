@@ -247,7 +247,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
             this.updateFlowTrackingState();
 
-            for (final Settings set : this.serverCM.getSettings()) {
+            for (final Settings set : this.clientCM.getSettings()) {
                 final Enum<?> sideLocal = this.serverCM.getSetting(set);
                 final Enum<?> sideRemote = this.clientCM.getSetting(set);
 

@@ -1,5 +1,10 @@
 package appeng.me.storage;
 
+import java.util.Optional;
+import java.util.function.Predicate;
+
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
@@ -30,6 +35,16 @@ public class MEInventoryWrapper<T extends IAEStack<T>> implements IMEInventory<T
     @Override
     public IItemList<T> getAvailableItems(IItemList<T> out, int iteration) {
         return this.delegate.getAvailableItems(out, iteration);
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
+        return this.delegate.getAvailableItems(out, iteration, filter);
+    }
+
+    @Override
+    public T getAvailableItem(@NotNull T request, int iteration) {
+        return this.delegate.getAvailableItem(request, iteration);
     }
 
     @Override

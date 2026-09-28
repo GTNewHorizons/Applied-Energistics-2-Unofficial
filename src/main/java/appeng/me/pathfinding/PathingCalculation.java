@@ -12,16 +12,23 @@ package appeng.me.pathfinding;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+
+import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridMultiblock;
 import appeng.api.networking.IGridNode;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
+import appeng.core.features.AEFeature;
 import appeng.me.GridConnection;
 import appeng.me.GridNode;
 import appeng.tile.networking.TileController;
@@ -34,13 +41,16 @@ import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
  * <p>
  * First, a BFS is performed starting from the controllers. This establishes a tree that connects all path items to a
  * controller. As nodes that require channels are visited, they are assigned a channel if possible. This is done by
- * checking the channel count of a few key nodes (max 3) along the path.
+ * checking the controller face and a few key nodes along the path.
  * <p>
  * Second, a DFS is performed to propagate the channel count upwards.
  */
 public class PathingCalculation {
 
+    private static final int CONTROLLER_FACE_CHANNELS = 32;
+
     private final IGrid grid;
+    private final int controllerFaceCapacity;
     /**
      * Path items that are part of a multiblock that was already granted a channel.
      */
@@ -63,6 +73,10 @@ public class PathingCalculation {
      */
     private final Reference2IntOpenHashMap<GridNode> channelBottlenecks = new Reference2IntOpenHashMap<>();
     /**
+     * Associates every path item with the controller face that supplies its channels.
+     */
+    private final Map<IPathItem, ControllerFace> controllerFaces = new IdentityHashMap<>();
+    /**
      * Nodes that have been granted a channel during the BFS pass.
      */
     private final Set<GridNode> channelNodes = new HashSet<>();
@@ -80,13 +94,21 @@ public class PathingCalculation {
      */
     public PathingCalculation(IGrid grid) {
         this.grid = grid;
+        this.controllerFaceCapacity = AEConfig.instance.isFeatureEnabled(AEFeature.Channels) ? CONTROLLER_FACE_CHANNELS
+                : Integer.MAX_VALUE;
 
         // Add every outgoing connection of the controllers (that doesn't point to another controller) to the list.
         for (IGridNode node : grid.getMachines(TileController.class)) {
             visited.add((IPathItem) node);
+            final Map<ForgeDirection, ControllerFace> faces = new EnumMap<>(ForgeDirection.class);
             for (var gcc : node.getConnections()) {
                 var gc = (GridConnection) gcc;
                 if (!(gc.getOtherSide(node).getMachine() instanceof TileController)) {
+                    controllerFaces.put(
+                            gc,
+                            faces.computeIfAbsent(
+                                    gc.getDirection(node),
+                                    ignored -> new ControllerFace(this.controllerFaceCapacity)));
                     enqueue(gc, 0);
                     gc.setControllerRoute((GridNode) node);
                 }
@@ -94,9 +116,15 @@ public class PathingCalculation {
         }
         for (IGridNode node : grid.getMachines(TileCreativeEnergyController.class)) {
             visited.add((IPathItem) node);
+            final Map<ForgeDirection, ControllerFace> faces = new EnumMap<>(ForgeDirection.class);
             for (var gcc : node.getConnections()) {
                 var gc = (GridConnection) gcc;
                 if (!(gc.getOtherSide(node).getMachine() instanceof TileController)) {
+                    controllerFaces.put(
+                            gc,
+                            faces.computeIfAbsent(
+                                    gc.getDirection(node),
+                                    ignored -> new ControllerFace(this.controllerFaceCapacity)));
                     enqueue(gc, 0);
                     gc.setControllerRoute((GridNode) node);
                 }
@@ -143,6 +171,7 @@ public class PathingCalculation {
                 if (!this.visited.contains(pi)) {
                     // Set BFS parent.
                     pi.setControllerRoute(i);
+                    this.controllerFaces.put(pi, this.controllerFaces.get(i));
 
                     if (pi.hasFlag(GridFlags.REQUIRE_CHANNEL)) {
                         if (!this.multiblocksWithChannel.contains(pi)) {
@@ -188,6 +217,11 @@ public class PathingCalculation {
             return false;
         }
 
+        final ControllerFace controllerFace = this.controllerFaces.get(start);
+        if (!controllerFace.canUseChannel()) {
+            return false;
+        }
+
         // Check that the allocation is possible.
         GridNode pi = start;
         while (pi != null) {
@@ -205,8 +239,27 @@ public class PathingCalculation {
             pi = pi.getHighestSimilarAncestor();
         }
 
+        controllerFace.useChannel();
         channelNodes.add(start);
         return true;
+    }
+
+    static final class ControllerFace {
+
+        private final int capacity;
+        private int usedChannels;
+
+        ControllerFace(final int capacity) {
+            this.capacity = capacity;
+        }
+
+        boolean canUseChannel() {
+            return this.usedChannels < this.capacity;
+        }
+
+        void useChannel() {
+            this.usedChannels++;
+        }
     }
 
     private static final Object SUBTREE_END = new Object();

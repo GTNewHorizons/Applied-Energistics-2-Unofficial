@@ -776,6 +776,12 @@ public class GuiMEMonitorable extends AEBaseGui
                 return true;
             }
             case keyBindPickBlockAction -> {
+                if (player.inventory.getItemStack() != null) {
+                    // middle click while holding an item; conflict with other feature like MatterManipulator pick
+                    // block.
+                    return false;
+                }
+
                 if (slot.getAEStack() != null && slot.getAEStack().isCraftable()) {
                     this.sendAction(MonitorableAction.AUTO_CRAFT, slot.getAEStack(), -1);
                     return true;
