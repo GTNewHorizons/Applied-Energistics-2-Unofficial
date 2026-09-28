@@ -157,7 +157,8 @@ public class PacketPickBlock extends AppEngPacket {
             return;
         }
 
-        if (isMissingFromStorage(wirelessInventory.getStorageList().findPrecise(targetAeItemStack))
+        if (pickBlockItemStack == null
+                && isMissingFromStorage(wirelessInventory.getStorageList().findPrecise(targetAeItemStack))
                 && openCraftAmountGui(sender, wirelessTerminal, targetAeItemStack, wirelessGrid)) {
             return;
         }
