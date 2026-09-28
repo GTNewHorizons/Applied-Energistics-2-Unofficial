@@ -157,7 +157,7 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
     }
 
     private long doOutput(long aVoltage, long aAmperage) {
-        if (!this.isOutput()) {
+        if (!this.isOutput() || !this.getProxy().isActive()) {
             return 0L;
         } else {
             TileEntity te = this.getTarget();
