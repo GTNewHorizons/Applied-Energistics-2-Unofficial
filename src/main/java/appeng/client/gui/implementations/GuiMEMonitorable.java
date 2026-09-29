@@ -905,11 +905,16 @@ public class GuiMEMonitorable extends AEBaseGui
         s.yDisplayPosition = s.getY() + this.ySize - 78 - 5;
     }
 
+    public boolean isSearchFieldManuallyFocused() {
+        return searchField.isFocused() && !isAutoFocused;
+    }
+
     @Override
     protected void keyTyped(final char character, final int key) {
         if (!searchField.isFocused() && (!NEI.searchField.existsSearchField() || !NEI.searchField.focused())
                 && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
             searchField.setFocused(true);
+            isAutoFocused = false;
             return;
         }
 
