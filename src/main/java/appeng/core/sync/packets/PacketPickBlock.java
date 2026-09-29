@@ -88,12 +88,8 @@ public class PacketPickBlock extends AppEngPacket {
             return;
         }
 
-        // 3. If there are no partial stacks and the player's inventory is full,
-        // then return since we cannot add a retrieved stack to a full inventory
+        // 3. Find a slot for retrieved items. A full inventory can still request a craft.
         int nextEmptySlot = sender.inventory.getFirstEmptyStack();
-        if (partialStackSlotsList.isEmpty() && nextEmptySlot == -1) {
-            return;
-        }
 
         // 4. Consolidate all partial stacks of target block into 1 ItemStack.
         // If a full stack is obtained, set it as the active slot and return.
@@ -160,6 +156,10 @@ public class PacketPickBlock extends AppEngPacket {
         if (pickBlockItemStack == null
                 && isMissingFromStorage(wirelessInventory.getStorageList().findPrecise(targetAeItemStack))
                 && openCraftAmountGui(sender, wirelessTerminal, targetAeItemStack, wirelessGrid)) {
+            return;
+        }
+
+        if (pickBlockSlot < 0) {
             return;
         }
 
@@ -312,7 +312,7 @@ public class PacketPickBlock extends AppEngPacket {
      * @param pickBlockInventorySlot the inventory slot of the ItemStack to move
      */
     private void movePickBlockItemStack(EntityPlayerMP player, int pickBlockInventorySlot) {
-        if (player.inventory.getStackInSlot(pickBlockInventorySlot) == null) {
+        if (pickBlockInventorySlot < 0 || player.inventory.getStackInSlot(pickBlockInventorySlot) == null) {
             return;
         }
         var firstEmptyHotbarSlot = PlayerInventoryUtil.getFirstEmptyHotbarSlot(player);
