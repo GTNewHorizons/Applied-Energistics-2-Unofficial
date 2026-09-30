@@ -23,7 +23,7 @@ import appeng.util.item.PrioritizedNetworkItemList;
  *
  * @param <StackType>
  */
-public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInventory<StackType> {
+public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInventory<StackType>, IReshuffleAccess {
 
     /**
      * determine if items can be injected/extracted.
@@ -93,11 +93,6 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
      */
     default boolean isAutoCraftingInventory() {
         return false;
-    }
-
-    /** READ permits reshuffler extraction; WRITE permits reshuffler insertion. */
-    default AccessRestriction getReshuffleAccess() {
-        return AccessRestriction.READ_WRITE;
     }
 
     /** returns internal IMEInventory if it has one */
