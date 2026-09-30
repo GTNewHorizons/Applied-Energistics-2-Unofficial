@@ -13,13 +13,18 @@
 
 package appeng.api.storage;
 
-import appeng.api.networking.security.IActionHost;
+import appeng.api.config.AccessRestriction;
 
 /**
- * Represents an {@link appeng.api.networking.IGridHost} that contributes to storage, such as a ME Chest, or ME Drive.
+ * Shared reshuffler permissions for cell containers and inventory handlers.
  */
-public interface ICellContainer extends IActionHost, ICellProvider, ISaveProvider, IReshuffleAccess {
+public interface IReshuffleAccess {
 
-    @Deprecated
-    default void blinkCell(int slot) {}
+    /**
+     * READ permits reshuffler extraction; WRITE permits reshuffler insertion. Implementations without reshuffler
+     * configuration allow both by default.
+     */
+    default AccessRestriction getReshuffleAccess() {
+        return AccessRestriction.READ_WRITE;
+    }
 }
