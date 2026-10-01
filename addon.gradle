@@ -33,6 +33,8 @@ tasks.named("assemble").configure {
 def functionalTestRunProperty = "ae2.withFunctionalTests"
 def withFunctionalTests = providers.gradleProperty(functionalTestRunProperty).map { it.toBoolean() }.orElse(false).get()
 def isCi = providers.environmentVariable("CI").map { it.toBoolean() }.orElse(false).get()
+def benchmarkProperty = "ae2.craftingBenchmark"
+def withCraftingBenchmark = providers.gradleProperty(benchmarkProperty).map { it.toBoolean() }.orElse(false).get()
 
 def addFunctionalTestsToRun = { JavaExec task ->
     task.dependsOn(functionalTestSet.jarTaskName)
@@ -53,8 +55,30 @@ tasks.register("runFunctionalTestClient", GradleBuild) {
     startParameter.projectProperties.put(functionalTestRunProperty, "true")
 }
 
-if (withFunctionalTests || isCi) {
+tasks.register("runCraftingBenchmark", GradleBuild) {
+    group = "verification"
+    description = "Benchmarks repeated crafting CPU dispatches in an initialized Minecraft server"
+    setTasks(["runServer"])
+    startParameter.projectProperties.putAll(gradle.startParameter.projectProperties)
+    startParameter.projectProperties.put(benchmarkProperty, "true")
+}
+
+if (withFunctionalTests || isCi || withCraftingBenchmark) {
     tasks.named("runServer", JavaExec).configure(addFunctionalTestsToRun)
+}
+
+if (withCraftingBenchmark) {
+    tasks.named("runServer", JavaExec).configure {
+        systemProperty(benchmarkProperty, "true")
+        [units: "10000000", operations: "4096", warmup: "10", samples: "7",
+         output: layout.buildDirectory.file("benchmarks/crafting.json").get().asFile.absolutePath].each { key, fallback ->
+            def propertyName = "${benchmarkProperty}.${key}"
+            systemProperty(propertyName, providers.gradleProperty(propertyName).orElse(fallback).get())
+        }
+        minHeapSize = "1G"
+        maxHeapSize = "1G"
+        jvmArgs("-XX:+UseG1GC")
+    }
 }
 
 if (withFunctionalTests) {
