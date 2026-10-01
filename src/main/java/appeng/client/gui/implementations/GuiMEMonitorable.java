@@ -843,6 +843,8 @@ public class GuiMEMonitorable extends AEBaseGui
     public void onGuiClosed() {
         super.onGuiClosed();
         memoryText = this.searchField.getText();
+        // Reacquire focus on reopening so native text input restarts after a screen change.
+        this.searchField.setFocused(false);
         Keyboard.enableRepeatEvents(false);
     }
 
@@ -911,6 +913,11 @@ public class GuiMEMonitorable extends AEBaseGui
 
     @Override
     protected void keyTyped(final char character, final int key) {
+        // Opening NEI can leave text events queued for this now-hidden terminal.
+        if (this.mc.currentScreen != this) {
+            return;
+        }
+
         if (!searchField.isFocused() && (!NEI.searchField.existsSearchField() || !NEI.searchField.focused())
                 && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
             searchField.setFocused(true);
