@@ -172,6 +172,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     protected boolean isComplete = true;
     protected int remainingOperations;
     protected boolean somethingChanged;
+    private boolean deferMarkDirty;
+    private boolean markDirtyPending;
 
     protected long lastTime;
     protected long elapsedTime;
@@ -540,7 +542,11 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void markDirty() {
-        this.getCore().markDirty();
+        if (this.deferMarkDirty) {
+            this.markDirtyPending = true;
+        } else {
+            this.getCore().markDirty();
+        }
     }
 
     protected void postCraftingStatusChange(final IAEStack<?> diff) {
@@ -776,20 +782,31 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.workableTasks.clear();
         this.workableTasks.putAll(this.tasks);
         this.knownBusyMediums.clear();
-        if (this.remainingOperations > 0) {
-            do {
-                this.somethingChanged = false;
-                this.executeCrafting(eg, cc);
-            } while (this.somethingChanged && this.remainingOperations > 0);
-        }
-        this.usedOps[2] = this.usedOps[1];
-        this.usedOps[1] = this.usedOps[0];
-        this.usedOps[0] = started - this.remainingOperations;
+        // Notify the core once after all dispatches, including early returns and fake crafting completion.
+        final boolean wasDeferringMarkDirty = this.deferMarkDirty;
+        this.deferMarkDirty = true;
+        try {
+            if (this.remainingOperations > 0) {
+                do {
+                    this.somethingChanged = false;
+                    this.executeCrafting(eg, cc);
+                } while (this.somethingChanged && this.remainingOperations > 0);
+            }
+            this.usedOps[2] = this.usedOps[1];
+            this.usedOps[1] = this.usedOps[0];
+            this.usedOps[0] = started - this.remainingOperations;
 
-        this.knownBusyMediums.clear();
+            this.knownBusyMediums.clear();
 
-        if (this.remainingOperations > 0 && !this.somethingChanged) {
-            this.waiting = true;
+            if (this.remainingOperations > 0 && !this.somethingChanged) {
+                this.waiting = true;
+            }
+        } finally {
+            this.deferMarkDirty = wasDeferringMarkDirty;
+            if (!this.deferMarkDirty && this.markDirtyPending) {
+                this.markDirtyPending = false;
+                this.markDirty();
+            }
         }
     }
 
@@ -836,6 +853,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 mediumListCheck = parallelismProvider.getOrDefault(details, new ArrayList<>(mediumsList));
             }
 
+            // Keep expansions local so later task visits can resolve updated tunnel patterns.
+            List<IAEStack<?>> expandedInputs = null;
             doWhileCraftingLoop: do {
                 MEInventoryCrafting craftingInventory = null;
                 didPatternCraft = false;
@@ -865,10 +884,12 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     double sum = 0;
                     if (craftingInventory == null) {
                         final boolean craftable = details.isCraftable();
-                        final List<IAEStack<?>> expandedInputs = craftable ? Arrays.asList(details.getAEInputs())
-                                : getExpandedInputs(details, cc);
                         if (expandedInputs == null) {
-                            throw new IllegalStateException("Input-only pattern expansion failed");
+                            expandedInputs = craftable ? Arrays.asList(details.getAEInputs())
+                                    : getExpandedInputs(details, cc);
+                            if (expandedInputs == null) {
+                                throw new IllegalStateException("Input-only pattern expansion failed");
+                            }
                         }
 
                         for (final IAEStack<?> anInput : expandedInputs) {
@@ -964,13 +985,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 // Smart blocking is fine sending the same recipe again.
                                 if (medium.getBlockingMode() == BlockingMode.BLOCKING) break;
 
-                                final List<IAEStack<?>> condensedInputsForRetry = getExpandedCondensedInputs(
-                                        details,
-                                        cc);
-                                if (condensedInputsForRetry == null) {
-                                    throw new IllegalStateException("Input-only pattern expansion failed");
-                                }
-                                if (!this.canCraft(details, condensedInputsForRetry)) {
+                                if (!this.canCraft(details, condensedInputs)) {
                                     sr = ScheduledReason.NOT_ENOUGH_INGREDIENTS;
                                     break;
                                 }
@@ -1030,11 +1045,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         // Smart blocking is fine sending the same recipe again.
                         if (medium.getBlockingMode() == BlockingMode.BLOCKING) break;
 
-                        final List<IAEStack<?>> condensedInputsForRetry = getExpandedCondensedInputs(details, cc);
-                        if (condensedInputsForRetry == null) {
-                            throw new IllegalStateException("Input-only pattern expansion failed");
-                        }
-                        if (!this.canCraft(details, condensedInputsForRetry)) {
+                        if (!this.canCraft(details, condensedInputs)) {
                             sr = ScheduledReason.NOT_ENOUGH_INGREDIENTS;
                             break;
                         }
