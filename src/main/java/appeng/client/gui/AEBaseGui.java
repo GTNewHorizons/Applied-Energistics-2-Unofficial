@@ -914,6 +914,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
      * Draw slot
      */
     public void func_146977_a(final Slot s) {
+        if (s instanceof AppEngSlot aeSlot && !aeSlot.shouldDisplay()) {
+            return;
+        }
+
         if (s instanceof SlotFake slotFake) {
             this.drawSlotWithAEFont(slotFake);
             return;
