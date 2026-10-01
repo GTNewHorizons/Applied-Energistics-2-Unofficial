@@ -1696,16 +1696,18 @@ public class Platform {
                 }
             }
 
-            final boolean checkFuzzy = ae_req.isOre()
-                    || providedTemplate.getItemDamage() == OreDictionary.WILDCARD_VALUE
+            final boolean wildcard = providedTemplate.getItemDamage() == OreDictionary.WILDCARD_VALUE;
+            final boolean checkFuzzy = ae_req.isOre() || wildcard
                     || providedTemplate.hasTagCompound()
                     || providedTemplate.isItemStackDamageable();
 
             if (items != null && checkFuzzy) {
                 for (final IAEItemStack x : items) {
                     final ItemStack sh = x.getItemStack();
-                    if ((Platform.isSameItemType(providedTemplate, sh) || ae_req.sameOre(x))
-                            && !Platform.isSameItem(sh, output)) { // Platform.isSameItemType( sh, providedTemplate )
+                    // Recipe wildcards accept any metadata of the same item, even without an ore dictionary entry.
+                    final boolean wildcardMatch = wildcard && sh != null && providedTemplate.getItem() == sh.getItem();
+                    if ((wildcardMatch || Platform.isSameItemType(providedTemplate, sh) || ae_req.sameOre(x))
+                            && !Platform.isSameItem(sh, output)) {
                         final ItemStack cp = Platform.cloneItemStack(sh);
                         cp.stackSize = 1;
                         ci.setInventorySlotContents(slot, cp);
