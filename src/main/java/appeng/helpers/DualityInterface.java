@@ -136,6 +136,7 @@ import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.inv.WrapperInvSlot;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
+import gregtech.api.metatileentity.BaseMetaPipeEntity;
 
 public class DualityInterface implements IGridTickable, IStorageMonitorable, IInventoryDestination, IAEAppEngInventory,
         IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost, IGridProxyable, IStorageInterceptor {
@@ -1596,6 +1597,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(directedTile, direction.getOpposite());
+            // EnderIO conduits and GT pipes are transport, not a target machine
+            if (adaptor instanceof AdaptorConduitBandle
+                    || (Platform.isGTLoaded && directedTile instanceof BaseMetaPipeEntity)) {
+                continue;
+            }
             if (directedTile instanceof ICraftingMachine || adaptor != null) {
                 if (directedTile instanceof IInventory && ((IInventory) directedTile).getSizeInventory() == 0) {
                     continue;
