@@ -139,7 +139,7 @@ public abstract class AbstractRendererPreview {
                     ViewHelper.getPreviewZ());
         }
 
-        return partHost.canAddPart(ViewHelper.getCachedItemStack(), ViewHelper.getPlacementSide());
+        return !partHost.canAddPart(ViewHelper.getCachedItemStack(), ViewHelper.getPlacementSide());
     }
 
     protected boolean canPlace(World world, ForgeDirection side, int x, int y, int z) {
