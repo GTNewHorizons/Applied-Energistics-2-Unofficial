@@ -20,7 +20,6 @@ import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 import org.junit.platform.launcher.listeners.TestExecutionSummary;
 import org.junit.platform.reporting.legacy.xml.LegacyXmlReportGeneratingListener;
 
-import appeng.test.benchmark.CraftingCPUClusterBenchmark;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
@@ -45,14 +44,6 @@ public class AppengTestMod {
 
     @EventHandler
     public void onServerStarted(FMLServerStartedEvent startedEv) {
-        if (Boolean.getBoolean("ae2.craftingBenchmark")) {
-            try {
-                CraftingCPUClusterBenchmark.run();
-            } finally {
-                MinecraftServer.getServer().initiateShutdown();
-            }
-            return;
-        }
         MinecraftServer.getServer().addChatMessage(new ChatComponentText("Running AE2 unit tests..."));
         runTests();
         MinecraftServer.getServer().addChatMessage(new ChatComponentText("Running AE2 unit tests finished"));
