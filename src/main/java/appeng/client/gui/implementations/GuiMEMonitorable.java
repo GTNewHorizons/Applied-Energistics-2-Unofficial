@@ -56,7 +56,6 @@ import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
-import appeng.api.storage.data.IDisplayRepo;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.ActionKey;
@@ -119,7 +118,7 @@ public class GuiMEMonitorable extends AEBaseGui
     public static final int keyBindPickBlockAction = 1_000_101;
 
     private static String memoryText = "";
-    private final IDisplayRepo repo;
+    private final ItemRepo repo;
     protected int offsetRepoX = 9;
     protected int offsetRepoY = 18;
     private final int MAGIC_HEIGHT_NUMBER = 114 + 1;
@@ -154,6 +153,7 @@ public class GuiMEMonitorable extends AEBaseGui
     public final boolean hasPinHost;
     private boolean enableShiftPause = true;
     private boolean needsViewUpdate = false;
+    private int scrollBarRepoSize = -1;
 
     protected VirtualMEPinSlot[] pinSlots = null;
     protected VirtualMEMonitorableSlot[] monitorableSlots = null;
@@ -198,7 +198,6 @@ public class GuiMEMonitorable extends AEBaseGui
                 final String text = getText();
                 repo.setSearchString(text.trim());
                 repo.updateView();
-                setScrollBar();
 
                 if (AEConfig.instance.preserveSearchBar) monitorableContainer.saveSearchString(this.getText());
             }
@@ -225,6 +224,7 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     private void setScrollBar() {
+        this.scrollBarRepoSize = this.repo.size();
         this.getScrollBar().setTop(this.offsetRepoY).setLeft(166 + this.offsetRepoX).setHeight(this.rows * 18 - 2);
         int totalPinRows = craftingPinsRows.ordinal() + playerPinsRows.ordinal();
         this.getScrollBar().setRange(
@@ -1106,9 +1106,9 @@ public class GuiMEMonitorable extends AEBaseGui
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         if (this.needsViewUpdate) {
             this.needsViewUpdate = false;
-            this.repo.updateView();
-            this.setScrollBar();
+            this.repo.updateViewIfChanged();
         }
+        if (this.repo.size() != this.scrollBarRepoSize) this.setScrollBar();
 
         handleTooltip(mouseX, mouseY, searchField);
 
