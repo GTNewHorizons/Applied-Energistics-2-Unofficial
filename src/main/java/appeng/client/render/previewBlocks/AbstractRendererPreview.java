@@ -139,19 +139,7 @@ public abstract class AbstractRendererPreview {
                     ViewHelper.getPreviewZ());
         }
 
-        IPart existingPart = partHost.getPart(ViewHelper.getPlacementSide());
-        if (existingPart != null) {
-            return true;
-        }
-
-        IPart centerPart = partHost.getPart(ForgeDirection.UNKNOWN);
-
-        if (centerPart instanceof PartCable cablePart) {
-            BusSupport busSupport = cablePart.supportsBuses();
-            return busSupport != BusSupport.CABLE && busSupport != BusSupport.DENSE_CABLE;
-        }
-
-        return !hasParts(partHost);
+        return partHost.canAddPart(ViewHelper.getCachedItemStack(), ViewHelper.getPlacementSide());
     }
 
     protected boolean canPlace(World world, ForgeDirection side, int x, int y, int z) {
@@ -169,16 +157,7 @@ public abstract class AbstractRendererPreview {
             return canPlaceBlockAt(world, neighborX, neighborY, neighborZ);
         }
 
-        if (partHost.getPart(side.getOpposite()) != null) {
-            return false;
-        }
-
-        IPart centerPart = partHost.getPart(ForgeDirection.UNKNOWN);
-        if (centerPart instanceof IPartCable cable) {
-            return cable.supportsBuses() == BusSupport.CABLE;
-        }
-
-        return hasParts(partHost);
+        return partHost.canAddPart(ViewHelper.getCachedItemStack(), side.getOpposite());
     }
 
     protected void renderBase(double minXBase, double minYBase, double minZBase, double maxXBase, double maxYBase,
