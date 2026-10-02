@@ -132,8 +132,7 @@ public class GuiInterface extends GuiUpgradeable {
                 this.guiLeft - 18,
                 this.guiTop + offset,
                 Settings.ADVANCED_BLOCKING_MODE,
-                AdvancedBlockingMode.DEFAULT);
-        this.advancedBlockingMode.visible = this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0;
+                AdvancedBlockingMode.NONE);
         this.buttonList.add(advancedBlockingMode);
 
         offset += 18;
@@ -365,9 +364,6 @@ public class GuiInterface extends GuiUpgradeable {
     @Override
     protected void handleButtonVisibility() {
         super.handleButtonVisibility();
-        if (this.advancedBlockingMode != null) {
-            this.advancedBlockingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0);
-        }
         if (this.lockCraftingMode != null) {
             this.lockCraftingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.LOCK_CRAFTING) > 0);
         }
