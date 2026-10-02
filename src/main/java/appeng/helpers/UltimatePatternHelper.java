@@ -56,9 +56,10 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
         this.inputOnly = encodedValue.getBoolean("tunnel");
         this.inputOnlyUuid = readInputOnlyUuid(encodedValue, this.inputOnly);
 
-        if (encodedValue.hasKey("author")) {
+        if (encodedValue.hasKey("author") || encodedValue.hasKey("encodedAt")) {
             final ItemStack forComparison = this.patternItem.copy();
             forComparison.stackTagCompound.removeTag("author");
+            forComparison.stackTagCompound.removeTag("encodedAt");
             this.pattern = AEItemStack.create(forComparison);
         } else {
             this.pattern = AEItemStack.create(is);
