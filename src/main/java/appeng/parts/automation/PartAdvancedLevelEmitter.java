@@ -55,17 +55,19 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
 
     private static final int FLAG_ON = 8;
     private static final int SLOTS = SLOT_COUNT;
+    private static final int CONFIG_SLOTS = SLOTS * 2;
 
     private static final double RED = 255 / 255d;
     private static final double GREEN = 4 / 255d;
     private static final double BLUE = 211 / 255d;
 
-    private final IAEStackInventory config = new IAEStackInventory(this, SLOTS, StorageName.CONFIG);
+    private final IAEStackInventory config = new IAEStackInventory(this, CONFIG_SLOTS, StorageName.CONFIG);
 
     private final boolean[] slotActive = new boolean[SLOTS];
     private final boolean[] slotInverted = new boolean[SLOTS];
     private final long[] amount = new long[SLOTS];
     private final long[] lastReportedValue = new long[SLOTS];
+    private final long[] lastReportedComparisonValue = new long[SLOTS];
 
     private boolean prevState = false;
 
@@ -123,6 +125,20 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     @Override
     public boolean isSlotInverted(final int slot) {
         return this.slotInverted[slot];
+    }
+
+    private IAEStack<?> getComparisonStack(final int slot) {
+        return this.config.getAEStackInSlot(slot + COMPARISON_SLOT_OFFSET);
+    }
+
+    private long getThreshold(final int slot) {
+        return this.getComparisonStack(slot) == null ? this.amount[slot] : this.lastReportedComparisonValue[slot];
+    }
+
+    private boolean isConditionMet(final int slot) {
+        final long threshold = this.getThreshold(slot);
+        return this.slotInverted[slot] ? this.lastReportedValue[slot] < threshold
+                : this.lastReportedValue[slot] >= threshold;
     }
 
     @Override
@@ -185,8 +201,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
             }
 
             sawActive = true;
-            final boolean slotState = this.slotInverted[slot] ? this.lastReportedValue[slot] < this.amount[slot]
-                    : this.lastReportedValue[slot] >= this.amount[slot];
+            final boolean slotState = this.isConditionMet(slot);
 
             result = mode == BooleanOperation.AND ? result && slotState : result || slotState;
         }
@@ -216,8 +231,13 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
 
             for (int slot = 0; slot < SLOTS; slot++) {
                 final IAEStack<?> stack = this.config.getAEStackInSlot(slot);
+                final IAEStack<?> comparisonStack = this.getComparisonStack(slot);
                 if (stack != null) {
                     this.myWatcher.add(stack);
+                }
+
+                if (comparisonStack != null) {
+                    this.myWatcher.add(comparisonStack);
                 }
             }
         }
@@ -233,25 +253,29 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     }
 
     private void updateReportingValueForSlot(final int slot) {
-        final IAEStack<?> myStack = this.config.getAEStackInSlot(slot);
-
-        if (myStack == null) {
-            this.lastReportedValue[slot] = 0;
-            return;
-        }
-
         try {
-            final IMEMonitor monitor = this.getProxy().getStorage().getMEMonitor(myStack.getStackType());
-            if (monitor == null) {
-                this.lastReportedValue[slot] = 0;
-                return;
-            }
+            final IAEStack<?> stack = this.config.getAEStackInSlot(slot);
+            final IAEStack<?> comparisonStack = this.getComparisonStack(slot);
 
-            final IAEStack<?> r = monitor.getStorageList().findPrecise((IAEStack) myStack);
-            this.lastReportedValue[slot] = r == null ? 0 : r.getStackSize();
+            this.lastReportedValue[slot] = this.getNetworkAmount(stack);
+            this.lastReportedComparisonValue[slot] = this.getNetworkAmount(comparisonStack);
         } catch (final GridAccessException e) {
             // >.>
         }
+    }
+
+    private long getNetworkAmount(final IAEStack<?> stack) throws GridAccessException {
+        if (stack == null) {
+            return 0;
+        }
+
+        final IMEMonitor monitor = this.getProxy().getStorage().getMEMonitor(stack.getStackType());
+        if (monitor == null) {
+            return 0;
+        }
+
+        final IAEStack<?> networkStack = monitor.getStorageList().findPrecise((IAEStack) stack);
+        return networkStack == null ? 0 : networkStack.getStackSize();
     }
 
     @Override
@@ -261,8 +285,14 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
 
         for (int slot = 0; slot < SLOTS; slot++) {
             final IAEStack<?> myStack = this.config.getAEStackInSlot(slot);
+            final IAEStack<?> comparisonStack = this.getComparisonStack(slot);
             if (myStack != null && fullStack.equals(myStack)) {
                 this.lastReportedValue[slot] = fullStack.getStackSize();
+                changed = true;
+            }
+
+            if (comparisonStack != null && fullStack.equals(comparisonStack)) {
+                this.lastReportedComparisonValue[slot] = fullStack.getStackSize();
                 changed = true;
             }
         }
@@ -577,6 +607,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
             this.slotInverted[slot] = tag.getBoolean("inverted");
             this.amount[slot] = tag.getLong("amount");
             this.lastReportedValue[slot] = tag.getLong("lastReportedValue");
+            this.lastReportedComparisonValue[slot] = tag.getLong("lastReportedComparisonValue");
         }
     }
 
@@ -593,6 +624,7 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
             tag.setBoolean("inverted", this.slotInverted[slot]);
             tag.setLong("amount", this.amount[slot]);
             tag.setLong("lastReportedValue", this.lastReportedValue[slot]);
+            tag.setLong("lastReportedComparisonValue", this.lastReportedComparisonValue[slot]);
             list.appendTag(tag);
         }
         data.setTag("slots", list);
@@ -641,13 +673,11 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
                 continue;
             }
 
-            final boolean slotState = this.slotActive[slot]
-                    && (this.slotInverted[slot] ? this.lastReportedValue[slot] < this.amount[slot]
-                            : this.lastReportedValue[slot] >= this.amount[slot]);
+            final boolean slotState = this.slotActive[slot] && this.isConditionMet(slot);
 
             result[slot] = new LevelItemInfo(
                     stack,
-                    this.getReportingValue(slot),
+                    this.getThreshold(slot),
                     -1,
                     slotState ? LevelState.Craft : LevelState.Idle);
         }
