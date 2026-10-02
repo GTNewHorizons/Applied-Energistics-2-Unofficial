@@ -20,281 +20,110 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import appeng.api.AEApi;
-import appeng.api.config.CopyMode;
-import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
-import appeng.helpers.ICellRestriction;
+import appeng.helpers.CellWorkbenchState;
+import appeng.helpers.ICellRestriction.CellData;
+import appeng.helpers.ICellRestriction.CellRestrictionData;
 import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.tile.AEBaseTile;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
-import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.InvOperation;
-import appeng.util.ConfigManager;
 import appeng.util.Platform;
 
 public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPrimaryGuiIconProvider {
 
-    private final AppEngInternalInventory cell = new AppEngInternalInventory(this, 1);
-    private final IAEStackInventory config = new IAEStackInventory(this, 63);
-    private final ConfigManager manager = new ConfigManager(this);
+    protected final CellWorkbenchState state = new CellWorkbenchState(this, this, this);
 
-    private IInventory cacheUpgrades = null;
-    private IAEStackInventory cacheConfig = null;
-    private boolean locked = false;
-    private long cellRestrictAmount;
-    private byte cellRestrictTypes;
-    @Nullable
-    private IAEStackType<?> type;
-    @Nullable
-    private IAEStackType<?> oldCellType;
-
-    public TileCellWorkbench() {
-        this.manager.registerSetting(Settings.COPY_MODE, CopyMode.CLEAR_ON_REMOVE);
-        this.cell.setEnableClientEvents(true);
-    }
-
+    @Override
     public IInventory getCellUpgradeInventory() {
-        if (this.cacheUpgrades == null) {
-            final ICellWorkbenchItem cell = this.getCell();
-            if (cell == null) {
-                return null;
-            }
-
-            final ItemStack is = this.cell.getStackInSlot(0);
-            if (is == null) {
-                return null;
-            }
-
-            final IInventory inv = cell.getUpgradesInventory(is);
-            if (inv == null) {
-                return null;
-            }
-
-            return this.cacheUpgrades = inv;
-        }
-        return this.cacheUpgrades;
+        return this.state.getCellUpgradeInventory();
     }
 
+    @Override
     public ICellWorkbenchItem getCell() {
-        if (this.cell.getStackInSlot(0) == null) {
-            return null;
-        }
-
-        if (this.cell.getStackInSlot(0).getItem() instanceof ICellWorkbenchItem) {
-            return ((ICellWorkbenchItem) this.cell.getStackInSlot(0).getItem());
-        }
-
-        return null;
+        return this.state.getCell();
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
-    public void writeToNBT_TileCellWorkbench(final NBTTagCompound data) {
-        this.cell.writeToNBT(data, "cell");
-        this.config.writeToNBT(data, "config");
-        this.manager.writeToNBT(data);
+    public void writeToNBT_TileCellWorkbench(NBTTagCompound data) {
+        this.state.writeToNBT(data);
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
-    public void readFromNBT_TileCellWorkbench(final NBTTagCompound data) {
-        this.cell.readFromNBT(data, "cell");
-        this.config.readFromNBT(data, "config");
-        this.manager.readFromNBT(data);
+    public void readFromNBT_TileCellWorkbench(NBTTagCompound data) {
+        this.state.readFromNBT(data);
     }
 
     @Override
-    public IInventory getInventoryByName(final String name) {
-        if (name.equals("cell")) {
-            return this.cell;
-        }
-
-        return null;
+    public IInventory getInventoryByName(String name) {
+        return "cell".equals(name) ? this.state.getCellInventory() : null;
     }
 
     @Override
-    public int getInstalledUpgrades(final Upgrades u) {
-        final IInventory inv = getCellUpgradeInventory();
-        if (inv != null) {
-            for (int x = 0; x < inv.getSizeInventory(); x++) {
-                final ItemStack is = inv.getStackInSlot(x);
-                if (is != null && is.getItem() instanceof IUpgradeModule) {
-                    if (((IUpgradeModule) is.getItem()).getType(is) == u) return 1;
-                }
-            }
-        }
-        return 0;
+    public int getInstalledUpgrades(Upgrades upgrade) {
+        return this.state.getInstalledUpgrades(upgrade);
     }
 
     @Override
-    public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
-            final ItemStack removedStack, final ItemStack newStack) {
-        if (mc == InvOperation.markDirty) {
+    public void onChangeInventory(IInventory inventory, int slot, InvOperation operation, ItemStack removedStack,
+            ItemStack newStack) {
+        this.state.onChangeInventory(inventory, operation);
+        if (operation == InvOperation.markDirty) {
             this.saveChanges();
-            return;
-        }
-
-        if (inv == this.cell && !this.locked) {
-            this.cacheUpgrades = null;
-            this.cacheConfig = null;
-            if (Platform.isClient()) {
-                this.updateStackTypeFromCell();
-                return;
-            }
-
-            this.locked = true;
-
-            ItemStack is = this.cell.getStackInSlot(0);
-            if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
-                if (is != null && is.getItem() instanceof ICellRestriction icr)
-                    icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
-            }
-
-            if (this.updateStackTypeFromCell()) {
-                if (this.type != this.oldCellType) {
-                    for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                        this.config.putAEStackInSlot(x, null);
-                    }
-                }
-                this.oldCellType = this.type;
-            }
-
-            final IAEStackInventory configInventory = this.getCellConfigInventory();
-            if (configInventory != null) {
-                boolean cellHasConfig = false;
-                for (int x = 0; x < configInventory.getSizeInventory(); x++) {
-                    if (configInventory.getAEStackInSlot(x) != null) {
-                        cellHasConfig = true;
-                        break;
-                    }
-                }
-
-                if (cellHasConfig) {
-                    for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                        this.config.putAEStackInSlot(x, configInventory.getAEStackInSlot(x));
-                    }
-                } else {
-                    for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                        configInventory.putAEStackInSlot(x, this.config.getAEStackInSlot(x));
-                    }
-
-                    configInventory.markDirty();
-                }
-            } else if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.CLEAR_ON_REMOVE) {
-                for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                    this.config.putAEStackInSlot(x, null);
-                }
-
-                this.markDirty();
-            }
-
-            this.locked = false;
-        } else if (inv == cacheUpgrades) {
-            if (getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) setFilter("");
-        }
-    }
-
-    private IAEStackInventory getCellConfigInventory() {
-        if (this.cacheConfig == null) {
-            final ICellWorkbenchItem cell = this.getCell();
-            if (cell == null) {
-                return null;
-            }
-
-            final ItemStack is = this.cell.getStackInSlot(0);
-            if (is == null) {
-                return null;
-            }
-
-            final IAEStackInventory inv = cell.getConfigAEInventory(is);
-            if (inv == null) {
-                return null;
-            }
-
-            this.cacheConfig = inv;
-        }
-        return this.cacheConfig;
-    }
-
-    private boolean updateStackTypeFromCell() {
-        final ItemStack is = this.cell.getStackInSlot(0);
-        if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
-            this.type = wi.getStackType();
-            return true;
-        } else {
-            this.type = null;
-            return false;
-        }
-    }
-
-    @Override
-    public void getDrops(final World w, final int x, final int y, final int z, final List<ItemStack> drops) {
-        super.getDrops(w, x, y, z, drops);
-
-        if (this.cell.getStackInSlot(0) != null) {
-            drops.add(this.cell.getStackInSlot(0));
         }
     }
 
     @Override
     public IConfigManager getConfigManager() {
-        return this.manager;
+        return this.state.getConfigManager();
     }
 
     @Override
-    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
-        // nothing here..
+    public void updateSetting(IConfigManager manager, Enum settingName, Enum newValue) {
+        if (Platform.isServer()) {
+            this.saveChanges();
+        }
     }
 
     @Override
     public String getFilter() {
-        ItemStack is = this.cell.getStackInSlot(0);
-        if (is != null && is.getItem() instanceof ICellWorkbenchItem)
-            return ((ICellWorkbenchItem) is.getItem()).getOreFilter(is);
-        else return "";
+        return this.state.getFilter();
     }
 
     @Override
     public void setFilter(String filter) {
-        ItemStack is = this.cell.getStackInSlot(0);
-        if (is != null && is.getItem() instanceof ICellWorkbenchItem)
-            ((ICellWorkbenchItem) is.getItem()).setOreFilter(is, filter);
+        this.state.setFilter(filter);
+        this.saveChanges();
     }
 
     @Override
-    public CellData getCellData(ItemStack n) {
-        ItemStack is = this.cell.getStackInSlot(0);
-        if (is != null && is.getItem() instanceof ICellRestriction icr) return icr.getCellData(is);
-        return null;
+    @Nullable
+    public CellData getCellData(ItemStack stack) {
+        return this.state.getCellData();
     }
 
     @Override
-    public CellRestrictionData getCellRestrictionData(ItemStack n) {
-        ItemStack is = this.cell.getStackInSlot(0);
-        if (is != null && is.getItem() instanceof ICellRestriction icr) return icr.getCellRestrictionData(is);
-        return null;
+    @Nullable
+    public CellRestrictionData getCellRestrictionData(ItemStack stack) {
+        return this.state.getCellRestrictionData();
     }
 
     @Override
-    public void setCellRestriction(ItemStack n, CellRestrictionData newRestriction) {
-        if (newRestriction.isReset() || this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
-            this.cellRestrictTypes = newRestriction.restrictionTypes;
-            this.cellRestrictAmount = newRestriction.restrictionAmount;
-        }
-
-        ItemStack is = this.cell.getStackInSlot(0);
-        if (is != null && is.getItem() instanceof ICellRestriction icr) icr.setCellRestriction(is, newRestriction);
+    public void setCellRestriction(ItemStack stack, CellRestrictionData restriction) {
+        this.state.setCellRestriction(restriction);
+        this.saveChanges();
     }
 
     @Override
     public boolean isSame(ICellWorkbench cellWorkbench) {
-        return this == getWorldObj().getTileEntity(xCoord, yCoord, zCoord);
+        return this == this.getWorldObj().getTileEntity(this.xCoord, this.yCoord, this.zCoord);
     }
 
     @Override
@@ -304,26 +133,26 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
 
     @Override
     public void saveAEStackInv() {
-        if (!this.locked) {
-            final IAEStackInventory c = this.getCellConfigInventory();
-            if (c != null) {
-                for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                    c.putAEStackInSlot(x, this.config.getAEStackInSlot(x));
-                }
-
-                c.markDirty();
-            }
-        }
+        this.state.saveAEStackInv();
     }
 
     @Override
     public IAEStackInventory getAEInventoryByName(StorageName name) {
-        return this.config;
+        return this.state.getAEInventoryByName(name);
     }
 
     @Override
     @Nullable
     public IAEStackType<?> getStackType() {
-        return this.type;
+        return this.state.getStackType();
+    }
+
+    @Override
+    public void getDrops(World world, int x, int y, int z, List<ItemStack> drops) {
+        super.getDrops(world, x, y, z, drops);
+        ItemStack stack = this.state.getCellInventory().getStackInSlot(0);
+        if (stack != null) {
+            drops.add(stack);
+        }
     }
 }

@@ -68,6 +68,8 @@ public interface IItems {
 
     IItemDefinition portableCell();
 
+    IItemDefinition portableCellWorkbench();
+
     IItemDefinition cellCreative();
 
     IItemDefinition cellVoid();
