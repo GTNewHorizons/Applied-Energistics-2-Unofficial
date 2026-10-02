@@ -53,6 +53,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.ISimplifiedBundle;
 import appeng.api.parts.PartItemStack;
+import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.StorageName;
 import appeng.api.util.AECableType;
@@ -446,6 +447,9 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                         filters.getFiltersMap().putAll(provider.getTypeFilter(player));
                         filters.writeToNBT(data);
                     }
+                    if (this instanceof ITerminalPins terminal) {
+                        terminal.getPinsHandler(player).writeToNBT(data);
+                    }
                     memoryCard.setMemoryCardContents(memCardIS, name, data);
 
                     if (this.getInventoryByName("upgrades") instanceof UpgradeInventory ui)
@@ -475,6 +479,10 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                         filters.readFromNBT(data);
                         provider.getTypeFilter(player).putAll(filters.getFiltersMap());
                         provider.saveTypeFilter();
+                    }
+                    if (this instanceof ITerminalPins terminal && data.hasKey("pins", NBT.TAG_COMPOUND)) {
+                        terminal.getPinsHandler(player).readFromNBT(data);
+                        this.getHost().markForSave();
                     }
 
                     // After insertUpgrades for the same reason as above
