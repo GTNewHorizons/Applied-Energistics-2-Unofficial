@@ -60,6 +60,7 @@ import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
+import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
@@ -104,8 +105,8 @@ public class TileMolecularAssembler extends AENetworkInvTile
     }
 
     @Override
-    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table,
-            final ForgeDirection where) {
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier, final ForgeDirection where) {
         if (this.myPattern == null) {
             boolean isEmpty = true;
             for (int x = 0; x < this.inv.getSizeInventory(); x++) {

@@ -72,6 +72,7 @@ import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
+import appeng.util.inv.MEInventoryCrafting;
 import io.netty.buffer.ByteBuf;
 
 public class TileInterface extends AENetworkInvTile
@@ -269,8 +270,25 @@ public class TileInterface extends AENetworkInvTile
     }
 
     @Override
+    @Deprecated
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         return this.duality.pushPattern(patternDetails, table);
+    }
+
+    @Override
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier) {
+        return this.duality.pushPattern(patternDetails, table, multiplier);
+    }
+
+    @Override
+    public boolean canMergePatternPush(final ICraftingPatternDetails patternDetails) {
+        return this.duality.canMergePatternPush(patternDetails);
+    }
+
+    @Override
+    public int getMaxPatternPushMultiplier(final ICraftingPatternDetails patternDetails, final int maxMultiplier) {
+        return this.duality.getMaxPatternPushMultiplier(patternDetails, maxMultiplier);
     }
 
     @Override
