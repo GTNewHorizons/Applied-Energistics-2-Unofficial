@@ -15,6 +15,7 @@ import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import java.util.Arrays;
 
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -39,6 +40,7 @@ import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.slot.OptionalSlotRestrictedInput;
+import appeng.container.slot.SlotFake;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
@@ -250,6 +252,10 @@ public class GuiInterface extends GuiUpgradeable {
             }
         }
 
+        if (this.hasBlockingFilter()) {
+            this.drawTexturedModalRect(offsetX - 86, offsetY + 73, 178, 121, 68, 68);
+        }
+
         if (AEConfig.instance.highlightPatternTypeMismatchInGUI) {
             // highlight pattern slots with unsupported stack types
             for (final Object obj : this.cvb.inventorySlots) {
@@ -291,6 +297,28 @@ public class GuiInterface extends GuiUpgradeable {
     @Override
     protected String getBackground() {
         return "guis/interface.png";
+    }
+
+    @Override
+    public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
+        if (!this.hasBlockingFilter()) return false;
+        return x + w > this.guiLeft - 86 && x < this.guiLeft - 18 && y + h > this.guiTop + 73 && y < this.guiTop + 141;
+    }
+
+    private boolean hasBlockingFilter() {
+        return this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0
+                && ((ContainerInterface) this.cvb).getAdvancedBlockingMode() == AdvancedBlockingMode.BLOCK_ON_ALL;
+    }
+
+    @Override
+    protected void mouseClicked(final int mouseX, final int mouseY, final int mouseButton) {
+        final Slot slot = this.getSlot(mouseX, mouseY);
+        if (slot instanceof SlotFake && slot.xDisplayPosition < 0
+                && this.handleClickOrDragSlot(slot, this.getStackFromHand(), mouseButton)) {
+            return;
+        }
+
+        super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
