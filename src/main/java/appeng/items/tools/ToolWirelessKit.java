@@ -26,16 +26,16 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.networking.IGridHost;
-import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.WirelessMessages;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.IWirelessLink;
 import appeng.helpers.WireLessToolHelper;
+import appeng.helpers.WirelessAnchor;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.WirelessKitObject;
 import appeng.server.ServerHelper;
-import appeng.tile.networking.TileWirelessBase;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
 
@@ -91,9 +91,10 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
         final TileEntity te = w.getTileEntity(x, y, z);
 
         if (mode == WirelessToolMode.Super && te instanceof IGridHost)
-            return WireLessToolHelper.bindSuper(te, is, w, p);
+            return WireLessToolHelper.bindSuper(te, is, w, p, xOff, yOff, zOff);
 
-        if (!(te instanceof TileWirelessBase target)) return false;
+        final IWirelessLink target = WireLessToolHelper.resolveClicked(te, xOff, yOff, zOff);
+        if (target == null) return false;
 
         return switch (mode) {
             case Simple -> WireLessToolHelper.bindSimple(target, is, w, p);
@@ -136,9 +137,9 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
                 if (tag.getCompoundTag(WireLessToolHelper.NbtSimple).hasNoTags()) {
                     lines.add(WirelessMessages.SimpleEmpty.getLocal());
                 } else {
-                    final DimensionalCoord dc = DimensionalCoord
+                    final WirelessAnchor anchor = WirelessAnchor
                             .readFromNBT(tag.getCompoundTag(WireLessToolHelper.NbtSimple));
-                    lines.add(WirelessMessages.SimpleBounded.getLocal(dc.getGuiTextShortNoDim()));
+                    lines.add(WirelessMessages.SimpleBounded.getLocal(anchor.getGuiTextShortNoDim()));
                     lines.add(WirelessMessages.SimpleBound.getLocal());
                 }
             }
@@ -149,7 +150,7 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
                 lines.add(WirelessMessages.AdvancedActivated.getLocal(mode.getLocal()));
 
                 if (currentMode == WirelessToolMode.Advanced) {
-                    final List<DimensionalCoord> dcl = DimensionalCoord
+                    final List<WirelessAnchor> dcl = WirelessAnchor
                             .readAsListFromNBT(tag.getCompoundTag(WireLessToolHelper.NbtAdvanced));
                     if (dcl.isEmpty()) {
                         if (mode == AdvancedWirelessToolMode.Queueing)
@@ -179,7 +180,7 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
                     else {
                         lines.add(
                                 WirelessMessages.AdvancedLine1st.getLocal(
-                                        DimensionalCoord
+                                        WirelessAnchor
                                                 .readFromNBT(
                                                         line.getCompoundTag(WireLessToolHelper.NbtAdvanced1StPoint))
                                                 .getGuiTextShort()));
@@ -189,7 +190,7 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
                         else {
                             lines.add(
                                     WirelessMessages.AdvancedLine2nd.getLocal(
-                                            DimensionalCoord
+                                            WirelessAnchor
                                                     .readFromNBT(
                                                             line.getCompoundTag(WireLessToolHelper.NbtAdvanced2ndPoint))
                                                     .getGuiTextShort()));
@@ -203,20 +204,20 @@ public class ToolWirelessKit extends AEBaseItem implements IGuiItem {
 
             case Super -> {
                 final NBTTagCompound stash = tag.getCompoundTag(WireLessToolHelper.NbtSuper);
-                final List<DimensionalCoord> dcl = DimensionalCoord
+                final List<WirelessAnchor> dcl = WirelessAnchor
                         .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
                 if (dcl.isEmpty()) lines.add(WirelessMessages.SuperNetworkListEmpty.getLocal());
                 else {
                     lines.add(WirelessMessages.SuperNetworkList.getLocal());
                     final NBTTagList tagNames = stash.getTagList(WireLessToolHelper.NbtSuperNames, NBT.TAG_COMPOUND);
-                    for (final DimensionalCoord network : dcl) {
+                    for (final WirelessAnchor network : dcl) {
                         String customName = "";
 
                         // the position sits under "network", and colour entries carry a colour name instead
                         for (int i = 0; i < tagNames.tagCount(); i++) {
                             final NBTTagCompound tagName = tagNames.getCompoundTagAt(i);
                             if (!tagName.hasKey("networkName")) continue;
-                            if (!network.equals(DimensionalCoord.readFromNBT(tagName.getCompoundTag("network"))))
+                            if (!network.equals(WirelessAnchor.readFromNBT(tagName.getCompoundTag("network"))))
                                 continue;
 
                             customName = tagName.getString("networkName");
