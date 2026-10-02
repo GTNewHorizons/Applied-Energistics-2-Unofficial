@@ -68,7 +68,8 @@ public enum PlayerMessages implements Localization {
     WirelessGroupInOtherDim,
     WirelessHighlighterPrefix,
     WirelessHighlighterNetworkPrefix,
-    WirelessHighlighterColorPrefix;
+    WirelessHighlighterColorPrefix,
+    CableSwapped;
 
     @Deprecated // kept for backward compat
     public IChatComponent get() {

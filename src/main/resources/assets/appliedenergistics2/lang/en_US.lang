@@ -160,6 +160,7 @@ chat.appliedenergistics2.WirelessInOtherDim=%d §e"%d§e"§r located in dimensio
 chat.appliedenergistics2.WirelessHighlighterPrefix=Wireless
 chat.appliedenergistics2.WirelessHighlighterNetworkPrefix=Wireless of network §e"%s§e"§r -
 chat.appliedenergistics2.WirelessHighlighterColorPrefix=Wireless color §e"%s§e"§r of network §e"%s§e"§r -
+chat.appliedenergistics2.CableSwapped=Cable swapped: %s → %s
 chat.appliedenergistics2.ControllerAnimation=Controller animation: %s
 
 # Creative Tabs
