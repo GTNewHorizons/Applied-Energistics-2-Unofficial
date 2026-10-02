@@ -53,6 +53,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.ISimplifiedBundle;
 import appeng.api.parts.PartItemStack;
+import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.StorageName;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
@@ -73,6 +74,7 @@ import appeng.parts.networking.PartCable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import appeng.util.SettingsFrom;
 import cpw.mods.fml.relauncher.Side;
@@ -439,6 +441,11 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
             if (player.isSneaking()) {
                 final NBTTagCompound data = this.downloadSettings(SettingsFrom.MEMORY_CARD);
                 if (data != null && !data.hasNoTags()) {
+                    if (this instanceof ITerminalTypeFilterProvider provider) {
+                        final AEStackTypeFilter filters = new AEStackTypeFilter();
+                        filters.getFiltersMap().putAll(provider.getTypeFilter(player));
+                        filters.writeToNBT(data);
+                    }
                     memoryCard.setMemoryCardContents(memCardIS, name, data);
 
                     if (this.getInventoryByName("upgrades") instanceof UpgradeInventory ui)
@@ -461,6 +468,14 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
                     // Apply settings after insertUpgrades to preserve upgrade-gated settings, such as ore filters.
                     this.uploadSettings(SettingsFrom.MEMORY_CARD, data);
+
+                    if (this instanceof ITerminalTypeFilterProvider provider
+                            && data.hasKey(AEStackTypeFilter.NBT_FILTERS, NBT.TAG_LIST)) {
+                        final AEStackTypeFilter filters = new AEStackTypeFilter();
+                        filters.readFromNBT(data);
+                        provider.getTypeFilter(player).putAll(filters.getFiltersMap());
+                        provider.saveTypeFilter();
+                    }
 
                     // After insertUpgrades for the same reason as above
                     if (this instanceof IInterfaceHost iHost) {

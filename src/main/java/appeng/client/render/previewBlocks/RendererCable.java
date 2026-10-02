@@ -108,6 +108,10 @@ public class RendererCable extends AbstractRendererPreview implements IRenderPre
 
     private boolean handleNullTileEntity(boolean isDense, TileEntity neighborTe, World world, ForgeDirection side,
             int x, int y, int z) {
+        if (canPlaceBlockAt(world, x, y, z)) {
+            setPreviewOffset(x, y, z, ForgeDirection.UNKNOWN);
+            return true;
+        }
         setPreviewOffset(x, y, z, side);
         if (neighborTe instanceof IPartHost partHost) {
             IPart centerPart = partHost.getPart(ForgeDirection.UNKNOWN);
