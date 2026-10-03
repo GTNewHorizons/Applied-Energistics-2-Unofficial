@@ -56,7 +56,6 @@ import appeng.client.gui.GuiNull;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
-import appeng.container.TunnelPatternRenamerHost;
 import appeng.container.implementations.ContainerAdvancedInscriber;
 import appeng.container.implementations.ContainerAdvancedLevelEmitter;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
@@ -273,8 +272,8 @@ public enum GuiBridge implements IGuiHandler {
     GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
 
-    GUI_TUNNEL_PATTERN_RENAMER(ContainerTunnelPatternRenamer.class, TunnelPatternRenamerHost.class,
-            GuiHostType.ITEM_OR_WORLD, null);
+    GUI_TUNNEL_PATTERN_RENAMER(ContainerTunnelPatternRenamer.class, ITerminalHost.class, GuiHostType.WORLD,
+            SecurityPermissions.CRAFT);
 
     private final Class tileClass;
     private final Class containerClass;
@@ -381,8 +380,7 @@ public enum GuiBridge implements IGuiHandler {
             throw new IllegalArgumentException("This Gui Cannot use the standard Handler.");
         }
 
-        return this == GUI_TUNNEL_PATTERN_RENAMER ? TunnelPatternRenamerHost.supports(tE)
-                : this.tileClass.isInstance(tE);
+        return this.tileClass.isInstance(tE);
     }
 
     private Object updateGui(final Object newContainer, final World w, final int x, final int y, final int z,
@@ -401,13 +399,12 @@ public enum GuiBridge implements IGuiHandler {
 
     public Object ConstructContainer(final InventoryPlayer inventory, final ForgeDirection side, final Object tE) {
         try {
-            final Object host = this == GUI_TUNNEL_PATTERN_RENAMER ? TunnelPatternRenamerHost.from(tE) : tE;
             final Constructor[] c = this.containerClass.getConstructors();
             if (c.length == 0) {
                 throw new AppEngException("Invalid Gui Class");
             }
 
-            final Constructor target = this.findConstructor(c, inventory, host);
+            final Constructor target = this.findConstructor(c, inventory, tE);
 
             if (target == null) {
                 throw new IllegalStateException(
@@ -415,7 +412,7 @@ public enum GuiBridge implements IGuiHandler {
                                 .getName() + "( " + this.typeName(inventory) + ", " + this.typeName(tE) + " )");
             }
 
-            final Object o = target.newInstance(inventory, host);
+            final Object o = target.newInstance(inventory, tE);
 
             /**
              * triggers achievement when the player sees presses.
@@ -507,13 +504,12 @@ public enum GuiBridge implements IGuiHandler {
 
     public Object ConstructGui(final InventoryPlayer inventory, final ForgeDirection side, final Object tE) {
         try {
-            final Object host = this == GUI_TUNNEL_PATTERN_RENAMER ? TunnelPatternRenamerHost.from(tE) : tE;
             final Constructor[] c = this.guiClass.getConstructors();
             if (c.length == 0) {
                 throw new AppEngException("Invalid Gui Class");
             }
 
-            final Constructor target = this.findConstructor(c, inventory, host);
+            final Constructor target = this.findConstructor(c, inventory, tE);
 
             if (target == null) {
                 throw new IllegalStateException(
@@ -521,7 +517,7 @@ public enum GuiBridge implements IGuiHandler {
                                 .getName() + "( " + this.typeName(inventory) + ", " + this.typeName(tE) + " )");
             }
 
-            return target.newInstance(inventory, host);
+            return target.newInstance(inventory, tE);
         } catch (final Throwable t) {
             throw new IllegalStateException(t);
         }

@@ -52,6 +52,7 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.items.misc.ItemTunnelPattern;
 
 public class GuiPatternTerm extends GuiMEMonitorable {
 
@@ -95,11 +96,35 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
+        if (btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100
+                && this.tryRenameTunnelPattern(this.getSlot(xCoord, yCoord)))
+            return;
 
         if (btn == 2 && doubleBtn.mousePressed(this.mc, xCoord, yCoord)) { //
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_PATTERN_MULTI));
         } else super.mouseClicked(xCoord, yCoord, btn);
 
+    }
+
+    @Override
+    protected void keyTyped(final char character, final int key) {
+        if (key == this.mc.gameSettings.keyBindPickBlock.getKeyCode()) {
+            final int mouseX = Mouse.getX() * this.width / this.mc.displayWidth;
+            final int mouseY = this.height - Mouse.getY() * this.height / this.mc.displayHeight - 1;
+            if (this.tryRenameTunnelPattern(this.getSlot(mouseX, mouseY))) return;
+        }
+        super.keyTyped(character, key);
+    }
+
+    private boolean tryRenameTunnelPattern(final Slot slot) {
+        if (slot != this.container.getEncodedPatternSlot() || !this.container.supportsTunnelPatternRenaming()
+                || !slot.canTakeStack(this.mc.thePlayer)
+                || this.mc.thePlayer.inventory.getItemStack() != null
+                || ItemTunnelPattern.getTunnelUuid(slot.getStack()) == null)
+            return false;
+
+        this.container.openTunnelPatternRenamerAction.send();
+        return true;
     }
 
     @Override

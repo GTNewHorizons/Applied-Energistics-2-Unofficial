@@ -17,7 +17,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 
@@ -42,7 +41,6 @@ import appeng.container.implementations.ContainerRenamer;
 import appeng.container.implementations.ContainerSecurity;
 import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerStorageReshuffle;
-import appeng.container.implementations.ContainerTunnelPatternRenamer;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -94,9 +92,7 @@ public class PacketValueConfig extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
 
-        if (this.Name.equals("TunnelPattern.Rename") && c instanceof ContainerTunnelPatternRenamer renamer) {
-            renamer.rename((EntityPlayerMP) player, this.Value);
-        } else if (this.Name.equals(CONTROLLER_ANIMATION_DEFAULT)) {
+        if (this.Name.equals(CONTROLLER_ANIMATION_DEFAULT)) {
             TileController.setPlayerDefaultAnimation(player, this.Value);
         } else if (this.Name.equals("Item") && player.getHeldItem() != null
                 && player.getHeldItem().getItem() instanceof IMouseWheelItem) {

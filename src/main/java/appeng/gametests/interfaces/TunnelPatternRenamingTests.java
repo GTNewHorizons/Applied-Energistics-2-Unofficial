@@ -4,19 +4,13 @@ import static appeng.gametests.AEGameTestHelpers.assertActive;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.itemMonitor;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Predicate;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -29,6 +23,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.base.Strings;
 import com.gtnewhorizons.horizonqa.api.GameTestHelper;
 import com.gtnewhorizons.horizonqa.api.InventoryHelper;
 import com.gtnewhorizons.horizonqa.api.annotation.GameTest;
@@ -37,31 +32,38 @@ import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
-import appeng.api.networking.energy.IEnergyGrid;
-import appeng.api.networking.energy.IEnergySource;
+import appeng.api.config.SecurityPermissions;
+import appeng.api.implementations.items.IBiometricCard;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.storage.IMEInventory;
+import appeng.api.networking.security.ISecurityGrid;
+import appeng.api.networking.security.PlayerSource;
+import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerInterface;
-import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerPatternTerm;
+import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.container.implementations.ContainerTunnelPatternRenamer;
+import appeng.container.sync.ActionHandler;
+import appeng.container.sync.StreamCodec;
+import appeng.container.sync.StreamCodecs;
+import appeng.container.sync.SyncEndpoint;
+import appeng.container.sync.SyncMode;
 import appeng.core.AppEng;
 import appeng.core.sync.GuiBridge;
-import appeng.core.sync.packets.PacketInventoryAction;
-import appeng.core.sync.packets.PacketMonitorableAction;
+import appeng.core.sync.packets.PacketPatternValueSet;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.helpers.InventoryAction;
-import appeng.helpers.MonitorableAction;
 import appeng.helpers.TunnelPatternRenaming;
 import appeng.items.misc.ItemTunnelPattern;
-import appeng.me.storage.MEInventoryWrapper;
+import appeng.me.cache.SecurityCache;
 import appeng.parts.reporting.PartPatternTerminal;
 import appeng.tile.misc.TileInterface;
+import appeng.tile.misc.TileSecurity;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.ReferenceCountUtil;
 
@@ -69,262 +71,337 @@ import io.netty.util.ReferenceCountUtil;
 public class TunnelPatternRenamingTests {
 
     @GameTest(template = "interface_network", timeoutTicks = 120)
-    public static void storedRenameFailuresPreserveExactlyOnePattern(final GameTestHelper helper) {
-        final TileController controller = helper.assertTileEntityPresent(TileController.class, "controller");
-        helper.setSlot("drive", 0, cell1k());
-        final IAEItemStack pattern = AEItemStack.create(tunnelPattern());
-        final IAEItemStack renamed = AEItemStack
-                .create(TunnelPatternRenaming.renamedCopy(pattern.getItemStack(), "Renamed"));
-        final FakePlayer player = guiPlayer(helper);
-
-        helper.startSequence()
-                .thenWaitUntil(
-                        "wait for the storage network",
-                        80,
-                        () -> assertActive(helper, controller.getProxy(), "Controller should become active"))
-                .thenExecute("exercise power, stale-definition and rollback failures on network storage", () -> {
-                    final BaseActionSource source = new BaseActionSource();
-                    final IMEInventory<IAEItemStack> inventory = itemMonitor(controller);
-                    final IEnergySource power = controller.getProxy().getNode().getGrid().getCache(IEnergyGrid.class);
-                    final List<IAEItemStack> returned = new ArrayList<>();
-                    helper.assertNull(
-                            inventory.injectItems(pattern.copy(), Actionable.MODULATE, source),
-                            "Original pattern should fit in the drive");
-
-                    helper.assertFalse(
-                            TunnelPatternRenaming.renameStored(
-                                    (amount, mode, multiplier) -> 0,
-                                    inventory,
-                                    pattern,
-                                    "Renamed",
-                                    source,
-                                    returned::add),
-                            "No power should prevent the transaction");
-                    assertStoredPattern(helper, inventory, pattern, source);
-
-                    final IMEInventory<IAEItemStack> rejectRename = rejectInsertions(
-                            inventory,
-                            input -> !input.isSameType(pattern));
-                    helper.assertFalse(
-                            TunnelPatternRenaming
-                                    .renameStored(power, rejectRename, pattern, "Renamed", source, returned::add),
-                            "Rejected replacement should trigger rollback");
-                    assertStoredPattern(helper, inventory, pattern, source);
-                    helper.assertTrue(returned.isEmpty(), "Successful rollback should leave nothing to return");
-
-                    final ItemStack updatedItem = pattern.getItemStack();
-                    updatedItem.getTagCompound().setString("testContents", "Updated definition");
-                    final IAEItemStack updated = AEItemStack.create(updatedItem);
-                    inventory.extractItems(pattern, Actionable.MODULATE, source);
-                    inventory.injectItems(updated, Actionable.MODULATE, source);
-                    helper.assertFalse(
-                            TunnelPatternRenaming
-                                    .renameStored(power, inventory, pattern, "Renamed", source, returned::add),
-                            "A same-UUID replacement should not satisfy the stale exact item request");
-                    assertStoredPattern(helper, inventory, updated, source);
-                    inventory.extractItems(updated, Actionable.MODULATE, source);
-                    inventory.injectItems(pattern.copy(), Actionable.MODULATE, source);
-
-                    final IMEInventory<IAEItemStack> rejectAll = rejectInsertions(inventory, input -> true);
-                    helper.assertFalse(
-                            TunnelPatternRenaming
-                                    .renameStored(power, rejectAll, pattern, "Renamed", source, remainder -> {
-                                        returned.add(remainder);
-                                        Platform.addToPlayerInvOrDrop(player, remainder.getItemStack());
-                                    }),
-                            "Rejected rollback should return the original pattern to the player");
-                    helper.assertEquals(1, returned.size(), "Only one original pattern should be returned");
-                    helper.assertTrue(
-                            returned.get(0).isSameType(pattern),
-                            "Returned item should retain its original NBT");
-                    helper.assertEquals(
-                            1L,
-                            InventoryHelper.count(player.inventory, pattern.getItemStack()),
-                            "Player inventory should receive the original pattern exactly once");
-                    helper.assertNull(
-                            inventory.extractItems(pattern, Actionable.SIMULATE, source),
-                            "Returned original should no longer be in the network");
-                    helper.assertNull(
-                            inventory.extractItems(renamed, Actionable.SIMULATE, source),
-                            "Rejected replacement should not be duplicated in the network");
-                }).thenSucceed();
-    }
-
-    @GameTest(template = "interface_network", timeoutTicks = 120)
-    public static void interfaceAndPlayerSlotsRenameThroughPackets(final GameTestHelper helper) {
-        final TileInterface tile = helper.assertTileEntityPresent(TileInterface.class, "block_interface");
-        final FakePlayer player = guiPlayer(helper);
-        player.setPosition(tile.xCoord + 0.5, tile.yCoord + 0.5, tile.zCoord + 0.5);
-        final ItemStack pattern = tunnelPattern();
-        InventoryHelper.setSlot(tile.getInterfaceDuality().getPatterns(), 0, pattern.copy());
-
-        helper.startSequence()
-                .thenWaitUntil(
-                        "wait for the interface network",
-                        80,
-                        () -> assertActive(helper, tile.getProxy(), "Interface should become active"))
-                .thenExecute("rename the installed pattern through its container packets", () -> {
-                    Platform.openGUI(player, tile, ForgeDirection.UNKNOWN, GuiBridge.GUI_INTERFACE);
-                    helper.assertTrue(player.openContainer instanceof ContainerInterface, "Interface GUI should open");
-                    final AEBaseContainer container = (AEBaseContainer) player.openContainer;
-                    final int slot = findSlot(container, tile.getInterfaceDuality().getPatterns(), 0);
-                    new PacketInventoryAction(InventoryAction.RENAME_TUNNEL_PATTERN, slot, 0)
-                            .serverPacketData(null, null, player);
-                    submitName(helper, player, "Interface renamed");
-                    final ItemStack renamed = tile.getInterfaceDuality().getPatterns().getStackInSlot(0);
-                    assertRenamed(helper, pattern, renamed, "Interface renamed");
-                }).thenExecute("rename a full player-inventory stack from the interface GUI", () -> {
-                    final ItemStack inventoryPattern = pattern.copy();
-                    inventoryPattern.stackSize = 8;
-                    player.inventory.setInventorySlotContents(0, inventoryPattern);
-                    final AEBaseContainer container = (AEBaseContainer) player.openContainer;
-                    final int slot = findSlot(container, player.inventory, 0);
-                    new PacketInventoryAction(InventoryAction.RENAME_TUNNEL_PATTERN, slot, 0)
-                            .serverPacketData(null, null, player);
-                    submitName(helper, player, "Inventory renamed");
-                    final ItemStack renamed = player.inventory.getStackInSlot(0);
-                    helper.assertEquals(8, renamed.stackSize, "Rename should preserve the full player stack");
-                    assertRenamed(helper, inventoryPattern, renamed, "Inventory renamed");
-                    player.openContainer = player.inventoryContainer;
-                }).thenSucceed();
-    }
-
-    @GameTest(template = "interface_network", timeoutTicks = 120)
-    public static void changedToolboxLayoutRenamesOnlyTheOriginalPlayerSlot(final GameTestHelper helper) {
-        final TileInterface tile = helper.assertTileEntityPresent(TileInterface.class, "block_interface");
-        final FakePlayer player = guiPlayer(helper);
-        player.setPosition(tile.xCoord + 0.5, tile.yCoord + 0.5, tile.zCoord + 0.5);
-        final ItemStack pattern = tunnelPattern();
-        player.inventory.setInventorySlotContents(9, pattern.copy());
-        player.inventory.setInventorySlotContents(18, pattern.copy());
-
-        helper.startSequence()
-                .thenWaitUntil(
-                        "wait for the interface network",
-                        80,
-                        () -> assertActive(helper, tile.getProxy(), "Interface should become active"))
-                .thenExecute("change the toolbox layout while renaming one of two identical patterns", () -> {
-                    Platform.openGUI(player, tile, ForgeDirection.UNKNOWN, GuiBridge.GUI_INTERFACE);
-                    final ContainerInterface container = (ContainerInterface) player.openContainer;
-                    helper.assertFalse(container.hasToolbox(), "Original GUI should not have a toolbox");
-                    final int oldSlotNumber = findSlot(container, player.inventory, 18);
-                    new PacketInventoryAction(InventoryAction.RENAME_TUNNEL_PATTERN, oldSlotNumber, 0)
-                            .serverPacketData(null, null, player);
-                    player.inventory.setInventorySlotContents(
-                            0,
-                            AEApi.instance().definitions().items().networkTool().maybeStack(1).get());
-                    submitName(helper, player, "Original slot renamed");
-
-                    final ContainerInterface reopened = (ContainerInterface) player.openContainer;
-                    helper.assertTrue(reopened.hasToolbox(), "Reopened GUI should include the new toolbox");
-                    helper.assertEquals(
-                            9,
-                            reopened.getSlot(oldSlotNumber).getSlotIndex(),
-                            "Old container slot number should now refer to the identical pattern in slot 9");
-                    helper.assertTrue(
-                            AEItemStack.create(pattern).isSameType(player.inventory.getStackInSlot(9)),
-                            "Identical pattern in the shifted slot should remain unchanged");
-                    assertRenamed(helper, pattern, player.inventory.getStackInSlot(18), "Original slot renamed");
-                    helper.assertEquals(
-                            2,
-                            player.inventory.getStackInSlot(9).stackSize
-                                    + player.inventory.getStackInSlot(18).stackSize,
-                            "Layout change should preserve both patterns exactly once");
-                    player.openContainer = player.inventoryContainer;
-                }).thenSucceed();
-    }
-
-    @GameTest(template = "interface_network", timeoutTicks = 140)
-    public static void storedPatternRenamesThroughTerminalPackets(final GameTestHelper helper) {
-        final TileController controller = helper.assertTileEntityPresent(TileController.class, "controller");
+    public static void normalAndExtendedOutputSlotsRenameThroughActions(final GameTestHelper helper) {
         final TileCableBus cable = helper.assertTileEntityPresent(TileCableBus.class, "block_interface_cable");
-        final FakePlayer player = guiPlayer(helper);
-        player.setPosition(cable.xCoord + 0.5, cable.yCoord + 0.5, cable.zCoord + 0.5);
-        cable.addPart(
-                AEApi.instance().definitions().parts().patternTerminal().maybeStack(1).get(),
-                ForgeDirection.UP,
-                player);
-        final PartPatternTerminal terminal = (PartPatternTerminal) cable.getPart(ForgeDirection.UP);
-        helper.setSlot("drive", 0, cell1k());
-        final IAEItemStack pattern = AEItemStack.create(tunnelPattern());
+        final FakePlayer player = guiPlayer(helper, cable);
+        final PartPatternTerminal normal = addTerminal(cable, player, ForgeDirection.UP, false);
+        final PartPatternTerminal extended = addTerminal(cable, player, ForgeDirection.DOWN, true);
+
+        helper.startSequence().thenWaitUntil("wait for both encoding terminals", 80, () -> {
+            assertActive(helper, normal, "Normal terminal should become active");
+            assertActive(helper, extended, "Extended terminal should become active");
+        }).thenExecute("rename only the real output slot in each encoding terminal", () -> {
+            for (final ForgeDirection side : new ForgeDirection[] { ForgeDirection.UP, ForgeDirection.DOWN }) {
+                final PartPatternTerminal terminal = (PartPatternTerminal) cable.getPart(side);
+                final IInventory inventory = patterns(terminal);
+                final ItemStack original = tunnelPattern();
+                inventory.setInventorySlotContents(1, original.copy());
+                final ContainerPatternTerm container = openTerminal(player, cable, side);
+                helper.assertEquals(
+                        side == ForgeDirection.DOWN,
+                        container instanceof ContainerPatternTermEx,
+                        "Normal and extended terminals should use their own containers");
+                openRenamer(helper, container, player);
+
+                final ItemStack forged = original.copy();
+                forged.getTagCompound().setString("testContents", "Client supplied contents");
+                new PacketPatternValueSet(AEItemStack.create(forged), StorageName.NONE, 0, true)
+                        .serverPacketData(null, null, player);
+                submitName(helper, player, "Renamed");
+                assertRenamed(helper, original, inventory.getStackInSlot(1), "Renamed");
+
+                openRenamer(helper, (ContainerPatternTerm) player.openContainer, player);
+                submitName(helper, player, "");
+                final ItemStack cleared = inventory.getStackInSlot(1);
+                helper.assertFalse(cleared.hasDisplayName(), "Empty name should clear the custom name");
+                assertRenamed(helper, original, cleared, "");
+
+                openRenamer(helper, (ContainerPatternTerm) player.openContainer, player);
+                submitName(helper, player, "A\u00a7\n\u0000B" + Strings.repeat("C", 100));
+                assertRenamed(helper, cleared, inventory.getStackInSlot(1), "AB" + Strings.repeat("C", 62));
+            }
+        }).thenSucceed();
+    }
+
+    @GameTest(template = "interface_network", timeoutTicks = 120)
+    public static void staleOutputPatternsAreRejected(final GameTestHelper helper) {
+        final TileCableBus cable = helper.assertTileEntityPresent(TileCableBus.class, "block_interface_cable");
+        final FakePlayer player = guiPlayer(helper, cable);
+        final PartPatternTerminal terminal = addTerminal(cable, player, ForgeDirection.UP, false);
+        final IInventory inventory = patterns(terminal);
+        final ItemStack original = tunnelPattern();
 
         helper.startSequence()
                 .thenWaitUntil(
-                        "wait for the terminal network",
+                        "wait for the encoding terminal",
                         80,
-                        () -> assertActive(helper, terminal, "Pattern Terminal should become active"))
-                .thenExecute("rename one network-stored pattern through terminal packets", () -> {
-                    final BaseActionSource source = new BaseActionSource();
-                    helper.assertNull(
-                            itemMonitor(controller).injectItems(pattern.copy(), Actionable.MODULATE, source),
-                            "Stored pattern should fit in the drive");
-                    Platform.openGUI(player, cable, ForgeDirection.UP, GuiBridge.GUI_PATTERN_TERMINAL);
-                    helper.assertTrue(player.openContainer instanceof ContainerMEMonitorable, "Terminal should open");
-                    final ContainerMEMonitorable container = (ContainerMEMonitorable) player.openContainer;
-                    container.setTargetStack(pattern.copy());
-                    new PacketMonitorableAction(MonitorableAction.RENAME_TUNNEL_PATTERN, -1)
-                            .serverPacketData(null, null, player);
-                    submitName(helper, player, "Network renamed");
-                    final IAEItemStack renamed = AEItemStack
-                            .create(TunnelPatternRenaming.renamedCopy(pattern.getItemStack(), "Network renamed"));
-                    helper.assertNull(
-                            itemMonitor(controller).extractItems(pattern, Actionable.SIMULATE, source),
-                            "Old pattern name should no longer be stored");
-                    final IAEItemStack stored = itemMonitor(controller)
-                            .extractItems(renamed, Actionable.SIMULATE, source);
-                    helper.assertNotNull(stored, "Renamed pattern should be stored in the terminal network");
-                    helper.assertEquals(
-                            1L,
-                            stored.getStackSize(),
-                            "The transaction should preserve exactly one pattern");
-                    assertRenamed(helper, pattern.getItemStack(), stored.getItemStack(), "Network renamed");
-                    player.openContainer = player.inventoryContainer;
+                        () -> assertActive(helper, terminal, "Terminal should become active"))
+                .thenExecute("reject changed contents, names, counts and a removed output", () -> {
+                    for (int change = 0; change < 4; change++) {
+                        inventory.setInventorySlotContents(1, original.copy());
+                        openRenamer(helper, openTerminal(player, cable, ForgeDirection.UP), player);
+                        final ItemStack changed = change == 3 ? null : original.copy();
+                        if (change == 0) changed.getTagCompound().setString("testContents", "Changed");
+                        if (change == 1) changed.setStackDisplayName("Changed by another player");
+                        if (change == 2) changed.stackSize = 2;
+                        inventory.setInventorySlotContents(1, changed);
+                        submitName(helper, player, "Should not apply");
+                        assertUnchanged(helper, changed, inventory.getStackInSlot(1));
+                    }
                 }).thenSucceed();
     }
 
-    private static void submitName(final GameTestHelper helper, final EntityPlayer player, final String name) {
+    @GameTest(template = "interface_network", timeoutTicks = 120)
+    public static void otherInventoriesAndLegacyPacketsDoNotRename(final GameTestHelper helper) {
+        final TileController controller = helper.assertTileEntityPresent(TileController.class, "controller");
+        final TileInterface tile = helper.assertTileEntityPresent(TileInterface.class, "block_interface");
+        final TileCableBus cable = helper.assertTileEntityPresent(TileCableBus.class, "block_interface_cable");
+        final FakePlayer player = guiPlayer(helper, cable);
+        final PartPatternTerminal terminal = addTerminal(cable, player, ForgeDirection.UP, false);
+        final ItemStack original = tunnelPattern();
+        patterns(terminal).setInventorySlotContents(0, original.copy());
+        terminal.getAEInventoryByName(StorageName.CRAFTING_INPUT).putAEStackInSlot(0, AEItemStack.create(original));
+        player.inventory.setInventorySlotContents(0, original.copy());
+        InventoryHelper.setSlot(tile.getInterfaceDuality().getPatterns(), 0, original.copy());
+        helper.setSlot("drive", 0, cell1k());
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for the encoding terminal",
+                        80,
+                        () -> assertActive(helper, terminal, "Terminal should become active"))
+                .thenExecute("an empty output cannot rename items in any other inventory", () -> {
+                    final BaseActionSource source = new BaseActionSource();
+                    final IAEItemStack stored = AEItemStack.create(original);
+                    helper.assertNull(
+                            itemMonitor(controller).injectItems(stored, Actionable.MODULATE, source),
+                            "Pattern should fit in network storage");
+                    final ContainerPatternTerm container = openTerminal(player, cable, ForgeDirection.UP);
+                    container.setTargetStack(stored.copy());
+                    incoming(container.openTunnelPatternRenamerAction, StreamCodecs.empty(), null);
+                    helper.assertSame(container, player.openContainer, "Empty output should not open the renamer");
+                    legacyName(player);
+                    assertUnchanged(helper, original, player.inventory.getStackInSlot(0));
+                    assertUnchanged(helper, original, tile.getInterfaceDuality().getPatterns().getStackInSlot(0));
+                    assertUnchanged(helper, original, patterns(terminal).getStackInSlot(0));
+                    final IAEItemStack input = (IAEItemStack) terminal.getAEInventoryByName(StorageName.CRAFTING_INPUT)
+                            .getAEStackInSlot(0);
+                    assertUnchanged(helper, original, input.getItemStack());
+                    final IAEItemStack stillStored = itemMonitor(controller)
+                            .extractItems(stored, Actionable.SIMULATE, source);
+                    helper.assertNotNull(stillStored, "Network pattern should remain stored");
+                    assertUnchanged(helper, original, stillStored.getItemStack());
+                    helper.assertNull(patterns(terminal).getStackInSlot(1), "Empty output should remain empty");
+
+                    Platform.openGUI(player, tile, ForgeDirection.UNKNOWN, GuiBridge.GUI_INTERFACE);
+                    helper.assertTrue(player.openContainer instanceof ContainerInterface, "Interface should open");
+                    legacyName(player);
+                    assertUnchanged(helper, original, tile.getInterfaceDuality().getPatterns().getStackInSlot(0));
+                    helper.assertFalse(
+                            GuiBridge.GUI_TUNNEL_PATTERN_RENAMER.CorrectTileOrPart(tile),
+                            "The renamer should not accept an ME interface host");
+                }).thenSucceed();
+    }
+
+    @GameTest(template = "interface_network", timeoutTicks = 120)
+    public static void invalidContextAndChangedTerminalAreRejected(final GameTestHelper helper) {
+        final TileCableBus cable = helper.assertTileEntityPresent(TileCableBus.class, "block_interface_cable");
+        final FakePlayer player = guiPlayer(helper, cable);
+        final FakePlayer other = guiPlayer(helper, cable);
+        final PartPatternTerminal terminal = addTerminal(cable, player, ForgeDirection.UP, false);
+        final IInventory inventory = patterns(terminal);
+        final ItemStack original = tunnelPattern();
+        inventory.setInventorySlotContents(1, original.copy());
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for the encoding terminal",
+                        80,
+                        () -> assertActive(helper, terminal, "Terminal should become active"))
+                .thenExecute("reject foreign players, occupied cursors and invalid containers", () -> {
+                    final ContainerPatternTerm stale = openTerminal(player, cable, ForgeDirection.UP);
+                    final ContainerPatternTerm container = openTerminal(player, cable, ForgeDirection.UP);
+                    ContainerTunnelPatternRenamer.open(player, stale);
+                    helper.assertSame(
+                            container,
+                            player.openContainer,
+                            "An inactive terminal container should not open a rename dialog");
+                    ContainerTunnelPatternRenamer.open(other, container);
+                    helper.assertSame(
+                            other.inventoryContainer,
+                            other.openContainer,
+                            "Another player's container should not open a rename dialog");
+                    player.inventory.setItemStack(original.copy());
+                    incoming(container.openTunnelPatternRenamerAction, StreamCodecs.empty(), null);
+                    helper.assertSame(container, player.openContainer, "Occupied cursor should block renaming");
+                    player.inventory.setItemStack(null);
+                    container.setValidContainer(false);
+                    incoming(container.openTunnelPatternRenamerAction, StreamCodecs.empty(), null);
+                    helper.assertSame(
+                            container,
+                            player.openContainer,
+                            "Invalid primary container should block renaming");
+
+                    openRenamer(helper, openTerminal(player, cable, ForgeDirection.UP), player);
+                    final ContainerTunnelPatternRenamer renamer = (ContainerTunnelPatternRenamer) player.openContainer;
+                    renamer.setValidContainer(false);
+                    incoming(renamer.renameAction, StreamCodecs.string(), "Should not apply");
+                    assertUnchanged(helper, original, inventory.getStackInSlot(1));
+                }).thenExecute("replacing the terminal must not rename an identical output in its replacement", () -> {
+                    openRenamer(helper, openTerminal(player, cable, ForgeDirection.UP), player);
+                    final ContainerTunnelPatternRenamer renamer = (ContainerTunnelPatternRenamer) player.openContainer;
+                    cable.removePart(ForgeDirection.UP, false);
+                    final PartPatternTerminal replacement = addTerminal(cable, player, ForgeDirection.UP, false);
+                    patterns(replacement).setInventorySlotContents(1, original.copy());
+                    incoming(renamer.renameAction, StreamCodecs.string(), "Should not apply");
+                    assertUnchanged(helper, original, inventory.getStackInSlot(1));
+                    assertUnchanged(helper, original, patterns(replacement).getStackInSlot(1));
+                }).thenSucceed();
+    }
+
+    @GameTest(template = "interface_network", timeoutTicks = 160)
+    public static void revokedCraftPermissionBlocksOpeningAndSaving(final GameTestHelper helper) {
+        final TileCableBus cable = helper.assertTileEntityPresent(TileCableBus.class, "block_interface_cable");
+        final FakePlayer player = guiPlayer(helper, cable);
+        final FakePlayer owner = guiPlayer(helper, cable);
+        final PartPatternTerminal terminal = addTerminal(cable, player, ForgeDirection.UP, false);
+        helper.setBlock(0, 0, 1, AEApi.instance().definitions().blocks().security().maybeBlock().get());
+        final TileSecurity security = helper.assertTileEntityPresent(TileSecurity.class, 0, 0, 1);
+        security.getProxy().setOwner(owner);
+        final PlayerSource ownerSource = new PlayerSource(owner, security);
+        final ItemStack original = tunnelPattern();
+        patterns(terminal).setInventorySlotContents(1, original.copy());
+
+        helper.startSequence().thenWaitUntil("wait for the real security grid", 100, () -> {
+            assertActive(helper, terminal, "Terminal should become active");
+            assertActive(helper, security.getProxy(), "Security terminal should become active");
+            helper.assertSame(
+                    terminal.getGridNode().getGrid(),
+                    security.getProxy().getNode().getGrid(),
+                    "Security terminal should share the encoding terminal's grid");
+            final ISecurityGrid permissions = terminal.getGridNode().getGrid().getCache(ISecurityGrid.class);
+            helper.assertTrue(permissions.isAvailable(), "Security rules should be active");
+        }).thenExecute("recheck CRAFT when opening and saving the rename dialog", () -> {
+            final ISecurityGrid permissions = terminal.getGridNode().getGrid().getCache(ISecurityGrid.class);
+            helper.assertFalse(SecurityCache.isPlayerOP(player.getGameProfile()), "Test player should not be OP");
+            helper.assertEquals(
+                    AEApi.instance().registries().players().getID(owner.getGameProfile()),
+                    permissions.getOwner(),
+                    "The security owner should be a different player");
+            helper.assertFalse(
+                    permissions.hasPermission(player, SecurityPermissions.CRAFT),
+                    "Test player should initially lack CRAFT");
+            final ItemStack card = AEApi.instance().definitions().items().biometricCard().maybeStack(1).get();
+            final IBiometricCard biometric = (IBiometricCard) card.getItem();
+            biometric.setProfile(card, player.getGameProfile());
+            biometric.addPermission(card, SecurityPermissions.EXTRACT);
+            biometric.addPermission(card, SecurityPermissions.CRAFT);
+            IAEItemStack storedCard = AEItemStack.create(card);
+            helper.assertNull(
+                    security.getItemInventory().injectItems(storedCard, Actionable.MODULATE, ownerSource),
+                    "Owner should be able to grant the test player's permissions");
+            helper.assertTrue(permissions.hasPermission(player, SecurityPermissions.CRAFT), "CRAFT should be granted");
+            final ContainerPatternTerm container = openTerminal(player, cable, ForgeDirection.UP);
+            storedCard = craftPermission(helper, security, ownerSource, storedCard, false);
+            helper.assertTrue(
+                    permissions.hasPermission(player, SecurityPermissions.EXTRACT),
+                    "Revocation should leave EXTRACT granted");
+            helper.assertFalse(permissions.hasPermission(player, SecurityPermissions.CRAFT), "CRAFT should be revoked");
+            incoming(container.openTunnelPatternRenamerAction, StreamCodecs.empty(), null);
+            helper.assertSame(container, player.openContainer, "Revoked CRAFT should prevent opening the dialog");
+
+            storedCard = craftPermission(helper, security, ownerSource, storedCard, true);
+            openRenamer(helper, container, player);
+            final ContainerTunnelPatternRenamer renamer = (ContainerTunnelPatternRenamer) player.openContainer;
+            craftPermission(helper, security, ownerSource, storedCard, false);
+            helper.assertFalse(
+                    permissions.hasPermission(player, SecurityPermissions.CRAFT),
+                    "CRAFT should be revoked again");
+            incoming(renamer.renameAction, StreamCodecs.string(), "Should not apply");
+            helper.assertSame(renamer, player.openContainer, "Revoked CRAFT should prevent saving");
+            assertUnchanged(helper, original, patterns(terminal).getStackInSlot(1));
+        }).thenSucceed();
+    }
+
+    private static IAEItemStack craftPermission(final GameTestHelper helper, final TileSecurity security,
+            final PlayerSource owner, final IAEItemStack current, final boolean grant) {
+        final IAEItemStack extracted = security.getItemInventory().extractItems(current, Actionable.MODULATE, owner);
+        helper.assertNotNull(extracted, "Owner should be able to replace the biometric card");
+        final ItemStack card = extracted.getItemStack();
+        final IBiometricCard biometric = (IBiometricCard) card.getItem();
+        if (grant) biometric.addPermission(card, SecurityPermissions.CRAFT);
+        else biometric.removePermission(card, SecurityPermissions.CRAFT);
+        final IAEItemStack replacement = AEItemStack.create(card);
+        helper.assertNull(
+                security.getItemInventory().injectItems(replacement, Actionable.MODULATE, owner),
+                "Updated biometric card should be accepted");
+        return replacement;
+    }
+
+    private static IInventory patterns(final PartPatternTerminal terminal) {
+        return terminal.getInventoryByName(StorageName.CRAFTING_PATTERN.getName());
+    }
+
+    private static PartPatternTerminal addTerminal(final TileCableBus cable, final FakePlayer player,
+            final ForgeDirection side, final boolean extended) {
+        cable.addPart(
+                (extended ? AEApi.instance().definitions().parts().patternTerminalEx()
+                        : AEApi.instance().definitions().parts().patternTerminal()).maybeStack(1).get(),
+                side,
+                player);
+        return (PartPatternTerminal) cable.getPart(side);
+    }
+
+    private static ContainerPatternTerm openTerminal(final FakePlayer player, final TileCableBus cable,
+            final ForgeDirection side) {
+        Platform.openGUI(
+                player,
+                cable,
+                side,
+                side == ForgeDirection.DOWN ? GuiBridge.GUI_PATTERN_TERMINAL_EX : GuiBridge.GUI_PATTERN_TERMINAL);
+        if (!(player.openContainer instanceof ContainerPatternTerm terminal))
+            throw new AssertionError("Pattern Encoding Terminal should open");
+        return terminal;
+    }
+
+    private static void openRenamer(final GameTestHelper helper, final ContainerPatternTerm container,
+            final FakePlayer player) {
+        incoming(container.openTunnelPatternRenamerAction, StreamCodecs.empty(), null);
         helper.assertTrue(
                 player.openContainer instanceof ContainerTunnelPatternRenamer,
-                "Tunnel Pattern renamer should open");
+                "Encoded output should open the Tunnel Pattern renamer");
+    }
+
+    private static void submitName(final GameTestHelper helper, final FakePlayer player, final String name) {
+        final ContainerTunnelPatternRenamer renamer = (ContainerTunnelPatternRenamer) player.openContainer;
+        incoming(renamer.renameAction, StreamCodecs.string(), name);
+        helper.assertTrue(
+                player.openContainer instanceof ContainerPatternTerm,
+                "Saving should return to the same kind of encoding terminal");
+    }
+
+    private static <T> void incoming(final ActionHandler<T> action, final StreamCodec<T> codec, final T payload) {
+        final ByteBuf buf = Unpooled.buffer();
         try {
-            new PacketValueConfig("TunnelPattern.Rename", name).serverPacketData(null, null, player);
+            codec.write(buf, payload);
+            action.readIncoming(SyncEndpoint.CLIENT, SyncMode.FULL, buf);
         } catch (IOException e) {
-            throw new AssertionError("Rename packet should be encodable", e);
+            throw new AssertionError("Container action should be encodable", e);
+        } finally {
+            buf.release();
         }
-        helper.assertTrue(player.openContainer instanceof AEBaseContainer, "Saving should return to the primary GUI");
     }
 
-    private static IMEInventory<IAEItemStack> rejectInsertions(final IMEInventory<IAEItemStack> inventory,
-            final Predicate<IAEItemStack> reject) {
-        return new MEInventoryWrapper<IAEItemStack>(inventory, ITEM_STACK_TYPE) {
-
-            @Override
-            public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode,
-                    final BaseActionSource source) {
-                return reject.test(input) ? input : super.injectItems(input, mode, source);
-            }
-        };
-    }
-
-    private static void assertStoredPattern(final GameTestHelper helper, final IMEInventory<IAEItemStack> inventory,
-            final IAEItemStack pattern, final BaseActionSource source) {
-        final IAEItemStack stored = inventory.extractItems(pattern, Actionable.SIMULATE, source);
-        helper.assertNotNull(stored, "Original or updated pattern should remain stored after the failed transaction");
-        helper.assertEquals(1L, stored.getStackSize(), "Failed transaction should preserve exactly one stored pattern");
-    }
-
-    private static int findSlot(final AEBaseContainer container, final IInventory inventory, final int index) {
-        for (final Slot slot : container.inventorySlots) {
-            if (slot.inventory == inventory && slot.getSlotIndex() == index) return slot.slotNumber;
+    private static void legacyName(final FakePlayer player) {
+        try {
+            new PacketValueConfig("TunnelPattern.Rename", "Should not apply").serverPacketData(null, null, player);
+        } catch (IOException e) {
+            throw new AssertionError("Legacy packet should be encodable", e);
         }
-        throw new AssertionError("Expected inventory slot should be present in the GUI");
+    }
+
+    private static void assertUnchanged(final GameTestHelper helper, final ItemStack expected, final ItemStack actual) {
+        if (expected == null) {
+            helper.assertNull(actual, "Removed output should remain empty");
+        } else {
+            helper.assertTrue(AEItemStack.create(expected).isSameType(actual), "Pattern NBT should remain unchanged");
+            helper.assertEquals(expected.stackSize, actual.stackSize, "Pattern count should remain unchanged");
+        }
     }
 
     private static void assertRenamed(final GameTestHelper helper, final ItemStack original, final ItemStack renamed,
             final String name) {
-        helper.assertTrue(
-                AEItemStack.create(TunnelPatternRenaming.renamedCopy(original, name)).isSameType(renamed),
-                "Only the pattern's custom name should change");
+        assertUnchanged(helper, TunnelPatternRenaming.renamedCopy(original, name), renamed);
         helper.assertEquals(
                 ItemTunnelPattern.getTunnelUuid(original),
                 ItemTunnelPattern.getTunnelUuid(renamed),
@@ -338,14 +415,17 @@ public class TunnelPatternRenamingTests {
         inputs.appendTag(itemStack(Blocks.cobblestone, 4).toNBTGeneric());
         tag.setTag("in", inputs);
         tag.setTag("out", new NBTTagList());
+        tag.setString("testContents", "Original contents");
+        tag.setLong("legacyTimestamp", 123456789L);
+        tag.setByteArray("opaquePayload", new byte[] { 0, 1, -1 });
         ItemTunnelPattern.writeTunnelUuid(tag, UUID.randomUUID());
         pattern.setTagCompound(tag);
         pattern.setStackDisplayName("Original");
         return pattern;
     }
 
-    // Forge FakePlayer.openGui is a no-op. Construct server GUIs through the real bridge without a client connection.
-    private static FakePlayer guiPlayer(final GameTestHelper helper) {
+    // Forge FakePlayer.openGui is a no-op. Use the real server GUI bridge with a no-client connection.
+    private static FakePlayer guiPlayer(final GameTestHelper helper, final TileCableBus cable) {
         final FakePlayer player = new FakePlayer(
                 (WorldServer) helper.getWorld(),
                 new GameProfile(UUID.randomUUID(), "tunnel_rename")) {
@@ -356,11 +436,12 @@ public class TunnelPatternRenamingTests {
                 this.openContainer = (Container) GuiBridge.GUI_Handler.getServerGuiElement(guiId, this, world, x, y, z);
             }
         };
+        player.setPosition(cable.xCoord + 0.5, cable.yCoord + 0.5, cable.zCoord + 0.5);
         final NetworkManager network = new NetworkManager(false);
         final EmbeddedChannel channel = new EmbeddedChannel(network);
         new NetHandlerPlayServer(MinecraftServer.getServer(), network, player);
         network.setConnectionState(EnumConnectionState.PLAY);
-        // Forge supports FakePlayers with a channel but no FML dispatcher: there is no client to send GUI sync to.
+        // Forge permits a FakePlayer channel without an FML dispatcher; no client receives GUI synchronization.
         helper.afterTest(() -> {
             player.openContainer = player.inventoryContainer;
             channel.finish();
