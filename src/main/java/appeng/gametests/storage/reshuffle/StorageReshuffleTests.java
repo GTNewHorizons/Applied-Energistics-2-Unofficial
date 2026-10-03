@@ -6,6 +6,7 @@ import static appeng.gametests.AEGameTestHelpers.assertStoredAmount;
 import static appeng.gametests.AEGameTestHelpers.cell1k;
 import static appeng.gametests.AEGameTestHelpers.insertItems;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,13 +26,17 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 import com.gtnewhorizons.horizonqa.api.annotation.MethodSource;
 
 import appeng.api.AEApi;
+import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.ReshufflePhase;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.storage.IStorageInterceptor;
+import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -59,6 +64,130 @@ public final class StorageReshuffleTests {
     private static final int TARGET_FILLER_COUNT = 8032;
 
     private StorageReshuffleTests() {}
+
+    @GameTest(template = TEMPLATE, timeoutTicks = 100)
+    public static void driveAndChestSupportAllAccessModes(GameTestHelper helper) {
+        Fixture fixture = placeFixture(helper);
+        ItemStack driveCell = cell1k();
+        ItemStack chestCell = cell1k();
+        insertItems(helper, driveCell, Blocks.cobblestone, 64);
+        insertItems(helper, chestCell, Blocks.dirt, 64);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for access mode network activation",
+                        40,
+                        () -> { assertFixtureActive(helper, fixture); })
+                .thenExecute("install access mode cells", () -> {
+                    helper.setSlot(SOURCE_DRIVE, 0, driveCell);
+                    helper.setSlot(ME_CHEST, 1, chestCell);
+                }).thenWaitUntil("wait for access mode cells", 20, () -> {
+                    helper.assertFalse(
+                            fixture.sourceDrive.getCellArray(ITEM_STACK_TYPE).isEmpty(),
+                            "Drive cell should be available");
+                    helper.assertFalse(
+                            fixture.meChest.getCellArray(ITEM_STACK_TYPE).isEmpty(),
+                            "ME chest cell should be available");
+                }).thenExecute("verify all reshuffler access modes", () -> {
+                    ReshuffleActionSource source = new ReshuffleActionSource(fixture.controller);
+                    IMEInventoryHandler<IAEItemStack> driveInventory = fixture.sourceDrive.getCellArray(ITEM_STACK_TYPE)
+                            .get(0);
+                    IMEInventoryHandler<IAEItemStack> chestInventory = fixture.meChest.getCellArray(ITEM_STACK_TYPE)
+                            .get(0);
+                    List<IMEInventoryHandler<IAEItemStack>> inventories = Arrays.asList(driveInventory, chestInventory);
+                    Block[] storedBlocks = { Blocks.cobblestone, Blocks.dirt };
+                    Block[] insertedBlocks = { Blocks.dirt, Blocks.cobblestone };
+
+                    for (AccessRestriction access : AccessRestriction.values()) {
+                        fixture.sourceDrive.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, access);
+                        fixture.meChest.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, access);
+
+                        for (int i = 0; i < inventories.size(); i++) {
+                            IMEInventoryHandler<IAEItemStack> inventory = inventories.get(i);
+                            boolean extractionAllowed = inventory
+                                    .extractItems(itemStack(storedBlocks[i], 1), Actionable.SIMULATE, source) != null;
+                            boolean insertionAllowed = inventory
+                                    .injectItems(itemStack(insertedBlocks[i], 1), Actionable.SIMULATE, source) == null;
+
+                            helper.assertEquals(
+                                    access,
+                                    inventory.getReshuffleAccess(),
+                                    "Storage should report " + access);
+                            helper.assertEquals(
+                                    access.hasPermission(AccessRestriction.READ),
+                                    extractionAllowed,
+                                    access + " should control reshuffler extraction");
+                            helper.assertEquals(
+                                    access.hasPermission(AccessRestriction.WRITE),
+                                    insertionAllowed,
+                                    access + " should control reshuffler insertion");
+                        }
+                    }
+                }).thenSucceed();
+    }
+
+    @GameTest(template = TEMPLATE, timeoutTicks = 100)
+    public static void voidCellsRespectDriveAndChestReshuffleAccess(GameTestHelper helper) {
+        Fixture fixture = placeFixture(helper);
+        ItemStack driveCell = AEApi.instance().definitions().items().cellVoid().maybeStack(1).get();
+        ItemStack chestCell = AEApi.instance().definitions().items().cellVoid().maybeStack(1).get();
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for void cell network activation",
+                        40,
+                        () -> { assertFixtureActive(helper, fixture); })
+                .thenExecute("install void cells", () -> {
+                    helper.setSlot(SOURCE_DRIVE, 0, driveCell);
+                    helper.setSlot(ME_CHEST, 1, chestCell);
+                }).thenWaitUntil("wait for void cell handlers", 20, () -> {
+                    helper.assertFalse(
+                            fixture.sourceDrive.getCellArray(ITEM_STACK_TYPE).isEmpty(),
+                            "Drive void cell missing");
+                    helper.assertFalse(
+                            fixture.meChest.getCellArray(ITEM_STACK_TYPE).isEmpty(),
+                            "Chest void cell missing");
+                }).thenExecute("verify void cell access", () -> {
+                    ReshuffleActionSource reshuffleSource = new ReshuffleActionSource(fixture.controller);
+                    MachineSource ordinarySource = new MachineSource(fixture.controller);
+                    IMEInventoryHandler<IAEItemStack> driveInventory = fixture.sourceDrive.getCellArray(ITEM_STACK_TYPE)
+                            .get(0);
+                    IMEInventoryHandler<IAEItemStack> chestInventory = fixture.meChest.getCellArray(ITEM_STACK_TYPE)
+                            .get(0);
+                    List<IMEInventoryHandler<IAEItemStack>> inventories = Arrays.asList(driveInventory, chestInventory);
+                    AccessRestriction[] accessModes = AccessRestriction.values();
+
+                    for (int i = 0; i < accessModes.length; i++) {
+                        AccessRestriction[] configuredAccess = { accessModes[i],
+                                accessModes[(i + 1) % accessModes.length] };
+                        fixture.sourceDrive.getConfigManager()
+                                .putSetting(Settings.RESHUFFLE_ACCESS, configuredAccess[0]);
+                        fixture.meChest.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, configuredAccess[1]);
+
+                        for (int host = 0; host < inventories.size(); host++) {
+                            IMEInventoryHandler<IAEItemStack> inventory = inventories.get(host);
+                            AccessRestriction access = configuredAccess[host];
+                            helper.assertEquals(
+                                    access,
+                                    inventory.getReshuffleAccess(),
+                                    "Void cell access should follow host");
+                            helper.assertEquals(
+                                    access.hasPermission(AccessRestriction.WRITE),
+                                    inventory.injectItems(
+                                            itemStack(Blocks.cobblestone, 1),
+                                            Actionable.SIMULATE,
+                                            reshuffleSource) == null,
+                                    "Void cell should enforce reshuffler insertion access");
+                            helper.assertTrue(
+                                    inventory.injectItems(
+                                            itemStack(Blocks.cobblestone, 1),
+                                            Actionable.SIMULATE,
+                                            ordinarySource) == null,
+                                    "Ordinary insertion should remain allowed");
+                        }
+                    }
+                }).thenSucceed();
+    }
 
     @GameTest(template = TEMPLATE, timeoutTicks = 160)
     @MethodSource("insertOrders")
@@ -206,6 +335,60 @@ public final class StorageReshuffleTests {
     }
 
     @GameTest(template = TEMPLATE, timeoutTicks = 140)
+    public static void accessModesControlExtractionAndInsertion(GameTestHelper helper) {
+        Fixture fixture = placeFixture(helper);
+        ItemStack readableCell = cell1k();
+        ItemStack writableCell = cell1k();
+        ItemStack inaccessibleCell = cell1k();
+        insertItems(helper, readableCell, Blocks.cobblestone, 64);
+        insertItems(helper, writableCell, Blocks.dirt, 32);
+        insertItems(helper, inaccessibleCell, Blocks.gravel, 16);
+
+        helper.startSequence()
+                .thenWaitUntil(
+                        "wait for access-controlled network activation",
+                        40,
+                        () -> { assertFixtureActive(helper, fixture); })
+                .thenExecute("configure reshuffler access and install cells", () -> {
+                    fixture.sourceDrive.setPriority(0);
+                    fixture.sourceDrive.getConfigManager()
+                            .putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ);
+                    fixture.targetDrive.setPriority(100);
+                    fixture.targetDrive.getConfigManager()
+                            .putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.WRITE);
+                    fixture.meChest.setPriority(200);
+                    fixture.meChest.getConfigManager()
+                            .putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.NO_ACCESS);
+                    helper.setSlot(SOURCE_DRIVE, 0, readableCell);
+                    helper.setSlot(TARGET_DRIVE, 0, writableCell);
+                    helper.setSlot(ME_CHEST, 1, inaccessibleCell);
+                }).thenWaitUntil("wait for access-controlled contents", 20, () -> {
+                    assertNetworkStoredAmount(helper, fixture.controller, Blocks.cobblestone, 64);
+                    assertNetworkStoredAmount(helper, fixture.controller, Blocks.dirt, 32);
+                    assertNetworkStoredAmount(helper, fixture.controller, Blocks.gravel, 16);
+                }).thenExecute("start access-controlled reshuffle", fixture.reshuffler::startReshuffle)
+                .thenWaitUntil(
+                        "wait for access-controlled reshuffle completion",
+                        60,
+                        () -> assertDone(helper, fixture.reshuffler))
+                .thenExecute("verify access-controlled routing", () -> {
+                    assertStoredAmount(helper, fixture.sourceDrive.getStackInSlot(0), Blocks.cobblestone, 0);
+                    assertStoredAmount(helper, fixture.targetDrive.getStackInSlot(0), Blocks.cobblestone, 64);
+                    assertStoredAmount(helper, fixture.targetDrive.getStackInSlot(0), Blocks.dirt, 32);
+                    assertStoredAmount(helper, fixture.meChest.getStackInSlot(1), Blocks.gravel, 16);
+                    assertStoredAmount(helper, fixture.meChest.getStackInSlot(1), Blocks.cobblestone, 0);
+
+                    ReshuffleReport report = fixture.reshuffler.getReshuffleReport();
+                    helper.assertEquals(64.0, report.extractedItems, "Only readable storage should be extracted");
+                    helper.assertEquals(64.0, report.injectedItems, "Writable storage should receive extracted items");
+                    helper.assertTrue(report.cantExtract.isEmpty(), "Unreadable storage should be skipped");
+                    helper.assertTrue(report.cantInject.isEmpty(), "Writable storage should accept every item");
+                    helper.assertTrue(report.lostItems.isEmpty(), "Access controls should not lose items");
+                    helper.assertTrue(report.gainedItems.isEmpty(), "Access controls should not duplicate items");
+                }).thenSucceed();
+    }
+
+    @GameTest(template = TEMPLATE, timeoutTicks = 140)
     public static void missingDestinationRestoresItemsToTheirSource(GameTestHelper helper) {
         Fixture fixture = placeFixture(helper);
         ItemStack firstSourceCell = cell1k();
@@ -220,6 +403,9 @@ public final class StorageReshuffleTests {
                         40,
                         () -> { assertFixtureActive(helper, fixture); })
                 .thenExecute("install rollback sources", () -> {
+                    fixture.sourceDrive.getConfigManager()
+                            .putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ);
+                    fixture.meChest.getConfigManager().putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ);
                     helper.setSlot(SOURCE_DRIVE, 0, firstSourceCell);
                     helper.setSlot(ME_CHEST, 1, secondSourceCell);
                 })
@@ -268,7 +454,11 @@ public final class StorageReshuffleTests {
                         "wait for cancellation network activation",
                         40,
                         () -> { assertFixtureActive(helper, fixture); })
-                .thenExecute("install cancellation source", () -> { helper.setSlot(SOURCE_DRIVE, 0, sourceCell); })
+                .thenExecute("install read-only cancellation source", () -> {
+                    fixture.sourceDrive.getConfigManager()
+                            .putSetting(Settings.RESHUFFLE_ACCESS, AccessRestriction.READ);
+                    helper.setSlot(SOURCE_DRIVE, 0, sourceCell);
+                })
                 .thenWaitUntil(
                         "wait for cancellation source contents",
                         20,

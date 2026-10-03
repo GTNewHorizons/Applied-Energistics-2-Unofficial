@@ -62,6 +62,7 @@ public enum Settings {
     INTERFACE_TERMINAL(EnumSet.of(YesNo.YES, YesNo.NO)),
     CRAFT_VIA_REDSTONE(EnumSet.of(YesNo.YES, YesNo.NO)),
     PATTERN_OPTIMIZATION(EnumSet.of(YesNo.YES, YesNo.NO)),
+    RESHUFFLE_ACCESS(EnumSet.allOf(AccessRestriction.class)),
 
     STORAGE_FILTER(EnumSet.allOf(StorageFilter.class)),
     PLACE_BLOCK(EnumSet.of(YesNo.YES, YesNo.NO)),

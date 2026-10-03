@@ -29,6 +29,9 @@ import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.SecurityPermissions;
@@ -47,6 +50,7 @@ import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
+import appeng.util.inv.IInventoryDestination;
 import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.IPartitionList;
 import io.netty.buffer.ByteBuf;
@@ -222,13 +226,18 @@ public class PacketNEIRecipe extends AppEngPacket {
      * @param patternItem which {@link ItemStack} to extract
      * @return null or a found {@link ItemStack}
      */
-    private ItemStack extractItemFromPlayerInventory(final EntityPlayer player, final Actionable mode,
-            final ItemStack patternItem) {
+    private @Nullable ItemStack extractItemFromPlayerInventory(final @NotNull EntityPlayer player,
+            final @NotNull Actionable mode, final @NotNull ItemStack patternItem) {
         final InventoryAdaptor ia = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-        final AEItemStack request = AEItemStack.create(patternItem);
         final boolean isSimulated = mode == Actionable.SIMULATE;
-        final boolean checkFuzzy = request.isOre() || patternItem.getItemDamage() == OreDictionary.WILDCARD_VALUE
-                || patternItem.hasTagCompound()
+        if (patternItem.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
+            final IInventoryDestination destination = candidate -> candidate.getItem() == patternItem.getItem();
+            return isSimulated ? ia.simulateSimilarRemove(1, null, FuzzyMode.IGNORE_ALL, destination)
+                    : ia.removeSimilarItems(1, null, FuzzyMode.IGNORE_ALL, destination);
+        }
+
+        final AEItemStack request = AEItemStack.create(patternItem);
+        final boolean checkFuzzy = request.isOre() || patternItem.hasTagCompound()
                 || patternItem.isItemStackDamageable();
 
         if (!checkFuzzy) {

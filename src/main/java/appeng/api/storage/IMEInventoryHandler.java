@@ -23,7 +23,7 @@ import appeng.util.item.PrioritizedNetworkItemList;
  *
  * @param <StackType>
  */
-public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInventory<StackType> {
+public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInventory<StackType>, IReshuffleAccess {
 
     /**
      * determine if items can be injected/extracted.
