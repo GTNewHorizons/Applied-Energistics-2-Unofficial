@@ -66,6 +66,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.localization.PlayerMessages;
+import appeng.helpers.IResolvablePatternDetails;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.me.cache.CraftingGridCache;
@@ -331,7 +332,15 @@ public class PartPatternRepeater extends PartBasicState
                 final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
                         .getCraftingMultiPatterns().entrySet();
 
-                tempPatterns.forEach((entry) -> this.craftingList.addAll(entry.getValue()));
+                for (Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> entry : tempPatterns) {
+                    for (ICraftingPatternDetails details : entry.getValue()) {
+                        // The receiving grid must not overwrite the source provider's resolved inputs.
+                        if (details instanceof IResolvablePatternDetails pattern && pattern.requiresInputResolution()) {
+                            details = pattern.copyForGrid(self.getWorldObj());
+                        }
+                        this.craftingList.add(details);
+                    }
+                }
 
                 this.targetCraftingGrid.getEmitableItems().forEach((stack) -> {
                     if (!this.targetCraftingGrid.getEmitableMediums(stack).isEmpty()) {
