@@ -68,9 +68,10 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         this.canSubstitute = nbt.getBoolean("substitute");
         this.canBeSubstitute = nbt.getBoolean("beSubstitute");
         this.patternItem = is;
-        if (nbt.hasKey("author")) {
+        if (nbt.hasKey("author") || nbt.hasKey("encodedAt")) {
             final ItemStack forComparison = this.patternItem.copy();
             forComparison.stackTagCompound.removeTag("author");
+            forComparison.stackTagCompound.removeTag("encodedAt");
             this.pattern = AEItemStack.create(forComparison);
         } else {
             this.pattern = AEItemStack.create(is);
