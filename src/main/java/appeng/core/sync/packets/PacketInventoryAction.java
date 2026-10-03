@@ -22,6 +22,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.ContainerOpenContext;
 import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCraftAmount;
+import appeng.container.implementations.ContainerTunnelPatternRenamer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -103,6 +104,10 @@ public class PacketInventoryAction extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
         if (sender.openContainer instanceof AEBaseContainer baseContainer) {
+            if (this.action == InventoryAction.RENAME_TUNNEL_PATTERN) {
+                ContainerTunnelPatternRenamer.openForSlot(sender, baseContainer, this.slot);
+                return;
+            }
             final PrimaryGui pg = baseContainer.createPrimaryGui();
             if (this.action == InventoryAction.AUTO_CRAFT) {
                 final ContainerOpenContext context = baseContainer.getOpenContext();

@@ -93,6 +93,7 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.util.Platform;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.VisiblityData;
@@ -415,6 +416,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
             return;
         }
 
+        if (btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100
+                && this.tryRenameTunnelPattern(this.getSlot(xCoord, yCoord)))
+            return;
+
         if (btn == 1) {
             for (final GuiButton guibutton : this.buttonList) {
                 if (guibutton.mousePressed(this.mc, xCoord, yCoord)) {
@@ -436,6 +441,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         if (keyCode == this.mc.gameSettings.keyBindPickBlock.getKeyCode()) {
             final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
             if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, keyBindPickBlockAction)) return;
+            final int mouseX = Mouse.getX() * this.width / this.mc.displayWidth;
+            final int mouseY = this.height - Mouse.getY() * this.height / this.mc.displayHeight - 1;
+            if (this.tryRenameTunnelPattern(this.getSlot(mouseX, mouseY))) return;
         }
 
         if (this.isCloseKey(keyCode)) {
@@ -443,6 +451,18 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         super.keyTyped(typedChar, keyCode);
+    }
+
+    private boolean tryRenameTunnelPattern(final Slot slot) {
+        if (slot == null || slot instanceof SlotFake
+                || !slot.canTakeStack(this.mc.thePlayer)
+                || this.mc.thePlayer.inventory.getItemStack() != null
+                || ItemTunnelPattern.getTunnelUuid(slot.getStack()) == null)
+            return false;
+
+        NetworkHandler.instance
+                .sendToServer(new PacketInventoryAction(InventoryAction.RENAME_TUNNEL_PATTERN, slot.slotNumber, 0));
+        return true;
     }
 
     @Override

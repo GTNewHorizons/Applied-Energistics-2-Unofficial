@@ -8,6 +8,7 @@ import appeng.container.ContainerOpenContext;
 import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerTunnelPatternRenamer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -43,6 +44,11 @@ public class PacketMonitorableAction extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (!(player.openContainer instanceof ContainerMEMonitorable container)) return;
+
+        if (action == MonitorableAction.RENAME_TUNNEL_PATTERN) {
+            ContainerTunnelPatternRenamer.openForStoredPattern((EntityPlayerMP) player, container);
+            return;
+        }
 
         if (action == MonitorableAction.AUTO_CRAFT) {
             final PrimaryGui pGui = container.createPrimaryGui();
