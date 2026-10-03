@@ -189,6 +189,7 @@ public class PatternEncodingHelper {
             ItemTunnelPattern.writeTunnelUuid(encodedValue, uuid);
         }
         encodedValue.setString("author", auther);
+        encodedValue.setLong("encodedAt", System.currentTimeMillis());
 
         output.setTagCompound(encodedValue);
         if (customName != null && ItemTunnelPattern.isTunnelPattern(output)) {
