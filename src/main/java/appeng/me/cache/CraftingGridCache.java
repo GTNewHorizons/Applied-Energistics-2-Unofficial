@@ -101,6 +101,7 @@ import appeng.me.diagnostics.CraftingDiagnosticSessionId;
 import appeng.me.diagnostics.CraftingNetworkDiagnostics;
 import appeng.me.diagnostics.DiagnosticRowView;
 import appeng.me.helpers.GenericInterestManager;
+import appeng.parts.misc.PartPatternRepeater;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
@@ -345,15 +346,21 @@ public class CraftingGridCache
 
     protected void setPatternsFromCraftingMethods() {
         final Map<IAEStack<?>, Set<ICraftingPatternDetails>> tmpCraft = new HashMap<>();
+        final Map<UUID, ICraftingPatternDetails> repeatedDefinitions = new HashMap<>();
 
-        for (final ICraftingPatternDetails details : this.craftingMethods.keySet()) {
+        for (final Entry<ICraftingPatternDetails, List<ICraftingMedium>> entry : this.craftingMethods.entrySet()) {
+            final ICraftingPatternDetails details = entry.getKey();
             if (details.isInputOnly()) {
                 final UUID uuid = details.getInputOnlyUuid();
                 if (uuid != null) {
-                    this.inputOnlyPatterns.putIfAbsent(uuid, details);
+                    // A grid's own definition must not be replaced by another grid's contents for the same UUID.
+                    final boolean local = entry.getValue().stream()
+                            .anyMatch(medium -> !(medium instanceof PartPatternRepeater));
+                    (local ? this.inputOnlyPatterns : repeatedDefinitions).putIfAbsent(uuid, details);
                 }
             }
         }
+        repeatedDefinitions.forEach(this.inputOnlyPatterns::putIfAbsent);
 
         for (final IResolvablePatternDetails pattern : this.resolvablePatterns) {
             if (!pattern.requiresInputResolution()) {
@@ -403,6 +410,10 @@ public class CraftingGridCache
 
     public ICraftingPatternDetails getInputOnlyPattern(final UUID uuid) {
         return this.inputOnlyPatterns.get(uuid);
+    }
+
+    public ImmutableCollection<ICraftingPatternDetails> getInputOnlyPatterns() {
+        return ImmutableList.copyOf(this.inputOnlyPatterns.values());
     }
 
     protected void updateCPUClusters() {

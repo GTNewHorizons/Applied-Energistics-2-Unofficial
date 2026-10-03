@@ -6,6 +6,7 @@ import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -28,7 +29,9 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
+import appeng.container.ContainerNull;
 import appeng.core.AppEng;
+import appeng.gametests.AEGameTestHelpers;
 import appeng.helpers.IInterfaceHost;
 import appeng.items.misc.ItemTunnelPattern;
 import appeng.me.GridAccessException;
@@ -38,6 +41,7 @@ import appeng.parts.misc.PartPatternRepeater;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
+import appeng.util.inv.MEInventoryCrafting;
 
 @GameTestHolder(AppEng.MOD_ID)
 public class TunnelPatternTests {
@@ -133,7 +137,7 @@ public class TunnelPatternTests {
             helper.assertNotSame(source, exported, "The receiving grid must own its own detail instance");
             helper.assertEquals(source, exported, "Exported copies must preserve medium-routing identity");
             assertFluidInputs(helper, source, FluidRegistry.WATER, 2_000);
-            assertUnresolvedInputs(helper, exported);
+            assertFluidInputs(helper, exported, FluidRegistry.WATER, 2_000);
         }).thenExecute("install another definition for the same UUID in the receiving grid", () -> {
             InventoryHelper.setSlot(
                     targetInterface.getInterfaceDuality().getPatterns(),
@@ -164,6 +168,337 @@ public class TunnelPatternTests {
                     exported.getAEInputs(),
                     "Ordinary patterns should preserve their input array identity");
         }).thenSucceed();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 200)
+    public static void localPatternsResolveDefinitionsSharedAcrossNetworks(GameTestHelper helper) {
+        RepeaterNetwork network = new RepeaterNetwork(helper, false);
+        UUID innerUuid = UUID.randomUUID();
+        UUID outerUuid = UUID.randomUUID();
+        ItemStack inner = tunnel(innerUuid, fluidStack(FluidRegistry.WATER, 250));
+        ItemStack innerReference = inner.copy();
+        innerReference.stackSize = 3;
+        ItemStack outer = tunnel(
+                outerUuid,
+                itemStack(Blocks.cobblestone, 2),
+                AEApi.instance().storage().createItemStack(innerReference));
+        ItemStack reference = outer.copy();
+        reference.stackSize = 2;
+
+        helper.startSequence().thenWaitUntil("wait for three separate networks", 80, network::assertActive)
+                .thenExecute("install definitions only in A and a referencing processing pattern only in C", () -> {
+                    InventoryHelper.setSlot(network.interfaces[0].getInterfaceDuality().getPatterns(), 0, inner);
+                    InventoryHelper.setSlot(network.interfaces[0].getInterfaceDuality().getPatterns(), 1, outer);
+                    InventoryHelper.setSlot(
+                            network.interfaces[2].getInterfaceDuality().getPatterns(),
+                            0,
+                            processing(reference));
+                }).thenWaitUntil("wait for nested definitions to reach the local pattern in C", 40, () -> {
+                    assertMixedInputs(helper, firstPattern(helper, network.controllers[2]), 4, 1_500);
+                    assertProviderInputs(helper, network.interfaces[2], 4, 1_500);
+                    for (int grid = 0; grid < 3; grid++) {
+                        helper.assertNotNull(
+                                network.cache(grid).getInputOnlyPattern(innerUuid),
+                                "Inner definition should propagate");
+                        helper.assertNotNull(
+                                network.cache(grid).getInputOnlyPattern(outerUuid),
+                                "Outer definition should propagate");
+                        for (ICraftingPatternDetails details : network.cache(grid).getCraftingMultiPatterns().values()
+                                .stream().flatMap(patterns -> patterns.stream())
+                                .toArray(ICraftingPatternDetails[]::new)) {
+                            helper.assertFalse(details.isInputOnly(), "Definitions must not become craftable outputs");
+                        }
+                    }
+                    helper.assertTrue(
+                            network.cache(0).getCraftingMultiPatterns().isEmpty(),
+                            "A network containing only definitions should not advertise crafting outputs");
+                }).thenSucceed();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 200)
+    public static void definitionChangesAndRemovalPropagateAcrossMultipleRepeaters(GameTestHelper helper) {
+        RepeaterNetwork network = new RepeaterNetwork(helper, false);
+        UUID uuid = UUID.randomUUID();
+        ItemStack definition = tunnel(uuid, fluidStack(FluidRegistry.WATER, 1_000));
+        ItemStack reference = definition.copy();
+        reference.stackSize = 2;
+
+        helper.startSequence().thenWaitUntil("wait for three separate networks", 80, network::assertActive)
+                .thenExecute("install the definition in A and processing patterns in B and C", () -> {
+                    InventoryHelper.setSlot(network.interfaces[0].getInterfaceDuality().getPatterns(), 0, definition);
+                    InventoryHelper.setSlot(
+                            network.interfaces[1].getInterfaceDuality().getPatterns(),
+                            0,
+                            processing(reference));
+                    InventoryHelper.setSlot(
+                            network.interfaces[2].getInterfaceDuality().getPatterns(),
+                            0,
+                            processing(reference, Blocks.dirt));
+                }).thenWaitUntil("wait for both receiving grids to resolve the definition", 40, () -> {
+                    assertFluidInputs(helper, firstPattern(helper, network.controllers[1]), FluidRegistry.WATER, 2_000);
+                    assertFluidInputs(
+                            helper,
+                            firstPattern(helper, network.controllers[2], Blocks.dirt),
+                            FluidRegistry.WATER,
+                            2_000);
+                }).thenExecute("change the source contents without changing its UUID", () -> {
+                    InventoryHelper.setSlot(
+                            network.interfaces[0].getInterfaceDuality().getPatterns(),
+                            0,
+                            tunnel(uuid, fluidStack(FluidRegistry.WATER, 500)));
+                }).thenWaitUntil("wait for changed fluid amounts to reach both local providers", 40, () -> {
+                    assertFluidInputs(
+                            helper,
+                            network.interfaces[1].getInterfaceDuality().craftingList.get(0),
+                            FluidRegistry.WATER,
+                            1_000);
+                    assertFluidInputs(
+                            helper,
+                            network.interfaces[2].getInterfaceDuality().craftingList.get(0),
+                            FluidRegistry.WATER,
+                            1_000);
+                })
+                .thenExecute(
+                        "remove the source definition",
+                        () -> {
+                            InventoryHelper.clearSlot(network.interfaces[0].getInterfaceDuality().getPatterns(), 0);
+                        })
+                .thenWaitUntil("wait for all imported definitions and expanded inputs to disappear", 40, () -> {
+                    for (int grid = 0; grid < 3; grid++) {
+                        helper.assertNull(
+                                network.cache(grid).getInputOnlyPattern(uuid),
+                                "Removed definition must not be cached by another grid");
+                    }
+                    assertUnresolvedInputs(helper, firstPattern(helper, network.controllers[1]));
+                    assertUnresolvedInputs(helper, firstPattern(helper, network.controllers[2], Blocks.dirt));
+                }).thenSucceed();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 240)
+    public static void disconnectedRepeatersDropDefinitionsAndReconnectWithUpdatedContents(GameTestHelper helper) {
+        RepeaterNetwork network = new RepeaterNetwork(helper, false);
+        UUID uuid = UUID.randomUUID();
+        ItemStack definition = tunnel(uuid, fluidStack(FluidRegistry.WATER, 1_000));
+        ItemStack reference = definition.copy();
+        reference.stackSize = 2;
+
+        helper.startSequence().thenWaitUntil("wait for three separate networks", 80, network::assertActive)
+                .thenExecute("install the source definition and target-local processing pattern", () -> {
+                    InventoryHelper.setSlot(network.interfaces[0].getInterfaceDuality().getPatterns(), 0, definition);
+                    InventoryHelper.setSlot(
+                            network.interfaces[2].getInterfaceDuality().getPatterns(),
+                            0,
+                            processing(reference));
+                })
+                .thenWaitUntil(
+                        "wait for the target pattern to resolve",
+                        40,
+                        () -> {
+                            assertFluidInputs(
+                                    helper,
+                                    firstPattern(helper, network.controllers[2]),
+                                    FluidRegistry.WATER,
+                                    2_000);
+                        })
+                .thenExecute(
+                        "remove the first accessor using the normal part lifecycle",
+                        () -> { network.firstAccessor.getHost().removePart(network.firstAccessor.getSide(), false); })
+                .thenWaitUntil("wait for disconnection to clear B and C definitions", 40, () -> {
+                    helper.assertNull(
+                            network.cache(1).getInputOnlyPattern(uuid),
+                            "Disconnected B must drop imported definitions");
+                    helper.assertNull(
+                            network.cache(2).getInputOnlyPattern(uuid),
+                            "Disconnected C must drop imported definitions");
+                    assertUnresolvedInputs(helper, firstPattern(helper, network.controllers[2]));
+                }).thenExecute("update A while disconnected and replace the accessor", () -> {
+                    InventoryHelper.setSlot(
+                            network.interfaces[0].getInterfaceDuality().getPatterns(),
+                            0,
+                            tunnel(uuid, fluidStack(FluidRegistry.LAVA, 500)));
+                    network.firstAccessor.getHost().addPart(repeater(), network.firstAccessor.getSide(), null);
+                })
+                .thenWaitUntil(
+                        "wait for reconnection to import only the updated contents",
+                        60,
+                        () -> {
+                            assertFluidInputs(
+                                    helper,
+                                    firstPattern(helper, network.controllers[2]),
+                                    FluidRegistry.LAVA,
+                                    1_000);
+                        })
+                .thenSucceed();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 240)
+    public static void repeaterCyclesClearRemovedDefinitionsWithoutGhostsOrIdleRebuilds(GameTestHelper helper) {
+        RepeaterNetwork network = new RepeaterNetwork(helper, true);
+        UUID uuid = UUID.randomUUID();
+        ItemStack definition = tunnel(uuid, fluidStack(FluidRegistry.WATER, 1_000));
+        ItemStack reference = definition.copy();
+        reference.stackSize = 2;
+        AtomicInteger rebuilds = new AtomicInteger();
+        AtomicInteger settledRebuilds = new AtomicInteger();
+
+        helper.startSequence().thenWaitUntil("wait for a directed three-grid repeater cycle", 80, network::assertActive)
+                .thenExecute("install the source definition and a processing pattern in C", () -> {
+                    InventoryHelper.setSlot(network.interfaces[0].getInterfaceDuality().getPatterns(), 0, definition);
+                    InventoryHelper.setSlot(
+                            network.interfaces[2].getInterfaceDuality().getPatterns(),
+                            0,
+                            processing(reference));
+                }).thenWaitUntil("wait for definitions to traverse the cycle", 40, () -> {
+                    for (int grid = 0; grid < 3; grid++) {
+                        helper.assertNotNull(
+                                network.cache(grid).getInputOnlyPattern(uuid),
+                                "Definition should be visible on each grid");
+                        assertFluidInputs(
+                                helper,
+                                firstPattern(helper, network.controllers[grid]),
+                                FluidRegistry.WATER,
+                                2_000);
+                    }
+                    helper.assertFalse(
+                            network.firstProvider.pushPattern(
+                                    firstPattern(helper, network.controllers[1]),
+                                    new MEInventoryCrafting(new ContainerNull(), 3, 3)),
+                            "A repeater cycle without a working processor must terminate rather than recurse forever");
+                })
+                .thenExecute(
+                        "remove the only original definition",
+                        () -> {
+                            InventoryHelper.clearSlot(network.interfaces[0].getInterfaceDuality().getPatterns(), 0);
+                        })
+                .thenWaitUntil("wait for deletion to remove all circularly imported copies", 40, () -> {
+                    for (int grid = 0; grid < 3; grid++) {
+                        helper.assertNull(
+                                network.cache(grid).getInputOnlyPattern(uuid),
+                                "A repeater cycle must not keep a ghost definition");
+                        assertUnresolvedInputs(helper, firstPattern(helper, network.controllers[grid]));
+                    }
+                }).thenExecute("restore the UUID with different contents", () -> {
+                    InventoryHelper.setSlot(
+                            network.interfaces[0].getInterfaceDuality().getPatterns(),
+                            0,
+                            tunnel(uuid, fluidStack(FluidRegistry.LAVA, 250)));
+                }).thenWaitUntil("wait for the cycle to use only the replacement contents", 40, () -> {
+                    for (int grid = 0; grid < 3; grid++) {
+                        assertFluidInputs(
+                                helper,
+                                firstPattern(helper, network.controllers[grid]),
+                                FluidRegistry.LAVA,
+                                500);
+                    }
+                }).thenIdle(5).thenExecute("count rebuilds after topology and contents settle", () -> {
+                    for (int grid = 0; grid < 3; grid++) {
+                        network.cache(grid).addPostPatternChangeListeners(rebuilds::incrementAndGet);
+                    }
+                    settledRebuilds.set(rebuilds.get());
+                }).thenIdle(5).thenExecute("verify unchanged networks do not trigger rebuild loops", () -> {
+                    helper.assertEquals(
+                            settledRebuilds.get(),
+                            rebuilds.get(),
+                            "Idle repeater cycles must not continuously rebuild patterns");
+                }).thenSucceed();
+    }
+
+    private static final class RepeaterNetwork {
+
+        private final GameTestHelper helper;
+        private final TileController[] controllers = new TileController[3];
+        private final TileInterface[] interfaces = new TileInterface[3];
+        private final PartPatternRepeater firstAccessor;
+        private final PartPatternRepeater firstProvider;
+        private final PartPatternRepeater[] repeaters;
+
+        private RepeaterNetwork(GameTestHelper helper, boolean cycle) {
+            this.helper = helper;
+            controllers[0] = helper.assertTileEntityPresent(TileController.class, "controller");
+            Block controller = AEApi.instance().definitions().blocks().creativeEnergyController().maybeBlock().get();
+            helper.setBlock("cable_6", controller);
+            helper.setBlock("drive", controller);
+            controllers[1] = helper.assertTileEntityPresent(TileController.class, "cable_6");
+            controllers[2] = helper.assertTileEntityPresent(TileController.class, "drive");
+            interfaces[0] = placeInterface(helper, "cable_2");
+            interfaces[1] = placeInterface(helper, "cable_5");
+            interfaces[2] = placeInterface(helper, "cable_10");
+            AEColor[] colors = { AEColor.Red, AEColor.Blue, AEColor.Green };
+            for (int grid = 0; grid < 3; grid++) {
+                controllers[grid].recolourBlock(ForgeDirection.UP, colors[grid], null);
+                interfaces[grid].recolourBlock(ForgeDirection.UP, colors[grid], null);
+            }
+            placeCable(helper, "cable_1", AEColor.Red);
+            TileCableBus source = placeCable(helper, "cable_3", AEColor.Red);
+            TileCableBus middleLeft = placeCable(helper, "cable_4", AEColor.Blue);
+            TileCableBus middleRight = placeCable(helper, "cable_7", AEColor.Blue);
+            TileCableBus target = placeCable(helper, "cable_8", AEColor.Green);
+            placeCable(helper, "cable_9", AEColor.Green);
+            firstAccessor = addRepeater(source, ForgeDirection.EAST, false);
+            firstProvider = addRepeater(middleLeft, ForgeDirection.WEST, true);
+            PartPatternRepeater secondAccessor = addRepeater(middleRight, ForgeDirection.EAST, false);
+            PartPatternRepeater secondProvider = addRepeater(target, ForgeDirection.WEST, true);
+            if (cycle) {
+                TileCableBus closingHost = null;
+                for (int x = 3; x <= 8; x++) {
+                    helper.setBlock(x, 0, 0, AEApi.instance().definitions().blocks().multiPart().maybeBlock().get());
+                    TileCableBus host = helper.assertTileEntityPresent(TileCableBus.class, x, 0, 0);
+                    host.addPart(
+                            AEApi.instance().definitions().parts().cableGlass().stack(AEColor.Green, 1),
+                            ForgeDirection.UNKNOWN,
+                            null);
+                    if (x == 3) {
+                        closingHost = host;
+                    }
+                }
+                PartPatternRepeater closingAccessor = addRepeater(closingHost, ForgeDirection.SOUTH, false);
+                PartPatternRepeater closingProvider = addRepeater(source, ForgeDirection.NORTH, true);
+                repeaters = new PartPatternRepeater[] { firstAccessor, firstProvider, secondAccessor, secondProvider,
+                        closingAccessor, closingProvider };
+            } else {
+                repeaters = new PartPatternRepeater[] { firstAccessor, firstProvider, secondAccessor, secondProvider };
+            }
+        }
+
+        private void assertActive() {
+            for (int grid = 0; grid < 3; grid++) {
+                AEGameTestHelpers.assertActive(helper, controllers[grid].getProxy(), "Controller should be active");
+                AEGameTestHelpers.assertActive(helper, interfaces[grid].getProxy(), "Interface should be active");
+                helper.assertNotSame(
+                        controllers[grid].getProxy().getNode().getGrid(),
+                        controllers[(grid + 1) % 3].getProxy().getNode().getGrid(),
+                        "Repeaters must not physically merge the three grids");
+            }
+            for (PartPatternRepeater repeater : repeaters) {
+                AEGameTestHelpers.assertActive(helper, repeater, "Repeater should be active");
+                helper.assertNotNull(repeater.getPair(), "Each repeater should have its adjacent pair");
+            }
+        }
+
+        private CraftingGridCache cache(int grid) {
+            try {
+                return (CraftingGridCache) controllers[grid].getProxy().getCrafting();
+            } catch (GridAccessException exception) {
+                throw new AssertionError("Crafting cache should be accessible", exception);
+            }
+        }
+    }
+
+    private static PartPatternRepeater addRepeater(TileCableBus host, ForgeDirection side, boolean provider) {
+        host.addPart(repeater(), side, null);
+        PartPatternRepeater part = (PartPatternRepeater) host.getPart(side);
+        if (provider) {
+            NBTTagCompound settings = new NBTTagCompound();
+            settings.setTag("waitingStacks", new NBTTagList());
+            settings.setBoolean("provider", true);
+            part.readFromNBT(settings);
+            part.gridChanged();
+        }
+        return part;
+    }
+
+    private static ItemStack repeater() {
+        return AEApi.instance().definitions().parts().patternRepeater().maybeStack(1).get();
     }
 
     private static void assertProviderInputs(GameTestHelper helper, IInterfaceHost host, long items, long fluid) {

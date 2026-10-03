@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Proxy;
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.google.common.collect.ImmutableCollection;
+
 import appeng.api.AEApi;
 import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -36,6 +39,7 @@ import appeng.helpers.PatternHelper;
 import appeng.helpers.UltimatePatternHelper;
 import appeng.items.misc.ItemTunnelPattern;
 import appeng.me.cache.CraftingGridCache;
+import appeng.parts.misc.PartPatternRepeater;
 import appeng.test.mockme.MockCraftingMedium;
 import appeng.test.mockme.MockGrid;
 import appeng.util.TunnelPatternExpander;
@@ -103,6 +107,51 @@ public class TunnelPatternResolutionFunctionalTest {
             assertSame(inputs, pattern.getAEInputs());
             assertSame(condensedInputs, pattern.getCondensedAEInputs());
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void localDefinitionsTakePrecedenceOverRepeatedDefinitions(boolean repeatedFirst) {
+        UUID uuid = UUID.randomUUID();
+        ItemStack localDefinition = tunnel(uuid, fluid(FluidRegistry.WATER, 1_000));
+        ICraftingPatternDetails local = new UltimatePatternHelper(localDefinition);
+        ICraftingPatternDetails repeated = new UltimatePatternHelper(tunnel(uuid, fluid(FluidRegistry.LAVA, 500)));
+        PartPatternRepeater repeater = new PartPatternRepeater(
+                AEApi.instance().definitions().parts().patternRepeater().maybeStack(1).get());
+        if (repeatedFirst) {
+            cache.addCraftingOption(repeater, repeated);
+            cache.addCraftingOption(medium, local);
+        } else {
+            cache.addCraftingOption(medium, local);
+            cache.addCraftingOption(repeater, repeated);
+        }
+        IResolvablePatternDetails pattern = processing(reference(localDefinition, 2), false);
+        cache.addCraftingOption(medium, pattern);
+
+        cache.setMockPatternsFromMethods();
+
+        assertSame(local, cache.getInputOnlyPattern(uuid));
+        assertEquals(1, cache.getInputOnlyPatterns().size());
+        assertFluid(pattern.getAEInputs()[0], FluidRegistry.WATER, 2_000);
+        assertTrue(
+                cache.getCraftingMultiPatterns().values().stream().flatMap(patterns -> patterns.stream())
+                        .noneMatch(ICraftingPatternDetails::isInputOnly));
+    }
+
+    @Test
+    void exportedDefinitionSnapshotIsImmutableAndDoesNotChangeDuringRebuilds() {
+        UUID uuid = UUID.randomUUID();
+        ICraftingPatternDetails initial = new UltimatePatternHelper(tunnel(uuid, fluid(FluidRegistry.WATER, 1_000)));
+        cache.addCraftingOption(medium, initial);
+        cache.setMockPatternsFromMethods();
+        ImmutableCollection<ICraftingPatternDetails> snapshot = cache.getInputOnlyPatterns();
+
+        cache.replaceDefinition(uuid, new UltimatePatternHelper(tunnel(uuid, fluid(FluidRegistry.LAVA, 500))));
+
+        assertSame(initial, snapshot.iterator().next());
+        assertThrows(UnsupportedOperationException.class, snapshot::clear);
+        assertNotSame(initial, cache.getInputOnlyPatterns().iterator().next());
+        assertTrue(cache.getCraftingMultiPatterns().isEmpty(), "Definitions must not advertise crafting outputs");
     }
 
     @Test

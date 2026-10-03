@@ -300,68 +300,73 @@ public class PartPatternRepeater extends PartBasicState
 
     public void init() {
         if (this.duringFletchPatterns) return;
-        this.unregisterPostPatternChangeListener();
-        this.clearEmitableCrafting(); // Clear before resetting targetCraftingGrid
-        this.craftingList.clear();
-        this.targetCraftingGrid = null;
-        this.targetNetworkProxy = null;
-        this.pairPatternRepeater = null;
+        this.duringFletchPatterns = true;
+        try {
+            this.unregisterPostPatternChangeListener();
+            this.clearEmitableCrafting(); // Clear before resetting targetCraftingGrid
+            this.craftingList.clear();
+            this.targetCraftingGrid = null;
+            this.targetNetworkProxy = null;
+            this.pairPatternRepeater = null;
 
-        final TileEntity self = this.getHost().getTile();
-        final TileEntity target = self.getWorldObj().getTileEntity(
-                self.xCoord + this.getSide().offsetX,
-                self.yCoord + this.getSide().offsetY,
-                self.zCoord + this.getSide().offsetZ);
-
-        if (Platform.getPartFromTE(target, this.getSide().getOpposite()) instanceof PartPatternRepeater ppr) {
-            this.pairPatternRepeater = ppr;
-            this.targetNetworkProxy = ppr.getProxy();
-
+            // Drop old exports even when the pair has been disconnected.
             if (this.provider) {
-                if (ppr.provider) return;
-                final IGridNode gn = ppr.getGridNode(ForgeDirection.UNKNOWN);
-                if (gn == null) return;
-
-                this.duringFletchPatterns = true;
-
-                // drop patterns from this
                 this.triggerPatternUpdate();
-
-                this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
-
-                final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
-                        .getCraftingMultiPatterns().entrySet();
-
-                for (Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> entry : tempPatterns) {
-                    for (ICraftingPatternDetails details : entry.getValue()) {
-                        // The receiving grid must not overwrite the source provider's resolved inputs.
-                        if (details instanceof IResolvablePatternDetails pattern && pattern.requiresInputResolution()) {
-                            details = pattern.copyForGrid(self.getWorldObj());
-                        }
-                        this.craftingList.add(details);
-                    }
-                }
-
-                this.targetCraftingGrid.getEmitableItems().forEach((stack) -> {
-                    if (!this.targetCraftingGrid.getEmitableMediums(stack).isEmpty()) {
-                        this.emitableCrafting.put(stack, false);
-                    }
-                });
-
-                this.triggerPatternUpdate();
-                this.updateEmitableStatus();
-
-                this.duringFletchPatterns = false;
-            } else {
-                final IGridNode gn = this.getGridNode(ForgeDirection.UNKNOWN);
-                if (gn == null) return;
-
-                this.currentCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
-                this.currentCraftingGrid.addPostPatternChangeListeners(this);
             }
-        }
 
-        this.configureWatchers();
+            final TileEntity self = this.getHost().getTile();
+            final TileEntity target = self.getWorldObj().getTileEntity(
+                    self.xCoord + this.getSide().offsetX,
+                    self.yCoord + this.getSide().offsetY,
+                    self.zCoord + this.getSide().offsetZ);
+
+            if (Platform.getPartFromTE(target, this.getSide().getOpposite()) instanceof PartPatternRepeater ppr) {
+                this.pairPatternRepeater = ppr;
+                this.targetNetworkProxy = ppr.getProxy();
+
+                if (this.provider) {
+                    if (ppr.provider) return;
+                    final IGridNode gn = ppr.getGridNode(ForgeDirection.UNKNOWN);
+                    final IGridNode ownNode = this.getGridNode(ForgeDirection.UNKNOWN);
+                    if (gn == null || ownNode == null || gn.getGrid() == ownNode.getGrid()) return;
+
+                    this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
+
+                    final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
+                            .getCraftingMultiPatterns().entrySet();
+
+                    for (Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> entry : tempPatterns) {
+                        for (ICraftingPatternDetails details : entry.getValue()) {
+                            // The receiving grid must not overwrite the source provider's resolved inputs.
+                            if (details instanceof IResolvablePatternDetails pattern
+                                    && pattern.requiresInputResolution()) {
+                                details = pattern.copyForGrid(self.getWorldObj());
+                            }
+                            this.craftingList.add(details);
+                        }
+                    }
+                    this.craftingList.addAll(this.targetCraftingGrid.getInputOnlyPatterns());
+
+                    this.targetCraftingGrid.getEmitableItems().forEach((stack) -> {
+                        if (!this.targetCraftingGrid.getEmitableMediums(stack).isEmpty()) {
+                            this.emitableCrafting.put(stack, false);
+                        }
+                    });
+
+                    this.triggerPatternUpdate();
+                    this.updateEmitableStatus();
+                } else {
+                    final IGridNode gn = this.getGridNode(ForgeDirection.UNKNOWN);
+                    if (gn == null) return;
+
+                    this.currentCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
+                    this.currentCraftingGrid.addPostPatternChangeListeners(this);
+                }
+            }
+        } finally {
+            this.duringFletchPatterns = false;
+            this.configureWatchers();
+        }
     }
 
     private void triggerPatternUpdate() {
