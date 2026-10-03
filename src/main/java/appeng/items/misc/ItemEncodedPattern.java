@@ -202,6 +202,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             }
         }
         if (ItemTunnelPattern.isTunnelPattern(stack)) {
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternRenameHint.getLocal());
             lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo1.getLocal());
             lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo2.getLocal());
             lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo3.getLocal());
