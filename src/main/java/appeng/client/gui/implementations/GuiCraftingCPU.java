@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -91,8 +90,6 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
     private static final int ICON_NO_TARGET = 132;
     private static final int ICON_LOCK_MODE = 133;
     private static final int ICON_BLOCK_MODE = 134;
-
-    private static final double LOOK_DISTANCE_SQUARED_EPSILON = 1.0e-6;
 
     private final ContainerCraftingCPU container;
     private final CraftingCpuVisualState visualState = new CraftingCpuVisualState();
@@ -238,66 +235,8 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                 this.mc.thePlayer,
                 messages,
                 ((Localization) () -> "tile.appliedenergistics2.BlockInterface.name").getLocal());
-        this.lookAtHoveredInterfaces();
+        BlockPosHighlighter.lookAtHighlightedBlocks(this.mc.thePlayer);
         this.closeGui();
-    }
-
-    private void lookAtHoveredInterfaces() {
-        final EntityPlayer player = this.mc.thePlayer;
-        final int dimension = player.worldObj.provider.dimensionId;
-        final double eyeY = Platform.getEyeOffset(player);
-        double centerX = 0;
-        double centerY = 0;
-        double centerZ = 0;
-        int count = 0;
-
-        for (final NamedDimensionalCoord block : this.hoveredInterfaceLocations) {
-            if (block.getDimension() != dimension) {
-                continue;
-            }
-
-            centerX += block.x + 0.5;
-            centerY += block.y + 0.5;
-            centerZ += block.z + 0.5;
-            count++;
-        }
-
-        if (count == 0) {
-            return;
-        }
-
-        final double dx = centerX / count - player.posX;
-        final double dy = centerY / count - eyeY;
-        final double dz = centerZ / count - player.posZ;
-        final double horizontalDistanceSquared = dx * dx + dz * dz;
-
-        // Keep the camera direction when opposing interfaces have no useful common direction.
-        for (final NamedDimensionalCoord block : this.hoveredInterfaceLocations) {
-            if (block.getDimension() != dimension) {
-                continue;
-            }
-            final double blockDx = block.x + 0.5 - player.posX;
-            final double blockDz = block.z + 0.5 - player.posZ;
-            if ((horizontalDistanceSquared < LOOK_DISTANCE_SQUARED_EPSILON
-                    && blockDx * blockDx + blockDz * blockDz >= LOOK_DISTANCE_SQUARED_EPSILON)
-                    || blockDx * dx + blockDz * dz < 0) {
-                return;
-            }
-        }
-
-        if (horizontalDistanceSquared + dy * dy < LOOK_DISTANCE_SQUARED_EPSILON) {
-            return;
-        }
-
-        // Keep the existing yaw when the target is directly above or below the player.
-        if (horizontalDistanceSquared >= LOOK_DISTANCE_SQUARED_EPSILON) {
-            player.rotationYaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-            player.prevRotationYaw = player.rotationYaw;
-            player.rotationYawHead = player.rotationYaw;
-            player.prevRotationYawHead = player.rotationYaw;
-        }
-        player.rotationPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(horizontalDistanceSquared)));
-        player.prevRotationPitch = player.rotationPitch;
     }
 
     @Override
