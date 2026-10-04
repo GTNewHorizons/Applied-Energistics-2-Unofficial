@@ -5,6 +5,9 @@ import java.util.Arrays;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
@@ -15,7 +18,7 @@ import appeng.core.sync.packets.PacketPinsUpdate;
 public class PinsHandler {
 
     private final PinsHolder holder;
-    private final PinList pinsInv;
+    private PinList pinsInv;
     private PinsRows craftingPinsRows;
     private PinsRows playerPinsRows;
     private final EntityPlayer player;
@@ -123,6 +126,34 @@ public class PinsHandler {
 
     public PinsRows getPlayerPinsRows() {
         return playerPinsRows;
+    }
+
+    public void writeToNBT(NBTTagCompound data) {
+        final NBTTagCompound pinsData = new NBTTagCompound();
+        holder.writeToNBT(pinsData, "pins");
+        final NBTTagList pins = pinsData.getTagList("pins", NBT.TAG_COMPOUND);
+        for (int i = 0; i < pins.tagCount(); i++) {
+            final NBTTagCompound playerPins = pins.getCompoundTagAt(i);
+            if (player.getPersistentID().toString().equals(playerPins.getString("playerId"))) {
+                data.setTag("pins", playerPins);
+                break;
+            }
+        }
+    }
+
+    public void readFromNBT(NBTTagCompound data) {
+        final NBTTagCompound playerPins = (NBTTagCompound) data.getCompoundTag("pins").copy();
+        playerPins.setString("playerId", player.getPersistentID().toString());
+        final NBTTagList pins = new NBTTagList();
+        pins.appendTag(playerPins);
+        final NBTTagCompound pinsData = new NBTTagCompound();
+        pinsData.setTag("pins", pins);
+        holder.readFromNBT(pinsData, "pins");
+        pinsInv = holder.getPinsInv(player);
+        craftingPinsRows = holder.getCraftingPinsRows(player);
+        playerPinsRows = holder.getPlayerPinsRows(player);
+        needUpdate = true;
+        holder.markDirty();
     }
 
     /** Returns the full pins array (TOTAL_SLOTS) for the client. */
