@@ -13,7 +13,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.38:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.15:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.99.99-mu32:dev') {transitive = false}
-    compileOnly('com.ruling_0:MaterialLib:0.16.0-mu:dev') {transitive = false}
+    compileOnly('com.ruling_0:MaterialLib:0.17.0-mu:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ModularUI2:2.3.91-1.7.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.23:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
@@ -54,7 +54,7 @@ dependencies {
         exclude module: "Hodgepodge"
         exclude module: "waila"
     }
-    functionalTestImplementation('com.ruling_0:MaterialLib:0.16.0-mu:dev')
+    functionalTestImplementation('com.ruling_0:MaterialLib:0.17.0-mu:dev')
 
     devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.15.0:dev")
 
