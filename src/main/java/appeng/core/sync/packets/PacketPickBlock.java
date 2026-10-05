@@ -5,22 +5,32 @@ import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
+import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.parts.ICraftingTerminal;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.container.PrimaryGui;
+import appeng.container.implementations.ContainerCraftAmount;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.AppEngPacket;
+import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
+import appeng.util.Platform;
 import appeng.util.PlayerInventoryUtil;
+import baubles.api.BaublesApi;
+import cpw.mods.fml.common.Optional;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -78,12 +88,8 @@ public class PacketPickBlock extends AppEngPacket {
             return;
         }
 
-        // 3. If there are no partial stacks and the player's inventory is full,
-        // then return since we cannot add a retrieved stack to a full inventory
+        // 3. Find a slot for retrieved items. A full inventory can still request a craft.
         int nextEmptySlot = sender.inventory.getFirstEmptyStack();
-        if (partialStackSlotsList.isEmpty() && nextEmptySlot == -1) {
-            return;
-        }
 
         // 4. Consolidate all partial stacks of target block into 1 ItemStack.
         // If a full stack is obtained, set it as the active slot and return.
@@ -126,7 +132,13 @@ public class PacketPickBlock extends AppEngPacket {
             sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
             return;
         }
-        var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
+        var wirelessGrid = getWirelessGrid(wirelessTerminal, sender);
+        if (wirelessGrid == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
+            return;
+        }
+
+        var wirelessInventory = getWirelessItemInventory(wirelessGrid);
         if (wirelessInventory == null) {
             movePickBlockItemStack(sender, pickBlockSlot);
             return;
@@ -138,6 +150,16 @@ public class PacketPickBlock extends AppEngPacket {
         IAEItemStack targetAeItemStack = AEApi.instance().storage().createItemStack(targetItemStack);
         if (targetAeItemStack == null) {
             movePickBlockItemStack(sender, pickBlockSlot);
+            return;
+        }
+
+        if (pickBlockItemStack == null
+                && isMissingFromStorage(wirelessInventory.getStorageList().findPrecise(targetAeItemStack))
+                && openCraftAmountGui(sender, wirelessTerminal, targetAeItemStack, wirelessGrid)) {
+            return;
+        }
+
+        if (pickBlockSlot < 0) {
             return;
         }
 
@@ -168,8 +190,7 @@ public class PacketPickBlock extends AppEngPacket {
         movePickBlockItemStack(sender, pickBlockSlot);
     }
 
-    private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(EntityPlayer player,
-            ItemStack wirelessTerminal) {
+    private IGrid getWirelessGrid(ItemStack wirelessTerminal, EntityPlayer player) {
         if (wirelessTerminal == null) {
             return null;
         }
@@ -204,12 +225,82 @@ public class PacketPickBlock extends AppEngPacket {
             return null;
         }
 
+        return wirelessGrid;
+    }
+
+    private IMEMonitor<IAEItemStack> getWirelessItemInventory(IGrid wirelessGrid) {
         IStorageGrid wirelessGridCache = wirelessGrid.getCache(IStorageGrid.class);
         if (wirelessGridCache == null) {
             return null;
         }
 
         return wirelessGridCache.getItemInventory();
+    }
+
+    private boolean openCraftAmountGui(EntityPlayerMP player, ItemStack wirelessTerminal, IAEItemStack itemToCraft,
+            IGrid wirelessGrid) {
+        ICraftingGrid craftingGrid = wirelessGrid.getCache(ICraftingGrid.class);
+        if (craftingGrid == null || craftingGrid.getCraftingFor(itemToCraft, null, -1, player.worldObj).isEmpty()) {
+            return false;
+        }
+
+        int terminalSlot = getInventorySlot(player, wirelessTerminal);
+        if (terminalSlot < 0) {
+            return false;
+        }
+
+        Platform.openGUI(player, null, null, GuiBridge.GUI_CRAFTING_AMOUNT, terminalSlot);
+        if (!(player.openContainer instanceof ContainerCraftAmount craftAmount)) {
+            return false;
+        }
+
+        // Unlike terminal clicks, pick block has no parent container to supply the return context.
+        // PacketCraftRequest passes this to the confirmation screen; a null context cancels the job.
+        PrimaryGui primaryGui = new PrimaryGui(
+                craftAmount.getTarget() instanceof ICraftingTerminal ? GuiBridge.GUI_CRAFTING_TERMINAL
+                        : GuiBridge.GUI_ME,
+                wirelessTerminal.copy(),
+                null,
+                ForgeDirection.UNKNOWN);
+        primaryGui.setSlotIndex(terminalSlot);
+        craftAmount.setPrimaryGui(primaryGui);
+        craftAmount.setItemToCraft(itemToCraft);
+        craftAmount.setInitialCraftAmount(1);
+        craftAmount.detectAndSendChanges();
+        return true;
+    }
+
+    static boolean isMissingFromStorage(IAEItemStack stored) {
+        return stored == null || stored.getStackSize() <= 0;
+    }
+
+    private int getInventorySlot(EntityPlayerMP player, ItemStack item) {
+        // Match getFirstWirelessTerminal: equipped terminals take priority over inventory terminals.
+        if (Platform.isBaublesLoaded) {
+            int slot = getBaublesSlot(player, item);
+            if (slot >= 0) return slot;
+        }
+        for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
+            if (player.inventory.mainInventory[slot] == item) {
+                return slot;
+            }
+        }
+
+        return -1;
+    }
+
+    @Optional.Method(modid = "Baubles|Expanded")
+    private int getBaublesSlot(EntityPlayerMP player, ItemStack item) {
+        return findSlot(BaublesApi.getBaubles(player), item, Platform.baublesSlotsOffset);
+    }
+
+    static int findSlot(IInventory inventory, ItemStack item, int offset) {
+        if (inventory != null && item != null) {
+            for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                if (inventory.getStackInSlot(slot) == item) return offset + slot;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -221,7 +312,7 @@ public class PacketPickBlock extends AppEngPacket {
      * @param pickBlockInventorySlot the inventory slot of the ItemStack to move
      */
     private void movePickBlockItemStack(EntityPlayerMP player, int pickBlockInventorySlot) {
-        if (player.inventory.getStackInSlot(pickBlockInventorySlot) == null) {
+        if (pickBlockInventorySlot < 0 || player.inventory.getStackInSlot(pickBlockInventorySlot) == null) {
             return;
         }
         var firstEmptyHotbarSlot = PlayerInventoryUtil.getFirstEmptyHotbarSlot(player);

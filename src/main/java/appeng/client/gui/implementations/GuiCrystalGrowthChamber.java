@@ -18,11 +18,15 @@ public class GuiCrystalGrowthChamber extends AEBaseGui {
         super(new ContainerCrystalGrowthChamber(inventoryPlayer, te));
         cg = (ContainerCrystalGrowthChamber) this.inventorySlots;
         ySize = 166;
-        xSize = hasToolbox() ? 246 : 211;
+        xSize = !hasToolbox() ? 211 : getToolboxSize() == 5 ? 290 : 246;
     }
 
     private boolean hasToolbox() {
         return ((ContainerUpgradeable) this.inventorySlots).hasToolbox();
+    }
+
+    private int getToolboxSize() {
+        return ((ContainerUpgradeable) this.inventorySlots).getToolboxSize();
     }
 
     @Override
@@ -46,7 +50,10 @@ public class GuiCrystalGrowthChamber extends AEBaseGui {
         if (drawUpgrades()) {
             drawTexturedModalRect(offsetX + 177, offsetY, 177, 0, 35, 14 + cg.availableUpgrades() * 18);
         }
-        if (hasToolbox()) {
+        if (hasToolbox() && getToolboxSize() == 5) {
+            bindTexture("guis/advanced_toolbox.png");
+            drawTexturedModalRect(offsetX + 178, offsetY + ySize - 90 - 7, 0, 0, 104, 104);
+        } else if (hasToolbox()) {
             drawTexturedModalRect(offsetX + 178, offsetY + ySize - 90, 178, ySize - 90, 68, 68);
         }
     }

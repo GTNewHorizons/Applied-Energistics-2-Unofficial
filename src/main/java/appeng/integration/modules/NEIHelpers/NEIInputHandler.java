@@ -8,11 +8,18 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.input.Keyboard;
+
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.client.gui.implementations.GuiCellWorkbench;
+import appeng.client.gui.implementations.GuiPatternTerm;
 import appeng.client.gui.implementations.GuiStorageBus;
+import appeng.client.gui.slots.VirtualMEPatternSlot;
+import appeng.integration.modules.NEI;
 import codechicken.nei.ItemPanels;
+import codechicken.nei.KeyManager;
 import codechicken.nei.NEIClientConfig;
 import codechicken.nei.bookmark.BookmarkItem;
 import codechicken.nei.bookmark.SortableGroup;
@@ -26,8 +33,28 @@ public class NEIInputHandler implements IContainerInputHandler {
     private List<ItemStack> draggedBookmarkGroup;
 
     @Override
-    public boolean keyTyped(GuiContainer gui, char keyChar, int keyCode) {
-        return false;
+    public boolean keyTyped(@NotNull GuiContainer gui, char keyChar, int keyCode) {
+        if (!(gui instanceof GuiPatternTerm terminal) || !NEIClientConfig.isLoaded()
+                || terminal.isSearchFieldManuallyFocused()
+                || NEI.searchField.focused()) {
+            return false;
+        }
+
+        if (!(terminal.getVirtualMESlotUnderMouse() instanceof VirtualMEPatternSlot slot)
+                || slot.getAEStack() == null) {
+            return false;
+        }
+
+        if (keyCode == Keyboard.KEY_NONE || keyCode == Keyboard.KEY_ESCAPE
+                || (keyCode != KeyManager.getKeyCode("recipe.recipe")
+                        && keyCode != KeyManager.getKeyCode("recipe.usage"))) {
+            return false;
+        }
+
+        // Run the normal NEI handlers before the terminal's search field can consume the key.
+        GuiContainerManager.getManager(gui).lastKeyTyped(keyCode, keyChar);
+        // A missing recipe must not turn the shortcut into search text either.
+        return true;
     }
 
     @Override

@@ -64,7 +64,13 @@ public class ContainerAdvancedInscriber extends ContainerUpgradeable implements 
 
     @Override
     protected int getToolboxY() {
-        return 113;
+        // The 5x5 toolbox does not fit below the upgrade strip, so it is placed next to it instead
+        return this.getToolboxSize() == 5 ? 79 : 113;
+    }
+
+    @Override
+    protected int getToolboxX() {
+        return this.getToolboxSize() == 5 ? 221 : 186;
     }
 
     @Override

@@ -49,6 +49,7 @@ import appeng.core.sync.packets.PacketPartInteraction;
 import appeng.core.sync.packets.PacketPartPlacement;
 import appeng.core.sync.packets.PacketRequestResync;
 import appeng.facade.IFacadeItem;
+import appeng.fmp.FMPPlacementHelper;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBuildCraftTransport;
@@ -220,8 +221,8 @@ public class PartPlacement {
 
         IPartHost host = getOrCreateHost(world.getTileEntity(x, y, z), player, side.ordinal());
 
-        // Try to add the part to the target block
-        if (host != null && tryPlace(held, player, world, x, y, z, side, host)) return true;
+        // Try to add the part to the target block, or replace a replaceable block like grass
+        if (tryPlace(held, player, world, x, y, z, side, host)) return true;
 
         // If that didn't work, we try to place on the face of the target block
         int tx = x + side.offsetX;
@@ -236,7 +237,7 @@ public class PartPlacement {
     }
 
     public static boolean tryPlace(ItemStack held, EntityPlayer player, World world, int x, int y, int z,
-            ForgeDirection side, IPartHost host) {
+            ForgeDirection side, @Nullable IPartHost host) {
         final IBlockDefinition multiPart = AEApi.instance().definitions().blocks().multiPart();
         if (!world.canMineBlock(player, x, y, z)) {
             return false;
@@ -271,6 +272,10 @@ public class PartPlacement {
             host = getExistingHost(world.getTileEntity(x, y, z));
             if (host == null) return false;
         }
+        // FMP does not support client side prediction, assume placement is successful on the client side to stop
+        // interaction pipeline on the client side. Item use is the last item in the pipeline, we possibly skip
+        // some offhand client prediction here as well but this only happen when we place on FMP blocks.
+        if (world.isRemote && host instanceof FMPPlacementHelper) return true;
         final ForgeDirection mySide = host.addPart(held, side, player);
         if (mySide != null) {
             if (world.isRemote && host.getPart(mySide) instanceof PartCable cable) {
