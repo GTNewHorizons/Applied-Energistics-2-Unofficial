@@ -782,6 +782,12 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.AdvancedBlockingModeAll,
                     ButtonToolTips.AdvancedBlockingModeAllDesc);
             this.registerApp(
+                    16 * 10 + 5,
+                    Settings.ADVANCED_BLOCKING_MODE,
+                    AdvancedBlockingMode.NONE,
+                    ButtonToolTips.AdvancedBlockingModeNone,
+                    ButtonToolTips.AdvancedBlockingModeNoneDesc);
+            this.registerApp(
                     10,
                     Settings.LOCK_CRAFTING_MODE,
                     LockCraftingMode.NONE,
