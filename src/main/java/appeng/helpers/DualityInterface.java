@@ -157,6 +157,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, NUMBER_OF_CONFIG_SLOTS);
     private AppEngInternalInventory storage = new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS);
     private final AppEngInternalInventory patterns = new AppEngInternalInventory(this, NUMBER_OF_PATTERN_SLOTS * 4);
+    private final AppEngInternalInventory blockingFilter = new AppEngInternalInventory(this, NUMBER_OF_CONFIG_SLOTS);
     private WrapperInvSlot slotInv = new WrapperInvSlot(this.storage);
     private final Map<IAEStackType<?>, MEMonitorPassThrough<?>> monitorMap;
     private final UpgradeInventory upgrades;
@@ -265,6 +266,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     public void writeToNBT(final NBTTagCompound data) {
         this.config.writeToNBT(data, "config");
         this.patterns.writeToNBT(data, "patterns");
+        this.blockingFilter.writeToNBT(data, "blockingFilter");
         if (!sharedInventory) this.storage.writeToNBT(data, "storage");
         this.upgrades.writeToNBT(data, "upgrades");
         this.cm.writeToNBT(data);
@@ -346,6 +348,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.upgrades.readFromNBT(data, "upgrades");
         this.config.readFromNBT(data, "config");
         this.patterns.readFromNBT(data, "patterns");
+        this.blockingFilter.readFromNBT(data, "blockingFilter");
         this.storage.readFromNBT(data, "storage");
         this.priority = data.getInteger("priority");
         this.cm.readFromNBT(data);
@@ -561,6 +564,17 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public AppEngInternalInventory getPatterns() {
         return this.patterns;
+    }
+
+    public AppEngInternalInventory getBlockingFilter() {
+        return this.blockingFilter;
+    }
+
+    public boolean isInBlockingFilter(final ItemStack stack) {
+        for (int i = 0; i < NUMBER_OF_CONFIG_SLOTS; i++) {
+            if (Platform.isSameItem(this.blockingFilter.getStackInSlot(i), stack)) return true;
+        }
+        return false;
     }
 
     public IAEStackType<?>[] getSupportedStackTypes() {
