@@ -1,4 +1,4 @@
-package appeng.items.tools;
+package appeng.util;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -19,16 +19,16 @@ import appeng.tile.networking.TileController;
 import appeng.tile.networking.TileCreativeEnergyController;
 
 /** Calculates how many more devices a connection can supply along its route to the controller. */
-final class NetworkChannelAvailability {
+public final class NetworkChannelAvailability {
 
     private final ControllerState controllerState;
     private final Map<GridNode, Integer> upstreamRemaining = new IdentityHashMap<>();
 
-    NetworkChannelAvailability(IGrid grid) {
+    public NetworkChannelAvailability(IGrid grid) {
         this.controllerState = ((IPathingGrid) grid.getCache(IPathingGrid.class)).getControllerState();
     }
 
-    int getFreeChannels(IGridConnection connection) {
+    public int getFreeChannels(IGridConnection connection) {
         if (!AEConfig.instance.isFeatureEnabled(AEFeature.Channels)) return -1;
 
         if (controllerState == ControllerState.NO_CONTROLLER) {

@@ -45,6 +45,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketNetworkVisualiserData;
 import appeng.items.AEBaseItem;
 import appeng.util.ConfigManager;
+import appeng.util.NetworkChannelAvailability;
 import appeng.util.Platform;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.common.tileentities.machines.MTEHatchCraftingInputME;
