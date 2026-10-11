@@ -12,8 +12,8 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.64:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.38:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.15:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.99.99-mu52:dev') {transitive = false}
-    compileOnly('com.ruling_0:MaterialLib:0.21.0-mu:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.99.99-mu53:dev') {transitive = false}
+    compileOnly('com.ruling_0:MaterialLib:0.24.0-mu:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ModularUI2:2.3.92-1.7.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.23:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
@@ -49,12 +49,12 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.99.99-mu52:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.99.99-mu53:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "Hodgepodge"
         exclude module: "waila"
     }
-    functionalTestImplementation('com.ruling_0:MaterialLib:0.21.0-mu:dev')
+    functionalTestImplementation('com.ruling_0:MaterialLib:0.24.0-mu:dev')
 
     devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.15.0:dev")
 
