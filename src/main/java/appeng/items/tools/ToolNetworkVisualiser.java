@@ -113,12 +113,14 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         public final VNode node1;
         public final VNode node2;
         public final int channels;
+        public final int freeChannels;
         public final EnumSet<VLinkFlags> flags;
 
-        public VLink(VNode node1, VNode node2, int channels, EnumSet<VLinkFlags> flags) {
+        public VLink(VNode node1, VNode node2, int channels, int freeChannels, EnumSet<VLinkFlags> flags) {
             this.node1 = node1;
             this.node2 = node2;
             this.channels = channels;
+            this.freeChannels = freeChannels;
             this.flags = flags.clone();
         }
 
@@ -128,7 +130,9 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             if (!(obj instanceof VLink other)) return false;
             boolean sameDir = this.node1.equals(other.node1) && this.node2.equals(other.node2);
             boolean oppositeDir = this.node1.equals(other.node2) && this.node2.equals(other.node1);
-            return this.channels == other.channels && this.flags.equals(other.flags) && (sameDir || oppositeDir);
+            return this.channels == other.channels && this.freeChannels == other.freeChannels
+                    && this.flags.equals(other.flags)
+                    && (sameDir || oppositeDir);
         }
 
         @Override
@@ -143,6 +147,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
 
             int hash = Fnv1a32.initialState();
             hash = Fnv1a32.hashStep(hash, this.channels);
+            hash = Fnv1a32.hashStep(hash, this.freeChannels);
             hash = Fnv1a32.hashStep(hash, this.flags.hashCode());
             hash = Fnv1a32.hashStep(hash, nodeHash1);
             hash = Fnv1a32.hashStep(hash, nodeHash2);
@@ -158,7 +163,8 @@ public class ToolNetworkVisualiser extends AEBaseItem {
         NODES_ONE_CHANNEL,
         ONE_CHANNEL,
         P2P,
-        PROXY
+        PROXY,
+        FREE_CHANNELS
     }
 
     private static class VisualisationUpdate {
@@ -277,13 +283,14 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                                             sb.getYCoord(),
                                             sb.getZCoord(),
                                             flagsNode);
-                                    vLinks.add(new VLink(node, sbNode, 0, flagsLink));
+                                    vLinks.add(new VLink(node, sbNode, 0, -1, flagsLink));
                                     vNodeList.add(sbNode);
                                 }
                             }
                         }
                     }
 
+                    NetworkChannelAvailability availability = new NetworkChannelAvailability(g);
                     for (IGridConnection c : gcList) {
                         VNode n1 = vnList.get(c.a());
                         VNode n2 = vnList.get(c.b());
@@ -296,7 +303,7 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                                     && c.b().hasFlag(GridFlags.CANNOT_CARRY_COMPRESSED)) {
                                 flags.add(VLinkFlags.COMPRESSED);
                             }
-                            vLinks.add(new VLink(n1, n2, c.getUsedChannels(), flags));
+                            vLinks.add(new VLink(n1, n2, c.getUsedChannels(), availability.getFreeChannels(c), flags));
                         }
                     }
                 }

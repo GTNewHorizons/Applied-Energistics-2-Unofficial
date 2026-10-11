@@ -1159,6 +1159,7 @@ item.appliedenergistics2.ToolNetworkVisualiser.mode.nodes_one_channel=§eShow No
 item.appliedenergistics2.ToolNetworkVisualiser.mode.one_channel=§eShow one Channel
 item.appliedenergistics2.ToolNetworkVisualiser.mode.p2p=§eShow P2P Links
 item.appliedenergistics2.ToolNetworkVisualiser.mode.proxy=§eShow Crafting Input Proxy Links
+item.appliedenergistics2.ToolNetworkVisualiser.mode.free_channels=§eShow Free Channels
 
 item.appliedenergistics2.WirelessMessages.BoundAdvancedFilled=§cTarget already in queue
 item.appliedenergistics2.WirelessMessages.Disconnected=Wireless %s disconnected %s
