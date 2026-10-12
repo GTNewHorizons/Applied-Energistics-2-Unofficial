@@ -24,9 +24,12 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.energy.IEnergyGrid;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.WorldCoord;
+import appeng.core.AEConfig;
+import appeng.core.features.AEFeature;
 import appeng.helpers.PatternHelper;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -169,8 +172,48 @@ public class CraftingCPUClusterFunctionalTest {
         assertEquals(2, cpu.core.dirtyNotifications, "Notifications outside the update must remain immediate");
     }
 
+    @Test
+    void craftingLogDoesNotBreakJobCompletion() {
+        cpu.prepare(pattern, 64, 128);
+        cpu.trackFinalOutput(64);
+        cpu.setStartItemCount(7);
+        final long[] reportedCount = { -1 };
+        cpu.addOnCompleteListener((output, count, elapsedTime) -> reportedCount[0] = count);
+        tick();
+
+        withCraftingLog(
+                () -> cpu.injectItems(
+                        AEItemStack.create(new ItemStack(Blocks.stone)).setStackSize(512),
+                        Actionable.MODULATE,
+                        new BaseActionSource()));
+
+        assertAll(
+                () -> assertTrue(cpu.completed()),
+                () -> assertEquals(512, reportedCount[0], "The crafting log must not change the reported output"));
+    }
+
+    @Test
+    void craftingLogDoesNotBreakFakeCraftingCompletion() {
+        cpu.prepare(pattern, 64, 128);
+        cpu.enableFakeCrafting(64);
+
+        withCraftingLog(this::tick);
+
+        assertTrue(cpu.completed());
+    }
+
     private void tick() {
         cpu.updateCraftingLogic(grid, energy, cache);
+    }
+
+    private static void withCraftingLog(Runnable action) {
+        final boolean wasEnabled = AEConfig.instance.isFeatureEnabled(AEFeature.CraftingLog);
+        AEConfig.instance.featureFlags.add(AEFeature.CraftingLog);
+        try {
+            action.run();
+        } finally {
+            if (!wasEnabled) AEConfig.instance.featureFlags.remove(AEFeature.CraftingLog);
+        }
     }
 
     private static ICraftingPatternDetails processingPattern() {
@@ -207,8 +250,16 @@ public class CraftingCPUClusterFunctionalTest {
                     Actionable.MODULATE);
         }
 
-        private void enableFakeCrafting(int crafts) {
+        private void setStartItemCount(long count) {
+            startItemCount = count;
+        }
+
+        private void trackFinalOutput(int crafts) {
             finalOutput.init(AEItemStack.create(new ItemStack(Blocks.stone)).setStackSize(crafts * 8L));
+        }
+
+        private void enableFakeCrafting(int crafts) {
+            trackFinalOutput(crafts);
             finalOutput.setFakeCrafting();
         }
 

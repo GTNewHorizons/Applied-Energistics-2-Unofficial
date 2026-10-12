@@ -576,7 +576,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         if (AELog.isCraftingLogEnabled()) {
-            final IAEStack<?> logStack = this.finalOutput.get();
+            final IAEStack<?> logStack = this.finalOutput.getOriginalOutput().copy();
             logStack.setStackSize(this.startItemCount);
             AELog.crafting(LOG_MARK_AS_COMPLETE, logStack);
         }
