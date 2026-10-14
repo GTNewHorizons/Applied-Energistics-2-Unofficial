@@ -125,6 +125,7 @@ public final class FluidList implements IItemList<IAEFluidStack> {
 
         if (st != null) {
             st.setCountRequestable(st.getCountRequestable() + option.getCountRequestable());
+            st.setCountRequestableCrafts(st.getCountRequestableCrafts() + option.getCountRequestableCrafts());
             return;
         }
 
@@ -132,6 +133,7 @@ public final class FluidList implements IItemList<IAEFluidStack> {
         opt.setStackSize(0);
         opt.setCraftable(false);
         opt.setCountRequestable(option.getCountRequestable());
+        opt.setCountRequestableCrafts(option.getCountRequestableCrafts());
 
         this.putFluidRecord(opt);
     }
