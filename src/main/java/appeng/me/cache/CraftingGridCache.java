@@ -651,6 +651,46 @@ public class CraftingGridCache
     }
 
     @Override
+    public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
+            final List<? extends IAEStack<?>> stacks, final IAEStack<?> displayOutput, final CraftingMode craftingMode,
+            final ICraftingCallback cb) {
+        if (world == null || grid == null || actionSrc == null || stacks == null) {
+            throw new IllegalArgumentException("Invalid Crafting Job Request");
+        }
+
+        // combine stacks of the same type while keeping the order, the first stack is the job's main output
+        final List<IAEStack<?>> outputs = new ArrayList<>(stacks.size());
+        outer: for (IAEStack<?> stack : stacks) {
+            if (stack == null || stack.getStackSize() <= 0) {
+                continue;
+            }
+            for (IAEStack<?> output : outputs) {
+                if (output.isSameType(stack)) {
+                    output.incStackSize(stack.getStackSize());
+                    continue outer;
+                }
+            }
+            outputs.add(stack.copy());
+        }
+
+        if (outputs.isEmpty()) {
+            throw new IllegalArgumentException("Invalid Crafting Job Request");
+        }
+
+        if (outputs.size() == 1 && displayOutput == null) {
+            return beginCraftingJob(world, grid, actionSrc, outputs.get(0), craftingMode, this.liteCraftingDefault, cb);
+        }
+
+        // only the V2 crafting calculation supports several outputs and a display output, so lite mode is ignored here
+        final CraftingJobV2<?> job = new CraftingJobV2<>(world, grid, actionSrc, (List) outputs, craftingMode, cb);
+        if (displayOutput != null) {
+            job.setDisplayOutput(displayOutput.copy());
+        }
+
+        return (Future) job.schedule();
+    }
+
+    @Override
     public ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
             boolean prioritizePower, BaseActionSource src) {
         return submitJob(job, requestingMachine, target, prioritizePower, src, false);
@@ -676,11 +716,7 @@ public class CraftingGridCache
 
                 boolean canOrder = false;
                 // Only player/standalone jobs may merge into an existing busy CPU.
-                canOrder |= (requestingMachine == null && cpu.isCraftingLinkStandalone()
-                        && cpu.isActive()
-                        && cpu.isBusy()
-                        && job.getOutput().isSameType((Object) cpu.getFinalMultiOutput())
-                        && cpu.getAvailableStorage() >= cpu.getUsedStorage() + job.getByteTotal());
+                canOrder |= (requestingMachine == null && cpu.isActive() && cpu.canMergeJob(job));
                 // Or this cpu is idle
                 canOrder |= (cpu.isActive() && !cpu.isBusy() && cpu.getAvailableStorage() >= job.getByteTotal());
 

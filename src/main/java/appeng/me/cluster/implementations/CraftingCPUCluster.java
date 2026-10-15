@@ -248,7 +248,28 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     @Override
     public IAEStack<?> getFinalMultiOutput() {
-        return finalOutput.get();
+        return finalOutput.getDisplayed();
+    }
+
+    @Override
+    public boolean isRunningCompositeJob() {
+        return finalOutput.isComposite();
+    }
+
+    /**
+     * Whether the job can be merged into the job running on this CPU. Only standalone jobs crafting a single item
+     * without a display output can be merged, since merging only tracks {@link ICraftingJob#getOutput()}.
+     */
+    public boolean canMergeJob(final ICraftingJob job) {
+        if (!this.isCraftingLinkStandalone() || !this.isBusy() || this.finalOutput.isComposite()) {
+            return false;
+        }
+        if (job.getOutputs().size() != 1 || job.getDisplayOutput() != null) {
+            return false;
+        }
+        final IAEStack<?> current = this.finalOutput.get();
+        return current != null && current.isSameType(job.getOutput())
+                && this.availableStorage >= this.usedStorage + job.getByteTotal();
     }
 
     public boolean isDestroyed() {
@@ -370,6 +391,15 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return is != null && is.getStackSize() > 0;
     }
 
+    /**
+     * Composite jobs keep their finished outputs in the CPU until everything is crafted, then
+     * {@link #updateCraftingLogic} moves them to the network together. Jobs requested by a machine always hand their
+     * outputs to it right away.
+     */
+    protected boolean holdsFinalOutputs() {
+        return this.finalOutput.isComposite() && (this.myLastLink == null || this.myLastLink.isStandalone());
+    }
+
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
         final IAEStack what = input.copy();
         final IAEStack<?> is = this.waitingFor.findPrecise(what);
@@ -381,7 +411,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 if (is.getStackSize() >= what.getStackSize()) {
                     if (this.finalOutput.isFinalOutput(what)) {
                         final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(what, type);
-                        if (outputToSend == null) {
+                        if (outputToSend == null || this.holdsFinalOutputs()) {
                             return null;
                         }
 
@@ -404,7 +434,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 if (this.finalOutput.isFinalOutput(used)) {
                     final IAEStack<?> outputToSend = this.finalOutput.splitOutputToIngredient(used, type);
 
-                    if (outputToSend == null) {
+                    if (outputToSend == null || this.holdsFinalOutputs()) {
                         return leftOver;
                     }
 
@@ -451,7 +481,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             finalOutput.decStackSize(outputToSend.getStackSize());
                         }
 
-                        if (outputToSend != null && this.myLastLink != null) {
+                        if (outputToSend != null && this.holdsFinalOutputs()) {
+                            this.inventory.injectItems(outputToSend, type);
+                            leftover = null;
+                        } else if (outputToSend != null && this.myLastLink != null) {
                             leftover = ((CraftingLink) this.myLastLink).injectItems(outputToSend, type);
                         }
 
@@ -490,7 +523,9 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     }
 
                     if (outputToSend != null) {
-                        if (this.myLastLink != null) {
+                        if (this.holdsFinalOutputs()) {
+                            this.inventory.injectItems(outputToSend, type);
+                        } else if (this.myLastLink != null) {
                             final IAEStack<?> linkLeftOver = ((CraftingLink) this.myLastLink)
                                     .injectItems(outputToSend.copy(), type);
                             if (linkLeftOver != null) {
@@ -582,7 +617,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         craftCompleteListeners.forEach(
-                f -> f.apply(this.finalOutput.getOriginalOutput(), this.finalOutput.getOriginalCount(), elapsedTime));
+                f -> f.apply(this.finalOutput.getSummaryOutput(), this.finalOutput.getSummaryCount(), elapsedTime));
         this.usedStorage = 0;
         this.remainingItemCount = 0;
         this.startItemCount = 0;
@@ -602,7 +637,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     protected void updateCPU() {
-        IAEStack<?> send = this.finalOutput.get();
+        IAEStack<?> send = this.finalOutput.getDisplayed();
 
         if (this.finalOutput.isEmpty()) {
             send = null;
@@ -951,13 +986,13 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         this.remainingOperations--;
                         pushedPattern = true;
 
-                        if (!this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
+                        if (!this.finalOutput.isFakeCrafting(details) && this.finalOutput.isFinalPattern(details)) {
                             if (medium instanceof DualityInterface di && di.isFakeCraftingMode()) {
-                                this.finalOutput.setFakeCrafting();
+                                this.finalOutput.setFakeCrafting(details);
                             }
                         }
 
-                        if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
+                        if (this.finalOutput.isFakeCrafting(details)) {
                             craftingInventory = null; // hand off complete!
                             didPatternCraft = true;
                             this.markDirty();
@@ -1128,11 +1163,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public ICraftingLink submitJob(final IGrid g, final ICraftingJob job, final BaseActionSource src,
             final ICraftingRequester requestingMachine) {
-        if (requestingMachine == null && this.myLastLink != null
-                && this.myLastLink.isStandalone()
-                && this.isBusy()
-                && this.finalOutput.get().isSameType(job.getOutput())
-                && this.availableStorage >= this.usedStorage + job.getByteTotal()) {
+        if (requestingMachine == null && this.canMergeJob(job)) {
             return mergeJob(g, job, src, requestingMachine);
         }
 
@@ -1170,7 +1201,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 craftCompleteListeners = initializeDefaultOnCompleteListener(); // clear all possible listeners
                 // when it comes to a new craft,
                 if (job.getOutput() != null) {
-                    this.finalOutput.init(job.getOutput());
+                    this.finalOutput.init(job.getOutputs(), job.getDisplayOutput());
                     this.waiting = false;
                     this.isComplete = false;
                     this.suspended = false;
@@ -2324,17 +2355,80 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.suspended = suspended;
     }
 
+    /**
+     * A pattern whose outputs are final outputs of the job. A job requesting several items can have several of them.
+     */
+    protected static class FinalPattern {
+
+        final IAEStack<?>[] outputs;
+        boolean fakeCrafting;
+
+        FinalPattern(IAEStack<?>[] outputs) {
+            this.outputs = outputs;
+        }
+
+        boolean matches(ICraftingPatternDetails details) {
+            final IAEStack<?>[] detailsOutputs = details.getCondensedAEOutputs();
+            if (detailsOutputs.length != this.outputs.length) return false;
+            int matches = 0;
+            for (IAEStack<?> aes : detailsOutputs) {
+                for (IAEStack<?> aes2 : this.outputs) {
+                    if (aes.equals(aes2)) matches++;
+                }
+            }
+
+            return matches == this.outputs.length;
+        }
+    }
+
     public class finalOutput {
 
-        boolean fakeCrafting;
         IAEStack originalOutput;
-        IAEStack<?>[] patternOutputs = null;
+        // shown instead of originalOutput when set, see ICraftingJob#getDisplayOutput
+        IAEStack<?> displayOutput;
+        // the job has several outputs or a display output, such jobs can't be merged
+        boolean composite;
+        final List<FinalPattern> finalPatterns = new ArrayList<>();
         IItemList<IAEStack<?>> outputs = AEApi.instance().storage().createAEStackList();
 
         public void init(IAEStack<?> originalOutput) {
+            this.init(Collections.singletonList(originalOutput), null);
+        }
+
+        /**
+         * Without a display output, the first output is the one shown on crafting monitors and in the completion
+         * message.
+         */
+        public void init(List<? extends IAEStack<?>> originalOutputs, IAEStack<?> displayOutput) {
             this.reset();
-            this.originalOutput = originalOutput;
-            this.addOutputs(originalOutput);
+            this.originalOutput = originalOutputs.get(0);
+            this.displayOutput = displayOutput;
+            this.composite = originalOutputs.size() > 1 || displayOutput != null;
+            for (IAEStack<?> output : originalOutputs) {
+                this.addOutputs(output);
+            }
+        }
+
+        public boolean isComposite() {
+            return this.composite;
+        }
+
+        /**
+         * @return the stack shown on crafting monitors and in the CPU list while the job is running.
+         */
+        public IAEStack<?> getDisplayed() {
+            return this.displayOutput != null ? this.displayOutput : this.get();
+        }
+
+        /**
+         * @return the stack reported when the job completes.
+         */
+        public IAEStack<?> getSummaryOutput() {
+            return this.displayOutput != null ? this.displayOutput : this.originalOutput;
+        }
+
+        public long getSummaryCount() {
+            return this.displayOutput != null ? this.displayOutput.getStackSize() : this.getOriginalCount();
         }
 
         protected void addOutputs(IAEStack<?> output) {
@@ -2357,9 +2451,12 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 return;
             }
 
-            this.patternOutputs = details.getCondensedAEOutputs().clone();
+            final IAEStack<?>[] patternOutputs = details.getCondensedAEOutputs();
+            if (this.findFinalPattern(details) == null) {
+                this.finalPatterns.add(new FinalPattern(patternOutputs.clone()));
+            }
 
-            for (IAEStack<?> aes : this.patternOutputs) {
+            for (IAEStack<?> aes : patternOutputs) {
                 final IAEStack<?> tempAes = aes.copy();
                 this.outputs.add(tempAes.setStackSize(tempAes.getStackSize() * finalOutputPatternMultiplier));
             }
@@ -2370,25 +2467,29 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return this.outputs.findPrecise(this.originalOutput);
         }
 
-        public void setFakeCrafting() {
-            this.fakeCrafting = true;
+        protected FinalPattern findFinalPattern(ICraftingPatternDetails details) {
+            for (FinalPattern finalPattern : this.finalPatterns) {
+                if (finalPattern.matches(details)) {
+                    return finalPattern;
+                }
+            }
+            return null;
         }
 
-        public boolean isFakeCrafting() {
-            return this.fakeCrafting;
+        public void setFakeCrafting(ICraftingPatternDetails details) {
+            final FinalPattern finalPattern = this.findFinalPattern(details);
+            if (finalPattern != null) {
+                finalPattern.fakeCrafting = true;
+            }
+        }
+
+        public boolean isFakeCrafting(ICraftingPatternDetails details) {
+            final FinalPattern finalPattern = this.findFinalPattern(details);
+            return finalPattern != null && finalPattern.fakeCrafting;
         }
 
         public boolean isFinalPattern(ICraftingPatternDetails details) {
-            if (this.patternOutputs == null || details.getCondensedAEOutputs().length != this.patternOutputs.length)
-                return false;
-            int matches = 0;
-            for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
-                for (IAEStack<?> aes2 : this.patternOutputs) {
-                    if (aes.equals(aes2)) matches++;
-                }
-            }
-
-            return matches == this.patternOutputs.length;
+            return this.findFinalPattern(details) != null;
         }
 
         public void performFakeCrafting(ICraftingPatternDetails details) {
@@ -2400,8 +2501,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (this.outputs.isEmpty()) {
                 markDirty();
 
-                for (IAEStack<?> aes : this.patternOutputs) {
-                    postCraftingStatusChange(aes.copy());
+                for (FinalPattern finalPattern : this.finalPatterns) {
+                    for (IAEStack<?> aes : finalPattern.outputs) {
+                        postCraftingStatusChange(aes.copy());
+                    }
                 }
 
                 completeJob();
@@ -2424,9 +2527,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public void reset() {
-            this.fakeCrafting = false;
             this.originalOutput = null;
-            this.patternOutputs = null;
+            this.displayOutput = null;
+            this.composite = false;
+            this.finalPatterns.clear();
             this.outputs.resetStatus();
         }
 
@@ -2495,20 +2599,27 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         public NBTTagCompound writeNbt() {
             final NBTTagCompound tag = new NBTTagCompound();
 
-            tag.setBoolean("fakeCrafting", this.fakeCrafting);
             tag.setTag("originalOutput", writeStackNBT(this.originalOutput, new NBTTagCompound(), true));
+            if (this.displayOutput != null) {
+                tag.setTag("displayOutput", writeStackNBT(this.displayOutput, new NBTTagCompound(), true));
+            }
+            tag.setBoolean("composite", this.composite);
 
-            NBTTagList patternOutputs = new NBTTagList();
-
-            if (this.patternOutputs != null) {
-                for (final IAEStack<?> ais : this.patternOutputs) {
+            final NBTTagList finalPatterns = new NBTTagList();
+            for (FinalPattern finalPattern : this.finalPatterns) {
+                final NBTTagCompound finalPatternTag = new NBTTagCompound();
+                final NBTTagList patternOutputs = new NBTTagList();
+                for (final IAEStack<?> ais : finalPattern.outputs) {
                     NBTTagCompound temp = new NBTTagCompound();
                     writeStackNBT(ais, temp, true);
                     patternOutputs.appendTag(temp);
                 }
+                finalPatternTag.setTag("outputs", patternOutputs);
+                finalPatternTag.setBoolean("fakeCrafting", finalPattern.fakeCrafting);
+                finalPatterns.appendTag(finalPatternTag);
             }
 
-            tag.setTag("patternOutputs", patternOutputs);
+            tag.setTag("finalPatterns", finalPatterns);
             tag.setTag("outputs", writeAEStackListNBT(this.outputs));
 
             return tag;
@@ -2521,19 +2632,41 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 return;
             }
 
-            this.fakeCrafting = tag.getBoolean("fakeCrafting");
             this.originalOutput = Platform.readStackNBT(tag.getCompoundTag("originalOutput"));
+            this.displayOutput = tag.hasKey("displayOutput")
+                    ? Platform.readStackNBT(tag.getCompoundTag("displayOutput"))
+                    : null;
+            this.composite = tag.getBoolean("composite");
 
-            NBTTagList patternOutputs = tag.getTagList("patternOutputs", NBT.TAG_COMPOUND);
-            if (patternOutputs != null) {
-                this.patternOutputs = new IAEStack[patternOutputs.tagCount()];
-                for (int x = 0; x < patternOutputs.tagCount(); x++) {
-                    final IAEStack<?> ais = readStackNBT(patternOutputs.getCompoundTagAt(x));
-                    this.patternOutputs[x] = ais;
+            this.finalPatterns.clear();
+            if (tag.hasKey("finalPatterns")) {
+                final NBTTagList finalPatterns = tag.getTagList("finalPatterns", NBT.TAG_COMPOUND);
+                for (int x = 0; x < finalPatterns.tagCount(); x++) {
+                    final NBTTagCompound finalPatternTag = finalPatterns.getCompoundTagAt(x);
+                    final FinalPattern finalPattern = new FinalPattern(
+                            readPatternOutputs(finalPatternTag.getTagList("outputs", NBT.TAG_COMPOUND)));
+                    finalPattern.fakeCrafting = finalPatternTag.getBoolean("fakeCrafting");
+                    this.finalPatterns.add(finalPattern);
+                }
+            } else {
+                // saved before jobs could have several final outputs
+                final NBTTagList patternOutputs = tag.getTagList("patternOutputs", NBT.TAG_COMPOUND);
+                if (patternOutputs.tagCount() > 0) {
+                    final FinalPattern finalPattern = new FinalPattern(readPatternOutputs(patternOutputs));
+                    finalPattern.fakeCrafting = tag.getBoolean("fakeCrafting");
+                    this.finalPatterns.add(finalPattern);
                 }
             }
 
             this.outputs = readAEStackListNBT(tag.getTagList("outputs", NBT.TAG_COMPOUND));
+        }
+
+        private IAEStack<?>[] readPatternOutputs(NBTTagList list) {
+            final IAEStack<?>[] patternOutputs = new IAEStack[list.tagCount()];
+            for (int x = 0; x < list.tagCount(); x++) {
+                patternOutputs[x] = readStackNBT(list.getCompoundTagAt(x));
+            }
+            return patternOutputs;
         }
     }
 }
