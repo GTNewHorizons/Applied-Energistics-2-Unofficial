@@ -144,6 +144,16 @@ public class CraftableItemResolver implements CraftingRequestResolver {
             if (matchingOutput == null) {
                 state = State.FAILURE;
             }
+
+            if (hasZeroSizedStack(this.patternInputs) || hasZeroSizedStack(this.patternRecursionInputs)
+                    || hasZeroSizedStack(this.patternOutputs)) {
+                // 0-sized stacks can only come from malformed pattern data; they divide by zero in Platform.ceilDiv
+                // and in calculateOneStep. Refuse the pattern instead of cancelling the entire crafting job.
+                AELog.error(
+                        "Refusing malformed pattern with a 0-sized stack, outputs: %s",
+                        Arrays.toString(this.patternOutputs));
+                state = State.FAILURE;
+            }
         }
 
         @SuppressWarnings("unused")
@@ -174,6 +184,16 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                 this.patternInputs = filterMeaningfulStacks(patternInputs);
                 this.patternOutputs = filterMeaningfulStacks(patternOutputs);
             }
+        }
+
+        private static boolean hasZeroSizedStack(IAEStack<?>[] stacks) {
+            for (IAEStack<?> stack : stacks) {
+                if (stack.getStackSize() <= 0) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static IAEStack<?>[] calculateRecursiveInputs(IAEStack<?>[] pInputs, IAEStack<?>[] pOutputs) {
