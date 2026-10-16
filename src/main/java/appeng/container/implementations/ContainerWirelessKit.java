@@ -2,7 +2,10 @@ package appeng.container.implementations;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -31,14 +34,19 @@ import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.core.sync.packets.PacketWirelessToolData;
+import appeng.helpers.IWirelessLink;
 import appeng.helpers.WireLessToolHelper;
+import appeng.helpers.WirelessAnchor;
 import appeng.helpers.WirelessKitCommand;
 import appeng.helpers.WirelessKitCommand.PinType;
 import appeng.helpers.WirelessKitCommand.SubCommand;
 import appeng.helpers.WirelessKitCommand.WirelessKitCommands;
 import appeng.helpers.WirelessToolDataObject;
 import appeng.items.contents.WirelessKitObject;
-import appeng.tile.networking.TileWirelessBase;
+import appeng.parts.networking.PartWirelessConnector;
+import appeng.parts.networking.PartWirelessConnectorOuter;
+import appeng.parts.networking.PartWirelessHub;
+import appeng.parts.networking.PartWirelessHubOuter;
 import appeng.tile.networking.TileWirelessConnector;
 import appeng.tile.networking.TileWirelessHub;
 import appeng.util.ConfigManager;
@@ -146,26 +154,24 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
     public void updateData() {
         final NBTTagCompound stash = toolInv.getItemStack().getTagCompound()
                 .getCompoundTag(WireLessToolHelper.NbtSuper);
-        final List<DimensionalCoord> dcl = DimensionalCoord
+        final List<WirelessAnchor> dcl = WirelessAnchor
                 .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
 
         World w = toolInv.getWorld();
 
         data.clear();
 
-        for (final DimensionalCoord network : dcl) {
+        for (final WirelessAnchor network : dcl) {
+            final DimensionalCoord pos = network.getCoord();
             if (w.provider.dimensionId == network.getDimension()
-                    && w.getTileEntity(network.x, network.y, network.z) instanceof IGridHost gh) {
-                final IGrid grid = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
+                    && w.getTileEntity(pos.x, pos.y, pos.z) instanceof IGridHost gh) {
+                final IGrid grid = gridOf(gh, network.getSide());
                 if (grid == null) continue;
-                for (IGridNode gn : grid.getMachines(TileWirelessConnector.class)) {
-                    TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
+                for (final IWirelessLink wc : connectorsIn(grid)) {
                     data.add(wc.getDataForTool(network));
                 }
 
-                for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                        .getMachines(TileWirelessHub.class)) {
-                    TileWirelessHub wc = (TileWirelessHub) gn.getMachine();
+                for (final IWirelessLink wc : hubsIn(grid)) {
                     data.add(wc.getDataForTool(network));
                 }
 
@@ -197,8 +203,8 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
             case RENAME_SINGLE, RENAME_GROUP -> {
                 switch (command.subCommand.groupBy) {
                     case SINGLE -> {
-                        final DimensionalCoord coord = command.subCommand.coord;
-                        if (w.getTileEntity(coord.x, coord.y, coord.z) instanceof TileWirelessBase twc) {
+                        final IWirelessLink twc = WireLessToolHelper.resolveLink(command.subCommand.coord, w);
+                        if (twc != null) {
                             twc.setCustomName(command.name);
                         }
                     }
@@ -211,7 +217,7 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                             final NBTTagCompound name = names.getCompoundTagAt(i);
 
                             if (!command.subCommand.networkPos
-                                    .equals(DimensionalCoord.readFromNBT(name.getCompoundTag("network"))))
+                                    .equals(WirelessAnchor.readFromNBT(name.getCompoundTag("network"))))
                                 continue;
 
                             if (isColor) {
@@ -261,14 +267,14 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
 
                     switch (command.subCommand.groupBy) {
                         case SINGLE -> {
-                            if (DimensionalCoord.readFromNBT(tag.getCompoundTag("coord"))
+                            if (WirelessAnchor.readFromNBT(tag.getCompoundTag("coord"))
                                     .equals(command.subCommand.coord)) {
                                 tgl.removeTag(i);
                                 return;
                             }
                         }
                         case NETWORK, COLOR -> {
-                            if (DimensionalCoord.readFromNBT(tag.getCompoundTag("network"))
+                            if (WirelessAnchor.readFromNBT(tag.getCompoundTag("network"))
                                     .equals(command.subCommand.networkPos)) {
 
                                 if (isColor && tgl.getCompoundTagAt(i).getInteger("color")
@@ -311,19 +317,19 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
 
                 // remove pin
                 for (int i = 0; i < pins.tagCount(); i++) {
-                    final DimensionalCoord network = DimensionalCoord
+                    final WirelessAnchor network = WirelessAnchor
                             .readFromNBT(pins.getCompoundTagAt(i).getCompoundTag("network"));
                     if (network.equals(command.networkPos)) {
                         pins.removeTag(i);
                     }
                 }
 
-                final List<DimensionalCoord> networks = DimensionalCoord
+                final List<WirelessAnchor> networks = WirelessAnchor
                         .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
                 networks.removeIf(network -> command.networkPos.equals(network));
 
                 final NBTTagCompound tag = new NBTTagCompound();
-                DimensionalCoord.writeListToNBT(tag, networks);
+                WirelessAnchor.writeListToNBT(tag, networks);
                 stash.setTag(WireLessToolHelper.NbtSuperPos, tag);
 
                 updateData();
@@ -332,15 +338,12 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                 for (final SubCommand subCommand : command.toBindRow) {
                     switch (subCommand.groupBy) {
                         case SINGLE -> {
-                            if (w.getTileEntity(
-                                    subCommand.coord.x,
-                                    subCommand.coord.y,
-                                    subCommand.coord.z) instanceof TileWirelessBase tw) {
+                            final IWirelessLink tw = WireLessToolHelper.resolveLink(subCommand.coord, w);
+                            if (tw != null) {
                                 if (!WireLessToolHelper
                                         .securityCheck(tw, new PlayerSource(this.getPlayerInv().player, null)))
                                     continue;
-                                if (command.color != null)
-                                    tw.recolourBlock(ForgeDirection.UNKNOWN, command.color, this.getPlayerInv().player);
+                                if (command.color != null) tw.recolourLink(command.color, this.getPlayerInv().player);
                                 else tw.madChameleonRecolor();
                             }
                         }
@@ -350,8 +353,8 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                             for (WirelessToolDataObject sd : data) {
                                 if (!subCommand.networkPos.equals(sd.network)) continue;
 
-                                if (!(w.getTileEntity(sd.cord.x, sd.cord.y, sd.cord.z) instanceof TileWirelessBase tw))
-                                    continue;
+                                final IWirelessLink tw = WireLessToolHelper.resolveLink(sd.cord, w);
+                                if (tw == null) continue;
 
                                 if (!WireLessToolHelper
                                         .securityCheck(tw, new PlayerSource(this.getPlayerInv().player, null)))
@@ -359,7 +362,7 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
 
                                 if (isColor) if (sd.color != subCommand.color) continue;
                                 if (command.color != null) {
-                                    tw.recolourBlock(ForgeDirection.UNKNOWN, command.color, this.getPlayerInv().player);
+                                    tw.recolourLink(command.color, this.getPlayerInv().player);
                                 } else {
                                     tw.madChameleonRecolor();
                                 }
@@ -371,18 +374,19 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                 updateData();
             }
             case BIND -> {
-                final List<TileWirelessBase> twToBind = this.fletchConnectors(false, command.toBindRow, w);
-                final List<TileWirelessBase> twTarget = this.fletchConnectors(false, command.targetRow, w);
+                final List<IWirelessLink> twToBind = this.fletchConnectors(false, command.toBindRow, w);
+                final List<IWirelessLink> twTarget = this.fletchConnectors(false, command.targetRow, w);
 
                 WireLessToolHelper.bindRows(twToBind, twTarget, this.getPlayerInv().player);
 
                 // Check if network was absorbed after bind and delete it if
-                final List<DimensionalCoord> networks = DimensionalCoord
+                final List<WirelessAnchor> networks = WirelessAnchor
                         .readAsListFromNBT(stash.getCompoundTag(WireLessToolHelper.NbtSuperPos));
                 final ArrayList<IGrid> gList = new ArrayList<>();
-                for (DimensionalCoord dc : networks) {
-                    if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
-                        final IGrid newG = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
+                for (WirelessAnchor dc : networks) {
+                    final DimensionalCoord pos = dc.getCoord();
+                    if (w.getTileEntity(pos.x, pos.y, pos.z) instanceof IGridHost gh) {
+                        final IGrid newG = gridOf(gh, dc.getSide());
                         if (newG != null) {
                             if (gList.contains(newG)) {
                                 final WirelessKitCommand nextCommand = new WirelessKitCommand(
@@ -403,17 +407,18 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                 updateData();
             }
             case UNBIND -> {
-                final List<DimensionalCoord> networks = DimensionalCoord
+                final List<WirelessAnchor> networks = WirelessAnchor
                         .readAsListFromNBT((NBTTagCompound) stash.getTag(WireLessToolHelper.NbtSuperPos));
-                final ArrayList<TileWirelessBase> unbounded = this.fletchConnectors(true, command.toBindRow, w);
+                final ArrayList<IWirelessLink> unbounded = this.fletchConnectors(true, command.toBindRow, w);
 
-                for (final TileWirelessBase tw : unbounded) {
+                for (final IWirelessLink tw : unbounded) {
                     boolean newNetwork = true;
-                    for (final DimensionalCoord dc : networks) {
-                        if (w.getTileEntity(dc.x, dc.y, dc.z) instanceof IGridHost gh) {
+                    for (final WirelessAnchor dc : networks) {
+                        final DimensionalCoord pos = dc.getCoord();
+                        if (w.getTileEntity(pos.x, pos.y, pos.z) instanceof IGridHost gh) {
                             try {
-                                final IGrid grid = gh.getGridNode(ForgeDirection.UNKNOWN).getGrid();
-                                if (tw.getProxy().getGrid().equals(grid)) {
+                                final IGrid grid = gridOf(gh, dc.getSide());
+                                if (tw.getLinkProxy().getGrid().equals(grid)) {
                                     newNetwork = false;
                                     break;
                                 }
@@ -421,10 +426,10 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                         }
                     }
 
-                    if (newNetwork) networks.add(tw.getLocation());
+                    if (newNetwork) networks.add(tw.getAnchor());
                 }
                 final NBTTagCompound tag = new NBTTagCompound();
-                DimensionalCoord.writeListToNBT(tag, networks);
+                WirelessAnchor.writeListToNBT(tag, networks);
                 stash.setTag(WireLessToolHelper.NbtSuperPos, tag);
 
                 updateData();
@@ -433,35 +438,32 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
         }
     }
 
-    private ArrayList<TileWirelessBase> fletchConnectors(final boolean unbind,
+    private ArrayList<IWirelessLink> fletchConnectors(final boolean unbind,
             final ArrayList<WirelessKitCommand.SubCommand> list, final World w) {
-        final ArrayList<TileWirelessBase> connectors = new ArrayList<>();
+        final ArrayList<IWirelessLink> connectors = new ArrayList<>();
         for (final SubCommand subCommand : list) {
             switch (subCommand.groupBy) {
                 case SINGLE -> {
-                    if (w.getTileEntity(
-                            subCommand.coord.x,
-                            subCommand.coord.y,
-                            subCommand.coord.z) instanceof TileWirelessBase wc) {
+                    final IWirelessLink wc = WireLessToolHelper.resolveLink(subCommand.coord, w);
+                    if (wc != null) {
                         if (unbind) {
-                            connectors.addAll(wc.getConnectedTiles());
+                            connectors.addAll(wc.getConnectedLinks());
                             WireLessToolHelper.breakConnection(wc, new PlayerSource(this.getPlayerInv().player, null));
                         }
                         connectors.add(wc);
                     }
                 }
                 case NETWORK, COLOR -> {
-                    final DimensionalCoord network = subCommand.networkPos;
+                    final DimensionalCoord network = subCommand.networkPos.getCoord();
+                    final ForgeDirection networkSide = subCommand.networkPos.getSide();
                     final boolean isColor = subCommand.groupBy == PinType.COLOR;;
                     if (w.getTileEntity(network.x, network.y, network.z) instanceof IGridHost gh) {
                         if (subCommand.includeConnectors) {
-                            for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                    .getMachines(TileWirelessConnector.class)) {
-                                TileWirelessBase wc = (TileWirelessBase) gn.getMachine();
+                            for (final IWirelessLink wc : connectorsIn(gridOf(gh, networkSide))) {
                                 if (!wc.isLinked()) {
                                     if (isColor && wc.getColor() != subCommand.color) continue;
                                     if (unbind) {
-                                        connectors.addAll(wc.getConnectedTiles());
+                                        connectors.addAll(wc.getConnectedLinks());
                                         WireLessToolHelper.breakConnection(
                                                 wc,
                                                 new PlayerSource(this.getPlayerInv().player, null));
@@ -472,13 +474,11 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
                         }
 
                         if (subCommand.includeHubs) {
-                            for (IGridNode gn : gh.getGridNode(ForgeDirection.UNKNOWN).getGrid()
-                                    .getMachines(TileWirelessHub.class)) {
-                                TileWirelessHub wc = (TileWirelessHub) gn.getMachine();
+                            for (final IWirelessLink wc : hubsIn(gridOf(gh, networkSide))) {
                                 if (wc.getFreeSlots() > 0 || unbind) {
                                     if (isColor && wc.getColor() != subCommand.color) continue;
                                     if (unbind) {
-                                        connectors.addAll(wc.getConnectedTiles());
+                                        connectors.addAll(wc.getConnectedLinks());
                                         WireLessToolHelper.breakConnection(
                                                 wc,
                                                 new PlayerSource(this.getPlayerInv().player, null));
@@ -493,5 +493,39 @@ public class ContainerWirelessKit extends AEBaseContainer implements IConfigMana
         }
 
         return connectors;
+    }
+
+    private static IGrid gridOf(final IGridHost host, final ForgeDirection side) {
+        final IGridNode node = host.getGridNode(side);
+        return node == null ? null : node.getGrid();
+    }
+
+    private static List<IWirelessLink> connectorsIn(final IGrid grid) {
+        return machinesIn(
+                grid,
+                TileWirelessConnector.class,
+                PartWirelessConnector.class,
+                PartWirelessConnectorOuter.class);
+    }
+
+    private static List<IWirelessLink> hubsIn(final IGrid grid) {
+        return machinesIn(grid, TileWirelessHub.class, PartWirelessHub.class, PartWirelessHubOuter.class);
+    }
+
+    @SafeVarargs
+    private static List<IWirelessLink> machinesIn(final IGrid grid, final Class<? extends IGridHost>... classes) {
+        final List<IWirelessLink> found = new ArrayList<>();
+        if (grid == null) return found;
+
+        // an outer fixture owns two nodes sharing one machine; only the link-carrying node counts
+        final Set<IWirelessLink> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (final Class<? extends IGridHost> clazz : classes) {
+            for (final IGridNode gn : grid.getMachines(clazz)) {
+                if (gn.getMachine() instanceof IWirelessLink link && link.getLinkProxy().getNode() == gn
+                        && seen.add(link))
+                    found.add(link);
+            }
+        }
+        return found;
     }
 }
