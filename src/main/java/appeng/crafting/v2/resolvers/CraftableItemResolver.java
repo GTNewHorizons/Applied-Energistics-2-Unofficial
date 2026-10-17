@@ -145,8 +145,10 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                 state = State.FAILURE;
             }
 
-            if (hasZeroSizedStack(this.patternInputs) || hasZeroSizedStack(this.patternRecursionInputs)
-                    || hasZeroSizedStack(this.patternOutputs)) {
+            // Complex patterns are calculated per slot, so condensation can hide an invalid stack size.
+            if (hasZeroSizedStack(isComplex ? pattern.getAEInputs() : this.patternInputs)
+                    || hasZeroSizedStack(this.patternRecursionInputs)
+                    || hasZeroSizedStack(isComplex ? pattern.getAEOutputs() : this.patternOutputs)) {
                 // 0-sized stacks can only come from malformed pattern data; they divide by zero in Platform.ceilDiv
                 // and in calculateOneStep. Refuse the pattern instead of cancelling the entire crafting job.
                 AELog.error(
@@ -188,7 +190,7 @@ public class CraftableItemResolver implements CraftingRequestResolver {
 
         private static boolean hasZeroSizedStack(IAEStack<?>[] stacks) {
             for (IAEStack<?> stack : stacks) {
-                if (stack.getStackSize() <= 0) {
+                if (stack != null && stack.getStackSize() <= 0) {
                     return true;
                 }
             }
