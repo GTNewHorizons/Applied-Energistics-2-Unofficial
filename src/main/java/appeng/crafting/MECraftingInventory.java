@@ -142,11 +142,23 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             IItemList list = type.createList();
             this.inventoryMap.put(type, list);
             for (final IAEStack<?> is : target.getMEMonitor(type).getStorageList()) {
-                list.add(is.copy());
+                list.add(is);
             }
         }
 
         this.par = null;
+    }
+
+    /**
+     * Copies the current contents without transaction logs or a parent inventory. Changes to either inventory do not
+     * affect the other, and committing the snapshot never changes network storage.
+     */
+    public MECraftingInventory createSnapshot() {
+        final MECraftingInventory snapshot = new MECraftingInventory();
+        for (final IItemList<IAEStack> list : snapshot.inventoryMap.values()) {
+            this.getAvailableItems(list);
+        }
+        return snapshot;
     }
 
     public void injectItems(final IAEStack<?> input, final Actionable mode) {
