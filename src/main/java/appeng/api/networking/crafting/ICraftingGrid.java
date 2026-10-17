@@ -13,6 +13,7 @@
 
 package appeng.api.networking.crafting;
 
+import java.util.List;
 import java.util.concurrent.Future;
 
 import net.minecraft.world.World;
@@ -22,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import appeng.api.config.CraftingMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridCache;
 import appeng.api.networking.security.BaseActionSource;
@@ -76,6 +78,30 @@ public interface ICraftingGrid extends IGridCache {
      */
     Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc, IAEStack<?> craftWhat,
             ICraftingCallback callback);
+
+    /**
+     * Begin calculating one crafting job that crafts several items, so they are planned together and run on a single
+     * CPU. Stacks of the same type are combined.
+     *
+     * @param world         crafting world
+     * @param grid          network
+     * @param actionSrc     source
+     * @param craftWhat     results, must contain at least one stack
+     * @param displayOutput stack shown on crafting CPUs and in the completion message, for example the item the results
+     *                      are ingredients for. null to show the first result.
+     * @param craftingMode  crafting mode used for all results
+     * @param callback      callback -- optional
+     * @return a future which will at an undetermined point in the future get you the {@link ICraftingJob} do not wait
+     *         on this, your be waiting forever.
+     */
+    default Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc,
+            List<? extends IAEStack<?>> craftWhat, IAEStack<?> displayOutput, CraftingMode craftingMode,
+            ICraftingCallback callback) {
+        if (craftWhat.size() == 1 && displayOutput == null) {
+            return this.beginCraftingJob(world, grid, actionSrc, craftWhat.get(0), callback);
+        }
+        throw new UnsupportedOperationException("This crafting grid can't craft several items in one job");
+    }
 
     /**
      * Submit the job to the Crafting system for processing.

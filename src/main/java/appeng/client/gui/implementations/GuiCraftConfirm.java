@@ -717,7 +717,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             return;
         }
 
-        craftingTree.setRequest(jobTree.originalRequest);
+        craftingTree.setRequests(jobTree.originalRequests);
 
         craftingTree.draw(mouseX, mouseY);
     }
