@@ -73,7 +73,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
             }
         }).onServerChange((oldValue, newValue) -> this.lvlEmitter.setReportingValue(newValue));
 
-        this.storedSync = sync.longSync("stored");
+        this.storedSync = sync.longS2C("stored");
 
         this.typeFiltersSync = sync
                 .object("typeFilters", AEStackTypeFilterSyncCodec.INSTANCE, this.lvlEmitter.getTypeFilters())

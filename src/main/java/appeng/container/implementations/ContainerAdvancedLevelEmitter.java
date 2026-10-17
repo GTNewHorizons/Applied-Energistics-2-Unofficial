@@ -56,7 +56,7 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
                 }
             }).onServerChange((oldValue, newValue) -> this.lvlEmitter.setReportingValue(slot, newValue));
 
-            this.storedSync[slot] = sync.longSync("stored" + slot);
+            this.storedSync[slot] = sync.longS2C("stored" + slot);
 
             this.activeSync[slot] = sync.booleanSync("active" + slot)
                     .onServerChange((oldValue, newValue) -> this.lvlEmitter.setSlotActive(slot, newValue));
