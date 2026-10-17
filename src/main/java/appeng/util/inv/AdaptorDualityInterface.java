@@ -8,7 +8,6 @@ import appeng.api.config.Actionable;
 import appeng.api.config.AdvancedBlockingMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.config.Settings;
-import appeng.api.config.Upgrades;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
@@ -69,7 +68,7 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
     @Override
     public boolean containsItems() {
         final DualityInterface dual = interfaceHost.getInterfaceDuality();
-        if (dual.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+        if (dual.getConfigManager().getSetting(Settings.ADVANCED_BLOCKING_MODE) != AdvancedBlockingMode.NONE) {
             for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
                 final IMEMonitor<?> monitor = dual.getMEMonitor(type);
                 if (monitor != null) {

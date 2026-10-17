@@ -9,5 +9,10 @@ public enum AdvancedBlockingMode {
     /**
      * Block on all items, including circuits.
      */
-    BLOCK_ON_ALL
+    BLOCK_ON_ALL,
+
+    /**
+     * No advanced blocking mode.
+     */
+    NONE
 }

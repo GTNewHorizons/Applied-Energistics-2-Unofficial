@@ -65,7 +65,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     public YesNo patternOptimization = YesNo.YES;
 
     @GuiSync(10)
-    public AdvancedBlockingMode advancedBlockingMode = AdvancedBlockingMode.DEFAULT;
+    public AdvancedBlockingMode advancedBlockingMode = AdvancedBlockingMode.NONE;
 
     @GuiSync(12)
     public LockCraftingMode lockCraftingMode = LockCraftingMode.NONE;
