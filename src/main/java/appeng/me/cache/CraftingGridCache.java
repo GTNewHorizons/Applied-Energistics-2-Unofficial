@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -94,14 +95,17 @@ import appeng.crafting.CraftingLinkNexus;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.fast.CraftingJobFast;
 import appeng.crafting.v2.CraftingJobV2;
+import appeng.helpers.IResolvablePatternDetails;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.diagnostics.CraftingDiagnosticSessionId;
 import appeng.me.diagnostics.CraftingNetworkDiagnostics;
 import appeng.me.diagnostics.DiagnosticRowView;
 import appeng.me.helpers.GenericInterestManager;
+import appeng.parts.misc.PartPatternRepeater;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
+import appeng.util.TunnelPatternExpander;
 import appeng.util.item.OreListMultiMap;
 
 public class CraftingGridCache
@@ -122,6 +126,9 @@ public class CraftingGridCache
     protected final Map<IGridNode, ICraftingWatcher> craftingWatchers = new HashMap<>();
     protected final IGrid grid;
     protected final Map<ICraftingPatternDetails, List<ICraftingMedium>> craftingMethods = new HashMap<>();
+    // Equal patterns share a medium entry, but every provider keeps its own details instance.
+    protected final Set<IResolvablePatternDetails> resolvablePatterns = Collections
+            .newSetFromMap(new IdentityHashMap<>());
     protected final Map<IAEStack<?>, List<ICraftingMedium>> emitableMediums = new HashMap<>();
     // Used for fuzzy lookups
     protected final OreListMultiMap<ICraftingPatternDetails> craftableItemSubstitutes = new OreListMultiMap<>();
@@ -298,6 +305,7 @@ public class CraftingGridCache
 
         // erase list.
         this.craftingMethods.clear();
+        this.resolvablePatterns.clear();
         this.emitableMediums.clear();
         this.craftableItems.clear();
         this.craftableItemSubstitutes.clear();
@@ -338,14 +346,38 @@ public class CraftingGridCache
 
     protected void setPatternsFromCraftingMethods() {
         final Map<IAEStack<?>, Set<ICraftingPatternDetails>> tmpCraft = new HashMap<>();
+        final Map<UUID, ICraftingPatternDetails> repeatedDefinitions = new HashMap<>();
+
+        for (final Entry<ICraftingPatternDetails, List<ICraftingMedium>> entry : this.craftingMethods.entrySet()) {
+            final ICraftingPatternDetails details = entry.getKey();
+            if (details.isInputOnly()) {
+                final UUID uuid = details.getInputOnlyUuid();
+                if (uuid != null) {
+                    // A grid's own definition must not be replaced by another grid's contents for the same UUID.
+                    final boolean local = entry.getValue().stream()
+                            .anyMatch(medium -> !(medium instanceof PartPatternRepeater));
+                    (local ? this.inputOnlyPatterns : repeatedDefinitions).putIfAbsent(uuid, details);
+                }
+            }
+        }
+        repeatedDefinitions.forEach(this.inputOnlyPatterns::putIfAbsent);
+
+        for (final IResolvablePatternDetails pattern : this.resolvablePatterns) {
+            if (!pattern.requiresInputResolution()) {
+                continue;
+            }
+            final List<IAEStack<?>> expandedInputs = TunnelPatternExpander
+                    .expandInputs(pattern.getEncodedAEInputs(), this, null);
+            if (expandedInputs != null) {
+                pattern.setResolvedAEInputs(expandedInputs.toArray(new IAEStack<?>[0]));
+            } else {
+                pattern.resetResolvedAEInputs();
+            }
+        }
 
         // new craftables!
         for (final ICraftingPatternDetails details : this.craftingMethods.keySet()) {
             if (details.isInputOnly()) {
-                final UUID uuid = details.getInputOnlyUuid();
-                if (uuid != null) {
-                    this.inputOnlyPatterns.putIfAbsent(uuid, details);
-                }
                 continue;
             }
             for (IAEStack<?> out : details.getCondensedAEOutputs()) {
@@ -378,6 +410,10 @@ public class CraftingGridCache
 
     public ICraftingPatternDetails getInputOnlyPattern(final UUID uuid) {
         return this.inputOnlyPatterns.get(uuid);
+    }
+
+    public ImmutableCollection<ICraftingPatternDetails> getInputOnlyPatterns() {
+        return ImmutableList.copyOf(this.inputOnlyPatterns.values());
     }
 
     protected void updateCPUClusters() {
@@ -424,6 +460,9 @@ public class CraftingGridCache
 
     @Override
     public void addCraftingOption(final ICraftingMedium medium, final ICraftingPatternDetails api) {
+        if (api instanceof IResolvablePatternDetails pattern) {
+            this.resolvablePatterns.add(pattern);
+        }
         List<ICraftingMedium> details = this.craftingMethods.get(api);
         if (details == null) {
             details = new ArrayList<>();
