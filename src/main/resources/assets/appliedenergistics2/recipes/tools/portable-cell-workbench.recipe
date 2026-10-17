@@ -1,0 +1,5 @@
+shaped=
+    _ ae2:BlockCellWorkbench _,
+    _ ae2:ItemMaterial.Singularity _,
+    _ ae2:ItemMaterial.EmptyStorageCell _
+    -> ae2:ToolPortableCellWorkbench
