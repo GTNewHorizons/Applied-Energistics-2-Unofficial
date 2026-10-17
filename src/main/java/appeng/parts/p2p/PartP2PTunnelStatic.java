@@ -43,6 +43,6 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
 
     @Override
     protected boolean checkIfCompatibleType(final IPart testPart) {
-        return this.getClass().isInstance(testPart);
+        return testPart != null && testPart.getClass() == this.getClass();
     }
 }
