@@ -17,6 +17,7 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 
 import appeng.util.ScheduledReason;
+import appeng.util.inv.MEInventoryCrafting;
 
 /**
  * A place to send Items for crafting purposes, this is considered part of AE's External crafting system.
@@ -24,14 +25,57 @@ import appeng.util.ScheduledReason;
 public interface ICraftingMedium {
 
     /**
-     * instruct a medium to create the item represented by the pattern+details, the items on the table, and where if
-     * possible the output should be directed.
+     * Instruct a medium to create one instance of the item represented by the pattern and table.
      *
-     * @param patternDetails details
-     * @param table          crafting table
-     * @return if the pattern was successfully pushed.
+     * @deprecated Implement {@link #pushPattern(ICraftingPatternDetails, MEInventoryCrafting, int)} instead. This
+     *             method is kept as a compatibility bridge for existing crafting integrations.
      */
-    boolean pushPattern(ICraftingPatternDetails patternDetails, InventoryCrafting table);
+    @Deprecated
+    default boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
+        throw new IllegalStateException(
+                "Crafting medium must override the legacy pushPattern method or the multiplier pushPattern method");
+    }
+
+    /**
+     * Instruct a medium to handle a pattern push. The multiplier describes how many executions are being submitted
+     * together. The table contains the complete inputs for the merged push, with stack sizes already multiplied by this
+     * value. Implementations that support merged pushes may use the multiplier to reserve or queue additional
+     * executions.
+     *
+     * @param patternDetails pattern details
+     * @param table          complete input items for the merged push; stack sizes are already multiplied
+     * @param multiplier     number of executions represented by this push
+     * @return true if the complete push was accepted
+     */
+    default boolean pushPattern(final ICraftingPatternDetails patternDetails, final MEInventoryCrafting table,
+            final int multiplier) {
+        return this.pushPattern(patternDetails, table);
+    }
+
+    /**
+     * Returns whether this medium supports submitting multiple executions of the same pattern in one push.
+     *
+     * @param patternDetails pattern to be submitted
+     * @return true if the merged push path is supported
+     */
+    default boolean canMergePatternPush(final ICraftingPatternDetails patternDetails) {
+        return false;
+    }
+
+    /**
+     * Returns the maximum number of executions this medium can accept in one merged push at this moment.
+     *
+     * This method is only queried after {@link #canMergePatternPush(ICraftingPatternDetails)} returns true. A return
+     * value of zero means that the medium is temporarily unavailable for a merged push. The default value of one keeps
+     * the original single-execution behavior for existing integrations.
+     *
+     * @param patternDetails pattern to be submitted
+     * @param maxMultiplier  upper bound imposed by the crafting CPU
+     * @return a value between zero and maxMultiplier
+     */
+    default int getMaxPatternPushMultiplier(final ICraftingPatternDetails patternDetails, final int maxMultiplier) {
+        return maxMultiplier <= 0 ? 0 : 1;
+    }
 
     /**
      * @return if this is false, the crafting engine will refuse to send new jobs to this medium.
