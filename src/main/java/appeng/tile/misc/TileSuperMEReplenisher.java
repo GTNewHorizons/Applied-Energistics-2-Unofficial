@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -20,6 +21,7 @@ import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.implementations.items.IStorageCell;
+import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkBootingStatusChange;
@@ -39,6 +41,7 @@ import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
+import appeng.api.util.AEColor;
 import appeng.container.implementations.ContainerSuperMEReplenisher;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
@@ -55,7 +58,7 @@ import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class TileSuperMEReplenisher extends AENetworkTile
-        implements IMEInventory<IAEStack<?>>, IIAEStackInventory, IPowerChannelState, IGridTickable {
+        implements IMEInventory<IAEStack<?>>, IIAEStackInventory, IPowerChannelState, IGridTickable, IColorableTile {
 
     private final IAEStackList storage = new IAEStackList(true);
     private final IAEStackList out = new IAEStackList(true);
@@ -82,6 +85,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
     private boolean isPowered = false;
 
     private int status = 0;
+    private AEColor paintedColor = AEColor.Transparent;
 
     private final BaseActionSource src = new MachineSource(this);
 
@@ -142,21 +146,31 @@ public class TileSuperMEReplenisher extends AENetworkTile
     public boolean readFromStream_TileSuperMEReplenisher(final ByteBuf data) {
         final boolean oldPower = this.isPowered;
         final int oldStatus = this.status;
+        final AEColor oldPaintedColor = this.paintedColor;
         this.isPowered = data.readBoolean();
         this.status = data.readInt();
-        return this.isPowered != oldPower || this.status != oldStatus;
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
+        this.getProxy().setColor(this.paintedColor);
+        return this.isPowered != oldPower || this.status != oldStatus || this.paintedColor != oldPaintedColor;
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
     public void writeToStream_TileSuperMEReplenisher(final ByteBuf data) {
         data.writeBoolean(isActive());
         data.writeInt(this.status);
+        data.writeByte(this.paintedColor.ordinal());
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBTEvent(NBTTagCompound data) {
         this.config.readFromNBT(data, "config");
         this.cells.readFromNBT(data, "cells");
+
+        final int color = data.hasKey("paintedColor", Constants.NBT.TAG_BYTE) ? data.getByte("paintedColor")
+                : AEColor.Transparent.ordinal();
+        this.paintedColor = color >= 0 && color < AEColor.VALUES.length ? AEColor.fromOrdinal(color)
+                : AEColor.Transparent;
+        this.getProxy().setColor(this.paintedColor);
 
         if (data.hasKey("threshold")) this.threshold = data.getDouble("threshold");
         if (data.hasKey("tickRate")) this.setTickRate(data.getInteger("tickRate"));
@@ -172,6 +186,7 @@ public class TileSuperMEReplenisher extends AENetworkTile
         this.config.writeToNBT(data, "config");
         this.cells.writeToNBT(data, "cells");
 
+        data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
         data.setDouble("threshold", this.threshold);
         data.setInteger("tickRate", this.tickRate);
         data.setTag("storage", Platform.writeAEStackListNBT(this.storage));
@@ -649,6 +664,27 @@ public class TileSuperMEReplenisher extends AENetworkTile
 
     public int getStatus() {
         return this.status;
+    }
+
+    @Override
+    public AEColor getColor() {
+        return this.paintedColor;
+    }
+
+    @Override
+    public boolean recolourBlock(final ForgeDirection side, final AEColor newPaintedColor, final EntityPlayer who) {
+        if (this.paintedColor == newPaintedColor) {
+            return false;
+        }
+        this.paintedColor = newPaintedColor;
+        this.getProxy().setColor(this.paintedColor);
+        final IGridNode node = this.getGridNode(side);
+        if (node != null) {
+            node.updateState();
+        }
+        this.markDirty();
+        this.markForUpdate();
+        return true;
     }
 
     public void setTickRate(final int tickRate) {
