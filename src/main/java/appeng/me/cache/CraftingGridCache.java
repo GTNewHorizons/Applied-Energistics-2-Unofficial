@@ -20,12 +20,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
@@ -357,7 +357,7 @@ public class CraftingGridCache
                     craftableItemSubstitutes.put(ais, details);
                 }
 
-                Set<ICraftingPatternDetails> methods = tmpCraft.computeIfAbsent(out, k -> new TreeSet<>(COMPARATOR));
+                Set<ICraftingPatternDetails> methods = tmpCraft.computeIfAbsent(out, k -> new LinkedHashSet<>());
 
                 methods.add(details);
             }
@@ -367,10 +367,14 @@ public class CraftingGridCache
 
         // make them immutable
         for (final Entry<IAEStack<?>, Set<ICraftingPatternDetails>> e : tmpCraft.entrySet()) {
-            this.craftableItems.put(e.getKey(), ImmutableList.copyOf(e.getValue()));
+            // sort a list: a set ordered by priority alone would drop patterns of equal priority
+            final List<ICraftingPatternDetails> patterns = new ArrayList<>(e.getValue());
+            patterns.sort(Comparator.comparing(ICraftingPatternDetails::getPriority).reversed());
+            final ImmutableList<ICraftingPatternDetails> immutable = ImmutableList.copyOf(patterns);
+            this.craftableItems.put(e.getKey(), immutable);
 
             final IAEItemStack ais = stackConvert(e.getKey());
-            if (ais != null) craftableItemsLegacy.put(ais, ImmutableList.copyOf(e.getValue()));
+            if (ais != null) craftableItemsLegacy.put(ais, immutable);
         }
 
         this.craftableItemsSnapshot = ImmutableMap.copyOf(this.craftableItems);
