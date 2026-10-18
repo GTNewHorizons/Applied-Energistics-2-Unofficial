@@ -722,6 +722,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         this.usedStorage = 0;
+        this.remainingItemCount = 0;
+        this.startItemCount = 0;
         this.isComplete = true;
         this.myLastLink = null;
         this.tasks.clear();
