@@ -311,7 +311,7 @@ public class TileIOPort extends AENetworkInvTile
                 || slot == INPUT_SLOT_INDEX_BOTTOM_RIGHT)) {
             moveQueue[slot] = 0;
         }
-        if (this.cells == inv) {
+        if (this.cells == inv || this.upgrades == inv) {
             this.updateTask();
         }
     }
@@ -358,8 +358,7 @@ public class TileIOPort extends AENetworkInvTile
         if (!this.getProxy().isActive()) {
             return TickRateModulation.IDLE;
         }
-        final RedstoneMode rs = (RedstoneMode) this.manager.getSetting(Settings.REDSTONE_CONTROLLED);
-        if (rs == RedstoneMode.SIGNAL_PULSE && !this.pendingRedstonePulse) {
+        if (!this.isEnabled()) {
             return TickRateModulation.IDLE;
         }
 
