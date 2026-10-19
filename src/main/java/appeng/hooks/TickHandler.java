@@ -167,7 +167,7 @@ public class TickHandler {
     public void onTick(final TickEvent ev) {
 
         if ((ev.type == Type.CLIENT || ev.type == Type.SERVER) && ev.phase == Phase.START
-                && ev.side == FMLCommonHandler.instance().getSide()) {
+                && ev.side == FMLCommonHandler.instance().getSide() && false) {
             OreDictionaryHandler.INSTANCE.onTick();
         }
 
