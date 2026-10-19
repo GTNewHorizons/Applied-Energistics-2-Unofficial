@@ -2,7 +2,9 @@ package appeng.me.storage;
 
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
+import appeng.api.config.AccessRestriction;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.data.IAEStack;
@@ -14,8 +16,18 @@ import appeng.util.item.PrioritizedNetworkItemList;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
-    public StorageBusInventoryHandler(IMEInventory<T> i, IAEStackType<T> type) {
+    private final Supplier<AccessRestriction> reshuffleAccess;
+
+    public StorageBusInventoryHandler(IMEInventory<T> i, IAEStackType<T> type,
+            Supplier<AccessRestriction> reshuffleAccess) {
         super(i, type);
+        this.reshuffleAccess = reshuffleAccess;
+    }
+
+    @Override
+    public AccessRestriction getReshuffleAccess() {
+        return this.getAccess().restrictPermissions(this.reshuffleAccess.get())
+                .restrictPermissions(super.getReshuffleAccess());
     }
 
     @Override
