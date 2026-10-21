@@ -49,7 +49,7 @@ public class RenderBlockSuperMEReplenisher extends BaseBlockRender<BlockSuperMER
                 tess.setBrightness(block.getMixedBrightnessForBlock(world, adjacentX, adjacentY, adjacentZ));
                 tess.setColorOpaque_F(status == -1 ? shade : 0.0f, status == 1 ? shade : 0.0f, 0.0f);
 
-                // Match the base UVs so the mask leaves its shine pixel exposed after rotation.
+                // Keep the overlay aligned with the base texture after rotation.
                 final IIcon base = block.getIcon(world, x, y, z, side.ordinal());
                 icon.setFlip(base.getMinU() > base.getMaxU(), base.getMinV() > base.getMaxV());
                 this.renderFace(x, y, z, block, icon, renderer, side);
