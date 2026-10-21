@@ -13,6 +13,7 @@ package appeng.client.gui.implementations;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.IIcon;
@@ -20,6 +21,7 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
@@ -35,6 +37,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiQuantityButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.gui.widgets.TypeToggleButton;
+import appeng.client.render.StackSizeRenderer;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
@@ -80,7 +83,29 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.container.setTextField(this.amountTextField);
         this.validateText();
 
-        this.config = new VirtualMEPhantomSlot(17, 42, this.container.configSync, 0, GuiLevelEmitter::acceptType);
+        this.config = new VirtualMEPhantomSlot(17, 42, this.container.configSync, 0, GuiLevelEmitter::acceptType) {
+
+            @Override
+            public boolean drawStackAndOverlay(final Minecraft mc, final int mouseX, final int mouseY) {
+                final boolean hovered = super.drawStackAndOverlay(mc, mouseX, mouseY);
+                // in energy mode or with a crafting card the stored value is not an item amount
+                if (this.getAEStack() != null && GuiLevelEmitter.this.container.getLevelMode() == LevelType.ITEM_LEVEL
+                        && GuiLevelEmitter.this.bc.getInstalledUpgrades(Upgrades.CRAFTING) == 0) {
+                    // the item icon is rendered with depth, so the text must skip the depth test
+                    GL11.glDisable(GL11.GL_LIGHTING);
+                    GL11.glDisable(GL11.GL_DEPTH_TEST);
+                    StackSizeRenderer.drawStackSize(
+                            this.getX(),
+                            this.getY(),
+                            GuiLevelEmitter.this.container.getStoredAmount(),
+                            mc.fontRenderer,
+                            AEConfig.instance.getTerminalFontSize());
+                    GL11.glEnable(GL11.GL_LIGHTING);
+                    GL11.glEnable(GL11.GL_DEPTH_TEST);
+                }
+                return hovered;
+            }
+        };
         this.registerVirtualSlots(this.config);
     }
 
