@@ -44,7 +44,7 @@ public final class IntegrationNode {
         return this.getShortName().name() + ':' + this.getState().name();
     }
 
-    boolean isActive() {
+    synchronized boolean isActive() {
         if (this.getState() == IntegrationStage.PRE_INIT) {
             this.call(IntegrationStage.PRE_INIT);
         }
