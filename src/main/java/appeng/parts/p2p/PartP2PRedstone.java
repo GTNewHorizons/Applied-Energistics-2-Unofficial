@@ -10,6 +10,9 @@
 
 package appeng.parts.p2p;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRedstoneWire;
 import net.minecraft.init.Blocks;
@@ -25,9 +28,6 @@ import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.me.GridAccessException;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class PartP2PRedstone extends PartP2PTunnelNormal<PartP2PRedstone> {
 
