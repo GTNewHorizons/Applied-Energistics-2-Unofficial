@@ -26,6 +26,9 @@ import appeng.me.GridAccessException;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PartP2PRedstone extends PartP2PTunnelNormal<PartP2PRedstone> {
 
     private int power;
@@ -160,7 +163,9 @@ public class PartP2PRedstone extends PartP2PTunnelNormal<PartP2PRedstone> {
 
     private void sendToOutput(final int power) {
         try {
-            for (final PartP2PRedstone rs : this.getOutputs()) {
+            List<PartP2PRedstone> outputs = new ArrayList<>();
+            this.getOutputs().forEach(outputs::add);
+            for (final PartP2PRedstone rs : outputs) {
                 rs.putInput(power);
             }
         } catch (final GridAccessException e) {
