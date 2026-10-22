@@ -1,9 +1,11 @@
 package appeng.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
@@ -22,18 +24,34 @@ import appeng.tile.networking.TileCreativeEnergyController;
 public final class NetworkChannelAvailability {
 
     private final ControllerState controllerState;
+    private final boolean booting;
+    private final boolean adHocChannelsUnavailable;
     private final Map<GridNode, Integer> upstreamRemaining = new IdentityHashMap<>();
 
     public NetworkChannelAvailability(IGrid grid) {
-        this.controllerState = ((IPathingGrid) grid.getCache(IPathingGrid.class)).getControllerState();
+        final IPathingGrid pathing = grid.getCache(IPathingGrid.class);
+        this.controllerState = pathing.getControllerState();
+        this.booting = pathing.isNetworkBooting();
+        boolean unavailable = false;
+        if (this.controllerState == ControllerState.NO_CONTROLLER) {
+            for (IGridNode node : grid.getNodes()) {
+                if (node.hasFlag(GridFlags.REQUIRE_CHANNEL) && !node.meetsChannelRequirements()) {
+                    // Failed ad-hoc allocations finalize every connection with zero used channels.
+                    unavailable = true;
+                    break;
+                }
+            }
+        }
+        this.adHocChannelsUnavailable = unavailable;
     }
 
     public int getFreeChannels(IGridConnection connection) {
-        if (!AEConfig.instance.isFeatureEnabled(AEFeature.Channels)) return -1;
+        if (!AEConfig.instance.isFeatureEnabled(AEFeature.Channels) || booting) return -1;
 
         if (controllerState == ControllerState.NO_CONTROLLER) {
             // An ad-hoc network has eight channels shared by all of its connections, even dense ones.
-            return Math.max(0, 8 - connection.getUsedChannels());
+            return adHocChannelsUnavailable ? 0
+                    : Math.min(spare(connection), Math.max(0, 8 - connection.getUsedChannels()));
         }
         if (controllerState != ControllerState.CONTROLLER_ONLINE) return -1;
 
@@ -52,6 +70,7 @@ public final class NetworkChannelAvailability {
         if (isController(node)) return remainingOnFace(node, route);
 
         List<GridNode> pending = new ArrayList<>();
+        Set<GridNode> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         int remaining;
         while (true) {
             Integer cached = upstreamRemaining.get(node);
@@ -60,8 +79,11 @@ public final class NetworkChannelAvailability {
                 break;
             }
 
+            // Item updates can run after a topology change but before the server-end repath.
+            if (!visited.add(node) || node.getConnections().isEmpty()) return -1;
             pending.add(node);
             GridConnection parentRoute = (GridConnection) node.getControllerRoute();
+            if (parentRoute.b() != node) return -1;
             node = (GridNode) parentRoute.getControllerRoute();
             if (isController(node)) {
                 remaining = remainingOnFace(node, parentRoute);
@@ -90,9 +112,13 @@ public final class NetworkChannelAvailability {
     }
 
     private static int spare(IGridConnection connection) {
-        int capacity = connection.a().hasFlag(GridFlags.DENSE_CAPACITY)
-                && connection.b().hasFlag(GridFlags.DENSE_CAPACITY) ? 32 : 8;
+        int capacity = Math.min(capacity(connection.a()), capacity(connection.b()));
         return Math.max(0, capacity - connection.getUsedChannels());
+    }
+
+    private static int capacity(IGridNode node) {
+        // Controllers cannot carry channels internally, but each outgoing face supplies 32.
+        return isController(node) ? 32 : ((GridNode) node).getMaxChannels();
     }
 
     private static boolean isController(IGridNode node) {
