@@ -373,9 +373,10 @@ public class PartPatternRepeater extends PartBasicState
             if (this.routeOutput) {
                 player.addChatMessage(PlayerMessages.PatternRepeaterRouteOutputTrue.toChat());
                 this.addInterception();
-            } else player.addChatMessage(PlayerMessages.PatternRepeaterRouteOutputFalse.toChat());
-
-            if (!this.routeOutput) this.waitingStacks.resetStatus();
+            } else {
+                player.addChatMessage(PlayerMessages.PatternRepeaterRouteOutputFalse.toChat());
+                this.waitingStacks.resetStatus();
+            }
 
             return true;
         }
