@@ -144,6 +144,7 @@ chat.appliedenergistics2.StorageInOtherDim=%d содержащий %d %s рас�
 chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
+chat.appliedenergistics2.CableSwapped=Заменён кабель: %s → %s
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
