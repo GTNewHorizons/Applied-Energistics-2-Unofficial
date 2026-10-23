@@ -20,6 +20,7 @@ import mcp.mobius.waila.api.IWailaDataAccessor;
 public class PartPatternRepeaterDataProvider extends BasePartWailaDataProvider {
 
     private static final String NBT_MODE = "provider";
+    private static final String NBT_OUTPUT = "looking4output";
     private static final String NBT_WAITING_STACKS = "waitingStacks";
 
     @Override
@@ -28,6 +29,7 @@ public class PartPatternRepeaterDataProvider extends BasePartWailaDataProvider {
         if (part instanceof PartPatternRepeater) {
             if (accessor.getNBTData().hasKey(NBT_MODE)) {
                 currentToolTip.add(accessor.getNBTData().getString(NBT_MODE));
+                currentToolTip.add(accessor.getNBTData().getString(NBT_OUTPUT));
 
                 if (accessor.getNBTData().hasKey(NBT_WAITING_STACKS)) {
                     currentToolTip.add(WailaText.Waiting.getLocal());
@@ -48,6 +50,10 @@ public class PartPatternRepeaterDataProvider extends BasePartWailaDataProvider {
             int x, int y, int z) {
         if (part instanceof PartPatternRepeater ppr) {
             tag.setString(NBT_MODE, ppr.isProvider() ? WailaText.Provider.getLocal() : WailaText.Accessor.getLocal());
+            tag.setString(
+                    NBT_OUTPUT,
+                    ppr.isLooking4Output() ? WailaText.Looking4OutputTrue.getLocal()
+                            : WailaText.Looking4OutputFalse.getLocal());
 
             IItemList<IAEStack<?>> waitingStacks = ppr.getWaitingStacks();
             if (!waitingStacks.isEmpty()) {

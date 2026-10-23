@@ -60,6 +60,8 @@ public enum PlayerMessages implements Localization {
     ItemFlowNotFound,
     PatternRepeaterProvider,
     PatternRepeaterAccessor,
+    PatternRepeaterLooking4OutputTrue,
+    PatternRepeaterLooking4OutputFalse,
 
     WirelessHighlighted,
     WirelessInOtherDim,

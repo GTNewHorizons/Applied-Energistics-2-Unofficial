@@ -1,13 +1,3 @@
-/*
- * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
- * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version. Applied Energistics 2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
- * Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
- * Applied Energistics 2. If not, see <http://www.gnu.org/licenses/lgpl>.
- */
-
 package appeng.parts.misc;
 
 import static appeng.util.Platform.convertStack;
@@ -90,6 +80,7 @@ public class PartPatternRepeater extends PartBasicState
     private CraftingGridCache currentCraftingGrid = null;
     private AENetworkProxy targetNetworkProxy = null;
     private boolean provider = false;
+    private boolean looking4Output = true;
     private PartPatternRepeater pairPatternRepeater = null;
 
     private ICraftingWatcher myCraftingWatcher = null;
@@ -230,12 +221,14 @@ public class PartPatternRepeater extends PartBasicState
     public void writeToNBT(NBTTagCompound data) {
         data.setTag("waitingStacks", writeAEStackListNBT(this.waitingStacks));
         data.setBoolean("provider", this.provider);
+        data.setBoolean("looking4output", this.looking4Output);
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
         this.waitingStacks = readAEStackListNBT((NBTTagList) data.getTag("waitingStacks"));
         this.provider = data.getBoolean("provider");
+        if (data.hasKey("looking4Output")) this.looking4Output = data.getBoolean("looking4Output");
     }
 
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
@@ -257,19 +250,23 @@ public class PartPatternRepeater extends PartBasicState
                 if (pushRepeater.targetCraftingGrid != null
                         && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid)
                         && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters)) {
-                    for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-                        waitingStacks.add(outputStack.copy());
+                    if (this.looking4Output) {
+                        for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
+                            waitingStacks.add(outputStack.copy());
+                        }
+                        this.addInterception();
                     }
-                    this.addInterception();
 
                     return true;
                 }
             } else {
                 if (medium.pushPattern(patternDetails, table)) {
-                    for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
-                        waitingStacks.add(outputStack.copy());
+                    if (this.looking4Output) {
+                        for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
+                            waitingStacks.add(outputStack.copy());
+                        }
+                        this.addInterception();
                     }
-                    this.addInterception();
 
                     return true;
                 }
@@ -368,7 +365,12 @@ public class PartPatternRepeater extends PartBasicState
         if (Platform.isClient()) return true;
 
         if (player.isSneaking()) {
-            this.waitingStacks.resetStatus();
+            this.looking4Output = !this.looking4Output;
+            if (this.looking4Output) player.addChatMessage(PlayerMessages.PatternRepeaterLooking4OutputTrue.toChat());
+            else player.addChatMessage(PlayerMessages.PatternRepeaterLooking4OutputFalse.toChat());
+
+            if (!this.looking4Output) this.waitingStacks.resetStatus();
+
             return true;
         }
 
@@ -406,13 +408,14 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public boolean canAccept(IAEStack<?> stack) {
-        return !injecting && this.isRequesting(stack);
+        return this.looking4Output && !this.injecting && this.isRequesting(stack);
     }
 
     @Override
     @SuppressWarnings({ "unchecked" })
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
         if (input == null) return null;
+        if (!this.looking4Output) return input;
         if (injecting) return input;
         injecting = true;
 
@@ -452,10 +455,11 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public boolean shouldRemoveInterceptor(IAEStack<?> stack) {
-        return this.waitingStacks.isEmpty() && !this.emitableCrafting.containsValue(true);
+        return !this.looking4Output || (this.waitingStacks.isEmpty() && !this.emitableCrafting.containsValue(true));
     }
 
     private void addInterception() {
+        if (!this.looking4Output) return;
         if (this.targetNetworkProxy == null) return;
 
         List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
@@ -600,5 +604,9 @@ public class PartPatternRepeater extends PartBasicState
     @Override
     public void onRequestChange(final ICraftingGrid craftingGrid, IAEStack<?> what) {
         this.updateEmitableStatus(what);
+    }
+
+    public boolean isLooking4Output() {
+        return this.looking4Output;
     }
 }
