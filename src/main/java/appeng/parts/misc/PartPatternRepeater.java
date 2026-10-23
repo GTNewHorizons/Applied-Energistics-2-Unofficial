@@ -73,6 +73,10 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 public class PartPatternRepeater extends PartBasicState
         implements ICraftingWatcherHost, ICraftingProvider, IStorageInterceptor, ICraftingPostPatternChangeListener {
 
+    public static final String NBT_ROUTE_OUTPUT = "routeOutput";
+    public static final String NBT_MODE = "provider";
+    public static final String NBT_WAITING_STACKS = "waitingStacks";
+
     private final Set<ICraftingPatternDetails> craftingList = new HashSet<>();
     private final Object2BooleanMap<IAEStack<?>> emitableCrafting = new Object2BooleanOpenHashMap<>();
     private IItemList<IAEStack<?>> waitingStacks = AEApi.instance().storage().createAEStackList();
@@ -80,7 +84,7 @@ public class PartPatternRepeater extends PartBasicState
     private CraftingGridCache currentCraftingGrid = null;
     private AENetworkProxy targetNetworkProxy = null;
     private boolean provider = false;
-    private boolean looking4Output = true;
+    private boolean routeOutput = true;
     private PartPatternRepeater pairPatternRepeater = null;
 
     private ICraftingWatcher myCraftingWatcher = null;
@@ -219,16 +223,16 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public void writeToNBT(NBTTagCompound data) {
-        data.setTag("waitingStacks", writeAEStackListNBT(this.waitingStacks));
-        data.setBoolean("provider", this.provider);
-        data.setBoolean("looking4output", this.looking4Output);
+        data.setTag(NBT_WAITING_STACKS, writeAEStackListNBT(this.waitingStacks));
+        data.setBoolean(NBT_MODE, this.provider);
+        data.setBoolean(NBT_ROUTE_OUTPUT, this.routeOutput);
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
-        this.waitingStacks = readAEStackListNBT((NBTTagList) data.getTag("waitingStacks"));
-        this.provider = data.getBoolean("provider");
-        if (data.hasKey("looking4Output")) this.looking4Output = data.getBoolean("looking4Output");
+        this.waitingStacks = readAEStackListNBT((NBTTagList) data.getTag(NBT_WAITING_STACKS));
+        this.provider = data.getBoolean(NBT_MODE);
+        if (data.hasKey(NBT_ROUTE_OUTPUT)) this.routeOutput = data.getBoolean(NBT_ROUTE_OUTPUT);
     }
 
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
@@ -250,7 +254,7 @@ public class PartPatternRepeater extends PartBasicState
                 if (pushRepeater.targetCraftingGrid != null
                         && !visitedRepeaters.contains(pushRepeater.targetCraftingGrid)
                         && pushRepeater.pushPatternToRepeater(patternDetails, table, visitedRepeaters)) {
-                    if (this.looking4Output) {
+                    if (this.routeOutput) {
                         for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
                             waitingStacks.add(outputStack.copy());
                         }
@@ -261,7 +265,7 @@ public class PartPatternRepeater extends PartBasicState
                 }
             } else {
                 if (medium.pushPattern(patternDetails, table)) {
-                    if (this.looking4Output) {
+                    if (this.routeOutput) {
                         for (IAEStack<?> outputStack : patternDetails.getCondensedAEOutputs()) {
                             waitingStacks.add(outputStack.copy());
                         }
@@ -365,11 +369,13 @@ public class PartPatternRepeater extends PartBasicState
         if (Platform.isClient()) return true;
 
         if (player.isSneaking()) {
-            this.looking4Output = !this.looking4Output;
-            if (this.looking4Output) player.addChatMessage(PlayerMessages.PatternRepeaterLooking4OutputTrue.toChat());
-            else player.addChatMessage(PlayerMessages.PatternRepeaterLooking4OutputFalse.toChat());
+            this.routeOutput = !this.routeOutput;
+            if (this.routeOutput) {
+                player.addChatMessage(PlayerMessages.PatternRepeaterRouteOutputTrue.toChat());
+                this.addInterception();
+            } else player.addChatMessage(PlayerMessages.PatternRepeaterRouteOutputFalse.toChat());
 
-            if (!this.looking4Output) this.waitingStacks.resetStatus();
+            if (!this.routeOutput) this.waitingStacks.resetStatus();
 
             return true;
         }
@@ -408,14 +414,14 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public boolean canAccept(IAEStack<?> stack) {
-        return this.looking4Output && !this.injecting && this.isRequesting(stack);
+        return this.routeOutput && !this.injecting && this.isRequesting(stack);
     }
 
     @Override
     @SuppressWarnings({ "unchecked" })
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
         if (input == null) return null;
-        if (!this.looking4Output) return input;
+        if (!this.routeOutput) return input;
         if (injecting) return input;
         injecting = true;
 
@@ -455,11 +461,11 @@ public class PartPatternRepeater extends PartBasicState
 
     @Override
     public boolean shouldRemoveInterceptor(IAEStack<?> stack) {
-        return !this.looking4Output || (this.waitingStacks.isEmpty() && !this.emitableCrafting.containsValue(true));
+        return !this.routeOutput || (this.waitingStacks.isEmpty() && !this.emitableCrafting.containsValue(true));
     }
 
     private void addInterception() {
-        if (!this.looking4Output) return;
+        if (!this.routeOutput) return;
         if (this.targetNetworkProxy == null) return;
 
         List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
@@ -606,7 +612,7 @@ public class PartPatternRepeater extends PartBasicState
         this.updateEmitableStatus(what);
     }
 
-    public boolean isLooking4Output() {
-        return this.looking4Output;
+    public boolean isRouteOutput() {
+        return this.routeOutput;
     }
 }

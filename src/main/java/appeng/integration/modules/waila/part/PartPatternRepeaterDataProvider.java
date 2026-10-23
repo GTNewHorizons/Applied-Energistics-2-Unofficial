@@ -1,5 +1,9 @@
 package appeng.integration.modules.waila.part;
 
+import static appeng.parts.misc.PartPatternRepeater.NBT_MODE;
+import static appeng.parts.misc.PartPatternRepeater.NBT_ROUTE_OUTPUT;
+import static appeng.parts.misc.PartPatternRepeater.NBT_WAITING_STACKS;
+
 import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -19,17 +23,13 @@ import mcp.mobius.waila.api.IWailaDataAccessor;
 
 public class PartPatternRepeaterDataProvider extends BasePartWailaDataProvider {
 
-    private static final String NBT_MODE = "provider";
-    private static final String NBT_OUTPUT = "looking4output";
-    private static final String NBT_WAITING_STACKS = "waitingStacks";
-
     @Override
     public List<String> getWailaBody(IPart part, List<String> currentToolTip, IWailaDataAccessor accessor,
             IWailaConfigHandler config) {
         if (part instanceof PartPatternRepeater) {
             if (accessor.getNBTData().hasKey(NBT_MODE)) {
                 currentToolTip.add(accessor.getNBTData().getString(NBT_MODE));
-                currentToolTip.add(accessor.getNBTData().getString(NBT_OUTPUT));
+                currentToolTip.add(accessor.getNBTData().getString(NBT_ROUTE_OUTPUT));
 
                 if (accessor.getNBTData().hasKey(NBT_WAITING_STACKS)) {
                     currentToolTip.add(WailaText.Waiting.getLocal());
@@ -51,9 +51,8 @@ public class PartPatternRepeaterDataProvider extends BasePartWailaDataProvider {
         if (part instanceof PartPatternRepeater ppr) {
             tag.setString(NBT_MODE, ppr.isProvider() ? WailaText.Provider.getLocal() : WailaText.Accessor.getLocal());
             tag.setString(
-                    NBT_OUTPUT,
-                    ppr.isLooking4Output() ? WailaText.Looking4OutputTrue.getLocal()
-                            : WailaText.Looking4OutputFalse.getLocal());
+                    NBT_ROUTE_OUTPUT,
+                    ppr.isRouteOutput() ? WailaText.RouteOutputTrue.getLocal() : WailaText.RouteOutputFalse.getLocal());
 
             IItemList<IAEStack<?>> waitingStacks = ppr.getWaitingStacks();
             if (!waitingStacks.isEmpty()) {

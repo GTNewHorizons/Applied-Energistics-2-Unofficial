@@ -60,8 +60,8 @@ public enum WailaText implements Localization {
     Waiting,
     Provider,
     Accessor,
-    Looking4OutputTrue,
-    Looking4OutputFalse;
+    RouteOutputTrue,
+    RouteOutputFalse;
 
     private final String formatedName;
 
