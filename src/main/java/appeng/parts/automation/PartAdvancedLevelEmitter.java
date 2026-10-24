@@ -109,6 +109,11 @@ public class PartAdvancedLevelEmitter extends PartUpgradeable implements IAdvanc
     }
 
     @Override
+    public long getStoredAmount(final int slot) {
+        return this.lastReportedValue[slot];
+    }
+
+    @Override
     public boolean isSlotActive(final int slot) {
         return this.slotActive[slot];
     }

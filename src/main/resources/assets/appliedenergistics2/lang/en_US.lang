@@ -155,6 +155,8 @@ chat.appliedenergistics2.ItemFlowInOtherDim=%s flow (%s) is located in dimension
 chat.appliedenergistics2.ItemFlowNotFound=No recent network flow found for %s
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - provides the pattern to the current system from the §5Accessor§r in front.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - provides the pattern to the §5Provider§r in front.
+chat.appliedenergistics2.PatternRepeaterRouteOutputTrue=Route pattern output.
+chat.appliedenergistics2.PatternRepeaterRouteOutputFalse=Ignore pattern output.
 chat.appliedenergistics2.WirelessHighlighted=%d §e"%d§e"§r is now highlighted at %d, %d, %d
 chat.appliedenergistics2.WirelessInOtherDim=%d §e"%d§e"§r located in dimension: %d and can't be highlighted
 chat.appliedenergistics2.WirelessHighlighterPrefix=Wireless
@@ -939,6 +941,8 @@ waila.appliedenergistics2.Disconnected=Disconnected
 waila.appliedenergistics2.Singularity=Singularity
 waila.appliedenergistics2.Provider=§5Provider§r
 waila.appliedenergistics2.Accessor=§5Accessor§r
+waila.appliedenergistics2.RouteOutputTrue=§5Route Output§r
+waila.appliedenergistics2.RouteOutputFalse=§5Ignore Output§r
 waila.appliedenergistics2.Waiting=Waiting:
 waila.appliedenergistics2.IOBusSpeed=Speed: %s %s/t
 
