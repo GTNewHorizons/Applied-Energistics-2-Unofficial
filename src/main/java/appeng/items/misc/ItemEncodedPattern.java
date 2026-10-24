@@ -281,6 +281,14 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         return output;
     }
 
+    /**
+     * A cached pattern output means the pattern was already decoded successfully. The Interface Terminal uses this to
+     * avoid decoding it again for validation.
+     */
+    public boolean hasCachedOutputAE(final ItemStack item) {
+        return OUTPUT_STACK_CACHE.containsKey(item);
+    }
+
     private boolean addInformation(final IAEStack<?>[] items, final List<String> lines, String label) {
         final ItemStack unknownItem = new ItemStack(Blocks.fire);
         boolean first = true;
