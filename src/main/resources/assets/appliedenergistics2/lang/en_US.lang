@@ -758,9 +758,9 @@ gui.tooltips.appliedenergistics2.SidelessModeSideless=Sideless Mode
 gui.tooltips.appliedenergistics2.SidelessModeSidelessDesc=All fluids are accessible from all sides
 
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefault=Default Blocking Mode
-gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Blocking interfaces follow normal blocking rules (ignore circuits, etc.)
-gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Loose Mode
-gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Blocking interfaces will block on any item in this ME system.
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Blocking interfaces follow normal blocking rules (ignore non-consumables like programmed circuits, molds and lenses).
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Custom Mode
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Blocks on any item in this ME system, except items in the filter.
 
 gui.tooltips.appliedenergistics2.LockCraftingMode=Lock Crafting
 gui.tooltips.appliedenergistics2.LockCraftingModeNone=Never

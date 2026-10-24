@@ -81,7 +81,9 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
                                         .isIgnored(ais.getItemStack())) {
                                     return true;
                                 }
-                            } else return true;
+                            } else if (!dual.isInBlockingFilter(ais.getItemStack())) {
+                                return true;
+                            }
                         } else return true;
                     }
                 }
