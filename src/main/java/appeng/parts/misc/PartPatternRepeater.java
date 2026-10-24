@@ -378,6 +378,8 @@ public class PartPatternRepeater extends PartBasicState
                 this.waitingStacks.resetStatus();
             }
 
+            this.getHost().markForSave();
+
             return true;
         }
 
@@ -396,6 +398,8 @@ public class PartPatternRepeater extends PartBasicState
             }
 
             this.gridChanged();
+
+            this.getHost().markForSave();
 
             return true;
         }
