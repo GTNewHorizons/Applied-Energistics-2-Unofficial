@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
@@ -19,6 +23,8 @@ import appeng.core.settings.ControllerAnimation;
 import cpw.mods.fml.client.FMLClientHandler;
 
 public class ControllerLightTexture extends TextureAtlasSprite {
+
+    private static final Map<List<Object>, double[]> WAVES = new ConcurrentHashMap<>();
 
     private final ResourceLocation source;
     private final AEColor color;
@@ -58,26 +64,51 @@ public class ControllerLightTexture extends TextureAtlasSprite {
             final ControllerAnimation style) {
         final int size = mask.getWidth();
         final int frames = style.frameCount();
+        final int[] maskPixels = mask.getRGB(0, 0, size, size, null, 0, size);
+        final double[] waves = waves(mask, maskPixels, style);
+        final int[] pixels = new int[waves.length];
+        for (int i = 0; i < pixels.length; i++) {
+            final double wave = waves[i];
+            int pixel = maskPixels[i % (size * size)] & 0xFF000000;
+            for (int shift = 0; shift <= 16; shift += 8) {
+                final int base = color.mediumVariant >> shift & 255;
+                final int highlight = color.whiteVariant >> shift & 255;
+                pixel |= (int) Math.round(base * 0.65 * (1 - wave) + highlight * wave) << shift;
+            }
+            pixels[i] = pixel;
+        }
         final BufferedImage animation = new BufferedImage(size, size * frames, BufferedImage.TYPE_INT_ARGB);
-        final double[][] circuitDistances = style.followsCircuitPaths() ? circuitDistances(mask, size) : null;
-        for (int frame = 0; frame < frames; frame++) {
-            for (int y = 0; y < size; y++) {
-                for (int x = 0; x < size; x++) {
-                    final double time = frame / 48.0;
-                    final double wave = circuitDistances == null
-                            ? style.brightness(x / (double) size, y / (double) size, time)
-                            : 0.25 + 0.75 * pulse(circuitDistances[y][x] - time * 3, 5);
-                    int pixel = mask.getRGB(x, y) & 0xFF000000;
-                    for (int shift = 0; shift <= 16; shift += 8) {
-                        final int base = color.mediumVariant >> shift & 255;
-                        final int highlight = color.whiteVariant >> shift & 255;
-                        pixel |= (int) Math.round(base * 0.65 * (1 - wave) + highlight * wave) << shift;
-                    }
-                    animation.setRGB(x, frame * size + y, pixel);
-                }
+        animation.setRGB(0, 0, size, size * frames, pixels, 0, size);
+        return animation;
+    }
+
+    // The brightness only depends on the style and the mask, so all colors share it.
+    private static double[] waves(final BufferedImage mask, final int[] maskPixels, final ControllerAnimation style) {
+        final int size = mask.getWidth();
+        BitSet opaque = null;
+        if (style.followsCircuitPaths()) {
+            opaque = new BitSet(maskPixels.length);
+            for (int i = 0; i < maskPixels.length; i++) {
+                if (maskPixels[i] >>> 24 != 0) opaque.set(i);
             }
         }
-        return animation;
+        return WAVES.computeIfAbsent(Arrays.asList(style, size, opaque), key -> {
+            final int frames = style.frameCount();
+            final double[][] circuitDistances = style.followsCircuitPaths() ? circuitDistances(mask, size) : null;
+            final double[] waves = new double[size * size * frames];
+            int i = 0;
+            for (int frame = 0; frame < frames; frame++) {
+                for (int y = 0; y < size; y++) {
+                    for (int x = 0; x < size; x++) {
+                        final double time = frame / 48.0;
+                        waves[i++] = circuitDistances == null
+                                ? style.brightness(x / (double) size, y / (double) size, time)
+                                : 0.25 + 0.75 * pulse(circuitDistances[y][x] - time * 3, 5);
+                    }
+                }
+            }
+            return waves;
+        });
     }
 
     private static double[][] circuitDistances(final BufferedImage mask, final int size) {
