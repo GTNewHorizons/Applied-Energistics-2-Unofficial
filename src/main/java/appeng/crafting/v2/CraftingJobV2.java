@@ -1,6 +1,8 @@
 package appeng.crafting.v2;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -45,6 +47,12 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
 
     protected CraftingContext context;
     public CraftingRequest originalRequest;
+    /**
+     * All root requests of this job, {@link #originalRequest} is always the first one.
+     */
+    public List<CraftingRequest> originalRequests;
+    // only used by the server to show the job on crafting CPUs, not sent with the crafting tree
+    protected IAEStack<?> displayOutput;
     protected ICraftingCallback callback;
     protected String errorMessage = "";
 
@@ -63,18 +71,45 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
 
     public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSource actionSource,
             final StackType what, final CraftingMode craftingMode, final ICraftingCallback callback) {
+        this(world, meGrid, actionSource, Collections.singletonList(what), craftingMode, callback);
+    }
+
+    /**
+     * Creates a single job that crafts all the given stacks, so they share one calculation and one CPU.
+     */
+    public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSource actionSource,
+            final List<StackType> whats, final CraftingMode craftingMode, final ICraftingCallback callback) {
+        if (whats.isEmpty()) {
+            throw new IllegalArgumentException("A crafting job needs at least one output");
+        }
         this.context = new CraftingContext(world, meGrid, actionSource);
         this.callback = callback;
-        this.originalRequest = new CraftingRequest(what, SubstitutionMode.PRECISE_FRESH, true, craftingMode);
-        this.context.addRequest(this.originalRequest);
-        this.context.itemModel.ignore(what);
+        this.originalRequests = new ArrayList<>(whats.size());
+        for (StackType what : whats) {
+            final CraftingRequest request = new CraftingRequest(
+                    what,
+                    SubstitutionMode.PRECISE_FRESH,
+                    true,
+                    craftingMode);
+            this.originalRequests.add(request);
+            this.context.addRequest(request);
+            this.context.itemModel.ignore(what);
+        }
+        this.originalRequest = this.originalRequests.get(0);
     }
 
     public CraftingJobV2(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
         this.totalByteCost = serializer.getBuffer().readLong();
         this.state = serializer.readEnum(State.class);
         this.errorMessage = ByteBufUtils.readUTF8String(serializer.getBuffer());
-        this.originalRequest = new CraftingRequest(serializer, this);
+        final int rootCount = ByteBufUtils.readVarInt(serializer.getBuffer(), 5);
+        if (rootCount == 1) {
+            this.originalRequest = new CraftingRequest(serializer, this);
+            this.originalRequests = Collections.singletonList(this.originalRequest);
+        } else {
+            // the roots are serialized as children, see loadChildren
+            this.originalRequests = new ArrayList<>(rootCount);
+        }
     }
 
     public static CraftingJobV2 deserialize(World world, ByteBuf buffer) {
@@ -179,22 +214,57 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
         serializer.getBuffer().writeLong(getByteTotal());
         serializer.writeEnum(state);
         ByteBufUtils.writeUTF8String(serializer.getBuffer(), errorMessage);
-        return originalRequest.serializeTree(serializer);
+        ByteBufUtils.writeVarInt(serializer.getBuffer(), originalRequests.size(), 5);
+        if (originalRequests.size() == 1) {
+            // a single root is inlined into the job node
+            return originalRequest.serializeTree(serializer);
+        }
+        return originalRequests;
     }
 
     @Override
     public ITreeSerializable getSerializationParent() {
-        return originalRequest;
+        // when deserializing several roots, originalRequest is only known after loadChildren
+        return originalRequest != null ? originalRequest : this;
     }
 
     @Override
     public void loadChildren(List<ITreeSerializable> children) throws IOException {
-        originalRequest.loadChildren(children);
+        if (originalRequest != null) {
+            originalRequest.loadChildren(children);
+            return;
+        }
+        for (ITreeSerializable child : children) {
+            originalRequests.add((CraftingRequest) child);
+        }
+        if (!originalRequests.isEmpty()) {
+            originalRequest = originalRequests.get(0);
+        }
     }
 
     @Override
     public StackType getOutput() {
-        return (StackType) originalRequest.stack;
+        // null if the tree was cut off before any root could be deserialized
+        return originalRequest == null ? null : (StackType) originalRequest.stack;
+    }
+
+    @Override
+    public IAEStack<?> getDisplayOutput() {
+        return displayOutput;
+    }
+
+    public void setDisplayOutput(IAEStack<?> displayOutput) {
+        this.displayOutput = displayOutput;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<StackType> getOutputs() {
+        final List<StackType> outputs = new ArrayList<>(originalRequests.size());
+        for (CraftingRequest request : originalRequests) {
+            outputs.add((StackType) request.stack);
+        }
+        return outputs;
     }
 
     @Override
@@ -211,7 +281,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
                 totalByteCost = -1;
             } while (taskState.needsMoreWork && System.currentTimeMillis() < finishTime && (state == State.RUNNING));
         } catch (Exception e) {
-            AELog.error(e, "Error while simulating crafting for " + originalRequest);
+            AELog.error(e, "Error while simulating crafting for " + originalRequests);
             errorMessage = e.toString();
             this.state = State.CANCELLED;
             if (callback != null) {
@@ -224,7 +294,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
             getByteTotal();
             this.state = State.FINISHED;
             if (AELog.isCraftingDebugLogEnabled()) {
-                AELog.log(Level.INFO, "Crafting job for %s finished with resolved steps:", originalRequest.toString());
+                AELog.log(Level.INFO, "Crafting job for %s finished with resolved steps:", originalRequests.toString());
                 AELog.logSimple(Level.INFO, context.toString());
             }
             if (callback != null) {
@@ -250,7 +320,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
     public void startCrafting(MECraftingInventory storage, ICraftingCPU rawCluster, BaseActionSource src) {
         if (this.state == State.RUNNING) {
             throw new IllegalStateException(
-                    "Trying to start crafting a not fully calculated job for " + originalRequest.toString());
+                    "Trying to start crafting a not fully calculated job for " + originalRequests.toString());
         }
         CraftingCPUCluster cluster = (CraftingCPUCluster) rawCluster;
         context.actionSource = src;
