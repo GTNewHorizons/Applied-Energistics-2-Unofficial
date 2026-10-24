@@ -18,11 +18,14 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
+import appeng.util.Platform;
 
 // taken from McJty's McJtyLib
 public class BlockPosHighlighter implements IHighlighter {
 
     static final BlockPosHighlighter INSTANCE = new BlockPosHighlighter();
+
+    private static final double LOOK_DISTANCE_SQUARED_EPSILON = 1.0e-6;
 
     protected final List<DimensionalCoord> highlightedBlocks = new ArrayList<>();
     protected long expireHighlightTime;
@@ -104,6 +107,64 @@ public class BlockPosHighlighter implements IHighlighter {
     public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundMsg,
             String wrongDimMsg) {
         highlightBlocks(player, interfaces, "", foundMsg, wrongDimMsg);
+    }
+
+    /** Aims at the current highlight group when its blocks share a useful direction in the player's dimension. */
+    public static void lookAtHighlightedBlocks(final EntityPlayer player) {
+        final int dimension = player.worldObj.provider.dimensionId;
+        final double eyeY = Platform.getEyeOffset(player);
+        double centerX = 0;
+        double centerY = 0;
+        double centerZ = 0;
+        int count = 0;
+
+        for (final DimensionalCoord block : INSTANCE.highlightedBlocks) {
+            if (block.getDimension() != dimension) {
+                continue;
+            }
+
+            centerX += block.x + 0.5;
+            centerY += block.y + 0.5;
+            centerZ += block.z + 0.5;
+            count++;
+        }
+
+        if (count == 0) {
+            return;
+        }
+
+        final double dx = centerX / count - player.posX;
+        final double dy = centerY / count - eyeY;
+        final double dz = centerZ / count - player.posZ;
+        final double horizontalDistanceSquared = dx * dx + dz * dz;
+
+        // Keep the camera direction when opposing blocks have no useful common direction.
+        for (final DimensionalCoord block : INSTANCE.highlightedBlocks) {
+            if (block.getDimension() != dimension) {
+                continue;
+            }
+            final double blockDx = block.x + 0.5 - player.posX;
+            final double blockDz = block.z + 0.5 - player.posZ;
+            if ((horizontalDistanceSquared < LOOK_DISTANCE_SQUARED_EPSILON
+                    && blockDx * blockDx + blockDz * blockDz >= LOOK_DISTANCE_SQUARED_EPSILON)
+                    || blockDx * dx + blockDz * dz < 0) {
+                return;
+            }
+        }
+
+        if (horizontalDistanceSquared + dy * dy < LOOK_DISTANCE_SQUARED_EPSILON) {
+            return;
+        }
+
+        // Keep the existing yaw when the target is directly above or below the player.
+        if (horizontalDistanceSquared >= LOOK_DISTANCE_SQUARED_EPSILON) {
+            player.rotationYaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+            player.prevRotationYaw = player.rotationYaw;
+            player.rotationYawHead = player.rotationYaw;
+            player.prevRotationYawHead = player.rotationYaw;
+        }
+        player.rotationPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(horizontalDistanceSquared)));
+        player.prevRotationPitch = player.rotationPitch;
     }
 
     public void clear() {
