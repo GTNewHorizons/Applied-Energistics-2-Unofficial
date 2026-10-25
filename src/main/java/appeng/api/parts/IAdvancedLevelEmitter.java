@@ -15,6 +15,9 @@ public interface IAdvancedLevelEmitter
 
     void setReportingValue(int slot, long v);
 
+    /** Returns the amount of the slot's configured stack currently stored in the network. */
+    long getStoredAmount(int slot);
+
     boolean isSlotActive(int slot);
 
     void setSlotActive(int slot, boolean active);
