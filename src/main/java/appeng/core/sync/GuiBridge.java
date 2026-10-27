@@ -104,6 +104,7 @@ import appeng.container.implementations.ContainerSpatialLinkChamber;
 import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerStorageReshuffle;
 import appeng.container.implementations.ContainerSuperMEReplenisher;
+import appeng.container.implementations.ContainerTunnelPatternRenamer;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
 import appeng.container.implementations.ContainerWirelessKit;
@@ -269,7 +270,10 @@ public enum GuiBridge implements IGuiHandler {
     GUI_WIRELESS_NETWORK_MANAGER(ContainerWirelessNetworkManager.class, IGuiItemObject.class, GuiHostType.ITEM, null),
 
     GUI_SUPER_ME_REPLENISHER(ContainerSuperMEReplenisher.class, TileSuperMEReplenisher.class, GuiHostType.WORLD,
-            SecurityPermissions.BUILD);
+            SecurityPermissions.BUILD),
+
+    GUI_TUNNEL_PATTERN_RENAMER(ContainerTunnelPatternRenamer.class, ITerminalHost.class, GuiHostType.WORLD,
+            SecurityPermissions.CRAFT);
 
     private final Class tileClass;
     private final Class containerClass;

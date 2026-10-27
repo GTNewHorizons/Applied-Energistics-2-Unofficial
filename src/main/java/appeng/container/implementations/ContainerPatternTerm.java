@@ -30,6 +30,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.parts.IPatternTerminal;
 import appeng.api.storage.IMEMonitor;
@@ -56,6 +57,7 @@ import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.contents.WirelessPatternTerminalGuiObject;
 import appeng.items.storage.ItemViewCell;
+import appeng.parts.reporting.PartPatternTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.IAEStackInventory;
@@ -94,6 +96,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public final ActionHandler<Boolean> encodeAndMoveToInventoryAction;
     public final ActionHandler<Void> clearAction;
     public final ActionHandler<Integer> doubleAction;
+    public final ActionHandler<Void> openTunnelPatternRenamerAction;
 
     public ContainerPatternTerm(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
@@ -199,8 +202,25 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                 .onServerAction(this::encodeAndMoveToInventory);
         this.clearAction = sync.actionC2S("clear").onServerAction(this::clear);
         this.doubleAction = sync.actionC2S("double", StreamCodecs.intValue()).onServerAction(this::doubleStacks);
+        this.openTunnelPatternRenamerAction = sync.actionC2S("renameTunnelPattern")
+                .onServerAction(() -> ContainerTunnelPatternRenamer.open((EntityPlayerMP) ip.player, this));
 
         this.updateOrderOfOutputSlots();
+    }
+
+    public Slot getEncodedPatternSlot() {
+        return this.patternSlotOUT;
+    }
+
+    public boolean supportsTunnelPatternRenaming() {
+        return this.patternTerminal instanceof PartPatternTerminal;
+    }
+
+    public boolean canRenameTunnelPattern(final EntityPlayer player) {
+        return player == this.getInventoryPlayer().player && this.supportsTunnelPatternRenaming()
+                && this.canInteractWith(player)
+                && this.hasAccess(SecurityPermissions.CRAFT, false)
+                && this.patternSlotOUT.canTakeStack(player);
     }
 
     private void updateOrderOfOutputSlots() {
