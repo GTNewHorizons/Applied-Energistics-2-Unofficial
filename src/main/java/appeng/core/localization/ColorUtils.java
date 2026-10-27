@@ -8,6 +8,93 @@ public class ColorUtils {
 
     public static final ColorResource
     // spotless:off
+
+    // AEColor
+        aeColorWhite_blackVariant           = color.rgb("aeColorWhite_blackVariant",            "0xBEBEBE"),
+        aeColorWhite_mediumVariant          = color.rgb("aeColorWhite_mediumVariant",           "0xDBDBDB"),
+        aeColorWhite_whiteVariant           = color.rgb("aeColorWhite_whiteVariant",            "0xFAFAFA"),
+        aeColorWhite_driveVariant           = color.rgb("aeColorWhite_driveVariant",            "0xBEBEBE"),
+
+        aeColorOrange_blackVariant          = color.rgb("aeColorOrange_blackVariant",           "0xF99739"),
+        aeColorOrange_mediumVariant         = color.rgb("aeColorOrange_mediumVariant",          "0xFAAE44"),
+        aeColorOrange_whiteVariant          = color.rgb("aeColorOrange_whiteVariant",           "0xF4DEC3"),
+        aeColorOrange_driveVariant          = color.rgb("aeColorOrange_driveVariant",           "0xDC9856"),
+
+        aeColorMagenta_blackVariant         = color.rgb("aeColorMagenta_blackVariant",          "0x821E82"),
+        aeColorMagenta_mediumVariant        = color.rgb("aeColorMagenta_mediumVariant",         "0xB82AB8"),
+        aeColorMagenta_whiteVariant         = color.rgb("aeColorMagenta_whiteVariant",          "0xC598C8"),
+        aeColorMagenta_driveVariant         = color.rgb("aeColorMagenta_driveVariant",          "0x732D73"),
+
+        aeColorLightBlue_blackVariant       = color.rgb("aeColorLightBlue_blackVariant",        "0x628DCB"),
+        aeColorLightBlue_mediumVariant      = color.rgb("aeColorLightBlue_mediumVariant",       "0x82ACE7"),
+        aeColorLightBlue_whiteVariant       = color.rgb("aeColorLightBlue_whiteVariant",        "0xD8F6FF"),
+        aeColorLightBlue_driveVariant       = color.rgb("aeColorLightBlue_driveVariant",        "0x7290BB"),
+
+        aeColorYellow_blackVariant          = color.rgb("aeColorYellow_blackVariant",           "0xFFF7AA"),
+        aeColorYellow_mediumVariant         = color.rgb("aeColorYellow_mediumVariant",          "0xF8FF4A"),
+        aeColorYellow_whiteVariant          = color.rgb("aeColorYellow_whiteVariant",           "0xFFFFE8"),
+        aeColorYellow_driveVariant          = color.rgb("aeColorYellow_driveVariant",           "0xF2EDB7"),
+
+        aeColorLime_blackVariant            = color.rgb("aeColorLime_blackVariant",             "0x7CFF4A"),
+        aeColorLime_mediumVariant           = color.rgb("aeColorLime_mediumVariant",            "0xBBFF51"),
+        aeColorLime_whiteVariant            = color.rgb("aeColorLime_whiteVariant",             "0xE7F7D7"),
+        aeColorLime_driveVariant            = color.rgb("aeColorLime_driveVariant",             "0x88e465"),
+
+        aeColorPink_blackVariant            = color.rgb("aeColorPink_blackVariant",             "0xDC8DB5"),
+        aeColorPink_mediumVariant           = color.rgb("aeColorPink_mediumVariant",            "0xF8B5D7"),
+        aeColorPink_whiteVariant            = color.rgb("aeColorPink_whiteVariant",             "0xF7DEEB"),
+        aeColorPink_driveVariant            = color.rgb("aeColorPink_driveVariant",             "0xD099B5"),
+
+        aeColorGray_blackVariant            = color.rgb("aeColorGray_blackVariant",             "0x7C7C7C"),
+        aeColorGray_mediumVariant           = color.rgb("aeColorGray_mediumVariant",            "0xA0A0A0"),
+        aeColorGray_whiteVariant            = color.rgb("aeColorGray_whiteVariant",             "0xC9C9C9"),
+        aeColorGray_driveVariant            = color.rgb("aeColorGray_driveVariant",             "0x7C7C7C"),
+
+        aeColorLightGray_blackVariant       = color.rgb("aeColorLightGray_blackVariant",        "0x9D9D9D"),
+        aeColorLightGray_mediumVariant      = color.rgb("aeColorLightGray_mediumVariant",       "0xCDCDCD"),
+        aeColorLightGray_whiteVariant       = color.rgb("aeColorLightGray_whiteVariant",        "0xEFEFEF"),
+        aeColorLightGray_driveVariant       = color.rgb("aeColorLightGray_driveVariant",        "0x9D9D9D"),
+
+        aeColorCyan_blackVariant            = color.rgb("aeColorCyan_blackVariant",             "0x2F9BA5"),
+        aeColorCyan_mediumVariant           = color.rgb("aeColorCyan_mediumVariant",            "0x51AAC6"),
+        aeColorCyan_whiteVariant            = color.rgb("aeColorCyan_whiteVariant",             "0xAEDDF4"),
+        aeColorCyan_driveVariant            = color.rgb("aeColorCyan_driveVariant",             "0x418c93"),
+
+        aeColorPurple_blackVariant          = color.rgb("aeColorPurple_blackVariant",           "0x8230B2"),
+        aeColorPurple_mediumVariant         = color.rgb("aeColorPurple_mediumVariant",          "0xA453CE"),
+        aeColorPurple_whiteVariant          = color.rgb("aeColorPurple_whiteVariant",           "0xC7A3CC"),
+        aeColorPurple_driveVariant          = color.rgb("aeColorPurple_driveVariant",           "0x7D449E"),
+
+        aeColorBlue_blackVariant            = color.rgb("aeColorBlue_blackVariant",             "0x2D29A0"),
+        aeColorBlue_mediumVariant           = color.rgb("aeColorBlue_mediumVariant",            "0x514AFF"),
+        aeColorBlue_whiteVariant            = color.rgb("aeColorBlue_whiteVariant",             "0xDDE6FF"),
+        aeColorBlue_driveVariant            = color.rgb("aeColorBlue_driveVariant",             "0x3E3B8E"),
+
+        aeColorBrown_blackVariant           = color.rgb("aeColorBrown_blackVariant",            "0x724E35"),
+        aeColorBrown_mediumVariant          = color.rgb("aeColorBrown_mediumVariant",           "0xB7967F"),
+        aeColorBrown_whiteVariant           = color.rgb("aeColorBrown_whiteVariant",            "0xE0D2C8"),
+        aeColorBrown_driveVariant           = color.rgb("aeColorBrown_driveVariant",            "0x695030"),
+
+        aeColorGreen_blackVariant           = color.rgb("aeColorGreen_blackVariant",            "0x45A021"),
+        aeColorGreen_mediumVariant          = color.rgb("aeColorGreen_mediumVariant",           "0x60E32E"),
+        aeColorGreen_whiteVariant           = color.rgb("aeColorGreen_whiteVariant",            "0xE3F2E3"),
+        aeColorGreen_driveVariant           = color.rgb("aeColorGreen_driveVariant",            "0x4D8D34"),
+
+        aeColorRed_blackVariant             = color.rgb("aeColorRed_blackVariant",              "0xA50029"),
+        aeColorRed_mediumVariant            = color.rgb("aeColorRed_mediumVariant",             "0xFF003C"),
+        aeColorRed_whiteVariant             = color.rgb("aeColorRed_whiteVariant",              "0xFFE6ED"),
+        aeColorRed_driveVariant             = color.rgb("aeColorRed_driveVariant",              "0x8C1935"),
+
+        aeColorBlack_blackVariant           = color.rgb("aeColorBlack_blackVariant",            "0x2B2B2B"),
+        aeColorBlack_mediumVariant          = color.rgb("aeColorBlack_mediumVariant",           "0x565656"),
+        aeColorBlack_whiteVariant           = color.rgb("aeColorBlack_whiteVariant",            "0x848484"),
+        aeColorBlack_driveVariant           = color.rgb("aeColorBlack_driveVariant",            "0x2B2B2B"),
+
+        aeColorFluix_blackVariant           = color.rgb("aeColorFluix_blackVariant",            "0x1B2344"),
+        aeColorFluix_mediumVariant          = color.rgb("aeColorFluix_mediumVariant",           "0x895CA8"),
+        aeColorFluix_whiteVariant           = color.rgb("aeColorFluix_whiteVariant",            "0xD7BBEC"),
+        aeColorFluix_driveVariant           = color.rgb("aeColorFluix_driveVariant",            "0xffffff"),
+
         guiTextColorGray                    = color.rgb("guiTextColorGray",                     "0x404040"),
         guiTextColorBlack                   = color.rgb("guiTextColorBlack",                    "0x000000"),
         searchboxText                       = color.rgb("searchboxText",                        "0xFFFFFF"),
