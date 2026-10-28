@@ -3,4 +3,5 @@ import=tools/matter-cannon.recipe
 import=tools/misctools.recipe
 import=tools/nether-quartz.recipe
 import=tools/network.recipe
+import=tools/portable-cell-workbench.recipe
 import=tools/paintballs.recipe

@@ -81,6 +81,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
             final ItemStack cell = this.workBench.getInventoryByName("cell").getStackInSlot(0);
             cwi.setFuzzyMode(cell, valueOf);
             if (valueOf == FuzzyMode.IGNORE_ALL) ItemStackNBT.removeTag(cell, "FuzzyMode");
+            this.markWorkbenchDirty();
         }
     }
 
@@ -179,6 +180,10 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         return haveCell() && this.workBench.getCell() instanceof ICellRestriction;
     }
 
+    protected void markWorkbenchDirty() {
+        this.workBench.getInventoryByName("cell").markDirty();
+    }
+
     private void clear() {
         final IAEStackInventory inv = this.workBench.getAEInventoryByName(StorageName.NONE);
         for (int x = 0; x < inv.getSizeInventory(); x++) {
@@ -252,7 +257,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         public ItemStack decrStackSize(final int i, final int j) {
             final IInventory inv = ContainerCellWorkbench.this.getCellUpgradeInventory();
             final ItemStack is = inv.decrStackSize(i, j);
-            inv.markDirty();
+            this.markDirty();
             return is;
         }
 
@@ -260,7 +265,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         public ItemStack getStackInSlotOnClosing(final int i) {
             final IInventory inv = ContainerCellWorkbench.this.getCellUpgradeInventory();
             final ItemStack is = inv.getStackInSlotOnClosing(i);
-            inv.markDirty();
+            this.markDirty();
             return is;
         }
 
@@ -268,7 +273,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
         public void setInventorySlotContents(final int i, final ItemStack itemstack) {
             final IInventory inv = ContainerCellWorkbench.this.getCellUpgradeInventory();
             inv.setInventorySlotContents(i, itemstack);
-            inv.markDirty();
+            this.markDirty();
         }
 
         @Override
@@ -291,6 +296,11 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
             if (ContainerCellWorkbench.this.getUpgradeable().getInstalledUpgrades(Upgrades.FUZZY) == 0) {
                 ContainerCellWorkbench.this.setFuzzy(FuzzyMode.IGNORE_ALL);
             }
+            if (ContainerCellWorkbench.this.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
+                ContainerCellWorkbench.this.workBench.setFilter("");
+            }
+            ContainerCellWorkbench.this.getCellUpgradeInventory().markDirty();
+            ContainerCellWorkbench.this.markWorkbenchDirty();
         }
 
         @Override
