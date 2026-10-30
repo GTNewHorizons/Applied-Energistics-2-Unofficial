@@ -2,8 +2,10 @@ package appeng.test.tile.misc;
 
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -13,6 +15,7 @@ import java.util.List;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -28,11 +31,14 @@ import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.util.AEColor;
 import appeng.tile.misc.TileSuperMEReplenisher;
 import appeng.util.Platform;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.IAEStackList;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class TileSuperMEReplenisherFunctionalTest {
 
@@ -132,6 +138,93 @@ public class TileSuperMEReplenisherFunctionalTest {
         assertSame(modulated, inject(tile, modulated, Actionable.MODULATE, storage, source));
         assertEquals(16_384, storage.findPrecise(itemStack(1)).getStackSize());
         assertEquals(2_048, tile.getUsedBytes());
+    }
+
+    @Test
+    public void paintsAllColorsAndClearsPaint() {
+        final TileSuperMEReplenisher tile = new TileSuperMEReplenisher();
+        assertEquals(AEColor.Transparent, tile.getColor());
+
+        for (final AEColor color : AEColor.VALUES) {
+            assertTrue(tile.recolourBlock(ForgeDirection.UP, color, null));
+            assertEquals(color, tile.getColor());
+            assertEquals(color, tile.getProxy().getColor());
+            assertFalse(tile.recolourBlock(ForgeDirection.UP, color, null));
+        }
+    }
+
+    @Test
+    public void roundTripsPaintedColorsThroughWorldNbt() {
+        for (final AEColor color : AEColor.VALUES) {
+            final TileSuperMEReplenisher tile = new TileSuperMEReplenisher();
+            tile.recolourBlock(ForgeDirection.UP, color, null);
+            final NBTTagCompound data = new NBTTagCompound();
+            tile.writeToNBT(data);
+
+            final TileSuperMEReplenisher restored = new TileSuperMEReplenisher();
+            restored.readFromNBT(data);
+
+            assertEquals(color, restored.getColor());
+            assertEquals(color, restored.getProxy().getColor());
+        }
+    }
+
+    @Test
+    public void loadsLegacyNbtWithoutChangingExistingSettings() {
+        final NBTTagCompound legacy = new NBTTagCompound();
+        legacy.setInteger("tickRate", 80);
+        legacy.setDouble("threshold", 0.25);
+        final TileSuperMEReplenisher tile = new TileSuperMEReplenisher();
+        tile.readFromNBT(legacy);
+
+        assertEquals(AEColor.Transparent, tile.getColor());
+        assertEquals(AEColor.Transparent, tile.getProxy().getColor());
+        assertEquals(80, tile.getTickRate());
+        assertEquals(0.25, tile.getThreshold());
+    }
+
+    @Test
+    public void loadsInvalidPaintAsUnpainted() {
+        final TileSuperMEReplenisher tile = new TileSuperMEReplenisher();
+        for (final int ordinal : new int[] { -128, -1, AEColor.VALUES.length, 127 }) {
+            final NBTTagCompound data = new NBTTagCompound();
+            data.setByte("paintedColor", (byte) ordinal);
+            tile.readFromNBT(data);
+
+            assertEquals(AEColor.Transparent, tile.getColor());
+            assertEquals(AEColor.Transparent, tile.getProxy().getColor());
+        }
+        final NBTTagCompound data = new NBTTagCompound();
+        data.setString("paintedColor", "Red");
+        tile.readFromNBT(data);
+        assertEquals(AEColor.Transparent, tile.getColor());
+    }
+
+    @Test
+    public void synchronizesColorChangesWithoutActivityChanges() {
+        final TileSuperMEReplenisher server = new TileSuperMEReplenisher();
+        final TileSuperMEReplenisher client = new TileSuperMEReplenisher();
+        final ByteBuf data = Unpooled.buffer();
+        try {
+            for (final AEColor color : AEColor.VALUES) {
+                server.recolourBlock(ForgeDirection.UP, color, null);
+                data.clear();
+                server.writeToStream_TileSuperMEReplenisher(data);
+
+                assertTrue(client.readFromStream_TileSuperMEReplenisher(data));
+                assertEquals(color, client.getColor());
+                assertEquals(color, client.getProxy().getColor());
+                assertEquals(0, client.getStatus());
+                assertFalse(client.isPowered());
+                assertFalse(data.isReadable());
+
+                data.clear();
+                server.writeToStream_TileSuperMEReplenisher(data);
+                assertFalse(client.readFromStream_TileSuperMEReplenisher(data));
+            }
+        } finally {
+            data.release();
+        }
     }
 
     private static TileSuperMEReplenisher replenisherWithCells(final int count) {
