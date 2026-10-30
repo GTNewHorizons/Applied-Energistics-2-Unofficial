@@ -321,9 +321,9 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     private boolean loopsBackTo(final PartP2PItems tunnel, final Set<PartP2PItems> visited) {
         final TileEntity te = this.getTile().getWorldObj().getTileEntity(
-                                this.getTile().xCoord + this.getSide().offsetX,
-                                this.getTile().yCoord + this.getSide().offsetY,
-                                this.getTile().zCoord + this.getSide().offsetZ);
+                this.getTile().xCoord + this.getSide().offsetX,
+                this.getTile().yCoord + this.getSide().offsetY,
+                this.getTile().zCoord + this.getSide().offsetZ);
         if (Platform.getPartFromTE(te, this.getSide().getOpposite()) instanceof PartP2PItems next) {
             if (next == tunnel) {
                 return true;
