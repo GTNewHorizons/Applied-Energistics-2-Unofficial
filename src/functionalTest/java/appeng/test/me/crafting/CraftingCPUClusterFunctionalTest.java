@@ -131,7 +131,7 @@ public class CraftingCPUClusterFunctionalTest {
     @Test
     void fakeCraftingAlsoCoalescesDirtyNotifications() {
         cpu.prepare(pattern, 64, 128);
-        cpu.enableFakeCrafting(64);
+        cpu.enableFakeCrafting(pattern, 64);
 
         tick();
 
@@ -196,7 +196,7 @@ public class CraftingCPUClusterFunctionalTest {
     @Test
     void craftingLogDoesNotBreakFakeCraftingCompletion() {
         cpu.prepare(pattern, 64, 128);
-        cpu.enableFakeCrafting(64);
+        cpu.enableFakeCrafting(pattern, 64);
 
         withCraftingLog(this::tick);
 
@@ -277,9 +277,9 @@ public class CraftingCPUClusterFunctionalTest {
             finalOutput.init(AEItemStack.create(new ItemStack(Blocks.stone)).setStackSize(crafts * 8L));
         }
 
-        private void enableFakeCrafting(int crafts) {
+        private void enableFakeCrafting(ICraftingPatternDetails pattern, int crafts) {
             trackFinalOutput(crafts);
-            finalOutput.setFakeCrafting();
+            finalOutput.setFakeCrafting(pattern);
         }
 
         private long storedInputs() {

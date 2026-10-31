@@ -54,7 +54,7 @@ public class GuiCraftingTree {
     public int widgetX, widgetY, widgetW, widgetH;
 
     public float scrollX = -8, scrollY = -8;
-    private CraftingRequest request;
+    private List<CraftingRequest> requests = Collections.emptyList();
 
     // Y -> list of nodes sorted by X
     private final TreeMap<Integer, ArrayList<Node>> treeNodes = new TreeMap<>();
@@ -376,18 +376,27 @@ public class GuiCraftingTree {
         scrollY = nd.y - nd.width;
     }
 
-    public void setRequest(final CraftingRequest request) {
-        final boolean isDifferent = (request != this.request);
-        this.request = request;
+    /**
+     * @param requests the root requests of the job, drawn side by side. Pass the same list instance on every frame, the
+     *                 tree is only rebuilt when the instance changes.
+     */
+    public void setRequests(final List<CraftingRequest> requests) {
+        final boolean isDifferent = (requests != this.requests);
+        this.requests = requests;
         if (isDifferent) {
             this.treeNodes.clear();
             this.allNodes.clear();
             this.treeWidth = 0;
             this.treeHeight = 0;
             final ArrayList<NodeBuilderTask> tasks = new ArrayList<>();
-            tasks.add(new NodeBuilderRequestWalker(0, 0, null, request));
-            while (!tasks.isEmpty()) {
-                tasks.get(tasks.size() - 1).step(tasks);
+            for (int i = 0; i < requests.size(); i++) {
+                if (i > 0) {
+                    treeWidth += X_SPACING;
+                }
+                tasks.add(new NodeBuilderRequestWalker(treeWidth, 0, null, requests.get(i)));
+                while (!tasks.isEmpty()) {
+                    tasks.get(tasks.size() - 1).step(tasks);
+                }
             }
             for (ArrayList<Node> row : treeNodes.values()) {
                 for (Node node : row) {
@@ -452,7 +461,7 @@ public class GuiCraftingTree {
     }
 
     public void draw(int guiMouseX, int guiMouseY, boolean inScreenshotMode) {
-        if (request == null) {
+        if (requests.isEmpty()) {
             return;
         }
         animationFrame = System.currentTimeMillis() / 500;
@@ -546,7 +555,7 @@ public class GuiCraftingTree {
             .ofPattern("yyyy-MM-dd_HH.mm.ss", Locale.ROOT);
 
     public void saveScreenshot() {
-        if (this.request == null) {
+        if (this.requests.isEmpty()) {
             return;
         }
         final Minecraft mc = Minecraft.getMinecraft();
@@ -796,6 +805,14 @@ public class GuiCraftingTree {
         }
         treeNodes.clear();
         treeWidth = treeHeight = 0;
+        // roots are not positioned by a parent, place them next to each other
+        int rootX = 0;
+        for (Node node : allNodes) {
+            if (node.parentNode == null) {
+                node.x = rootX;
+                rootX += node.subtreeWidth;
+            }
+        }
         for (Node node : allNodes) {
             node.visible = node.parentNode == null || (node.parentNode.visible && !node.parentNode.childrenCollapsed);
             if (!node.visible) continue;
