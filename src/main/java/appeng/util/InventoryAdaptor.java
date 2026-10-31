@@ -240,7 +240,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                 }
 
                 if (invs && part instanceof PartP2PItems p2p) {
-                    return new AdaptorP2PItem(p2p);
+                    return new AdaptorP2PItem(p2p, d);
                 }
 
                 if (tanks && part instanceof PartP2PLiquids p2p) {
