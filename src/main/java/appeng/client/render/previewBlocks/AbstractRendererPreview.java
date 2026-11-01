@@ -9,12 +9,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.opengl.GL11;
 
-import appeng.api.implementations.parts.IPartCable;
-import appeng.api.parts.BusSupport;
-import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.core.AEConfig;
-import appeng.parts.networking.PartCable;
 
 public abstract class AbstractRendererPreview {
 
@@ -132,59 +128,32 @@ public abstract class AbstractRendererPreview {
                 .getTileEntity(ViewHelper.getPreviewX(), ViewHelper.getPreviewY(), ViewHelper.getPreviewZ());
 
         if (!(te instanceof IPartHost partHost)) {
-            return true;
+            return !canPlaceBlockAt(
+                    ViewHelper.getWorld(),
+                    ViewHelper.getPreviewX(),
+                    ViewHelper.getPreviewY(),
+                    ViewHelper.getPreviewZ());
         }
 
-        IPart existingPart = partHost.getPart(ViewHelper.getPlacementSide());
-        if (existingPart != null) {
-            return true;
-        }
-
-        IPart centerPart = partHost.getPart(ForgeDirection.UNKNOWN);
-
-        if (centerPart instanceof PartCable cablePart) {
-            BusSupport busSupport = cablePart.supportsBuses();
-            return busSupport != BusSupport.CABLE && busSupport != BusSupport.DENSE_CABLE;
-        }
-
-        return !hasParts(partHost);
+        return !partHost.canAddPart(ViewHelper.getCachedItemStack(), ViewHelper.getPlacementSide());
     }
 
     protected boolean canPlace(World world, ForgeDirection side, int x, int y, int z) {
+        if (!shouldPlaceOnNeighborBlock()) {
+            return true;
+        }
+
         int neighborX = x + side.offsetX;
         int neighborY = y + side.offsetY;
         int neighborZ = z + side.offsetZ;
 
-        TileEntity te = world.getTileEntity(x, y, z);
-        TileEntity neighborTe = world.getTileEntity(neighborX, neighborY, neighborZ);
-        boolean canPlaceOnNeighbor = canPlaceBlockAt(world, neighborX, neighborY, neighborZ);
+        TileEntity te = world.getTileEntity(neighborX, neighborY, neighborZ);
 
-        if (!shouldPlaceOnNeighborBlock() && checkTe(te, side, canPlaceOnNeighbor)) {
-            return true;
-        }
-
-        return checkTe(neighborTe, side, canPlaceOnNeighbor);
-    }
-
-    protected boolean checkTe(TileEntity te, ForgeDirection side, boolean canPlaceOnNeighbor) {
         if (!(te instanceof IPartHost partHost)) {
-            return canPlaceOnNeighbor;
+            return canPlaceBlockAt(world, neighborX, neighborY, neighborZ);
         }
 
-        if (partHost.getPart(side) != null && !shouldPlaceOnNeighborBlock()) {
-            return false;
-        }
-
-        if (partHost.getPart(side.getOpposite()) != null) {
-            return false;
-        }
-
-        IPart centerPart = partHost.getPart(ForgeDirection.UNKNOWN);
-        if (centerPart instanceof IPartCable cable) {
-            return cable.supportsBuses() == BusSupport.CABLE;
-        }
-
-        return hasParts(partHost);
+        return partHost.canAddPart(ViewHelper.getCachedItemStack(), side.getOpposite());
     }
 
     protected void renderBase(double minXBase, double minYBase, double minZBase, double maxXBase, double maxYBase,

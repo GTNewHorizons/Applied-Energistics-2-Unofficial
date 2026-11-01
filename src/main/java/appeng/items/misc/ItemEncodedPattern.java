@@ -14,6 +14,9 @@ import static appeng.helpers.PatternHelper.convertToCondensedAEList;
 import static appeng.helpers.UltimatePatternHelper.loadIAEStackFromNBT;
 
 import java.text.NumberFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -59,6 +62,8 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
     private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<>();
     private static final Map<ItemStack, IAEStack<?>> OUTPUT_STACK_CACHE = new WeakHashMap<>();
     private static final Locale locale = Locale.getDefault();
+    private static final DateTimeFormatter ENCODING_DATE_FORMAT = DateTimeFormatter
+            .ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT).withZone(ZoneId.systemDefault());
 
     public ItemEncodedPattern() {
         this.setFeature(EnumSet.of(AEFeature.Patterns));
@@ -186,6 +191,14 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 lines.add(
                         EnumChatFormatting.LIGHT_PURPLE + GuiText.EncodedBy.getLocal(author)
                                 + EnumChatFormatting.RESET);
+                if (encodedValue.hasKey("encodedAt", NBT.TAG_LONG)) {
+                    lines.add(
+                            EnumChatFormatting.LIGHT_PURPLE + "("
+                                    + ENCODING_DATE_FORMAT
+                                            .format(Instant.ofEpochMilli(encodedValue.getLong("encodedAt")))
+                                    + ")"
+                                    + EnumChatFormatting.RESET);
+                }
             }
         }
         if (ItemTunnelPattern.isTunnelPattern(stack)) {
@@ -266,6 +279,14 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final IAEStack<?> output = outputs[0];
         OUTPUT_STACK_CACHE.put(item, output);
         return output;
+    }
+
+    /**
+     * A cached pattern output means the pattern was already decoded successfully. The Interface Terminal uses this to
+     * avoid decoding it again for validation.
+     */
+    public boolean hasCachedOutputAE(final ItemStack item) {
+        return OUTPUT_STACK_CACHE.containsKey(item);
     }
 
     private boolean addInformation(final IAEStack<?>[] items, final List<String> lines, String label) {

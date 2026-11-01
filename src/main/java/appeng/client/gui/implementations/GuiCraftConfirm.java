@@ -823,7 +823,6 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             }
         }
         this.sortItems();
-        updateFilteredList();
         this.setScrollBar();
     }
 
@@ -876,6 +875,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
 
     private void sortItems() {
         this.visual.sort(comparator);
+        this.updateFilteredList();
     }
 
     private void handleInput(final IItemList<IAEStack<?>> s, final IAEStack<?> l) {

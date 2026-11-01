@@ -18,6 +18,7 @@ import java.util.List;
 
 import net.minecraft.util.StatCollector;
 
+import appeng.core.localization.ColorUtils;
 import appeng.core.localization.Localization;
 
 /**
@@ -27,40 +28,126 @@ import appeng.core.localization.Localization;
  */
 public enum AEColor implements Localization {
 
-    White("gui.appliedenergistics2.White", 0xBEBEBE, 0xDBDBDB, 0xFAFAFA, 0xBEBEBE),
+    // spotless:off
+    White("gui.appliedenergistics2.White",
+        ColorUtils.aeColorWhite_blackVariant.getColor(),
+        ColorUtils.aeColorWhite_mediumVariant.getColor(),
+        ColorUtils.aeColorWhite_whiteVariant.getColor(),
+        ColorUtils.aeColorWhite_driveVariant.getColor()
+        ),
 
-    Orange("gui.appliedenergistics2.Orange", 0xF99739, 0xFAAE44, 0xF4DEC3, 0xDC9856),
+    Orange("gui.appliedenergistics2.Orange",
+        ColorUtils.aeColorOrange_blackVariant.getColor(),
+        ColorUtils.aeColorOrange_mediumVariant.getColor(),
+        ColorUtils.aeColorOrange_whiteVariant.getColor(),
+        ColorUtils.aeColorOrange_driveVariant.getColor()
+        ),
 
-    Magenta("gui.appliedenergistics2.Magenta", 0x821E82, 0xB82AB8, 0xC598C8, 0x732D73),
+    Magenta("gui.appliedenergistics2.Magenta",
+        ColorUtils.aeColorMagenta_blackVariant.getColor(),
+        ColorUtils.aeColorMagenta_mediumVariant.getColor(),
+        ColorUtils.aeColorMagenta_whiteVariant.getColor(),
+        ColorUtils.aeColorMagenta_driveVariant.getColor()
+        ),
 
-    LightBlue("gui.appliedenergistics2.LightBlue", 0x628DCB, 0x82ACE7, 0xD8F6FF, 0x7290BB),
+    LightBlue("gui.appliedenergistics2.LightBlue",
+        ColorUtils.aeColorLightBlue_blackVariant.getColor(),
+        ColorUtils.aeColorLightBlue_mediumVariant.getColor(),
+        ColorUtils.aeColorLightBlue_whiteVariant.getColor(),
+        ColorUtils.aeColorLightBlue_driveVariant.getColor()
+        ),
 
-    Yellow("gui.appliedenergistics2.Yellow", 0xFFF7AA, 0xF8FF4A, 0xFFFFE8, 0xF2EDB7),
+    Yellow("gui.appliedenergistics2.Yellow",
+        ColorUtils.aeColorYellow_blackVariant.getColor(),
+        ColorUtils.aeColorYellow_mediumVariant.getColor(),
+        ColorUtils.aeColorYellow_whiteVariant.getColor(),
+        ColorUtils.aeColorYellow_driveVariant.getColor()
+        ),
 
-    Lime("gui.appliedenergistics2.Lime", 0x7CFF4A, 0xBBFF51, 0xE7F7D7, 0x88e465),
+    Lime("gui.appliedenergistics2.Lime",
+        ColorUtils.aeColorLime_blackVariant.getColor(),
+        ColorUtils.aeColorLime_mediumVariant.getColor(),
+        ColorUtils.aeColorLime_whiteVariant.getColor(),
+        ColorUtils.aeColorLime_driveVariant.getColor()
+        ),
 
-    Pink("gui.appliedenergistics2.Pink", 0xDC8DB5, 0xF8B5D7, 0xF7DEEB, 0xD099B5),
+    Pink("gui.appliedenergistics2.Pink",
+        ColorUtils.aeColorPink_blackVariant.getColor(),
+        ColorUtils.aeColorPink_mediumVariant.getColor(),
+        ColorUtils.aeColorPink_whiteVariant.getColor(),
+        ColorUtils.aeColorPink_driveVariant.getColor()
+        ),
 
-    Gray("gui.appliedenergistics2.Gray", 0x7C7C7C, 0xA0A0A0, 0xC9C9C9, 0x7C7C7C),
+    Gray("gui.appliedenergistics2.Gray",
+        ColorUtils.aeColorGray_blackVariant.getColor(),
+        ColorUtils.aeColorGray_mediumVariant.getColor(),
+        ColorUtils.aeColorGray_whiteVariant.getColor(),
+        ColorUtils.aeColorGray_driveVariant.getColor()
+        ),
 
-    LightGray("gui.appliedenergistics2.LightGray", 0x9D9D9D, 0xCDCDCD, 0xEFEFEF, 0x9D9D9D),
+    LightGray("gui.appliedenergistics2.LightGray",
+        ColorUtils.aeColorLightGray_blackVariant.getColor(),
+        ColorUtils.aeColorLightGray_mediumVariant.getColor(),
+        ColorUtils.aeColorLightGray_whiteVariant.getColor(),
+        ColorUtils.aeColorLightGray_driveVariant.getColor()
+        ),
 
-    Cyan("gui.appliedenergistics2.Cyan", 0x2F9BA5, 0x51AAC6, 0xAEDDF4, 0x418c93),
+    Cyan("gui.appliedenergistics2.Cyan",
+        ColorUtils.aeColorCyan_blackVariant.getColor(),
+        ColorUtils.aeColorCyan_mediumVariant.getColor(),
+        ColorUtils.aeColorCyan_whiteVariant.getColor(),
+        ColorUtils.aeColorCyan_driveVariant.getColor()
+        ),
 
-    Purple("gui.appliedenergistics2.Purple", 0x8230B2, 0xA453CE, 0xC7A3CC, 0x7D449E),
+    Purple("gui.appliedenergistics2.Purple",
+        ColorUtils.aeColorPurple_blackVariant.getColor(),
+        ColorUtils.aeColorPurple_mediumVariant.getColor(),
+        ColorUtils.aeColorPurple_whiteVariant.getColor(),
+        ColorUtils.aeColorPurple_driveVariant.getColor()
+        ),
 
-    Blue("gui.appliedenergistics2.Blue", 0x2D29A0, 0x514AFF, 0xDDE6FF, 0x3E3B8E),
+    Blue("gui.appliedenergistics2.Blue",
+        ColorUtils.aeColorBlue_blackVariant.getColor(),
+        ColorUtils.aeColorBlue_mediumVariant.getColor(),
+        ColorUtils.aeColorBlue_whiteVariant.getColor(),
+        ColorUtils.aeColorBlue_driveVariant.getColor()
+        ),
 
-    Brown("gui.appliedenergistics2.Brown", 0x724E35, 0xB7967F, 0xE0D2C8, 0x695030),
+    Brown("gui.appliedenergistics2.Brown",
+        ColorUtils.aeColorBrown_blackVariant.getColor(),
+        ColorUtils.aeColorBrown_mediumVariant.getColor(),
+        ColorUtils.aeColorBrown_whiteVariant.getColor(),
+        ColorUtils.aeColorBrown_driveVariant.getColor()
+        ),
 
-    Green("gui.appliedenergistics2.Green", 0x45A021, 0x60E32E, 0xE3F2E3, 0x4D8D34),
+    Green("gui.appliedenergistics2.Green",
+        ColorUtils.aeColorGreen_blackVariant.getColor(),
+        ColorUtils.aeColorGreen_mediumVariant.getColor(),
+        ColorUtils.aeColorGreen_whiteVariant.getColor(),
+        ColorUtils.aeColorGreen_driveVariant.getColor()
+        ),
 
-    Red("gui.appliedenergistics2.Red", 0xA50029, 0xFF003C, 0xFFE6ED, 0x8C1935),
+    Red("gui.appliedenergistics2.Red",
+        ColorUtils.aeColorRed_blackVariant.getColor(),
+        ColorUtils.aeColorRed_mediumVariant.getColor(),
+        ColorUtils.aeColorRed_whiteVariant.getColor(),
+        ColorUtils.aeColorRed_driveVariant.getColor()
+        ),
 
-    Black("gui.appliedenergistics2.Black", 0x2B2B2B, 0x565656, 0x848484, 0x2B2B2B),
+    Black("gui.appliedenergistics2.Black",
+        ColorUtils.aeColorBlack_blackVariant.getColor(),
+        ColorUtils.aeColorBlack_mediumVariant.getColor(),
+        ColorUtils.aeColorBlack_whiteVariant.getColor(),
+        ColorUtils.aeColorBlack_driveVariant.getColor()
+        ),
 
-    Transparent("gui.appliedenergistics2.Fluix", 0x1B2344, 0x895CA8, 0xD7BBEC, 0xffffff);
-
+    Transparent("gui.appliedenergistics2.Fluix",
+        ColorUtils.aeColorFluix_blackVariant.getColor(),
+        ColorUtils.aeColorFluix_mediumVariant.getColor(),
+        ColorUtils.aeColorFluix_whiteVariant.getColor(),
+        ColorUtils.aeColorFluix_driveVariant.getColor()
+        );
+    // spotless:on
     public static final AEColor[] VALUES = values();
 
     public static final List<AEColor> VALID_COLORS = Arrays.asList(

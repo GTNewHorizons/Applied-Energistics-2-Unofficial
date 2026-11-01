@@ -831,7 +831,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         bindTexture(BACKGROUND);
         final Tessellator tessellator = Tessellator.instance;
         tessellator.startDrawingQuads();
-        int relY = 0;
+        // Preserve the full entry height even when rendering only visible rows.
+        int relY = entry.rows * 18;
         final int slotLeftMargin = (VIEW_WIDTH - entry.rowSize * 18);
 
         entry.dispY = viewY;
@@ -841,7 +842,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             final int rowYTop = row * 18;
             final int rowYBot = rowYTop + 18;
 
-            relY += 18;
+            // Scissoring hides offscreen rows but does not skip item rendering work.
+            if (viewY + rowYTop >= viewHeight) break;
             /* Is the slot row in view? */
             if (viewY + rowYBot <= titleBottom) {
                 continue;
@@ -896,6 +898,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         for (int row = 0; row < entry.rows; ++row) {
             final int rowYTop = row * 18;
             final int rowYBot = rowYTop + 18;
+            if (viewY + rowYTop >= viewHeight) break;
             /* Is the slot row in view? */
             if (viewY + rowYBot <= titleBottom) {
                 continue;
@@ -1344,6 +1347,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (w == null) {
             return false;
         }
+
+        // getOutputAE() already decoded this pattern while drawing its icon.
+        // Reuse that result rather than creating another PatternHelper here.
+        if (itemStack.getItem() instanceof ItemEncodedPattern iep && iep.hasCachedOutputAE(itemStack)) {
+            return false;
+        }
+
         return !(itemStack.getItem() instanceof ICraftingPatternItem icpi
                 && icpi.getPatternForItem(itemStack, w) != null);
     }

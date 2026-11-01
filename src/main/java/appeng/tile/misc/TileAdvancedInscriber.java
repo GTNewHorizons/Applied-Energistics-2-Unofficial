@@ -73,7 +73,6 @@ public class TileAdvancedInscriber extends AENetworkPowerTile
 
     public TileAdvancedInscriber() {
         this.getProxy().setValidSides(EnumSet.allOf(ForgeDirection.class));
-        this.setPowerSides(EnumSet.allOf(ForgeDirection.class));
         this.setInternalMaxPower(5000);
         this.getProxy().setIdlePowerUsage(0);
         this.settings = new ConfigManager(this);

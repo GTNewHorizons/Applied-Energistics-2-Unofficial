@@ -55,6 +55,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
     private MEGuiTextField textField;
 
     private final LongSyncHandler emitterValueSync;
+    private final LongSyncHandler storedSync;
     private final DeltaObjectSyncHandler<@NotNull AEStackTypeFilter, TypeFilterDelta> typeFiltersSync;
     private final ConfigEnumSyncHandler<@NotNull LevelType> levelModeSync;
     private final ConfigEnumSyncHandler<@NotNull YesNo> craftingModeSync;
@@ -71,6 +72,8 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
                 this.textField.setCursorPositionEnd();
             }
         }).onServerChange((oldValue, newValue) -> this.lvlEmitter.setReportingValue(newValue));
+
+        this.storedSync = sync.longS2C("stored");
 
         this.typeFiltersSync = sync
                 .object("typeFilters", AEStackTypeFilterSyncCodec.INSTANCE, this.lvlEmitter.getTypeFilters())
@@ -170,6 +173,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
 
         if (Platform.isServer()) {
             this.emitterValueSync.set(this.lvlEmitter.getReportingValue());
+            this.storedSync.set(this.lvlEmitter.getStoredAmount());
             this.typeFiltersSync.set(this.lvlEmitter.getTypeFilters());
             this.craftingModeSync.syncFromConfig();
             this.levelModeSync.syncFromConfig();
@@ -183,6 +187,10 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements ICont
 
     public long getEmitterValue() {
         return this.emitterValueSync.get();
+    }
+
+    public long getStoredAmount() {
+        return this.storedSync.get();
     }
 
     public void setLevel(final long l) {

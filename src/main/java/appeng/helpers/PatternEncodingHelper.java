@@ -186,6 +186,7 @@ public class PatternEncodingHelper {
             ItemTunnelPattern.writeTunnelUuid(encodedValue, uuid);
         }
         encodedValue.setString("author", auther);
+        encodedValue.setLong("encodedAt", System.currentTimeMillis());
 
         output.setTagCompound(encodedValue);
         pattern.setInventorySlotContents(1, output);

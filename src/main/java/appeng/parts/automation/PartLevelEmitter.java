@@ -126,6 +126,11 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         return this.reportingValue;
     }
 
+    @Override
+    public long getStoredAmount() {
+        return this.lastReportedValue;
+    }
+
     public void setReportingValue(final long v) {
         this.reportingValue = v;
         this.getHost().markForSave();

@@ -140,7 +140,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
 
     @Override
     public boolean isSimulation() {
-        return context.wasSimulated;
+        return state == State.CANCELLED || context.wasSimulated;
     }
 
     @Override
@@ -222,7 +222,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
 
         if (!taskState.needsMoreWork) {
             getByteTotal();
-            this.state = State.FINISHED;
+            this.state = taskState == CraftingTask.State.FAILURE ? State.CANCELLED : State.FINISHED;
             if (AELog.isCraftingDebugLogEnabled()) {
                 AELog.log(Level.INFO, "Crafting job for %s finished with resolved steps:", originalRequest.toString());
                 AELog.logSimple(Level.INFO, context.toString());
@@ -248,7 +248,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
 
     @Override
     public void startCrafting(MECraftingInventory storage, ICraftingCPU rawCluster, BaseActionSource src) {
-        if (this.state == State.RUNNING) {
+        if (this.state != State.FINISHED) {
             throw new IllegalStateException(
                     "Trying to start crafting a not fully calculated job for " + originalRequest.toString());
         }
