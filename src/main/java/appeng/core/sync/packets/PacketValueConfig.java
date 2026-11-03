@@ -45,6 +45,7 @@ import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.IMouseWheelItem;
+import appeng.items.tools.ToolMemoryCard;
 import appeng.tile.networking.TileController;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -52,6 +53,7 @@ import io.netty.buffer.Unpooled;
 public class PacketValueConfig extends AppEngPacket {
 
     public static final String CONTROLLER_ANIMATION_DEFAULT = "ControllerAnimationDefault";
+    public static final String MEMORY_CARD_COPY_PATTERNS = "MemoryCardCopyPatterns";
     public static final String APPLY_CONTROLLER_ANIMATION_DEFAULT = "ApplyControllerAnimationDefault";
     public static final String CYCLE_CONTROLLER_ANIMATION = "CycleControllerAnimation";
     public static final String CYCLE_CONTROLLER_ANIMATION_BACKWARDS = "CycleControllerAnimationBackwards";
@@ -94,6 +96,8 @@ public class PacketValueConfig extends AppEngPacket {
 
         if (this.Name.equals(CONTROLLER_ANIMATION_DEFAULT)) {
             TileController.setPlayerDefaultAnimation(player, this.Value);
+        } else if (this.Name.equals(MEMORY_CARD_COPY_PATTERNS)) {
+            ToolMemoryCard.setCopyPatterns(player, Boolean.parseBoolean(this.Value));
         } else if (this.Name.equals("Item") && player.getHeldItem() != null
                 && player.getHeldItem().getItem() instanceof IMouseWheelItem) {
             final ItemStack is = player.getHeldItem();
