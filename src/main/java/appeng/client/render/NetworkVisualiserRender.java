@@ -345,6 +345,8 @@ public class NetworkVisualiserRender {
                 color = ColorUtils.networkVisualiserLinkCompressed.getColor();
             else if (link.flags.contains(VLinkFlags.DENSE)) color = ColorUtils.networkVisualiserLinkDense.getColor();
             else if (link.flags.contains(VLinkFlags.PROXY)) color = ColorUtils.networkVisualiserLinkProxy.getColor();
+            else if (link.flags.contains(VLinkFlags.EXTERNAL))
+                color = ColorUtils.networkVisualiserLinkExternal.getColor();
             else color = ColorUtils.networkVisualiserLinkDefault.getColor();
 
             final int alpha = (color >> 24) & 0xFF;

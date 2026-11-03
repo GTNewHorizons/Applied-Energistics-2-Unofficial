@@ -178,6 +178,7 @@ public class ColorUtils {
         networkVisualiserLinkCompressed     = color.argb("networkVisualiserLinkCompressed",     "0xffff00ff"),
         networkVisualiserLinkDense          = color.argb("networkVisualiserLinkDense",          "0xffffff00"),
         networkVisualiserLinkProxy          = color.argb("networkVisualiserLinkProxy",          "0xffffa500"),
+        networkVisualiserLinkExternal       = color.argb("networkVisualiserLinkExternal",       "0xff9b30ff"),
         networkVisualiserLinkDefault        = color.argb("networkVisualiserLinkDefault",        "0xff0000ff"),
         contextMenuBackground               = color.argb("contextMenuBackground",               "0xFFCDCDCD"),
         contextMenuBackgroundHover          = color.argb("contextMenuBackgroundHover",          "0xFFA0A0A0"),

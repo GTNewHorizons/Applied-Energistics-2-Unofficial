@@ -8,6 +8,7 @@ package appeng.items.tools;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.BiConsumer;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -105,7 +107,28 @@ public class ToolNetworkVisualiser extends AEBaseItem {
     public enum VLinkFlags {
         DENSE,
         COMPRESSED,
-        PROXY
+        PROXY,
+        EXTERNAL
+    }
+
+    /**
+     * Supplies links that are not grid connections, so that another mod can show its own links between machines of the
+     * visualised grid. Register with {@link ToolNetworkVisualiser#registerExternalLinkProvider}.
+     */
+    @FunctionalInterface
+    public interface IExternalLinkProvider {
+
+        /**
+         * Called on the server for every visualisation update. Pass each link to the consumer. Positions that are not
+         * visualised nodes of the given grid are ignored.
+         */
+        void addLinks(IGrid grid, World world, BiConsumer<DimensionalCoord, DimensionalCoord> out);
+    }
+
+    private static final List<IExternalLinkProvider> EXTERNAL_LINK_PROVIDERS = new ArrayList<>();
+
+    public static void registerExternalLinkProvider(IExternalLinkProvider provider) {
+        EXTERNAL_LINK_PROVIDERS.add(provider);
     }
 
     public static class VLink {
@@ -299,6 +322,8 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                             vLinks.add(new VLink(n1, n2, c.getUsedChannels(), flags));
                         }
                     }
+
+                    addExternalLinks(g, w, vnList.values(), vLinks);
                 }
             }
         }
@@ -307,6 +332,30 @@ public class ToolNetworkVisualiser extends AEBaseItem {
             vNodeList.addAll(vnList.values());
             NetworkHandler.instance.sendTo(new PacketNetworkVisualiserData(vNodeList, vLinks), player);
         } catch (IOException ignored) {}
+    }
+
+    private static void addExternalLinks(IGrid grid, World world, Collection<VNode> nodes, List<VLink> vLinks) {
+        if (EXTERNAL_LINK_PROVIDERS.isEmpty()) return;
+
+        final Map<Long, VNode> nodesByPos = new HashMap<>();
+        for (VNode node : nodes) {
+            nodesByPos.put(posKey(node.x, node.y, node.z), node);
+        }
+
+        final EnumSet<VLinkFlags> flags = EnumSet.of(VLinkFlags.EXTERNAL);
+        for (IExternalLinkProvider provider : EXTERNAL_LINK_PROVIDERS) {
+            provider.addLinks(grid, world, (a, b) -> {
+                VNode n1 = nodesByPos.get(posKey(a.x, a.y, a.z));
+                VNode n2 = nodesByPos.get(posKey(b.x, b.y, b.z));
+                if (n1 != null && n2 != null && !n1.isAtSameLocation(n2)) {
+                    vLinks.add(new VLink(n1, n2, 0, flags));
+                }
+            });
+        }
+    }
+
+    private static long posKey(int x, int y, int z) {
+        return ((long) (x & 0x3FFFFFF) << 38) | ((long) (z & 0x3FFFFFF) << 12) | (y & 0xFFF);
     }
 
     private static boolean needToUpdate(EntityPlayerMP player, DimensionalCoord pos) {
