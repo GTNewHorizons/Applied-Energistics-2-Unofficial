@@ -456,7 +456,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                         ToolMemoryCard.setUpgradesInfo(data, ui);
 
                     if (this instanceof IInterfaceHost iHost) {
-                        ToolMemoryCard.savePatterns(data, iHost);
+                        ToolMemoryCard.savePatterns(data, player, iHost);
                     }
 
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
