@@ -66,6 +66,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiSub;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
+import appeng.client.gui.ScreenColor;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiTabButton;
@@ -181,7 +182,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (cont instanceof IContainerSubGui subGui) subGui.setGuiLink(this);
 
         this.setScrollBar(new GuiScrollbar());
-        this.xSize = MAIN_WIDTH + 90;
+        this.xSize = MAIN_WIDTH + (((ContainerInterfaceTerminal) cont).getToolboxSize() == 5 ? 106 : 90);
         this.ySize = 255;
         this.neiPresent = Loader.isModLoaded("NotEnoughItems");
 
@@ -353,7 +354,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
     protected void repositionSlots() {
         for (final Object obj : this.inventorySlots.inventorySlots) {
             if (obj instanceof AppEngSlot slot) {
-                slot.yDisplayPosition = ((ContainerInterfaceTerminal) inventorySlots).isUpgradeSlot(slot) ? 94
+                final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
+                slot.yDisplayPosition = container.isUpgradeSlot(slot) || container.isToolboxSlot(slot) ? slot.getY()
                         : this.ySize + slot.getY() - 78 - 7;
             }
         }
@@ -387,20 +389,20 @@ public class GuiInterfaceTerminal extends AEBaseGui
             fontRendererObj.drawString(
                     GuiText.InterfaceUpgrades.getLocal(),
                     panelX,
-                    HEADER_HEIGHT + 6,
+                    14,
                     ColorUtils.guiTextColorGray.getColor());
             final InterfaceTerminalEntry entry = masterList.list.get(selectedId);
             if (entry != null) {
                 fontRendererObj.drawString(
                         fontRendererObj.trimStringToWidth(entry.dispName, 78),
                         panelX,
-                        HEADER_HEIGHT + 18,
+                        26,
                         ColorUtils.guiTextColorGray.getColor());
                 fontRendererObj.drawString(
                         fontRendererObj
                                 .trimStringToWidth(entry.dim + ": " + entry.x + ", " + entry.y + ", " + entry.z, 78),
                         panelX,
-                        HEADER_HEIGHT + 28,
+                        36,
                         ColorUtils.guiTextColorGray.getColor());
             }
         }
@@ -481,7 +483,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
     @Override
     protected boolean enableSpaceClicking() {
         // The virtual pattern grid handles region moves itself; real upgrade slots use vanilla window clicks.
-        return ((ContainerInterfaceTerminal) inventorySlots).getSelectedUpgradeId() < 0;
+        final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
+        return container.getSelectedUpgradeId() < 0 && container.getToolboxSize() == 0;
     }
 
     @Override
@@ -598,18 +601,33 @@ public class GuiInterfaceTerminal extends AEBaseGui
         searchFieldInputs.drawTextBox();
         searchFieldOutputs.drawTextBox();
         searchFieldNames.drawTextBox();
+        // Text fields leave their focus/text color active; side panels need the same tint as the main background.
+        ScreenColor.setGuiColor();
         if (((ContainerInterfaceTerminal) inventorySlots).getSelectedUpgradeId() >= 0) {
             final int panelX = offsetX + MAIN_WIDTH + 2;
-            final int panelY = offsetY + HEADER_HEIGHT;
-            drawRect(panelX, panelY, panelX + 86, panelY + 64, 0xFF373737);
-            drawRect(panelX + 1, panelY + 1, panelX + 85, panelY + 63, 0xFFC6C6C6);
+            final int panelY = offsetY + 8;
+            bindTexture("guis/interface.png");
+            // Reuse the interface's frame, blank header and slots, including resource-pack replacements.
+            drawTexturedModalRect(panelX, panelY, 0, 0, 82, 4);
+            drawTexturedModalRect(panelX + 82, panelY, 172, 0, 4, 4);
+            drawTexturedModalRect(panelX, panelY + 4, 0, 4, 4, 56);
+            drawTexturedModalRect(panelX + 82, panelY + 4, 172, 4, 4, 56);
+            drawTextured9PatchRect(panelX + 4, panelY + 4, 78, 56, 4, 4, 3, 3);
+            drawTexturedModalRect(panelX, panelY + 60, 0, 207, 82, 4);
+            drawTexturedModalRect(panelX + 82, panelY + 60, 172, 207, 4, 4);
             for (int slot = 0; slot < 4; slot++) {
                 final int x = offsetX + 216 + slot * 18;
-                final int y = offsetY + 93;
-                drawRect(x, y, x + 18, y + 18, 0xFFFFFFFF);
-                drawRect(x, y, x + 17, y + 17, 0xFF373737);
-                drawRect(x + 1, y + 1, x + 17, y + 17, 0xFF8B8B8B);
+                final int y = offsetY + 49;
+                drawTexturedModalRect(x, y, 186, 7, 18, 18);
             }
+        }
+        final int toolboxSize = ((ContainerInterfaceTerminal) inventorySlots).getToolboxSize();
+        if (toolboxSize == 5) {
+            bindTexture("guis/advanced_toolbox.png");
+            drawTexturedModalRect(offsetX + MAIN_WIDTH + 2, offsetY + 84, 0, 0, 104, 104);
+        } else if (toolboxSize == 3) {
+            bindTexture("guis/interface.png");
+            drawTexturedModalRect(offsetX + MAIN_WIDTH + 2, offsetY + 84, 178, 121, 68, 68);
         }
     }
 
@@ -622,6 +640,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int viewY = -scroll; // current y in viewport coordinates
         int entryIdx = 0;
         List<InterfaceSection> visibleSections = this.masterList.getVisibleSections();
+        // Sections outside this frame's viewport must not retain clickable buttons from a previous scroll position.
+        for (InterfaceSection section : visibleSections) {
+            section.visible = false;
+        }
 
         final float guiScaleX = (float) mc.displayWidth / width;
         final float guiScaleY = (float) mc.displayHeight / height;
@@ -805,6 +827,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             } else {
                 entry.dispY = -9999;
                 entry.optionsButton.yPosition = -1;
+                entry.upgradeButton.visible = false;
                 renderY += entryHeight;
             }
         }
@@ -1645,7 +1668,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
          * @param btn       button code
          */
         public boolean mouseClicked(int relMouseX, int relMouseY, int btn) {
-            if (relMouseX < 0 || relMouseX >= VIEW_WIDTH || relMouseY < 0 || relMouseY >= viewHeight) {
+            if (!online || relMouseX < 0 || relMouseX >= VIEW_WIDTH || relMouseY < 0 || relMouseY >= viewHeight) {
                 return false;
             }
             for (InterfaceSection section : getVisibleSections()) {

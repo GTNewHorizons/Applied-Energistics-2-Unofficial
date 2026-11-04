@@ -44,6 +44,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.ICraftingPatternItem;
+import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
@@ -66,6 +67,7 @@ import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.InterfaceUpgradeRemoval;
 import appeng.helpers.InventoryAction;
+import appeng.items.contents.NetworkToolViewer;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.AEBasePart;
 import appeng.parts.misc.PartPatternRepeater;
@@ -87,6 +89,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     private final int firstUpgradeSlot;
     private long selectedUpgradeId = -1;
     private boolean upgradeSelectionPending;
+    private NetworkToolViewer toolbox;
+    private int toolboxSlot;
 
     @SideOnly(Side.CLIENT)
     private IGuiSub guiLink;
@@ -115,10 +119,32 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                 dirty = new PacketInterfaceTerminalUpdate();
             }
         }
+        for (int slot = 0; slot < ip.getSizeInventory(); slot++) {
+            final ItemStack stack = ip.getStackInSlot(slot);
+            if (stack != null && stack.getItem() instanceof INetworkToolItem tool) {
+                toolbox = new NetworkToolViewer(stack, null, tool.getInventorySize());
+                toolboxSlot = slot;
+                lockPlayerInventorySlot(slot);
+                break;
+            }
+        }
         this.bindPlayerInventory(ip, 14, 3);
         this.firstUpgradeSlot = this.inventorySlots.size();
         for (int slot = 0; slot < UPGRADE_SLOTS; slot++) {
             this.addSlotToContainer(new InterfaceUpgradeSlot(clientUpgrades, slot));
+        }
+        if (toolbox != null) {
+            final int size = toolbox.getSize();
+            for (int slot = 0; slot < toolbox.getSizeInventory(); slot++) {
+                addSlotToContainer(
+                        new SlotRestrictedInput(
+                                SlotRestrictedInput.PlacableItemType.UPGRADES,
+                                toolbox,
+                                slot,
+                                219 + slot % size * 18,
+                                92 + slot / size * 18,
+                                ip).setPlayerSide());
+            }
         }
         this.upgradeSelection = this.syncRegistrar().action("interfaceUpgrades", StreamCodecs.longValue())
                 .onServerAction(this::selectUpgrades).onClientAction(id -> {
@@ -129,6 +155,25 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
 
     public long getSelectedUpgradeId() {
         return selectedUpgradeId;
+    }
+
+    public int getToolboxSize() {
+        return toolbox == null ? 0 : toolbox.getSize();
+    }
+
+    public boolean isToolboxSlot(Slot slot) {
+        return toolbox != null && slot.inventory == toolbox;
+    }
+
+    private void checkToolbox() {
+        if (toolbox == null || Platform.isClient()) return;
+        final ItemStack current = getPlayerInv().getStackInSlot(toolboxSlot);
+        if (current == toolbox.getItemStack()) return;
+        if (ItemStack.areItemStacksEqual(current, toolbox.getItemStack())) {
+            getPlayerInv().setInventorySlotContents(toolboxSlot, toolbox.getItemStack());
+        } else {
+            setValidContainer(false);
+        }
     }
 
     public boolean isUpgradeSlot(Slot slot) {
@@ -151,6 +196,9 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         final IInventory upgrades = entry != null && entry.machine instanceof IInterfaceHost host
                 ? host.getInterfaceDuality().getUpgrades()
                 : clientUpgrades;
+        // Slot IDs and count never change. Only the server rebinds these four slots; the client keeps its mirror.
+        // While a request is pending the GUI blocks clicks. Send the acknowledgement before the slot snapshot so
+        // vanilla can apply even empty/unchanged contents to the newly selected panel in the same ordered stream.
         for (int index = 0; index < UPGRADE_SLOTS; index++) {
             final InterfaceUpgradeSlot slot = new InterfaceUpgradeSlot(upgrades, index);
             slot.slotNumber = firstUpgradeSlot + index;
@@ -193,12 +241,23 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
 
     @Override
     public boolean isValidSrcSlotForTransfer(AppEngSlot slot) {
-        return super.isValidSrcSlotForTransfer(slot)
+        checkToolbox();
+        return isValidContainer() && super.isValidSrcSlotForTransfer(slot)
                 && (!isUpgradeSlot(slot) || slot.canTakeStack(getPlayerInv().player));
     }
 
     @Override
+    public List<AppEngSlot> getValidDestinationSlots(boolean playerSide, ItemStack stack) {
+        final List<AppEngSlot> slots = super.getValidDestinationSlots(playerSide, stack);
+        // Like local interfaces, return removed cards to the toolbox before the loose player inventory.
+        if (!playerSide && toolbox != null) slots.sort(java.util.Comparator.comparing(slot -> !isToolboxSlot(slot)));
+        return slots;
+    }
+
+    @Override
     public ItemStack slotClick(int slot, int button, int mode, EntityPlayer player) {
+        checkToolbox();
+        if (!isValidContainer()) return null;
         final boolean hadPanel = selectedUpgradeId >= 0;
         if (Platform.isServer() && hadPanel && !canModifyUpgrades(selectedUpgradeId)) selectUpgrades(-1);
         final ItemStack result = super.slotClick(slot, button, mode, player);
@@ -208,6 +267,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
 
     @Override
     public void swapSlotContents(int first, int second) {
+        checkToolbox();
+        if (!isValidContainer()) return;
         final boolean hadPanel = selectedUpgradeId >= 0;
         if (hadPanel && !canModifyUpgrades(selectedUpgradeId)) selectUpgrades(-1);
         super.swapSlotContents(first, second);
@@ -225,7 +286,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     private class InterfaceUpgradeSlot extends SlotRestrictedInput {
 
         InterfaceUpgradeSlot(IInventory inventory, int index) {
-            super(PlacableItemType.UPGRADES, inventory, index, 217 + index * 18, 94, getPlayerInv());
+            super(PlacableItemType.UPGRADES, inventory, index, 217 + index * 18, 50, getPlayerInv());
             setStackLimit(1);
         }
 
@@ -293,6 +354,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
             return;
         }
 
+        checkToolbox();
         if (selectedUpgradeId >= 0 && !canModifyUpgrades(selectedUpgradeId)) selectUpgrades(-1);
 
         super.detectAndSendChanges();

@@ -10,12 +10,19 @@ import static appeng.gametests.AEGameTestHelpers.itemMonitor;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
 
+import java.util.List;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ICrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -42,6 +49,7 @@ import appeng.container.ContainerNull;
 import appeng.container.implementations.ContainerInterfaceTerminal;
 import appeng.core.AppEng;
 import appeng.helpers.IInterfaceHost;
+import appeng.items.contents.NetworkToolViewer;
 import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
 import appeng.parts.reporting.PartInterfaceTerminal;
@@ -52,6 +60,7 @@ import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
 import appeng.util.Platform;
 import appeng.util.inv.MEInventoryCrafting;
+import io.netty.channel.embedded.EmbeddedChannel;
 
 @GameTestHolder(AppEng.MOD_ID)
 public class InterfaceTests {
@@ -93,6 +102,16 @@ public class InterfaceTests {
         final PartInterfaceTerminal anchor = terminal;
         final FakePlayer player = helper.spawnFakePlayer("interface_upgrades");
         final FakePlayer other = helper.spawnFakePlayer("interface_upgrades_other");
+        // Give fake players a packet sink: shift-click invokes normal container synchronization as well.
+        for (FakePlayer viewer : new FakePlayer[] { player, other }) {
+            final NetworkManager connection = new NetworkManager(false);
+            final EmbeddedChannel channel = new EmbeddedChannel(connection);
+            new NetHandlerPlayServer(MinecraftServer.getServer(), connection, viewer);
+            helper.afterTest(() -> {
+                channel.finish();
+                viewer.playerNetServerHandler = null;
+            });
+        }
         helper.afterTest(() -> {
             player.inventory.setItemStack(null);
             other.inventory.setItemStack(null);
@@ -103,110 +122,227 @@ public class InterfaceTests {
             assertInterfaceNetworkActive(helper, network);
             assertActive(helper, anchor.getProxy(), "Interface terminal should be online");
         }).thenExecute("exercise real terminal upgrade slots", () -> {
-            player.capabilities.isCreativeMode = false;
-            other.capabilities.isCreativeMode = false;
-            for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
-                player.inventory.mainInventory[slot] = null;
-                other.inventory.mainInventory[slot] = null;
+            for (ItemStack tool : new ItemStack[] { null,
+                    AEApi.instance().definitions().items().networkTool().maybeStack(1).get(),
+                    AEApi.instance().definitions().items().advancedNetworkTool().maybeStack(1).get() }) {
+                for (long targetId = 0; targetId < 2; targetId++) {
+                    player.capabilities.isCreativeMode = false;
+                    other.capabilities.isCreativeMode = false;
+                    player.inventory.setItemStack(null);
+                    other.inventory.setItemStack(null);
+                    for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
+                        player.inventory.mainInventory[slot] = null;
+                        other.inventory.mainInventory[slot] = null;
+                    }
+                    player.inventory.mainInventory[8] = tool == null ? null : tool.copy();
+                    final ContainerInterfaceTerminal container = new ContainerInterfaceTerminal(
+                            player.inventory,
+                            anchor);
+                    player.openContainer = container;
+                    final ItemStack[] snapshot = new ItemStack[4];
+                    final int[] snapshotUpdates = { 0 };
+                    container.addCraftingToCrafters(new ICrafting() {
+
+                        @Override
+                        public void sendContainerAndContentsToPlayer(Container source, List<ItemStack> stacks) {}
+
+                        @Override
+                        public void sendSlotContents(Container source, int slot, ItemStack stack) {
+                            if (slot >= 36 && slot < 40) {
+                                snapshot[slot - 36] = stack == null ? null : stack.copy();
+                                snapshotUpdates[0]++;
+                            }
+                        }
+
+                        @Override
+                        public void sendProgressBarUpdate(Container source, int key, int value) {}
+                    });
+                    container.selectUpgrades(targetId);
+                    helper.assertEquals(
+                            targetId,
+                            container.getSelectedUpgradeId(),
+                            "A tracked interface should be selectable");
+                    final IInterfaceHost target = container.getSlot(36).inventory
+                            == network.blockInterface.getInventoryByName("upgrades") ? network.blockInterface
+                                    : network.partInterface;
+                    helper.assertSame(
+                            target.getInventoryByName("upgrades"),
+                            container.getSlot(36).inventory,
+                            "Terminal slots must use the real upgrade inventory");
+
+                    final ItemStack cards = AEApi.instance().definitions().materials().cardPatternCapacity()
+                            .maybeStack(2).get();
+                    cards.setStackDisplayName("terminal test cards");
+                    final ItemStack expectedCard = cards.copy();
+                    expectedCard.stackSize = 1;
+                    if (tool == null) {
+                        player.inventory.setItemStack(cards);
+                        container.slotClick(36, 0, 0, player);
+                        helper.assertEquals(
+                                1,
+                                player.inventory.getItemStack().stackSize,
+                                "Insertion should consume one card");
+                        container.slotClick(37, 0, 0, player);
+                    } else {
+                        final int lastToolSlot = 40 + container.getToolboxSize() * container.getToolboxSize() - 1;
+                        container.getSlot(lastToolSlot).putStack(cards);
+                        container.slotClick(lastToolSlot, 0, 1, player);
+                        helper.assertNull(
+                                container.getSlot(lastToolSlot).getStack(),
+                                "Tool cards should be shift-clickable");
+                        container.slotClick(35, 0, 0, player);
+                        helper.assertNull(player.inventory.getItemStack(), "The active network tool must be locked");
+                    }
+                    helper.assertNull(player.inventory.getItemStack(), "Both source cards should be installed");
+                    helper.assertEquals(
+                            2,
+                            target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                            "Two cards installed");
+
+                    final ItemStack pattern = encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1);
+                    target.getPatterns().setInventorySlotContents(26, pattern);
+                    container.slotClick(36, 0, 0, player);
+                    container.transferStackInSlot(player, 36);
+                    container.swapSlotContents(36, 27);
+                    container.slotClick(36, 0, 4, player);
+                    helper.assertNull(
+                            player.inventory.getItemStack(),
+                            "Refused removals must not create a cursor card");
+                    helper.assertEquals(
+                            2,
+                            target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                            "All removal paths should be blocked");
+                    helper.assertSame(
+                            pattern,
+                            target.getPatterns().getStackInSlot(26),
+                            "A rejected removal must not move the pattern");
+
+                    target.getPatterns().setInventorySlotContents(26, null);
+                    target.getPatterns().setInventorySlotContents(17, pattern);
+                    final ContainerInterfaceTerminal second = new ContainerInterfaceTerminal(other.inventory, anchor);
+                    other.openContainer = second;
+                    second.selectUpgrades(targetId);
+                    second.slotClick(36, 0, 0, other);
+                    helper.assertEquals(
+                            1,
+                            other.inventory.getItemStack().stackSize,
+                            "The first player to remove a card gets exactly one");
+                    container.slotClick(36, 0, 0, player);
+                    helper.assertNull(
+                            player.inventory.getItemStack(),
+                            "A stale repeated removal must not duplicate the removed card");
+                    container.slotClick(37, 0, 0, player);
+                    helper.assertEquals(
+                            1,
+                            target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                            "The remaining card is needed by row two");
+
+                    target.getPatterns().setInventorySlotContents(17, null);
+                    player.inventory.mainInventory[0] = null;
+                    container.swapSlotContents(37, 27);
+                    helper.assertEquals(
+                            0,
+                            target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                            "Safe removal should succeed");
+                    helper.assertItemEqual(
+                            expectedCard,
+                            player.inventory.mainInventory[0],
+                            "Hotbar removal must preserve card NBT");
+                    helper.assertEquals(
+                            2,
+                            player.inventory.mainInventory[0].stackSize + other.inventory.getItemStack().stackSize,
+                            "Exactly the two original cards must remain");
+                    helper.assertTrue(
+                            helper.getEntities(EntityItem.class, -1, -1, -1, 16, 8, 16).isEmpty(),
+                            "No card or pattern should be dropped by terminal actions");
+
+                    player.inventory.setItemStack(
+                            AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get());
+                    container.slotClick(38, 0, 0, player);
+                    helper.assertEquals(
+                            1,
+                            target.getInstalledUpgrades(Upgrades.CRAFTING),
+                            "Other supported upgrades should be accepted");
+                    container.slotClick(38, 0, 0, player);
+                    helper.assertEquals(
+                            0,
+                            target.getInstalledUpgrades(Upgrades.CRAFTING),
+                            "Other upgrades should remain removable");
+                    final int slotCount = container.inventorySlots.size();
+                    snapshotUpdates[0] = 0;
+                    container.selectUpgrades(1 - targetId);
+                    helper.assertEquals(4, snapshotUpdates[0], "Every selection must synchronize all four slots");
+                    for (ItemStack stack : snapshot) {
+                        helper.assertNull(stack, "Switching to an empty interface must clear the previous cards");
+                    }
+                    helper.assertEquals(
+                            1 - targetId,
+                            container.getSelectedUpgradeId(),
+                            "Switching targets should rebind slots");
+                    helper.assertNotSame(
+                            target.getInventoryByName("upgrades"),
+                            container.getSlot(36).inventory,
+                            "The previous target must not remain bound");
+                    container.selectUpgrades(targetId);
+                    helper.assertEquals(
+                            slotCount,
+                            container.inventorySlots.size(),
+                            "Switching must preserve slot IDs/count");
+                    container.selectUpgrades(Long.MAX_VALUE);
+                    for (ItemStack stack : snapshot) {
+                        helper.assertNull(stack, "Refused selections must clear the client slot snapshot too");
+                    }
+                    container.slotClick(36, 0, 0, player);
+                    helper.assertEquals(
+                            -1L,
+                            container.getSelectedUpgradeId(),
+                            "Invalid selections should close the panel");
+                    helper.assertEquals(
+                            1,
+                            player.inventory.getItemStack().stackSize,
+                            "An invalid target must not consume cards");
+                    if (tool != null) {
+                        final ItemStack expectedCraftingCard = player.inventory.getItemStack().copy();
+                        container.slotClick(40, 0, 0, player);
+                        helper.assertNull(
+                                player.inventory.getItemStack(),
+                                "The toolbox must work without a selected target");
+                        final ItemStack activeTool = player.inventory.mainInventory[8];
+                        final int size = container.getToolboxSize();
+                        helper.assertItemEqual(
+                                expectedCraftingCard,
+                                new NetworkToolViewer(activeTool, null, size).getStackInSlot(0),
+                                "Tool storage must persist card NBT");
+                        container.selectUpgrades(targetId);
+                        container.slotClick(40, 0, 1, player);
+                        helper.assertEquals(
+                                1,
+                                target.getInstalledUpgrades(Upgrades.CRAFTING),
+                                "Tool cards should install into the selected interface");
+                        container.slotClick(36, 0, 1, player);
+                        helper.assertItemEqual(
+                                expectedCraftingCard,
+                                new NetworkToolViewer(activeTool, null, size).getStackInSlot(0),
+                                "Shift-removal must return exactly one card to the saved toolbox");
+                        helper.assertEquals(
+                                1,
+                                container.getSlot(40).getStack().stackSize,
+                                "No toolbox card duplication");
+                        helper.assertEquals(
+                                0,
+                                target.getInstalledUpgrades(Upgrades.CRAFTING),
+                                "Card should leave the interface");
+                        player.inventory.mainInventory[8] = null;
+                        container.slotClick(40, 0, 0, player);
+                        helper.assertFalse(
+                                container.isValidContainer(),
+                                "A missing tool must invalidate the container");
+                        helper.assertNull(
+                                player.inventory.getItemStack(),
+                                "Detached tool cards must not be extractable");
+                    }
+                }
             }
-            final ContainerInterfaceTerminal container = new ContainerInterfaceTerminal(player.inventory, anchor);
-            player.openContainer = container;
-            container.selectUpgrades(0);
-            helper.assertEquals(0L, container.getSelectedUpgradeId(), "A tracked interface should be selectable");
-            final IInterfaceHost target = container.getSlot(36).inventory
-                    == network.blockInterface.getInventoryByName("upgrades") ? network.blockInterface
-                            : network.partInterface;
-            helper.assertSame(
-                    target.getInventoryByName("upgrades"),
-                    container.getSlot(36).inventory,
-                    "Terminal slots must use the real upgrade inventory");
-
-            final ItemStack cards = AEApi.instance().definitions().materials().cardPatternCapacity().maybeStack(2)
-                    .get();
-            cards.setStackDisplayName("terminal test cards");
-            final ItemStack expectedCard = cards.copy();
-            expectedCard.stackSize = 1;
-            player.inventory.setItemStack(cards);
-            container.slotClick(36, 0, 0, player);
-            helper.assertEquals(1, player.inventory.getItemStack().stackSize, "Insertion should consume one card");
-            container.slotClick(37, 0, 0, player);
-            helper.assertNull(player.inventory.getItemStack(), "Both source cards should be installed");
-            helper.assertEquals(2, target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY), "Two cards installed");
-
-            final ItemStack pattern = encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1);
-            target.getPatterns().setInventorySlotContents(26, pattern);
-            container.slotClick(36, 0, 0, player);
-            container.transferStackInSlot(player, 36);
-            container.swapSlotContents(36, 27);
-            container.slotClick(36, 0, 4, player);
-            helper.assertNull(player.inventory.getItemStack(), "Refused removals must not create a cursor card");
-            helper.assertEquals(
-                    2,
-                    target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
-                    "All removal paths should be blocked");
-            helper.assertSame(
-                    pattern,
-                    target.getPatterns().getStackInSlot(26),
-                    "A rejected removal must not move the pattern");
-
-            target.getPatterns().setInventorySlotContents(26, null);
-            target.getPatterns().setInventorySlotContents(17, pattern);
-            final ContainerInterfaceTerminal second = new ContainerInterfaceTerminal(other.inventory, anchor);
-            other.openContainer = second;
-            second.selectUpgrades(0);
-            second.slotClick(36, 0, 0, other);
-            helper.assertEquals(
-                    1,
-                    other.inventory.getItemStack().stackSize,
-                    "The first player to remove a card gets exactly one");
-            container.slotClick(36, 0, 0, player);
-            helper.assertNull(
-                    player.inventory.getItemStack(),
-                    "A stale repeated removal must not duplicate the removed card");
-            container.slotClick(37, 0, 0, player);
-            helper.assertEquals(
-                    1,
-                    target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
-                    "The remaining card is needed by row two");
-
-            target.getPatterns().setInventorySlotContents(17, null);
-            player.inventory.mainInventory[0] = null;
-            container.swapSlotContents(37, 27);
-            helper.assertEquals(
-                    0,
-                    target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
-                    "Safe removal should succeed");
-            helper.assertItemEqual(
-                    expectedCard,
-                    player.inventory.mainInventory[0],
-                    "Hotbar removal must preserve card NBT");
-            helper.assertEquals(
-                    2,
-                    player.inventory.mainInventory[0].stackSize + other.inventory.getItemStack().stackSize,
-                    "Exactly the two original cards must remain");
-            helper.assertTrue(
-                    helper.getEntities(EntityItem.class, -1, -1, -1, 16, 8, 16).isEmpty(),
-                    "No card or pattern should be dropped by terminal actions");
-
-            player.inventory
-                    .setItemStack(AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get());
-            container.slotClick(38, 0, 0, player);
-            helper.assertEquals(
-                    1,
-                    target.getInstalledUpgrades(Upgrades.CRAFTING),
-                    "Other supported upgrades should be accepted");
-            container.slotClick(38, 0, 0, player);
-            helper.assertEquals(
-                    0,
-                    target.getInstalledUpgrades(Upgrades.CRAFTING),
-                    "Other upgrades should remain removable");
-            container.selectUpgrades(Long.MAX_VALUE);
-            container.slotClick(36, 0, 0, player);
-            helper.assertEquals(-1L, container.getSelectedUpgradeId(), "Invalid selections should close the panel");
-            helper.assertEquals(
-                    1,
-                    player.inventory.getItemStack().stackSize,
-                    "An invalid target must not consume cards");
         }).thenSucceed();
     }
 
