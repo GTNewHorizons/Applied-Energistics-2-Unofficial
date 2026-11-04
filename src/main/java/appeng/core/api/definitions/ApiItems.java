@@ -39,6 +39,7 @@ import appeng.items.tools.ToolColorizer;
 import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolNetworkTool;
 import appeng.items.tools.ToolNetworkVisualiser;
+import appeng.items.tools.ToolPortableCellWorkbench;
 import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.ToolWirelessKit;
 import appeng.items.tools.powered.ToolChargedStaff;
@@ -86,6 +87,7 @@ public final class ApiItems implements IItems {
     private final IItemDefinition advancedNetworkTool;
     private final IItemDefinition priorityCard;
     private final IItemDefinition portableCell;
+    protected final IItemDefinition portableCellWorkbench;
 
     private final IItemDefinition cellCreative;
     private final IItemDefinition cellVoid;
@@ -162,6 +164,7 @@ public final class ApiItems implements IItems {
         this.advancedNetworkTool = constructor.registerItemDefinition(new ToolAdvancedNetworkTool());
         this.priorityCard = constructor.registerItemDefinition(new ToolPriorityCard());
         this.portableCell = constructor.registerItemDefinition(new ToolPortableCell());
+        this.portableCellWorkbench = constructor.registerItemDefinition(new ToolPortableCellWorkbench());
 
         this.cellCreative = constructor.registerItemDefinition(new ItemCreativeStorageCell());
         this.cellVoid = constructor.registerItemDefinition(new ItemVoidStorageCell());
@@ -334,6 +337,11 @@ public final class ApiItems implements IItems {
     @Override
     public IItemDefinition portableCell() {
         return this.portableCell;
+    }
+
+    @Override
+    public IItemDefinition portableCellWorkbench() {
+        return this.portableCellWorkbench;
     }
 
     @Override

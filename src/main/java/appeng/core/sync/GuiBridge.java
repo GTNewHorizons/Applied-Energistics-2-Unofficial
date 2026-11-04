@@ -231,7 +231,7 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_ADVANCED_INSCRIBER(ContainerAdvancedInscriber.class, TileAdvancedInscriber.class, GuiHostType.WORLD, null),
 
-    GUI_CELL_WORKBENCH(ContainerCellWorkbench.class, ICellWorkbench.class, GuiHostType.WORLD, null),
+    GUI_CELL_WORKBENCH(ContainerCellWorkbench.class, ICellWorkbench.class, GuiHostType.ITEM_OR_WORLD, null),
 
     GUI_MAC(ContainerMAC.class, TileMolecularAssembler.class, GuiHostType.WORLD, null),
 
