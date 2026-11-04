@@ -274,10 +274,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
     @Override
     public void initGui() {
         super.initGui();
-
-        this.buttonList.clear();
         searchFieldNames.setFocused(AEConfig.instance.autoFocusInterfaceTerminalSearch);
+        setSearchString();
+        layout = null;
+        updateLayout();
+    }
 
+    private void initButtons() {
+        this.buttonList.clear();
         int offset = guiTop + 8;
         terminalStyleBox.xPosition = guiLeft - 18;
         terminalStyleBox.yPosition = offset;
@@ -311,8 +315,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonUseSubstitute.yPosition = offset;
         offset += 18;
 
-        setSearchString();
-
         buttonList.add(guiButtonAssemblersOnly);
         buttonList.add(guiButtonHideFull);
         buttonList.add(guiButtonShowHidden);
@@ -329,8 +331,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (button.xPosition == guiLeft - 18) sidebarButtons.add(button);
         }
         sidebarButtons.sort(Comparator.comparingInt(button -> button.yPosition));
-        layout = null;
-        updateLayout();
     }
 
     private void updateLayout() {
@@ -339,20 +339,19 @@ public class GuiInterfaceTerminal extends AEBaseGui
         final Layout next = Layout.forScreen(width, toolboxSize, container.getSelectedUpgradeId() >= 0);
         if (next.equals(layout)) return;
 
-        final int oldLeft = guiLeft;
-        final int oldTop = guiTop;
         xSize = next.width();
         guiLeft = next.left();
-        toolbarHeight = next.toolbarHeight(sidebarButtons.size());
-        viewHeight = calculateViewHeight();
-        ySize = HEADER_HEIGHT + INV_HEIGHT + viewHeight;
-        final int contentHeight = Math.max(ySize, toolboxSize == 0 ? 0 : 98 + toolboxSize * 18);
-        final int unusedSpace = height - contentHeight - toolbarHeight;
-        guiTop = toolbarHeight + (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
-
-        for (GuiButton button : buttonList) {
-            button.xPosition += guiLeft - oldLeft;
-            button.yPosition += guiTop - oldTop;
+        // Custom controls can depend on xSize/ySize, so recreate them after calculating the geometry.
+        // A second pass accounts for any extra toolbar rows added by the provider.
+        for (int pass = 0; pass < 2; pass++) {
+            toolbarHeight = next.toolbarHeight(Math.max(8, sidebarButtons.size()));
+            viewHeight = calculateViewHeight();
+            ySize = HEADER_HEIGHT + INV_HEIGHT + viewHeight;
+            final int contentHeight = Math.max(ySize, toolboxSize == 0 ? 0 : 98 + toolboxSize * 18);
+            final int unusedSpace = height - contentHeight - toolbarHeight;
+            guiTop = toolbarHeight + (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
+            initButtons();
+            if (toolbarHeight == next.toolbarHeight(sidebarButtons.size())) break;
         }
         for (int index = 0; index < sidebarButtons.size(); index++) {
             final GuiButton button = sidebarButtons.get(index);
