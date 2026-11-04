@@ -51,6 +51,8 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import com.github.bsideup.jabel.Desugar;
+
 import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
@@ -161,6 +163,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     protected int offsetY;
     private GuiTabButton originalGuiBtn;
+    private final List<GuiButton> sidebarButtons = new ArrayList<>();
+    private Layout layout;
+    private int toolbarHeight;
 
     /*
      * Z-level Map (FLOATS) 0.0 - BACKGROUND 1.0 - ItemStacks 2.0 - Slot color overlays 20.0 - ItemStack overlays 21.0 -
@@ -182,7 +187,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (cont instanceof IContainerSubGui subGui) subGui.setGuiLink(this);
 
         this.setScrollBar(new GuiScrollbar());
-        this.xSize = MAIN_WIDTH + (((ContainerInterfaceTerminal) cont).getToolboxSize() == 5 ? 106 : 90);
+        this.xSize = MAIN_WIDTH;
         this.ySize = 255;
         this.neiPresent = Loader.isModLoaded("NotEnoughItems");
 
@@ -271,20 +276,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
         super.initGui();
 
         this.buttonList.clear();
-        this.viewHeight = calculateViewHeight();
-        this.ySize = HEADER_HEIGHT + INV_HEIGHT + this.viewHeight;
-
-        final int unusedSpace = this.height - this.ySize;
-        this.guiTop = (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
-
-        searchFieldInputs.x = guiLeft + Math.max(32, VIEW_LEFT);
-        searchFieldInputs.y = guiTop + 25;
-
-        searchFieldOutputs.x = guiLeft + Math.max(32, VIEW_LEFT);
-        searchFieldOutputs.y = guiTop + 38;
-
-        searchFieldNames.x = guiLeft + Math.max(32, VIEW_LEFT) + 99;
-        searchFieldNames.y = guiTop + 38;
         searchFieldNames.setFocused(AEConfig.instance.autoFocusInterfaceTerminalSearch);
 
         int offset = guiTop + 8;
@@ -322,9 +313,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         setSearchString();
 
-        this.setScrollBar();
-        this.repositionSlots();
-
         buttonList.add(guiButtonAssemblersOnly);
         buttonList.add(guiButtonHideFull);
         buttonList.add(guiButtonShowHidden);
@@ -336,6 +324,77 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         initCustomButtons(this.guiLeft - 18, offset);
         initPrimaryGuiButton();
+        sidebarButtons.clear();
+        for (GuiButton button : buttonList) {
+            if (button.xPosition == guiLeft - 18) sidebarButtons.add(button);
+        }
+        sidebarButtons.sort(Comparator.comparingInt(button -> button.yPosition));
+        layout = null;
+        updateLayout();
+    }
+
+    private void updateLayout() {
+        final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
+        final int toolboxSize = container.getToolboxSize();
+        final Layout next = Layout.forScreen(width, toolboxSize, container.getSelectedUpgradeId() >= 0);
+        if (next.equals(layout)) return;
+
+        final int oldLeft = guiLeft;
+        final int oldTop = guiTop;
+        xSize = next.width();
+        guiLeft = next.left();
+        toolbarHeight = next.toolbarHeight(sidebarButtons.size());
+        viewHeight = calculateViewHeight();
+        ySize = HEADER_HEIGHT + INV_HEIGHT + viewHeight;
+        final int contentHeight = Math.max(ySize, toolboxSize == 0 ? 0 : 98 + toolboxSize * 18);
+        final int unusedSpace = height - contentHeight - toolbarHeight;
+        guiTop = toolbarHeight + (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
+
+        for (GuiButton button : buttonList) {
+            button.xPosition += guiLeft - oldLeft;
+            button.yPosition += guiTop - oldTop;
+        }
+        for (int index = 0; index < sidebarButtons.size(); index++) {
+            final GuiButton button = sidebarButtons.get(index);
+            button.xPosition = next.buttonX(index);
+            button.yPosition = next.buttonY(index, guiTop, sidebarButtons.size());
+        }
+        searchFieldInputs.x = guiLeft + Math.max(32, VIEW_LEFT);
+        searchFieldInputs.y = guiTop + 25;
+        searchFieldOutputs.x = guiLeft + Math.max(32, VIEW_LEFT);
+        searchFieldOutputs.y = guiTop + 38;
+        searchFieldNames.x = guiLeft + Math.max(32, VIEW_LEFT) + 99;
+        searchFieldNames.y = guiTop + 38;
+        setScrollBar();
+        repositionSlots();
+        layout = next;
+    }
+
+    // Zero columns keeps the sidebar on the left; otherwise it wraps above the GUI.
+    @Desugar
+    static record Layout(int width, int left, int columns) {
+
+        static Layout forScreen(int screenWidth, int toolboxSize, boolean upgradesOpen) {
+            final int panelWidth = Math.max(upgradesOpen ? 90 : 0, toolboxSize == 0 ? 0 : toolboxSize * 18 + 16);
+            final int guiWidth = MAIN_WIDTH + panelWidth;
+            final boolean toolbar = screenWidth < guiWidth + 18;
+            return new Layout(
+                    guiWidth,
+                    (screenWidth - guiWidth + (toolbar ? 0 : 18)) / 2,
+                    toolbar ? Math.max(1, guiWidth / 18) : 0);
+        }
+
+        int toolbarHeight(int buttons) {
+            return columns == 0 ? 0 : (buttons + columns - 1) / columns * 18;
+        }
+
+        int buttonX(int index) {
+            return left + (columns == 0 ? -18 : index % columns * 18);
+        }
+
+        int buttonY(int index, int top, int buttons) {
+            return columns == 0 ? top + 8 + index * 18 : top - toolbarHeight(buttons) + index / columns * 18;
+        }
     }
 
     @Override
@@ -365,7 +424,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         final int maxViewHeight = this.getMaxViewHeight();
         final boolean hasNEI = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI);
         final int NEIPadding = hasNEI ? 22 /* input */ + 18 /* top panel */ : 0;
-        final int availableSpace = this.height - HEADER_HEIGHT - INV_HEIGHT - NEIPadding;
+        final int availableSpace = this.height - HEADER_HEIGHT - INV_HEIGHT - NEIPadding - toolbarHeight;
 
         // screen should use 95% of the space it can, 5% margins
         return Math.min((int) (availableSpace * 0.95), maxViewHeight);
@@ -413,6 +472,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        // Selection acknowledgements can open/close the panel without reinitializing search or scroll state.
+        updateLayout();
         guiButtonAssemblersOnly.set(
                 onlyMolecularAssemblers ? ActionItems.MOLECULAR_ASSEMBLEERS_ON : ActionItems.MOLECULAR_ASSEMBLEERS_OFF);
         guiButtonHideFull.set(
