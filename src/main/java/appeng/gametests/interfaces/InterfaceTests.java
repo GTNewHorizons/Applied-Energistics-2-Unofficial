@@ -11,6 +11,7 @@ import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -30,6 +31,7 @@ import com.gtnewhorizons.horizonqa.api.annotation.GameTestHolder;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -37,10 +39,12 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AEColor;
 import appeng.container.ContainerNull;
+import appeng.container.implementations.ContainerInterfaceTerminal;
 import appeng.core.AppEng;
 import appeng.helpers.IInterfaceHost;
 import appeng.me.GridAccessException;
 import appeng.parts.misc.PartInterface;
+import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
@@ -65,6 +69,146 @@ public class InterfaceTests {
     private static final String SUBNET_CONTROLLER_LABEL = "subnet_controller";
 
     private static final int STOCK_AMOUNT = 32;
+
+    @GameTest(template = "interface_network", timeoutTicks = 160)
+    public static void terminalUpgradesPreserveCardsAndRefusePatternDrops(GameTestHelper helper) {
+        InterfaceNetwork network = getInterfaceNetwork(helper);
+        TileCableBus cable = helper.assertTileEntityPresent(TileCableBus.class, PART_INTERFACE_HOST_LABEL);
+        PartInterfaceTerminal terminal = null;
+        for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+            if (cable.getPart(side) != null || !helper.getWorld()
+                    .isAirBlock(cable.xCoord + side.offsetX, cable.yCoord + side.offsetY, cable.zCoord + side.offsetZ))
+                continue;
+            helper.assertEquals(
+                    side,
+                    cable.addPart(
+                            AEApi.instance().definitions().parts().interfaceTerminal().maybeStack(1).get(),
+                            side,
+                            null),
+                    "Terminal should attach to the existing network");
+            terminal = (PartInterfaceTerminal) cable.getPart(side);
+            break;
+        }
+        helper.assertNotNull(terminal, "Fixture needs a free cable face for the interface terminal");
+        final PartInterfaceTerminal anchor = terminal;
+        final FakePlayer player = helper.spawnFakePlayer("interface_upgrades");
+        final FakePlayer other = helper.spawnFakePlayer("interface_upgrades_other");
+        helper.afterTest(() -> {
+            player.inventory.setItemStack(null);
+            other.inventory.setItemStack(null);
+            player.openContainer = player.inventoryContainer;
+            other.openContainer = other.inventoryContainer;
+        });
+        helper.startSequence().thenWaitUntil("wait for interface terminal network", 100, () -> {
+            assertInterfaceNetworkActive(helper, network);
+            assertActive(helper, anchor.getProxy(), "Interface terminal should be online");
+        }).thenExecute("exercise real terminal upgrade slots", () -> {
+            player.capabilities.isCreativeMode = false;
+            other.capabilities.isCreativeMode = false;
+            for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
+                player.inventory.mainInventory[slot] = null;
+                other.inventory.mainInventory[slot] = null;
+            }
+            final ContainerInterfaceTerminal container = new ContainerInterfaceTerminal(player.inventory, anchor);
+            player.openContainer = container;
+            container.selectUpgrades(0);
+            helper.assertEquals(0L, container.getSelectedUpgradeId(), "A tracked interface should be selectable");
+            final IInterfaceHost target = container.getSlot(36).inventory
+                    == network.blockInterface.getInventoryByName("upgrades") ? network.blockInterface
+                            : network.partInterface;
+            helper.assertSame(
+                    target.getInventoryByName("upgrades"),
+                    container.getSlot(36).inventory,
+                    "Terminal slots must use the real upgrade inventory");
+
+            final ItemStack cards = AEApi.instance().definitions().materials().cardPatternCapacity().maybeStack(2)
+                    .get();
+            cards.setStackDisplayName("terminal test cards");
+            final ItemStack expectedCard = cards.copy();
+            expectedCard.stackSize = 1;
+            player.inventory.setItemStack(cards);
+            container.slotClick(36, 0, 0, player);
+            helper.assertEquals(1, player.inventory.getItemStack().stackSize, "Insertion should consume one card");
+            container.slotClick(37, 0, 0, player);
+            helper.assertNull(player.inventory.getItemStack(), "Both source cards should be installed");
+            helper.assertEquals(2, target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY), "Two cards installed");
+
+            final ItemStack pattern = encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1);
+            target.getPatterns().setInventorySlotContents(26, pattern);
+            container.slotClick(36, 0, 0, player);
+            container.transferStackInSlot(player, 36);
+            container.swapSlotContents(36, 27);
+            container.slotClick(36, 0, 4, player);
+            helper.assertNull(player.inventory.getItemStack(), "Refused removals must not create a cursor card");
+            helper.assertEquals(
+                    2,
+                    target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                    "All removal paths should be blocked");
+            helper.assertSame(
+                    pattern,
+                    target.getPatterns().getStackInSlot(26),
+                    "A rejected removal must not move the pattern");
+
+            target.getPatterns().setInventorySlotContents(26, null);
+            target.getPatterns().setInventorySlotContents(17, pattern);
+            final ContainerInterfaceTerminal second = new ContainerInterfaceTerminal(other.inventory, anchor);
+            other.openContainer = second;
+            second.selectUpgrades(0);
+            second.slotClick(36, 0, 0, other);
+            helper.assertEquals(
+                    1,
+                    other.inventory.getItemStack().stackSize,
+                    "The first player to remove a card gets exactly one");
+            container.slotClick(36, 0, 0, player);
+            helper.assertNull(
+                    player.inventory.getItemStack(),
+                    "A stale repeated removal must not duplicate the removed card");
+            container.slotClick(37, 0, 0, player);
+            helper.assertEquals(
+                    1,
+                    target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                    "The remaining card is needed by row two");
+
+            target.getPatterns().setInventorySlotContents(17, null);
+            player.inventory.mainInventory[0] = null;
+            container.swapSlotContents(37, 27);
+            helper.assertEquals(
+                    0,
+                    target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                    "Safe removal should succeed");
+            helper.assertItemEqual(
+                    expectedCard,
+                    player.inventory.mainInventory[0],
+                    "Hotbar removal must preserve card NBT");
+            helper.assertEquals(
+                    2,
+                    player.inventory.mainInventory[0].stackSize + other.inventory.getItemStack().stackSize,
+                    "Exactly the two original cards must remain");
+            helper.assertTrue(
+                    helper.getEntities(EntityItem.class, -1, -1, -1, 16, 8, 16).isEmpty(),
+                    "No card or pattern should be dropped by terminal actions");
+
+            player.inventory
+                    .setItemStack(AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get());
+            container.slotClick(38, 0, 0, player);
+            helper.assertEquals(
+                    1,
+                    target.getInstalledUpgrades(Upgrades.CRAFTING),
+                    "Other supported upgrades should be accepted");
+            container.slotClick(38, 0, 0, player);
+            helper.assertEquals(
+                    0,
+                    target.getInstalledUpgrades(Upgrades.CRAFTING),
+                    "Other upgrades should remain removable");
+            container.selectUpgrades(Long.MAX_VALUE);
+            container.slotClick(36, 0, 0, player);
+            helper.assertEquals(-1L, container.getSelectedUpgradeId(), "Invalid selections should close the panel");
+            helper.assertEquals(
+                    1,
+                    player.inventory.getItemStack().stackSize,
+                    "An invalid target must not consume cards");
+        }).thenSucceed();
+    }
 
     @GameTest(template = "interface_network", timeoutTicks = 20)
     public static void coloredBlockInterfaceRejectsMismatchedCable(GameTestHelper helper) {
