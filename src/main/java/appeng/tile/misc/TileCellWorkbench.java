@@ -154,8 +154,10 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
             ItemStack is = this.cell.getStackInSlot(0);
             if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
                 if (is != null && is.getItem() instanceof ICellRestriction icr) {
-                    if (is.getItem() instanceof IStorageCell asCell)
+                    if (is.getItem() instanceof IStorageCell asCell) {
                         cellRestrictTypes = (byte) Math.min(cellRestrictTypes, asCell.getTotalTypes(is));
+                        cellRestrictAmount = Math.min(cellRestrictAmount, asCell.getBytesLong(is));
+                    }
                     icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
                 }
             }
