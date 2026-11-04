@@ -445,7 +445,10 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
             ItemStackNBT.removeTag(is, "cellRestrictionTypes");
             ItemStackNBT.removeTag(is, "cellRestrictionAmount");
         } else {
-            ItemStackNBT.setByte(is, "cellRestrictionTypes", newRestriction.restrictionTypes);
+            ItemStackNBT.setByte(
+                    is,
+                    "cellRestrictionTypes",
+                    (byte) Math.min(newRestriction.restrictionTypes, this.totalTypes));
             ItemStackNBT.setLong(is, "cellRestrictionAmount", newRestriction.restrictionAmount);
         }
     }

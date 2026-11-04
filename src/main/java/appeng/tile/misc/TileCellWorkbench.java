@@ -23,6 +23,7 @@ import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
+import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
@@ -152,8 +153,11 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
 
             ItemStack is = this.cell.getStackInSlot(0);
             if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
-                if (is != null && is.getItem() instanceof ICellRestriction icr)
+                if (is != null && is.getItem() instanceof ICellRestriction icr) {
+                    if (is.getItem() instanceof IStorageCell asCell)
+                        cellRestrictTypes = (byte) Math.min(cellRestrictTypes, asCell.getTotalTypes(is));
                     icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
+                }
             }
 
             if (this.updateStackTypeFromCell()) {
