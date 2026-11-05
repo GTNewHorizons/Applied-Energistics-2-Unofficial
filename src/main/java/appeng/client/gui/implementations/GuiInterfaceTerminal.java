@@ -278,6 +278,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         setSearchString();
         layout = null;
         updateLayout();
+        layout.placeSidebarButtons(sidebarButtons, guiTop);
     }
 
     private void initButtons() {
@@ -353,11 +354,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
             initButtons();
             if (toolbarHeight == next.toolbarHeight(sidebarButtons.size())) break;
         }
-        for (int index = 0; index < sidebarButtons.size(); index++) {
-            final GuiButton button = sidebarButtons.get(index);
-            button.xPosition = next.buttonX(index);
-            button.yPosition = next.buttonY(index, guiTop, sidebarButtons.size());
-        }
         searchFieldInputs.x = guiLeft + Math.max(32, VIEW_LEFT);
         searchFieldInputs.y = guiTop + 25;
         searchFieldOutputs.x = guiLeft + Math.max(32, VIEW_LEFT);
@@ -393,6 +389,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         int buttonY(int index, int top, int buttons) {
             return columns == 0 ? top + 8 + index * 18 : top - toolbarHeight(buttons) + index / columns * 18;
+        }
+
+        void placeSidebarButtons(List<GuiButton> buttons, int top) {
+            for (int index = 0; index < buttons.size(); index++) {
+                final GuiButton button = buttons.get(index);
+                button.xPosition = buttonX(index);
+                button.yPosition = buttonY(index, top, buttons.size());
+            }
         }
     }
 
@@ -473,6 +477,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         // Selection acknowledgements can open/close the panel without reinitializing search or scroll state.
         updateLayout();
+        // Custom-button synchronization can overwrite positions even when the geometry has not changed.
+        layout.placeSidebarButtons(sidebarButtons, guiTop);
         guiButtonAssemblersOnly.set(
                 onlyMolecularAssemblers ? ActionItems.MOLECULAR_ASSEMBLEERS_ON : ActionItems.MOLECULAR_ASSEMBLEERS_OFF);
         guiButtonHideFull.set(
