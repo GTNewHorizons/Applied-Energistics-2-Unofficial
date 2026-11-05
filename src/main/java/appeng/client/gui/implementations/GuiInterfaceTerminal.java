@@ -338,21 +338,22 @@ public class GuiInterfaceTerminal extends AEBaseGui
         final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
         final int toolboxSize = container.getToolboxSize();
         final Layout next = Layout.forScreen(width, toolboxSize, container.getSelectedUpgradeId() >= 0);
-        if (next.equals(layout)) return;
+        if (next.equals(layout) && toolbarHeight == next.toolbarHeight(Layout.visibleButtonCount(sidebarButtons)))
+            return;
 
         xSize = next.width();
         guiLeft = next.left();
         // Custom controls can depend on xSize/ySize, so recreate them after calculating the geometry.
         // A second pass accounts for any extra toolbar rows added by the provider.
         for (int pass = 0; pass < 2; pass++) {
-            toolbarHeight = next.toolbarHeight(Math.max(8, sidebarButtons.size()));
+            toolbarHeight = next.toolbarHeight(Math.max(8, Layout.visibleButtonCount(sidebarButtons)));
             viewHeight = calculateViewHeight();
             ySize = HEADER_HEIGHT + INV_HEIGHT + viewHeight;
             final int contentHeight = Math.max(ySize, toolboxSize == 0 ? 0 : 98 + toolboxSize * 18);
             final int unusedSpace = height - contentHeight - toolbarHeight;
             guiTop = toolbarHeight + (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
             initButtons();
-            if (toolbarHeight == next.toolbarHeight(sidebarButtons.size())) break;
+            if (toolbarHeight == next.toolbarHeight(Layout.visibleButtonCount(sidebarButtons))) break;
         }
         searchFieldInputs.x = guiLeft + Math.max(32, VIEW_LEFT);
         searchFieldInputs.y = guiTop + 25;
@@ -383,6 +384,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             return columns == 0 ? 0 : (buttons + columns - 1) / columns * 18;
         }
 
+        static int visibleButtonCount(List<GuiButton> buttons) {
+            return (int) buttons.stream().filter(button -> button.visible).count();
+        }
+
         int buttonX(int index) {
             return left + (columns == 0 ? -18 : index % columns * 18);
         }
@@ -392,10 +397,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
 
         void placeSidebarButtons(List<GuiButton> buttons, int top) {
-            for (int index = 0; index < buttons.size(); index++) {
-                final GuiButton button = buttons.get(index);
+            final int count = visibleButtonCount(buttons);
+            int index = 0;
+            for (GuiButton button : buttons) {
+                if (!button.visible) continue;
                 button.xPosition = buttonX(index);
-                button.yPosition = buttonY(index, top, buttons.size());
+                button.yPosition = buttonY(index, top, count);
+                index++;
             }
         }
     }
