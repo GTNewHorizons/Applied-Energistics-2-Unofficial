@@ -156,9 +156,19 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
                 if (is != null && is.getItem() instanceof ICellRestriction icr) {
                     CellRestrictionData newRestriction = new CellRestrictionData(cellRestrictTypes, cellRestrictAmount);
                     if (is.getItem() instanceof IStorageCell asCell) {
-                        var maxTypes = (byte) Math.min(cellRestrictTypes, asCell.getTotalTypes(is));
-                        var maxItems = asCell.getBytesLong(is) / ((long) asCell.getBytesPerType(is));
-                        newRestriction = new CellRestrictionData(maxTypes, Math.min(cellRestrictAmount, maxItems));
+                        var totalTypes = asCell.getTotalTypes(is);
+                        // we need to avoid 0 before the max amount calc
+                        long effectiveTypes = newRestriction.restrictionTypes == 0
+                            ? totalTypes
+                            : Math.min(newRestriction.restrictionTypes, totalTypes);
+                        long maxAmount = (asCell.getBytesLong(is) - (long) asCell.getBytesPerType(is) * effectiveTypes)
+                            * asCell.getStackType().getAmountPerByte();
+                        long amount = Math.min(newRestriction.restrictionAmount, maxAmount);
+                        // we need to allow 0 here again, so Restriction#isReset() works
+                        // otherwise restrictions might be (MaxType, 0 Items) instead of (0, 0)
+                        // for clearing them in copy mode
+                        effectiveTypes = Math.min(newRestriction.restrictionTypes, totalTypes);
+                        newRestriction = new CellRestrictionData((byte) effectiveTypes, amount);
                     }
                     icr.setCellRestriction(is, newRestriction);
                 }
