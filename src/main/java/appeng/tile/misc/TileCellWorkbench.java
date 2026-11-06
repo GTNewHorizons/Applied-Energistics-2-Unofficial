@@ -23,6 +23,7 @@ import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
+import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
@@ -152,8 +153,24 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
 
             ItemStack is = this.cell.getStackInSlot(0);
             if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
-                if (is != null && is.getItem() instanceof ICellRestriction icr)
-                    icr.setCellRestriction(is, new CellRestrictionData(cellRestrictTypes, cellRestrictAmount));
+                if (is != null && is.getItem() instanceof ICellRestriction icr) {
+                    CellRestrictionData newRestriction = new CellRestrictionData(cellRestrictTypes, cellRestrictAmount);
+                    if (is.getItem() instanceof IStorageCell asCell) {
+                        var totalTypes = asCell.getTotalTypes(is);
+                        // we need to avoid 0 before the max amount calc
+                        long effectiveTypes = newRestriction.restrictionTypes == 0 ? totalTypes
+                                : Math.min(newRestriction.restrictionTypes, totalTypes);
+                        long maxAmount = (asCell.getBytesLong(is) - (long) asCell.getBytesPerType(is) * effectiveTypes)
+                                * asCell.getStackType().getAmountPerByte();
+                        long amount = Math.min(newRestriction.restrictionAmount, maxAmount);
+                        // we need to allow 0 here again, so Restriction#isReset() works
+                        // otherwise restrictions might be (MaxType, 0 Items) instead of (0, 0)
+                        // for clearing them in copy mode
+                        effectiveTypes = Math.min(newRestriction.restrictionTypes, totalTypes);
+                        newRestriction = new CellRestrictionData((byte) effectiveTypes, amount);
+                    }
+                    icr.setCellRestriction(is, newRestriction);
+                }
             }
 
             if (this.updateStackTypeFromCell()) {
