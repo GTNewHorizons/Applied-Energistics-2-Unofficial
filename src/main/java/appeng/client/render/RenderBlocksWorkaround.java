@@ -40,6 +40,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     private EnumSet<ForgeDirection> renderFaces = EnumSet.allOf(ForgeDirection.class);
     private EnumSet<ForgeDirection> faces = EnumSet.allOf(ForgeDirection.class);
     private boolean isFacade = false;
+    private FacadeRenderHelper facadeRenderHelper;
     private boolean useTextures = true;
     private float opacity = 1.0f;
     private final LightingCache lightState = new LightingCache();
@@ -211,6 +212,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             }
 
             if (this.isFacade()) {
+                if (this.facadeRenderHelper != null && this.facadeRenderHelper.renderFace(this, ForgeDirection.DOWN)) {
+                    return;
+                }
                 final Tessellator tessellator = Tessellator.instance;
 
                 double d3 = par8Icon.getInterpolatedU(this.renderMinX * 16.0D);
@@ -265,6 +269,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             }
 
             if (this.isFacade()) {
+                if (this.facadeRenderHelper != null && this.facadeRenderHelper.renderFace(this, ForgeDirection.UP)) {
+                    return;
+                }
                 final Tessellator tessellator = Tessellator.instance;
 
                 final double d3 = par8Icon.getInterpolatedU(this.renderMinX * 16.0D);
@@ -314,6 +321,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             }
 
             if (this.isFacade()) {
+                if (this.facadeRenderHelper != null && this.facadeRenderHelper.renderFace(this, ForgeDirection.NORTH)) {
+                    return;
+                }
                 final Tessellator tessellator = Tessellator.instance;
 
                 final double d3 = par8Icon.getInterpolatedU(16.0D - this.renderMinX * 16.0D);
@@ -363,6 +373,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             }
 
             if (this.isFacade()) {
+                if (this.facadeRenderHelper != null && this.facadeRenderHelper.renderFace(this, ForgeDirection.SOUTH)) {
+                    return;
+                }
                 final Tessellator tessellator = Tessellator.instance;
 
                 final double d3 = par8Icon.getInterpolatedU(this.renderMinX * 16.0D);
@@ -412,6 +425,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             }
 
             if (this.isFacade()) {
+                if (this.facadeRenderHelper != null && this.facadeRenderHelper.renderFace(this, ForgeDirection.WEST)) {
+                    return;
+                }
                 final Tessellator tessellator = Tessellator.instance;
 
                 final double d3 = par8Icon.getInterpolatedU(this.renderMinZ * 16.0D);
@@ -461,6 +477,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
             }
 
             if (this.isFacade()) {
+                if (this.facadeRenderHelper != null && this.facadeRenderHelper.renderFace(this, ForgeDirection.EAST)) {
+                    return;
+                }
                 final Tessellator tessellator = Tessellator.instance;
 
                 final double d3 = par8Icon.getInterpolatedU(16.0D - this.renderMinZ * 16.0D);
@@ -623,6 +642,10 @@ public class RenderBlocksWorkaround extends RenderBlocks {
 
     private boolean isFacade() {
         return this.isFacade;
+    }
+
+    public void setFacadeRenderHelper(final FacadeRenderHelper helper) {
+        this.facadeRenderHelper = helper;
     }
 
     public void setFacade(final boolean isFacade) {
