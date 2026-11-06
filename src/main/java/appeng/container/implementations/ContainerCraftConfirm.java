@@ -101,6 +101,10 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
     @GuiSync(11)
     public String errorMessage = "";
 
+    // jobs with several outputs or a display output can't be merged into a running CPU
+    @GuiSync(12)
+    public boolean compositeJob = false;
+
     public ContainerCraftConfirm(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
         this.host = te;
@@ -155,6 +159,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         if (this.getJob() != null && this.getJob().isDone()) {
             try {
                 this.result = this.getJob().get();
+                this.compositeJob = this.result.getOutputs().size() > 1 || this.result.getDisplayOutput() != null;
 
                 if (!this.result.isSimulation()) {
                     this.setSimulation(false);
@@ -294,7 +299,9 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
     }
 
     public boolean cpuCraftingSameItem(final CraftingCPUStatus c) {
-        if (c.getCrafting() == null || this.getItemToCraft() == null) {
+        if (this.compositeJob || c.isRunningCompositeJob()
+                || c.getCrafting() == null
+                || this.getItemToCraft() == null) {
             return false;
         }
         return c.getCrafting().isSameType(this.getItemToCraft());
