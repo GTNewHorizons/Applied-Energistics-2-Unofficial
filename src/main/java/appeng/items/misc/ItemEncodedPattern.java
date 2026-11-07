@@ -122,6 +122,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         }
 
         final ICraftingPatternDetails details = this.getPatternForItem(stack, player.worldObj);
+        final boolean tunnelPattern = ItemTunnelPattern.isTunnelPattern(stack);
         final boolean substitute = encodedValue.getBoolean("substitute");
         final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
         final String author = encodedValue.getString("author");
@@ -175,7 +176,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             if (GuiScreen.isShiftKeyDown()) {
                 lines.addAll(in);
             } else {
-                lines.add(holdShift);
+                if (!tunnelPattern) {
+                    lines.add(holdShift);
+                }
                 if (GuiScreen.isCtrlKeyDown()) {
                     lines.add("x2/x0.5");
                 } else {
@@ -201,14 +204,18 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 }
             }
         }
-        if (ItemTunnelPattern.isTunnelPattern(stack)) {
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo1.getLocal());
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo2.getLocal());
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo3.getLocal());
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo4.getLocal());
-            final java.util.UUID uuid = ItemTunnelPattern.getTunnelUuid(stack);
-            if (uuid != null) {
-                lines.add(EnumChatFormatting.GRAY + "UUID: " + uuid);
+        if (tunnelPattern) {
+            if (GuiScreen.isShiftKeyDown()) {
+                lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo1.getLocal());
+                lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo2.getLocal());
+                lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo3.getLocal());
+                lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo4.getLocal());
+                final java.util.UUID uuid = ItemTunnelPattern.getTunnelUuid(stack);
+                if (uuid != null) {
+                    lines.add(EnumChatFormatting.GRAY + "UUID: " + uuid);
+                }
+            } else {
+                lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternDetailsHint.getLocal());
             }
         }
     }
