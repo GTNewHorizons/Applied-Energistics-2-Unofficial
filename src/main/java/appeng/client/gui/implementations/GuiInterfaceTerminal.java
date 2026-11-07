@@ -51,6 +51,8 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import com.github.bsideup.jabel.Desugar;
+
 import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
@@ -66,6 +68,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiSub;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
+import appeng.client.gui.ScreenColor;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiTabButton;
@@ -119,6 +122,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     public static final int INV_HEIGHT = 98;
     public static final int VIEW_WIDTH = 174;
     public static final int VIEW_LEFT = 10;
+    private static final int MAIN_WIDTH = 209;
     protected static final ResourceLocation BACKGROUND = new ResourceLocation(
             AppEng.MOD_ID,
             "textures/guis/newinterfaceterminal.png");
@@ -159,6 +163,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     protected int offsetY;
     private GuiTabButton originalGuiBtn;
+    private final List<GuiButton> sidebarButtons = new ArrayList<>();
+    private Layout layout;
+    private int toolbarHeight;
 
     /*
      * Z-level Map (FLOATS) 0.0 - BACKGROUND 1.0 - ItemStacks 2.0 - Slot color overlays 20.0 - ItemStack overlays 21.0 -
@@ -180,7 +187,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (cont instanceof IContainerSubGui subGui) subGui.setGuiLink(this);
 
         this.setScrollBar(new GuiScrollbar());
-        this.xSize = 209;
+        this.xSize = MAIN_WIDTH;
         this.ySize = 255;
         this.neiPresent = Loader.isModLoaded("NotEnoughItems");
 
@@ -267,24 +274,15 @@ public class GuiInterfaceTerminal extends AEBaseGui
     @Override
     public void initGui() {
         super.initGui();
-
-        this.buttonList.clear();
-        this.viewHeight = calculateViewHeight();
-        this.ySize = HEADER_HEIGHT + INV_HEIGHT + this.viewHeight;
-
-        final int unusedSpace = this.height - this.ySize;
-        this.guiTop = (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
-
-        searchFieldInputs.x = guiLeft + Math.max(32, VIEW_LEFT);
-        searchFieldInputs.y = guiTop + 25;
-
-        searchFieldOutputs.x = guiLeft + Math.max(32, VIEW_LEFT);
-        searchFieldOutputs.y = guiTop + 38;
-
-        searchFieldNames.x = guiLeft + Math.max(32, VIEW_LEFT) + 99;
-        searchFieldNames.y = guiTop + 38;
         searchFieldNames.setFocused(AEConfig.instance.autoFocusInterfaceTerminalSearch);
+        setSearchString();
+        layout = null;
+        updateLayout();
+        layout.placeSidebarButtons(sidebarButtons, guiTop);
+    }
 
+    private void initButtons() {
+        this.buttonList.clear();
         int offset = guiTop + 8;
         terminalStyleBox.xPosition = guiLeft - 18;
         terminalStyleBox.yPosition = offset;
@@ -318,11 +316,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonUseSubstitute.yPosition = offset;
         offset += 18;
 
-        setSearchString();
-
-        this.setScrollBar();
-        this.repositionSlots();
-
         buttonList.add(guiButtonAssemblersOnly);
         buttonList.add(guiButtonHideFull);
         buttonList.add(guiButtonShowHidden);
@@ -334,6 +327,85 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         initCustomButtons(this.guiLeft - 18, offset);
         initPrimaryGuiButton();
+        sidebarButtons.clear();
+        for (GuiButton button : buttonList) {
+            if (button.xPosition == guiLeft - 18) sidebarButtons.add(button);
+        }
+        sidebarButtons.sort(Comparator.comparingInt(button -> button.yPosition));
+    }
+
+    private void updateLayout() {
+        final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
+        final int toolboxSize = container.getToolboxSize();
+        final Layout next = Layout.forScreen(width, toolboxSize, container.getSelectedUpgradeId() >= 0);
+        if (next.equals(layout) && toolbarHeight == next.toolbarHeight(Layout.visibleButtonCount(sidebarButtons)))
+            return;
+
+        xSize = next.width();
+        guiLeft = next.left();
+        // Custom controls can depend on xSize/ySize, so recreate them after calculating the geometry.
+        // A second pass accounts for any extra toolbar rows added by the provider.
+        for (int pass = 0; pass < 2; pass++) {
+            toolbarHeight = next.toolbarHeight(Math.max(8, Layout.visibleButtonCount(sidebarButtons)));
+            viewHeight = calculateViewHeight();
+            ySize = HEADER_HEIGHT + INV_HEIGHT + viewHeight;
+            final int contentHeight = Math.max(ySize, toolboxSize == 0 ? 0 : 98 + toolboxSize * 18);
+            final int unusedSpace = height - contentHeight - toolbarHeight;
+            guiTop = toolbarHeight + (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
+            initButtons();
+            if (toolbarHeight == next.toolbarHeight(Layout.visibleButtonCount(sidebarButtons))) break;
+        }
+        searchFieldInputs.x = guiLeft + Math.max(32, VIEW_LEFT);
+        searchFieldInputs.y = guiTop + 25;
+        searchFieldOutputs.x = guiLeft + Math.max(32, VIEW_LEFT);
+        searchFieldOutputs.y = guiTop + 38;
+        searchFieldNames.x = guiLeft + Math.max(32, VIEW_LEFT) + 99;
+        searchFieldNames.y = guiTop + 38;
+        setScrollBar();
+        repositionSlots();
+        layout = next;
+    }
+
+    // Zero columns keeps the sidebar on the left; otherwise it wraps above the GUI.
+    @Desugar
+    static record Layout(int width, int left, int columns) {
+
+        static Layout forScreen(int screenWidth, int toolboxSize, boolean upgradesOpen) {
+            final int panelWidth = Math.max(upgradesOpen ? 90 : 0, toolboxSize == 0 ? 0 : toolboxSize * 18 + 16);
+            final int guiWidth = MAIN_WIDTH + panelWidth;
+            final boolean toolbar = screenWidth < guiWidth + 18;
+            return new Layout(
+                    guiWidth,
+                    (screenWidth - guiWidth + (toolbar ? 0 : 18)) / 2,
+                    toolbar ? Math.max(1, guiWidth / 18) : 0);
+        }
+
+        int toolbarHeight(int buttons) {
+            return columns == 0 ? 0 : (buttons + columns - 1) / columns * 18;
+        }
+
+        static int visibleButtonCount(List<GuiButton> buttons) {
+            return (int) buttons.stream().filter(button -> button.visible).count();
+        }
+
+        int buttonX(int index) {
+            return left + (columns == 0 ? -18 : index % columns * 18);
+        }
+
+        int buttonY(int index, int top, int buttons) {
+            return columns == 0 ? top + 8 + index * 18 : top - toolbarHeight(buttons) + index / columns * 18;
+        }
+
+        void placeSidebarButtons(List<GuiButton> buttons, int top) {
+            final int count = visibleButtonCount(buttons);
+            int index = 0;
+            for (GuiButton button : buttons) {
+                if (!button.visible) continue;
+                button.xPosition = buttonX(index);
+                button.yPosition = buttonY(index, top, count);
+                index++;
+            }
+        }
     }
 
     @Override
@@ -341,7 +413,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (inventorySlots instanceof IContainerSubGui subGui && subGui.getPrimaryGuiIcon() != null) {
             buttonList.add(
                     this.originalGuiBtn = new GuiTabButton(
-                            this.guiLeft + this.xSize - 22,
+                            this.guiLeft + MAIN_WIDTH - 22,
                             this.guiTop,
                             subGui.getPrimaryGuiIcon(),
                             subGui.getPrimaryGuiIcon().getDisplayName(),
@@ -352,7 +424,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
     protected void repositionSlots() {
         for (final Object obj : this.inventorySlots.inventorySlots) {
             if (obj instanceof AppEngSlot slot) {
-                slot.yDisplayPosition = this.ySize + slot.getY() - 78 - 7;
+                final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
+                slot.yDisplayPosition = container.isUpgradeSlot(slot) || container.isToolboxSlot(slot) ? slot.getY()
+                        : this.ySize + slot.getY() - 78 - 7;
             }
         }
     }
@@ -361,7 +435,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         final int maxViewHeight = this.getMaxViewHeight();
         final boolean hasNEI = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI);
         final int NEIPadding = hasNEI ? 22 /* input */ + 18 /* top panel */ : 0;
-        final int availableSpace = this.height - HEADER_HEIGHT - INV_HEIGHT - NEIPadding;
+        final int availableSpace = this.height - HEADER_HEIGHT - INV_HEIGHT - NEIPadding - toolbarHeight;
 
         // screen should use 95% of the space it can, 5% margins
         return Math.min((int) (availableSpace * 0.95), maxViewHeight);
@@ -379,6 +453,29 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 GuiInterfaceTerminal.VIEW_LEFT + 12,
                 this.ySize - 93,
                 ColorUtils.guiTextColorGray.getColor());
+        final long selectedId = ((ContainerInterfaceTerminal) inventorySlots).getSelectedUpgradeId();
+        if (selectedId >= 0) {
+            final int panelX = MAIN_WIDTH + 6;
+            fontRendererObj.drawString(
+                    GuiText.InterfaceUpgrades.getLocal(),
+                    panelX,
+                    14,
+                    ColorUtils.guiTextColorGray.getColor());
+            final InterfaceTerminalEntry entry = masterList.list.get(selectedId);
+            if (entry != null) {
+                fontRendererObj.drawString(
+                        fontRendererObj.trimStringToWidth(entry.dispName, 78),
+                        panelX,
+                        26,
+                        ColorUtils.guiTextColorGray.getColor());
+                fontRendererObj.drawString(
+                        fontRendererObj
+                                .trimStringToWidth(entry.dim + ": " + entry.x + ", " + entry.y + ", " + entry.z, 78),
+                        panelX,
+                        36,
+                        ColorUtils.guiTextColorGray.getColor());
+            }
+        }
         if (!neiPresent && tooltipStack != null) {
             renderToolTip(tooltipStack, mouseX, mouseY);
         }
@@ -386,6 +483,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        // Selection acknowledgements can open/close the panel without reinitializing search or scroll state.
+        updateLayout();
+        // Custom-button synchronization can overwrite positions even when the geometry has not changed.
+        layout.placeSidebarButtons(sidebarButtons, guiTop);
         guiButtonAssemblersOnly.set(
                 onlyMolecularAssemblers ? ActionItems.MOLECULAR_ASSEMBLEERS_ON : ActionItems.MOLECULAR_ASSEMBLEERS_OFF);
         guiButtonHideFull.set(
@@ -451,6 +552,25 @@ public class GuiInterfaceTerminal extends AEBaseGui
             return;
         }
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    protected boolean enableSpaceClicking() {
+        // The virtual pattern grid handles region moves itself; real upgrade slots use vanilla window clicks.
+        final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
+        return container.getSelectedUpgradeId() < 0 && container.getToolboxSize() == 0;
+    }
+
+    @Override
+    protected void handleMouseClick(net.minecraft.inventory.Slot slot, int index, int button, int mode) {
+        if (!((ContainerInterfaceTerminal) inventorySlots).isUpgradeSelectionPending()) {
+            super.handleMouseClick(slot, index, button, mode);
+        }
+    }
+
+    @Override
+    protected boolean checkHotbarKeys(int key) {
+        return !((ContainerInterfaceTerminal) inventorySlots).isUpgradeSelectionPending() && super.checkHotbarKeys(key);
     }
 
     @Override
@@ -523,22 +643,22 @@ public class GuiInterfaceTerminal extends AEBaseGui
         final Tessellator tessellator = Tessellator.instance;
         this.bindTexture(BACKGROUND);
         /* Draws the top part. */
-        this.drawTexturedModalRect(offsetX, offsetY, 0, 0, xSize, HEADER_HEIGHT);
+        this.drawTexturedModalRect(offsetX, offsetY, 0, 0, MAIN_WIDTH, HEADER_HEIGHT);
         /* Draws the middle part. */
         tessellator.startDrawingQuads();
         addTexturedRectToTesselator(
                 offsetX,
                 offsetY + HEADER_HEIGHT,
-                offsetX + xSize,
+                offsetX + MAIN_WIDTH,
                 offsetY + HEADER_HEIGHT + viewHeight + 1,
                 0.0f,
                 0.0f,
                 (HEADER_HEIGHT + InterfaceSection.TITLE_HEIGHT + 1.0f) / 256.0f,
-                this.xSize / 256.0f,
+                MAIN_WIDTH / 256.0f,
                 (HEADER_HEIGHT + 106.0f) / 256.0f);
         tessellator.draw();
         /* Draw the bottom part */
-        this.drawTexturedModalRect(offsetX, offsetY + HEADER_HEIGHT + viewHeight, 0, 158, xSize, INV_HEIGHT);
+        this.drawTexturedModalRect(offsetX, offsetY + HEADER_HEIGHT + viewHeight, 0, 158, MAIN_WIDTH, INV_HEIGHT);
         if (online) {
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             GL11.glEnable(GL11.GL_BLEND);
@@ -555,6 +675,34 @@ public class GuiInterfaceTerminal extends AEBaseGui
         searchFieldInputs.drawTextBox();
         searchFieldOutputs.drawTextBox();
         searchFieldNames.drawTextBox();
+        // Text fields leave their focus/text color active; side panels need the same tint as the main background.
+        ScreenColor.setGuiColor();
+        if (((ContainerInterfaceTerminal) inventorySlots).getSelectedUpgradeId() >= 0) {
+            final int panelX = offsetX + MAIN_WIDTH + 2;
+            final int panelY = offsetY + 8;
+            bindTexture("guis/interface.png");
+            // Reuse the interface's frame, blank header and slots, including resource-pack replacements.
+            drawTexturedModalRect(panelX, panelY, 0, 0, 82, 4);
+            drawTexturedModalRect(panelX + 82, panelY, 172, 0, 4, 4);
+            drawTexturedModalRect(panelX, panelY + 4, 0, 4, 4, 56);
+            drawTexturedModalRect(panelX + 82, panelY + 4, 172, 4, 4, 56);
+            drawTextured9PatchRect(panelX + 4, panelY + 4, 78, 56, 4, 4, 3, 3);
+            drawTexturedModalRect(panelX, panelY + 60, 0, 207, 82, 4);
+            drawTexturedModalRect(panelX + 82, panelY + 60, 172, 207, 4, 4);
+            for (int slot = 0; slot < 4; slot++) {
+                final int x = offsetX + 216 + slot * 18;
+                final int y = offsetY + 49;
+                drawTexturedModalRect(x, y, 186, 7, 18, 18);
+            }
+        }
+        final int toolboxSize = ((ContainerInterfaceTerminal) inventorySlots).getToolboxSize();
+        if (toolboxSize == 5) {
+            bindTexture("guis/advanced_toolbox.png");
+            drawTexturedModalRect(offsetX + MAIN_WIDTH + 2, offsetY + 84, 0, 0, 104, 104);
+        } else if (toolboxSize == 3) {
+            bindTexture("guis/interface.png");
+            drawTexturedModalRect(offsetX + MAIN_WIDTH + 2, offsetY + 84, 178, 121, 68, 68);
+        }
     }
 
     /**
@@ -566,6 +714,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int viewY = -scroll; // current y in viewport coordinates
         int entryIdx = 0;
         List<InterfaceSection> visibleSections = this.masterList.getVisibleSections();
+        // Sections outside this frame's viewport must not retain clickable buttons from a previous scroll position.
+        for (InterfaceSection section : visibleSections) {
+            section.visible = false;
+        }
 
         final float guiScaleX = (float) mc.displayWidth / width;
         final float guiScaleY = (float) mc.displayHeight / height;
@@ -749,6 +901,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             } else {
                 entry.dispY = -9999;
                 entry.optionsButton.yPosition = -1;
+                entry.upgradeButton.visible = false;
                 renderY += entryHeight;
             }
         }
@@ -872,9 +1025,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             final boolean shiftHeld = isShiftKeyDown() && entry.isInPlayerDimension();
             final GuiImgButton activeButton = altHeld ? entry.hideButton
                 : shiftHeld ? entry.renameButton : entry.optionsButton;
-            entry.optionsButton.yPosition = viewY + 5;
-            entry.hideButton.yPosition = altHeld ? viewY + 5 : -1;
-            entry.renameButton.yPosition = shiftHeld && !altHeld ? viewY + 5 : -1;
+            final int buttonY = viewY + (entry.hasUpgrades ? 1 : 5);
+            entry.optionsButton.yPosition = buttonY;
+            entry.hideButton.yPosition = altHeld ? buttonY : -1;
+            entry.renameButton.yPosition = shiftHeld && !altHeld ? buttonY : -1;
             activeButton.drawButton(mc, relMouseX, relMouseY);
             if (activeButton.getMouseIn()
                     && relMouseY >= Math.max(titleBottom - viewY + activeButton.yPosition, activeButton.yPosition)) {
@@ -892,6 +1046,17 @@ public class GuiInterfaceTerminal extends AEBaseGui
             entry.optionsButton.yPosition = -1;
             entry.hideButton.yPosition = -1;
             entry.renameButton.yPosition = -1;
+        }
+        entry.upgradeButton.yPosition = viewY + 10;
+        entry.upgradeButton.visible = entry.hasUpgrades && entry.upgradeButton.yPosition >= Math.max(0, titleBottom)
+                && entry.upgradeButton.yPosition + entry.upgradeButton.height <= viewHeight;
+        if (entry.upgradeButton.visible) {
+            entry.upgradeButton.drawButton(mc, relMouseX, relMouseY);
+            if (entry.upgradeButton.getMouseIn()) {
+                pendingEntryButtonTooltip = Collections.singletonList(GuiText.InterfaceUpgrades.getLocal());
+                pendingEntryButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                pendingEntryButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+            }
         }
         /* PASS 2: Items */
         outerItems:
@@ -1223,6 +1388,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             entry.terminalVisible = addCmd.terminalVisible;
             entry.isCraftingPatternProvider = addCmd.isCraftingPatternProvider;
+            entry.hasUpgrades = addCmd.hasUpgrades;
             entry.hideButton.set(entry.terminalVisible ? YesNo.YES : YesNo.NO);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1576,7 +1742,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
          * @param btn       button code
          */
         public boolean mouseClicked(int relMouseX, int relMouseY, int btn) {
-            if (relMouseX < 0 || relMouseX >= VIEW_WIDTH || relMouseY < 0 || relMouseY >= viewHeight) {
+            if (!online || relMouseX < 0 || relMouseX >= VIEW_WIDTH || relMouseY < 0 || relMouseY >= viewHeight) {
                 return false;
             }
             for (InterfaceSection section : getVisibleSections()) {
@@ -1728,6 +1894,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private class InterfaceTerminalEntry {
 
         String dispName;
+        boolean hasUpgrades;
+        final GuiImgButton upgradeButton;
         AppEngInternalInventory inv;
         GuiImgButton optionsButton;
         GuiImgButton hideButton;
@@ -1775,6 +1943,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.priority = priority;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
+            this.upgradeButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.WRENCH);
+            this.upgradeButton.setHalfSize(true);
             this.hideButton = new GuiImgButton(2, 0, Settings.INTERFACE_TERMINAL, YesNo.YES);
             this.hideButton.setHalfSize(true);
             this.renameButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.RENAME_INTERFACE);
@@ -1813,6 +1983,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             inv = new AppEngInternalInventory(null, newSize);
             rows = newSize / rowSize;
             brokenRecipes = new Boolean[newSize];
+            useSubstitute = new Boolean[newSize];
+            filteredRecipes = new boolean[newSize];
             numItems = 0;
 
             for (int i = 0; i < inv.getSizeInventory(); ++i) {
@@ -1915,6 +2087,15 @@ public class GuiInterfaceTerminal extends AEBaseGui
         public boolean mouseClicked(int mouseX, int mouseY, int btn) {
             if (!section.visible || btn < 0 || btn > 2) {
                 return false;
+            }
+
+            if (upgradeButton.visible && mouseX >= upgradeButton.xPosition
+                    && mouseX < upgradeButton.xPosition + upgradeButton.width
+                    && mouseY >= upgradeButton.yPosition
+                    && mouseY < upgradeButton.yPosition + upgradeButton.height) {
+                final ContainerInterfaceTerminal container = (ContainerInterfaceTerminal) inventorySlots;
+                container.requestUpgradeSelection(container.getSelectedUpgradeId() == id ? -1 : id);
+                return true;
             }
 
             // Validate options/hide button click (Alt switches to hide mode)

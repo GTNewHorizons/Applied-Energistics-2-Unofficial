@@ -428,7 +428,8 @@ public enum GuiText implements Localization {
     HoldCtrlForContents,
 
     UpgradesInstalled,
-    FakeUpgrade;
+    FakeUpgrade,
+    InterfaceUpgrades;
 
     private final String root;
 
