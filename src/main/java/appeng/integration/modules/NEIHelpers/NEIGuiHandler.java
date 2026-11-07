@@ -7,6 +7,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingStatus;
+import appeng.client.gui.implementations.GuiInterface;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import codechicken.nei.api.INEIGuiAdapter;
@@ -39,6 +40,8 @@ public class NEIGuiHandler extends INEIGuiAdapter {
             return ((GuiCraftConfirm) gui).hideItemPanelSlot(x, y, w, h);
         } else if (gui instanceof GuiMEMonitorable) {
             return ((GuiMEMonitorable) gui).hideItemPanelSlot(x, y, w, h);
+        } else if (gui instanceof GuiInterface gi) {
+            return gi.hideItemPanelSlot(gui, x, y, w, h);
         }
 
         return false;

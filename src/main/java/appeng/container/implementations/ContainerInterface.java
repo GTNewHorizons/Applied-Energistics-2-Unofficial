@@ -118,6 +118,28 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         for (int x = 0; x < DualityInterface.NUMBER_OF_STORAGE_SLOTS; x++) {
             this.addSlotToContainer(new SlotNormal(this.myDuality.getStorage(), x, 8 + 18 * x, 15 + 18));
         }
+
+        for (int i = 0; i < DualityInterface.NUMBER_OF_CONFIG_SLOTS; i++) {
+            final OptionalSlotFake slot = new OptionalSlotFake(
+                    this.myDuality.getBlockingFilter(),
+                    this,
+                    i,
+                    -78 + 18 * (i % 3),
+                    81 + 18 * (i / 3),
+                    4) {
+
+                @Override
+                public void putStack(ItemStack is) {
+                    if (is != null) {
+                        is = is.copy();
+                        is.stackSize = 1;
+                    }
+                    super.putStack(is);
+                }
+            };
+            slot.setRenderDisabled(false);
+            this.addSlotToContainer(slot);
+        }
     }
 
     @Override
@@ -351,6 +373,10 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
     @Override
     public boolean isSlotEnabled(final int idx) {
+        if (idx == 4) {
+            return this.advancedBlockingMode == AdvancedBlockingMode.BLOCK_ON_ALL
+                    && myDuality.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0;
+        }
         if (Platform.isClient() && (isEmpty || isConfigEmpty)) return false;
         return myDuality.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY) >= idx;
     }
