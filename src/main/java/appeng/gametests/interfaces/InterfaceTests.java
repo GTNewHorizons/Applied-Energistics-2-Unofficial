@@ -19,6 +19,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -223,10 +224,13 @@ public class InterfaceTests {
             container.getSlot(36).putStack(card);
             final ItemStack[] snapshot = new ItemStack[4];
             final int[] updates = { 0 };
+            final int[] fullSyncs = { 0 };
             container.addCraftingToCrafters(new ICrafting() {
 
                 @Override
-                public void sendContainerAndContentsToPlayer(Container source, List<ItemStack> stacks) {}
+                public void sendContainerAndContentsToPlayer(Container source, List<ItemStack> stacks) {
+                    fullSyncs[0]++;
+                }
 
                 @Override
                 public void sendSlotContents(Container source, int slot, ItemStack stack) {
@@ -240,21 +244,24 @@ public class InterfaceTests {
                 public void sendProgressBarUpdate(Container source, int key, int value) {}
             });
             helper.assertItemEqual(card, snapshot[0], "Initial snapshot includes the installed card");
+            fullSyncs[0] = 0;
+            container.slotClick(27, 0, 0, player);
+            helper.assertEquals(0, fullSyncs[0], "Unrelated player-inventory clicks do not resend the whole window");
+            final Slot fixedUpgradeSlot = container.getSlot(36);
             int slotCount = container.inventorySlots.size();
             updates[0] = 0;
             container.selectUpgrades(1);
             helper.assertEquals(1L, container.getSelectedUpgradeId(), "Other interface selected");
+            helper.assertSame(fixedUpgradeSlot, container.getSlot(36), "Upgrade slot objects remain fixed");
             helper.assertNotSame(
-                    original.getInventoryByName("upgrades"),
-                    container.getSlot(36).inventory,
-                    "Previous interface must not remain bound");
+                    original,
+                    terminalTarget(helper, container),
+                    "New selection delegates to the other host");
             helper.assertEquals(4, updates[0], "Selection explicitly synchronizes all four slots");
             for (ItemStack stack : snapshot) helper.assertNull(stack, "Empty target clears previous cards");
             container.selectUpgrades(0);
-            helper.assertSame(
-                    original.getInventoryByName("upgrades"),
-                    container.getSlot(36).inventory,
-                    "Returning to a target restores the real inventory");
+            helper.assertSame(fixedUpgradeSlot, container.getSlot(36), "Returning reuses the same upgrade slot");
+            helper.assertSame(original, terminalTarget(helper, container), "Returning delegates to the original host");
             helper.assertItemEqual(card, snapshot[0], "Returning to a target restores its card snapshot");
             helper.assertEquals(slotCount, container.inventorySlots.size(), "Switching preserves slot IDs/count");
             container.selectUpgrades(Long.MAX_VALUE);
@@ -432,13 +439,17 @@ public class InterfaceTests {
 
     private static IInterfaceHost terminalTarget(GameTestHelper helper, ContainerInterfaceTerminal container) {
         InterfaceNetwork network = getInterfaceNetwork(helper);
-        IInterfaceHost target = container.getSlot(36).inventory == network.blockInterface.getInventoryByName("upgrades")
-                ? network.blockInterface
-                : network.partInterface;
-        helper.assertSame(
-                target.getInventoryByName("upgrades"),
-                container.getSlot(36).inventory,
-                "Terminal slots must use the real upgrade inventory");
+        final Slot selectedSlot = container.getSlot(36);
+        final ItemStack previous = selectedSlot.getStack();
+        final ItemStack probe = capacityCards(1);
+        selectedSlot.putStack(probe);
+        final boolean blockSelected = network.blockInterface.getInterfaceDuality().getUpgrades().getStackInSlot(0)
+                == probe;
+        final boolean partSelected = network.partInterface.getInterfaceDuality().getUpgrades().getStackInSlot(0)
+                == probe;
+        selectedSlot.putStack(previous);
+        helper.assertTrue(blockSelected ^ partSelected, "Selected slot must delegate to exactly one interface");
+        IInterfaceHost target = blockSelected ? network.blockInterface : network.partInterface;
         return target;
     }
 

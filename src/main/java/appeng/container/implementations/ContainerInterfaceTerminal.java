@@ -30,7 +30,6 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
@@ -77,6 +76,7 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
+import appeng.util.inv.IUpgradeInventory;
 import appeng.util.inv.ItemSlot;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -85,6 +85,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
 
     private static final int UPGRADE_SLOTS = 4;
     private final AppEngInternalInventory clientUpgrades = new AppEngInternalInventory(null, UPGRADE_SLOTS, 1);
+    private final UpgradeSlotInventory upgradeSlotInventory = new UpgradeSlotInventory(clientUpgrades);
     private final ActionHandler<Long> upgradeSelection;
     private final int firstUpgradeSlot;
     private long selectedUpgradeId = -1;
@@ -131,7 +132,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         this.bindPlayerInventory(ip, 14, 3);
         this.firstUpgradeSlot = this.inventorySlots.size();
         for (int slot = 0; slot < UPGRADE_SLOTS; slot++) {
-            this.addSlotToContainer(new InterfaceUpgradeSlot(clientUpgrades, slot));
+            this.addSlotToContainer(new InterfaceUpgradeSlot(upgradeSlotInventory, slot));
         }
         if (toolbox != null) {
             final int size = toolbox.getSize();
@@ -196,16 +197,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         final IInventory upgrades = entry != null && entry.machine instanceof IInterfaceHost host
                 ? host.getInterfaceDuality().getUpgrades()
                 : clientUpgrades;
-        // Slot IDs and count never change. Only the server rebinds these four slots; the client keeps its mirror.
-        // While a request is pending the GUI blocks clicks. Send the acknowledgement before the slot snapshot so
-        // vanilla can apply even empty/unchanged contents to the newly selected panel in the same ordered stream.
-        for (int index = 0; index < UPGRADE_SLOTS; index++) {
-            final InterfaceUpgradeSlot slot = new InterfaceUpgradeSlot(upgrades, index);
-            slot.slotNumber = firstUpgradeSlot + index;
-            slot.setContainer(this);
-            inventorySlots.set(slot.slotNumber, slot);
-        }
-        // Acknowledge even refused/unchanged selections before sending the vanilla slot contents.
+        upgradeSlotInventory.setInventory(upgrades);
+        // Acknowledge before sending contents so vanilla applies even empty/unchanged slots in the same order.
         upgradeSelection.send(selectedUpgradeId);
         for (int index = 0; index < UPGRADE_SLOTS; index++) {
             final Slot slot = getSlot(firstUpgradeSlot + index);
@@ -258,10 +251,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     public ItemStack slotClick(int slot, int button, int mode, EntityPlayer player) {
         checkToolbox();
         if (!isValidContainer()) return null;
-        final boolean hadPanel = selectedUpgradeId >= 0;
-        if (Platform.isServer() && hadPanel && !canModifyUpgrades(selectedUpgradeId)) selectUpgrades(-1);
+        final boolean upgradeSlotClicked = isUpgradeSlotIndex(slot);
+        if (Platform.isServer() && selectedUpgradeId >= 0 && !canModifyUpgrades(selectedUpgradeId)) {
+            selectUpgrades(-1);
+        }
         final ItemStack result = super.slotClick(slot, button, mode, player);
-        if (Platform.isServer() && hadPanel) syncUpgradeWindow();
+        if (Platform.isServer() && upgradeSlotClicked) syncUpgradeSlots(player, slot);
         return result;
     }
 
@@ -269,18 +264,27 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     public void swapSlotContents(int first, int second) {
         checkToolbox();
         if (!isValidContainer()) return;
-        final boolean hadPanel = selectedUpgradeId >= 0;
-        if (hadPanel && !canModifyUpgrades(selectedUpgradeId)) selectUpgrades(-1);
+        if (selectedUpgradeId >= 0 && !canModifyUpgrades(selectedUpgradeId)) selectUpgrades(-1);
         super.swapSlotContents(first, second);
-        if (hadPanel) syncUpgradeWindow();
+        syncUpgradeSlots(getPlayerInv().player, first, second);
     }
 
-    private void syncUpgradeWindow() {
-        // Rejected server-only limits can leave vanilla's predicted return stack unchanged. Resync the cursor too.
-        // ponytail: full window resync for infrequent upgrade edits; use targeted slot/cursor updates if this gets hot.
-        if (getPlayerInv().player instanceof EntityPlayerMP player && player.playerNetServerHandler != null) {
-            player.sendContainerToPlayer(this);
+    private boolean isUpgradeSlotIndex(int slot) {
+        return slot >= firstUpgradeSlot && slot < firstUpgradeSlot + UPGRADE_SLOTS;
+    }
+
+    private void syncUpgradeSlots(EntityPlayer player, int... slots) {
+        if (Platform.isClient() || !(player instanceof EntityPlayerMP serverPlayer)
+                || serverPlayer.playerNetServerHandler == null)
+            return;
+        boolean changedUpgradeSlot = false;
+        for (int slot : slots) {
+            if (isUpgradeSlotIndex(slot)) {
+                serverPlayer.sendSlotContents(this, slot, getSlot(slot).getStack());
+                changedUpgradeSlot = true;
+            }
         }
+        if (changedUpgradeSlot) serverPlayer.updateHeldItem();
     }
 
     private class InterfaceUpgradeSlot extends SlotRestrictedInput {
@@ -334,17 +338,90 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         public void onSlotChanged() {
             super.onSlotChanged();
             scheduleUpdate();
-            if (Platform.isServer()) {
-                final InvTracker selected = trackedById.get(selectedUpgradeId);
-                if (selected == null) return;
-                for (Object onlinePlayer : MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
-                    if (onlinePlayer instanceof EntityPlayerMP player
-                            && player.openContainer instanceof ContainerInterfaceTerminal terminal
-                            && terminal.tracked.containsKey(selected.machine)) {
-                        terminal.scheduleUpdate();
-                    }
-                }
-            }
+        }
+    }
+
+    private static class UpgradeSlotInventory implements IInventory, IUpgradeInventory {
+
+        private IInventory inventory;
+
+        UpgradeSlotInventory(IInventory inventory) {
+            this.inventory = inventory;
+        }
+
+        void setInventory(IInventory inventory) {
+            this.inventory = inventory;
+        }
+
+        @Override
+        public int getSizeInventory() {
+            return inventory.getSizeInventory();
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            return inventory.getStackInSlot(slot);
+        }
+
+        @Override
+        public ItemStack decrStackSize(int slot, int amount) {
+            return inventory.decrStackSize(slot, amount);
+        }
+
+        @Override
+        public ItemStack getStackInSlotOnClosing(int slot) {
+            return inventory.getStackInSlotOnClosing(slot);
+        }
+
+        @Override
+        public void setInventorySlotContents(int slot, ItemStack stack) {
+            inventory.setInventorySlotContents(slot, stack);
+        }
+
+        @Override
+        public String getInventoryName() {
+            return inventory.getInventoryName();
+        }
+
+        @Override
+        public boolean hasCustomInventoryName() {
+            return inventory.hasCustomInventoryName();
+        }
+
+        @Override
+        public int getInventoryStackLimit() {
+            return inventory.getInventoryStackLimit();
+        }
+
+        @Override
+        public void markDirty() {
+            inventory.markDirty();
+        }
+
+        @Override
+        public boolean isUseableByPlayer(EntityPlayer player) {
+            return inventory.isUseableByPlayer(player);
+        }
+
+        @Override
+        public void openInventory() {
+            inventory.openInventory();
+        }
+
+        @Override
+        public void closeInventory() {
+            inventory.closeInventory();
+        }
+
+        @Override
+        public boolean isItemValidForSlot(int slot, ItemStack stack) {
+            return inventory.isItemValidForSlot(slot, stack);
+        }
+
+        @Override
+        public int getMaxInstalled(Upgrades upgrade) {
+            return inventory instanceof IUpgradeInventory upgradeInventory ? upgradeInventory.getMaxInstalled(upgrade)
+                    : 0;
         }
     }
 
@@ -355,6 +432,15 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         }
 
         checkToolbox();
+        if (!forceNextUpdate) {
+            for (InvTracker entry : tracked.values()) {
+                if (entry.machine.rows() != entry.rows || entry.machine.rowSize() != entry.rowSize
+                        || entry.machine.numSlots() != entry.numSlots) {
+                    forceNextUpdate = true;
+                    break;
+                }
+            }
+        }
         if (selectedUpgradeId >= 0 && !canModifyUpgrades(selectedUpgradeId)) selectUpgrades(-1);
 
         super.detectAndSendChanges();
