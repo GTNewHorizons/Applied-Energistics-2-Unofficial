@@ -27,7 +27,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.AEApi;
-import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.container.ContainerNull;
@@ -35,7 +34,7 @@ import appeng.util.ItemSorters;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 
-public class PatternHelper implements ICraftingPatternDetails, Comparable<PatternHelper> {
+public class PatternHelper implements IResolvablePatternDetails, Comparable<PatternHelper> {
 
     private final ItemStack patternItem;
     private final InventoryCrafting crafting = new InventoryCrafting(new ContainerNull(), 3, 3);
@@ -46,6 +45,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     private final IAEItemStack[] condensedOutputs;
     private final IAEItemStack[] inputs;
     private final IAEItemStack[] outputs;
+    private final PatternInputResolver inputResolver;
     private final boolean isCrafting;
     private final boolean canSubstitute;
     private final boolean canBeSubstitute;
@@ -139,6 +139,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         this.inputs = in.toArray(new IAEItemStack[0]);
 
         this.condensedInputs = convertToCondensedList(this.inputs);
+        this.inputResolver = new PatternInputResolver(this.inputs, this.condensedInputs);
         this.condensedOutputs = convertToCondensedList(this.outputs);
 
         if (condensedInputs.length == 0 || condensedOutputs.length == 0) {
@@ -223,8 +224,18 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     }
 
     @Override
+    public IAEStack<?>[] getAEInputs() {
+        return this.inputResolver.getInputs();
+    }
+
+    @Override
     public IAEItemStack[] getCondensedInputs() {
         return this.condensedInputs;
+    }
+
+    @Override
+    public IAEStack<?>[] getCondensedAEInputs() {
+        return this.inputResolver.getCondensedInputs();
     }
 
     @Override
@@ -235,6 +246,28 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     @Override
     public IAEItemStack[] getOutputs() {
         return this.outputs;
+    }
+
+    @Override
+    public IAEStack<?>[] getEncodedAEInputs() {
+        return this.inputResolver.getEncodedInputs();
+    }
+
+    @Override
+    public void setResolvedAEInputs(final IAEStack<?>[] inputs) {
+        this.inputResolver.set(inputs);
+    }
+
+    @Override
+    public void resetResolvedAEInputs() {
+        this.inputResolver.reset();
+    }
+
+    @Override
+    public IResolvablePatternDetails copyForGrid(final World world) {
+        final PatternHelper copy = new PatternHelper(this.patternItem.copy(), world);
+        copy.setPriority(this.priority);
+        return copy;
     }
 
     @Override
