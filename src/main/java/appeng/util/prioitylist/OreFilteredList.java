@@ -110,7 +110,7 @@ public class OreFilteredList implements IPartitionList<IAEItemStack> {
 
     public static Predicate<IAEItemStack> makeFilter(String f) {
         try {
-            Predicate<ItemStack> matcher = makeMatcher(f);
+            Predicate<ItemStack> matcher = makeMatcher(f.replace("\r", "").replace("\n", ""));
             if (matcher == null) return null;
             return new OreListMatcher(matcher);
         } catch (Exception ex) {
