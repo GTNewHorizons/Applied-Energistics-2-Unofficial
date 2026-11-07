@@ -21,10 +21,14 @@ import appeng.util.item.AEItemStack;
 public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextField {
 
     private final ContainerPatternValueAmount container;
-    private final MEGuiTextField textField;
+    protected final MEGuiTextField textField;
 
     public GuiPatternItemRenamer(InventoryPlayer ip, ITerminalHost p) {
-        super(new ContainerPatternValueAmount(ip, p));
+        this(new ContainerPatternValueAmount(ip, p));
+    }
+
+    protected GuiPatternItemRenamer(final ContainerPatternValueAmount container) {
+        super(container);
         this.container = (ContainerPatternValueAmount) this.inventorySlots;
         xSize = 256;
         textField = new MEGuiTextField(231, 12);
@@ -66,21 +70,24 @@ public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextFiel
     @Override
     protected void keyTyped(final char character, final int key) {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-            IAEStack<?> nameStack = getNewNameStack();
-            if (nameStack == null) {
-                return;
-            }
-            NetworkHandler.instance.sendToServer(
-                    new PacketPatternValueSet(nameStack, this.container.getInvName(), this.container.getSlotIndex()));
+            this.submitName(textField.getText());
         } else if (!textField.textboxKeyTyped(character, key)) {
             super.keyTyped(character, key);
         }
     }
 
-    private IAEStack<?> getNewNameStack() {
+    protected void submitName(final String name) {
+        final IAEStack<?> nameStack = getNewNameStack(name);
+        if (nameStack != null) {
+            NetworkHandler.instance.sendToServer(
+                    new PacketPatternValueSet(nameStack, this.container.getInvName(), this.container.getSlotIndex()));
+        }
+    }
+
+    private IAEStack<?> getNewNameStack(final String name) {
         IAEStack<?> aeStack = this.container.getAEStack();
         if (!(aeStack instanceof IAEItemStack itemStack)) return null;
-        return AEItemStack.create(itemStack.getItemStack().setStackDisplayName(textField.getText()));
+        return AEItemStack.create(itemStack.getItemStack().setStackDisplayName(name));
     }
 
     public boolean isOverTextField(final int mousex, final int mousey) {
