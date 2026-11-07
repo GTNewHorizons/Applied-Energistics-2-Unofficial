@@ -43,6 +43,7 @@ import appeng.api.util.IConfigManager;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketNetworkVisualiserData;
+import appeng.helpers.IWirelessLink;
 import appeng.items.AEBaseItem;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
@@ -253,7 +254,11 @@ public class ToolNetworkVisualiser extends AEBaseItem {
                     Set<IGridConnection> gcList = new HashSet<>();
                     for (IGridNode igNode : g.getNodes()) {
                         IGridBlock igb = igNode.getGridBlock();
-                        if (igb.isWorldAccessible() && igb.getLocation().isInWorld(w)) {
+                        // a part's own node is never world accessible (IPart#getGridNode), so a wireless fixture
+                        // would drop out here and take its links with it
+                        final boolean wirelessFixture = !igb.isWorldAccessible()
+                                && igb.getMachine() instanceof IWirelessLink;
+                        if ((igb.isWorldAccessible() || wirelessFixture) && igb.getLocation().isInWorld(w)) {
                             DimensionalCoord loc = igb.getLocation();
                             for (IGridConnection igc : igNode.getConnections()) {
                                 gcList.add(igc);

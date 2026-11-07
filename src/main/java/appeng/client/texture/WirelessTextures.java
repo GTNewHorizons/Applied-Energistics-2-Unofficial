@@ -59,6 +59,8 @@ public enum WirelessTextures {
     private final String offName;
     public IIcon onIIcon;
     public IIcon offIIcon;
+    public IIcon fixtureOnIIcon;
+    public IIcon fixtureOffIIcon;
 
     WirelessTextures(final String onName, final String offName) {
         this.onName = onName;
@@ -90,8 +92,18 @@ public enum WirelessTextures {
         return this.offIIcon;
     }
 
+    public IIcon getFixtureOnIcon() {
+        return this.fixtureOnIIcon;
+    }
+
+    public IIcon getFixtureOffIcon() {
+        return this.fixtureOffIIcon;
+    }
+
     public void registerIcon(final TextureMap map) {
         this.onIIcon = map.registerIcon("appliedenergistics2:Wireless/Block" + this.onName);
         this.offIIcon = map.registerIcon("appliedenergistics2:Wireless/Block" + this.offName);
+        this.fixtureOnIIcon = map.registerIcon("appliedenergistics2:WirelessFixture/Part" + this.onName);
+        this.fixtureOffIIcon = map.registerIcon("appliedenergistics2:WirelessFixture/Part" + this.offName);
     }
 }

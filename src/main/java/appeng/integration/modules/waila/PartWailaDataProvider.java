@@ -36,6 +36,7 @@ import appeng.integration.modules.waila.part.PartPatternRepeaterDataProvider;
 import appeng.integration.modules.waila.part.PowerStateWailaDataProvider;
 import appeng.integration.modules.waila.part.StorageMonitorWailaDataProvider;
 import appeng.integration.modules.waila.part.Tracer;
+import appeng.integration.modules.waila.part.WirelessLinkWailaDataProvider;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import mcp.mobius.waila.api.IWailaDataProvider;
@@ -78,6 +79,7 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
         final IPartWailaDataProvider partInterface = new PartInterfaceDataProvider();
         final IPartWailaDataProvider partPatternRepeater = new PartPatternRepeaterDataProvider();
         final IPartWailaDataProvider partIOBus = new IOBusWailaDataProvider();
+        final IPartWailaDataProvider wirelessLink = new WirelessLinkWailaDataProvider();
 
         this.providers = Lists.newArrayList(
                 channel,
@@ -87,7 +89,8 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
                 partStack,
                 partInterface,
                 partPatternRepeater,
-                partIOBus);
+                partIOBus,
+                wirelessLink);
     }
 
     @Override
