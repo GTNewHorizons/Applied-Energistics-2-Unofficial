@@ -24,13 +24,30 @@ public final class TunnelPatternExpander {
             return new ArrayList<>(0);
         }
         final List<IAEStack<?>> expandedInputs = new ArrayList<>(inputs.length);
-        final Set<UUID> expansionStack = new HashSet<>();
+        Set<UUID> expansionStack = null;
         for (IAEStack<?> input : inputs) {
+            if (!isTunnelPattern(input)) {
+                if (input != null) expandedInputs.add(input);
+                continue;
+            }
+            if (expansionStack == null) expansionStack = new HashSet<>();
             if (!expandInputOnlyPattern(input, cache, parentPatterns, expansionStack, expandedInputs)) {
                 return null;
             }
         }
         return expandedInputs;
+    }
+
+    public static boolean containsTunnelPattern(final IAEStack<?>[] inputs) {
+        if (inputs == null) return false;
+        for (final IAEStack<?> input : inputs) {
+            if (isTunnelPattern(input)) return true;
+        }
+        return false;
+    }
+
+    private static boolean isTunnelPattern(final IAEStack<?> input) {
+        return input instanceof IAEItemStack ais && ais.getItem() instanceof ItemTunnelPattern;
     }
 
     private static boolean expandInputOnlyPattern(final IAEStack<?> input, final CraftingGridCache cache,
@@ -39,15 +56,11 @@ public final class TunnelPatternExpander {
         if (input == null) {
             return true;
         }
-        if (!(input instanceof IAEItemStack ais)) {
+        if (!isTunnelPattern(input)) {
             expandedInputs.add(input);
             return true;
         }
-        final ItemStack itemStack = ais.getItemStack();
-        if (!ItemTunnelPattern.isTunnelPattern(itemStack)) {
-            expandedInputs.add(input);
-            return true;
-        }
+        final ItemStack itemStack = ((IAEItemStack) input).getItemStack();
         final UUID uuid = ItemTunnelPattern.getTunnelUuid(itemStack);
         if (uuid == null) {
             return false;
