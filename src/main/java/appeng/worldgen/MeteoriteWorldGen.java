@@ -32,6 +32,12 @@ public final class MeteoriteWorldGen implements IWorldGenerator {
                                                    // spawnSurfaceMeteorite. These variables should be reassigned unless
                                                    // something goes wrong.
 
+    //TODO In this PR you need to...
+    //TODO Make meteorite spawns less gridlike (remove the guarantee that you find a meteor 700 blocks away from the previous one)
+    //TODO Make underground meteorites an actually consistent and proper config option (set to 0 and you are guaranteed only surface meteorites, regardless of ANYTHING)
+    //TODO Add the ability to configure the block that makes up the lava moat, check with liquid lead, water, etc. (At the same time make sure meteorites that spawn in water (if they can) have automatically flooded moats)
+    //TODO Make it all configurable and per-dimension configs
+    //TODO I guess also take a look and see if you can add any more options to the loot table
     @Override
     public void generate(final Random rng, final int chunkX, final int chunkZ, final World world,
             final IChunkProvider chunkGenerator, final IChunkProvider chunkProvider) {
