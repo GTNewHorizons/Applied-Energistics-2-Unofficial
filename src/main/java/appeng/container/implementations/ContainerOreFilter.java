@@ -2,7 +2,7 @@ package appeng.container.implementations;
 
 import net.minecraft.entity.player.InventoryPlayer;
 
-import appeng.client.gui.widgets.MEGuiTextField;
+import appeng.client.gui.implementations.GuiOreFilter;
 import appeng.container.ContainerSubGui;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.IOreFilterable;
@@ -15,7 +15,7 @@ public class ContainerOreFilter extends ContainerSubGui {
     private final IOreFilterable filterHost;
 
     @SideOnly(Side.CLIENT)
-    private MEGuiTextField textField;
+    private GuiOreFilter gui;
 
     @GuiSync(2)
     public String filter = "";
@@ -26,9 +26,8 @@ public class ContainerOreFilter extends ContainerSubGui {
     }
 
     @SideOnly(Side.CLIENT)
-    public void setTextField(final MEGuiTextField f) {
-        this.textField = f;
-        this.textField.setText(filter);
+    public void setGui(final GuiOreFilter gui) {
+        this.gui = gui;
     }
 
     public void setFilter(final String newValue) {
@@ -44,7 +43,7 @@ public class ContainerOreFilter extends ContainerSubGui {
 
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
-        if (field.equals("filter") && this.textField != null) this.textField.setText(filter);
+        if (field.equals("filter") && this.gui != null) this.gui.setFilterText(filter);
 
         super.onUpdate(field, oldValue, newValue);
     }
