@@ -77,6 +77,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
     public int arrowOffsetX;
     public int arrowCenterY;
     public int craftingOutputY = SLOTS_OFFSET_Y;
+    public int nonNullInputs;
 
     public final ArrayList<ViewItemStack> inputSlots = new ArrayList<>();
     public final ArrayList<ViewItemStack> outputSlots = new ArrayList<>();
@@ -180,6 +181,8 @@ public class NEIPatternViewHandler implements IUsageHandler {
         boolean isCraftable = patternDetails.isCraftable();
         List<IAEStack<?>> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
         int nonNullOutputs = (int) aeOutputs.stream().filter(Objects::nonNull).count();
+        this.nonNullInputs = (int) getFilteredStacks(patternDetails.getAEInputs()).stream().filter(Objects::nonNull)
+                .count();
 
         if (isCraftable) {
             setupCraftingLayout();
@@ -204,7 +207,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     public void setupReversedLayout() {
         inputsCols = REVERSED_INPUTS_COLS;
-        inputsRows = REVERSED_INPUTS_ROWS;
+        inputsRows = Math.max(REVERSED_INPUTS_ROWS, (nonNullInputs + inputsCols - 1) / inputsCols);
         outputsCols = REVERSED_OUTPUTS_COLS;
         outputsRows = REVERSED_OUTPUTS_ROWS;
         inputsOffsetX = OFFSET_X + 10;
@@ -215,7 +218,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     public void setupProcessingLayout() {
         inputsCols = PROCESSING_INPUTS_COLS;
-        inputsRows = PROCESSING_INPUTS_ROWS;
+        inputsRows = Math.max(PROCESSING_INPUTS_ROWS, (nonNullInputs + inputsCols - 1) / inputsCols);
         outputsCols = PROCESSING_OUTPUTS_COLS;
         outputsRows = PROCESSING_OUTPUTS_ROWS;
         inputsOffsetX = OFFSET_X;

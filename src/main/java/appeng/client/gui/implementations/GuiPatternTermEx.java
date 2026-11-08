@@ -39,7 +39,8 @@ public class GuiPatternTermEx extends GuiPatternTerm {
 
         this.setReservedSpace(81);
 
-        processingScrollBar.setHeight(70).setWidth(7).setLeft(6).setRange(0, 1, 1);
+        final int maxPages = Math.max(container.getPatternInputPages(), container.getPatternOutputPages());
+        processingScrollBar.setHeight(70).setWidth(7).setLeft(6).setRange(0, maxPages - 1, 1);
         processingScrollBar.setTexture(AppEng.MOD_ID, "guis/pattern3.png", 242, 0);
     }
 
@@ -214,7 +215,8 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                     VirtualMEPhantomSlot slot = this.outputSlots[slotIndex];
 
                     slot.setHidden(
-                            !container.invertedSync.get() ? y != container.activePageSync.get() || page != 0
+                            !container.invertedSync.get()
+                                    ? y != container.activePageSync.get() || page != 0 || y >= outputSlotPages
                                     : page != container.activePageSync.get());
 
                     slot.setX(
