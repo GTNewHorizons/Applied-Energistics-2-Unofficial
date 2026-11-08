@@ -139,7 +139,7 @@ public class ClientHelper extends ServerHelper {
         AEConfig.instance.get("Client", "controllerAnimation", ControllerAnimation.ORIGINAL_RAINBOW.name())
                 .set(controllerAnimation.name());
         AEConfig.instance.save();
-        syncControllerAnimationDefault();
+        syncPlayerSettings();
         return controllerAnimation;
     }
 
@@ -149,14 +149,14 @@ public class ClientHelper extends ServerHelper {
 
     @SubscribeEvent
     public void onPlayerJoinWorld(final EntityJoinWorldEvent event) {
-        if (event.entity instanceof EntityPlayerSP) syncControllerAnimationDefault();
+        if (event.entity instanceof EntityPlayerSP) syncPlayerSettings();
     }
 
     @SubscribeEvent
     public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
         if (!event.modID.equals(AppEng.MOD_ID)) return;
         loadControllerAnimation();
-        syncControllerAnimationDefault();
+        syncPlayerSettings();
     }
 
     private static void loadControllerAnimation() {
@@ -174,12 +174,16 @@ public class ClientHelper extends ServerHelper {
         }
     }
 
-    private static void syncControllerAnimationDefault() {
+    private static void syncPlayerSettings() {
         final Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft.thePlayer == null || minecraft.theWorld == null) return;
         try {
             NetworkHandler.instance.sendToServer(
                     new PacketValueConfig(PacketValueConfig.CONTROLLER_ANIMATION_DEFAULT, controllerAnimation.name()));
+            NetworkHandler.instance.sendToServer(
+                    new PacketValueConfig(
+                            PacketValueConfig.MEMORY_CARD_COPY_PATTERNS,
+                            String.valueOf(AEConfig.instance.memoryCardCopiesPatterns)));
         } catch (final IOException e) {
             AELog.debug(e);
         }
