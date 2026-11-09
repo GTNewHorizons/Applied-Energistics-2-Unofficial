@@ -88,6 +88,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     private final UpgradeSlotInventory upgradeSlotInventory = new UpgradeSlotInventory(clientUpgrades);
     private final ActionHandler<Long> upgradeSelection;
     private final int firstUpgradeSlot;
+    private final Set<Integer> dragSlots = new HashSet<>();
     private long selectedUpgradeId = -1;
     private boolean upgradeSelectionPending;
     private NetworkToolViewer toolbox;
@@ -192,6 +193,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     }
 
     public void selectUpgrades(long id) {
+        func_94533_d();
         selectedUpgradeId = canModifyUpgrades(id) ? id : -1;
         final InvTracker entry = trackedById.get(selectedUpgradeId);
         final IInventory upgrades = entry != null && entry.machine instanceof IInterfaceHost host
@@ -227,7 +229,9 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                 : Platform.getPartFromTE(tile, entry.side) != entry.machine)
             return false;
         final IGridNode node = entry.machine.getGridNode(ForgeDirection.UNKNOWN);
-        if (node == null || !node.isActive() || !collectReachableGrids().contains(node.getGrid())) return false;
+        if (node == null || !node.isActive()
+                || node.getGrid() != grid && !collectReachableGrids().contains(node.getGrid()))
+            return false;
         final ISecurityGrid security = node.getGrid().getCache(ISecurityGrid.class);
         return security.hasPermission(getPlayerInv().player, SecurityPermissions.BUILD);
     }
@@ -250,14 +254,47 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
     @Override
     public ItemStack slotClick(int slot, int button, int mode, EntityPlayer player) {
         checkToolbox();
-        if (!isValidContainer()) return null;
-        final boolean upgradeSlotClicked = isUpgradeSlotIndex(slot);
+        if (!isValidContainer()) {
+            func_94533_d();
+            return null;
+        }
+        final Set<Integer> syncSlots = new HashSet<>();
+        if (mode == 5) {
+            final int stage = func_94532_c(button);
+            if (stage == 0) dragSlots.clear();
+            // Track attempted targets too: the client may accept a slot that the server refuses.
+            if (stage == 1 && slot >= 0 && slot < inventorySlots.size()) dragSlots.add(slot);
+            // Vanilla resets its drag state during the final click, usually outside the window (-999).
+            if (stage == 2) syncSlots.addAll(dragSlots);
+        } else {
+            if (isUpgradeSlotIndex(slot)) syncSlots.add(slot);
+            if (mode == 6 && player.inventory.getItemStack() != null) {
+                for (Object entry : inventorySlots) {
+                    final Slot candidate = (Slot) entry;
+                    if (candidate.getHasStack() && func_94527_a(candidate, player.inventory.getItemStack(), true)) {
+                        syncSlots.add(candidate.slotNumber);
+                    }
+                }
+            }
+        }
         if (Platform.isServer() && selectedUpgradeId >= 0 && !canModifyUpgrades(selectedUpgradeId)) {
             selectUpgrades(-1);
         }
         final ItemStack result = super.slotClick(slot, button, mode, player);
-        if (Platform.isServer() && upgradeSlotClicked) syncUpgradeSlots(player, slot);
+        syncUpgradeSlots(player, Ints.toArray(syncSlots));
         return result;
+    }
+
+    @Override
+    protected void func_94533_d() {
+        super.func_94533_d();
+        dragSlots.clear();
+    }
+
+    @Override
+    public void onContainerClosed(EntityPlayer player) {
+        func_94533_d();
+        super.onContainerClosed(player);
     }
 
     @Override
@@ -277,14 +314,17 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
         if (Platform.isClient() || !(player instanceof EntityPlayerMP serverPlayer)
                 || serverPlayer.playerNetServerHandler == null)
             return;
-        boolean changedUpgradeSlot = false;
+        boolean touchesUpgrades = false;
         for (int slot : slots) {
-            if (isUpgradeSlotIndex(slot)) {
+            if (isUpgradeSlotIndex(slot)) touchesUpgrades = true;
+        }
+        if (!touchesUpgrades) return;
+        for (int slot : slots) {
+            if (slot >= 0 && slot < inventorySlots.size()) {
                 serverPlayer.sendSlotContents(this, slot, getSlot(slot).getStack());
-                changedUpgradeSlot = true;
             }
         }
-        if (changedUpgradeSlot) serverPlayer.updateHeldItem();
+        serverPlayer.updateHeldItem();
     }
 
     private class InterfaceUpgradeSlot extends SlotRestrictedInput {

@@ -10,8 +10,11 @@ import static appeng.gametests.AEGameTestHelpers.itemMonitor;
 import static appeng.gametests.AEGameTestHelpers.itemStack;
 import static appeng.gametests.AEGameTestHelpers.part;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import net.minecraft.block.Block;
@@ -25,6 +28,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.play.server.S2FPacketSetSlot;
+import net.minecraft.network.play.server.S30PacketWindowItems;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.FakePlayer;
@@ -63,6 +69,7 @@ import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
 import appeng.util.Platform;
 import appeng.util.inv.MEInventoryCrafting;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 
 @GameTestHolder(AppEng.MOD_ID)
@@ -179,6 +186,114 @@ public class InterfaceTests {
                         player.inventory.getItemStack().stackSize,
                         "Empty second row allows safe removal");
                 helper.assertEquals(0, target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY), "Safe removal succeeds");
+                player.inventory.setItemStack(null);
+                assertNoTerminalDrops(helper);
+            }
+        });
+    }
+
+    @GameTest(template = "interface_network", timeoutTicks = 160)
+    public static void terminalUpgradesDragSynchronizesOnlyAtCompletion(GameTestHelper helper) {
+        withInterfaceTerminal(helper, anchor -> {
+            FakePlayer player = terminalPlayer(helper, "upgrades_drag");
+            for (long targetId = 0; targetId < 2; targetId++) {
+                ContainerInterfaceTerminal container = openTerminal(helper, player, anchor, targetId);
+                IInterfaceHost target = terminalTarget(helper, container);
+                container.getSlot(36)
+                        .putStack(AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get());
+                player.inventory
+                        .setItemStack(AEApi.instance().definitions().materials().cardCrafting().maybeStack(2).get());
+                container.slotClick(-999, 0, 5, player);
+                container.slotClick(37, 1, 5, player);
+                container.slotClick(27, 1, 5, player);
+                assertTerminalSlotUpdates(helper, player, container);
+                container.slotClick(-999, 2, 5, player);
+                helper.assertNull(container.getSlot(37).getStack(), "Duplicate crafting card is refused");
+                helper.assertEquals(
+                        1,
+                        target.getInstalledUpgrades(Upgrades.CRAFTING),
+                        "Original crafting card remains");
+                helper.assertEquals(
+                        2,
+                        container.getSlot(27).getStack().stackSize,
+                        "Vanilla puts both cards in player slot");
+                helper.assertNull(player.inventory.getItemStack(), "Refused target consumes no card");
+                assertTerminalSlotUpdates(helper, player, container, 27, 37, -1);
+
+                container.getSlot(36).putStack(null);
+                container.getSlot(27).putStack(null);
+                player.inventory.setItemStack(capacityCards(4));
+                container.slotClick(-999, 0, 5, player);
+                container.slotClick(36, 1, 5, player);
+                container.slotClick(37, 1, 5, player);
+                assertTerminalSlotUpdates(helper, player, container);
+                container.slotClick(-999, 2, 5, player);
+                helper.assertEquals(
+                        2,
+                        target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                        "Drag installs two cards");
+                helper.assertEquals(
+                        2,
+                        player.inventory.getItemStack().stackSize,
+                        "Slot limits leave two cards on cursor");
+                assertTerminalSlotUpdates(helper, player, container, 36, 37, -1);
+
+                container.slotClick(-999, 0, 5, player);
+                container.slotClick(38, 1, 5, player);
+                container.slotClick(27, 0, 0, player); // Cancel without completing the drag.
+                container.slotClick(-999, 0, 5, player);
+                container.slotClick(27, 1, 5, player);
+                container.slotClick(28, 1, 5, player);
+                container.slotClick(-999, 2, 5, player);
+                helper.assertEquals(
+                        1,
+                        container.getSlot(27).getStack().stackSize,
+                        "Player-only drag still distributes");
+                helper.assertEquals(
+                        1,
+                        container.getSlot(28).getStack().stackSize,
+                        "Player-only drag preserves quantity");
+                helper.assertNull(container.getSlot(38).getStack(), "Cancelled drag installs nothing");
+                helper.assertNull(player.inventory.getItemStack(), "All four capacity cards are accounted for");
+                assertTerminalSlotUpdates(helper, player, container);
+                container.getSlot(27).putStack(null);
+                container.getSlot(28).putStack(null);
+                assertNoTerminalDrops(helper);
+            }
+        });
+    }
+
+    @GameTest(template = "interface_network", timeoutTicks = 160)
+    public static void terminalUpgradesDoubleClickSynchronizesRefusedRemoval(GameTestHelper helper) {
+        withInterfaceTerminal(helper, anchor -> {
+            FakePlayer player = terminalPlayer(helper, "upgrades_double_click");
+            for (long targetId = 0; targetId < 2; targetId++) {
+                ContainerInterfaceTerminal container = openTerminal(helper, player, anchor, targetId);
+                IInterfaceHost target = terminalTarget(helper, container);
+                container.getSlot(36).putStack(capacityCards(1));
+                container.getSlot(37).putStack(capacityCards(1));
+                ItemStack pattern = encodedProcessingPattern(Blocks.cobblestone, 1, Blocks.stone, 1);
+                target.getPatterns().setInventorySlotContents(26, pattern);
+                container.getSlot(27).putStack(capacityCards(2));
+                player.inventory.setItemStack(capacityCards(1));
+                container.slotClick(28, 0, 6, player);
+                helper.assertEquals(3, player.inventory.getItemStack().stackSize, "Only loose cards are collected");
+                helper.assertNull(container.getSlot(27).getStack(), "Vanilla collects from the player inventory");
+                helper.assertEquals(
+                        2,
+                        target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY),
+                        "Unsafe removals refused");
+                helper.assertSame(pattern, target.getPatterns().getStackInSlot(26), "Occupied pattern stays in place");
+                assertTerminalSlotUpdates(helper, player, container, 27, 36, 37, -1);
+
+                target.getPatterns().setInventorySlotContents(26, null);
+                container.slotClick(28, 0, 6, player);
+                helper.assertEquals(
+                        5,
+                        player.inventory.getItemStack().stackSize,
+                        "Safe collection returns all five cards");
+                helper.assertEquals(0, target.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY), "Safe removal succeeds");
+                assertTerminalSlotUpdates(helper, player, container, 36, 37, -1);
                 player.inventory.setItemStack(null);
                 assertNoTerminalDrops(helper);
             }
@@ -435,6 +550,38 @@ public class InterfaceTests {
         container.selectUpgrades(targetId);
         helper.assertEquals(targetId, container.getSelectedUpgradeId(), "Tracked interface should be selectable");
         return container;
+    }
+
+    private static void assertTerminalSlotUpdates(GameTestHelper helper, FakePlayer player,
+            ContainerInterfaceTerminal container, int... expectedSlots) {
+        EmbeddedChannel channel = (EmbeddedChannel) player.playerNetServerHandler.netManager.channel();
+        channel.runPendingTasks();
+        Set<Integer> received = new HashSet<>();
+        Object packet;
+        while ((packet = channel.readOutbound()) != null) {
+            helper.assertFalse(packet instanceof S30PacketWindowItems, "Upgrade operations must not resend the window");
+            if (!(packet instanceof S2FPacketSetSlot update)) continue;
+            // Packet getters are client-only; inspect the vanilla wire format on the dedicated server.
+            PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+            try {
+                update.writePacketData(data);
+                int window = data.readByte();
+                int slot = data.readShort();
+                helper.assertEquals(slot == -1 ? -1 : container.windowId, window, "Snapshot targets the right window");
+                ItemStack expected = slot == -1 ? player.inventory.getItemStack() : container.getSlot(slot).getStack();
+                helper.assertTrue(
+                        ItemStack.areItemStacksEqual(expected, data.readItemStackFromBuffer()),
+                        "Slot/cursor snapshot matches final server contents, slot=" + slot);
+                received.add(slot);
+            } catch (IOException e) {
+                throw new AssertionError("Cannot inspect slot update", e);
+            } finally {
+                data.release();
+            }
+        }
+        Set<Integer> expected = new HashSet<>();
+        for (int slot : expectedSlots) expected.add(slot);
+        helper.assertEquals(expected, received, "Only participating slots and cursor should be resynchronized");
     }
 
     private static IInterfaceHost terminalTarget(GameTestHelper helper, ContainerInterfaceTerminal container) {

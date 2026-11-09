@@ -316,22 +316,25 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonUseSubstitute.yPosition = offset;
         offset += 18;
 
-        buttonList.add(guiButtonAssemblersOnly);
-        buttonList.add(guiButtonHideFull);
-        buttonList.add(guiButtonShowHidden);
-        buttonList.add(guiButtonBrokenRecipes);
-        buttonList.add(guiButtonSectionOrder);
-        buttonList.add(searchStringSave);
-        buttonList.add(terminalStyleBox);
-        buttonList.add(guiButtonUseSubstitute);
-
-        initCustomButtons(this.guiLeft - 18, offset);
-        initPrimaryGuiButton();
         sidebarButtons.clear();
-        for (GuiButton button : buttonList) {
-            if (button.xPosition == guiLeft - 18) sidebarButtons.add(button);
-        }
-        sidebarButtons.sort(Comparator.comparingInt(button -> button.yPosition));
+        Collections.addAll(
+                sidebarButtons,
+                terminalStyleBox,
+                searchStringSave,
+                guiButtonSectionOrder,
+                guiButtonBrokenRecipes,
+                guiButtonHideFull,
+                guiButtonAssemblersOnly,
+                guiButtonShowHidden,
+                guiButtonUseSubstitute);
+        buttonList.addAll(sidebarButtons);
+
+        final int firstCustomButton = buttonList.size();
+        initCustomButtons(this.guiLeft - 18, offset);
+        buttonList.subList(firstCustomButton, buttonList.size()).stream()
+                .filter(button -> button.xPosition == guiLeft - 18)
+                .sorted(Comparator.comparingInt(button -> button.yPosition)).forEach(sidebarButtons::add);
+        initPrimaryGuiButton();
     }
 
     private void updateLayout() {
