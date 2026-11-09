@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.crafting.v2.CraftingRequest;
@@ -711,5 +712,100 @@ public class CraftingV2Tests {
         assertEquals(1, goldDustRequests.size());
         assertEquals(1, goldDustRequests.get(0).stack.getStackSize());
         assertEquals(0, goldDustRequests.get(0).remainingToProcess);
+    }
+
+    private void addEqualPriorityPlateRecipes(MockAESystem aeSystem) {
+        aeSystem.newProcessingPattern().addInput(withSize(ironDust, 2)) //
+                .addOutput(withSize(ironIngot, 1)) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(ironIngot, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(goldDust, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .buildAndAdd();
+    }
+
+    @Test
+    void competingRecipeSamePriority() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(withSize(ironDust, 4));
+        aeSystem.addStoredItem(withSize(goldDust, 1));
+        addEqualPriorityPlateRecipes(aeSystem);
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(withSize(ironPlate, 3));
+        simulateJobAndCheck(job, MAX_SIMULATION_STEPS);
+        assertFalse(job.isSimulation());
+        assertEquals(job.getOutput(), AEItemStack.create(withSize(ironPlate, 3)));
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(withSize(ironDust, 4)),
+                AEItemStack.create(withSize(goldDust, 1)),
+                AEItemStack.create(withSize(ironIngot, 0)).setCountRequestable(2),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(3));
+
+        final CraftingJobV2 jobFailed = aeSystem.makeCraftingJob(withSize(ironPlate, 4));
+        simulateJobAndCheck(jobFailed, MAX_SIMULATION_STEPS);
+        assertTrue(jobFailed.isSimulation());
+        assertJobPlanEquals(
+                jobFailed,
+                AEItemStack.create(withSize(ironDust, 6)),
+                AEItemStack.create(withSize(goldDust, 1)),
+                AEItemStack.create(withSize(ironIngot, 0)).setCountRequestable(3),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(4));
+    }
+
+    @Test
+    void competingRecipeSamePriorityIronDustOnly() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(withSize(ironDust, 2));
+        addEqualPriorityPlateRecipes(aeSystem);
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(withSize(ironPlate, 1));
+        simulateJobAndCheck(job, MAX_SIMULATION_STEPS);
+        assertFalse(job.isSimulation());
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(withSize(ironDust, 2)),
+                AEItemStack.create(withSize(ironIngot, 0)).setCountRequestable(1),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(1));
+    }
+
+    @Test
+    void competingRecipeSamePriorityGoldDustOnly() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(withSize(goldDust, 1));
+        addEqualPriorityPlateRecipes(aeSystem);
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(withSize(ironPlate, 1));
+        simulateJobAndCheck(job, MAX_SIMULATION_STEPS);
+        assertFalse(job.isSimulation());
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(withSize(goldDust, 1)),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(1));
+    }
+
+    @Test
+    void competingRecipePatternsListedByPriority() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        addEqualPriorityPlateRecipes(aeSystem);
+        aeSystem.newProcessingPattern().addInput(withSize(goldIngot, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .setPriority(1) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(ironDust, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .setPriority(-1) //
+                .buildAndAdd();
+        aeSystem.cgCache.setMockPatternsFromMethods();
+
+        final List<ICraftingPatternDetails> platePatterns = new ArrayList<>(
+                aeSystem.cgCache.getCraftingFor(AEItemStack.create(withSize(ironPlate, 1)), null, 0, dummyWorld));
+        assertEquals(4, platePatterns.size());
+        assertEquals(1, platePatterns.get(0).getPriority());
+        assertEquals(0, platePatterns.get(1).getPriority());
+        assertEquals(0, platePatterns.get(2).getPriority());
+        assertEquals(-1, platePatterns.get(3).getPriority());
     }
 }

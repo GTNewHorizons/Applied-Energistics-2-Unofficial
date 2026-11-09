@@ -21,6 +21,9 @@ public interface ILevelEmitter
 
     long getReportingValue();
 
+    /** Returns the value the emitter currently compares against its threshold. */
+    long getStoredAmount();
+
     default AEStackTypeFilter getTypeFilters() {
         return new AEStackTypeFilter();
     }

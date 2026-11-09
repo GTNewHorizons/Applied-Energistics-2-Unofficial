@@ -66,6 +66,9 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
     @GuiSync(9)
     public ExtractionMode extractionMode;
 
+    @GuiSync(10)
+    public AccessRestriction reshuffleAccess = AccessRestriction.READ_WRITE;
+
     private final IAEStack<?>[] configClientSlot = new IAEStack[63];
 
     public ContainerStorageBus(final InventoryPlayer ip, final IStorageBus te) {
@@ -150,6 +153,8 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
             this.setStickyMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.STICKY_MODE));
             this.setExtractionMode(
                     (ExtractionMode) this.getUpgradeable().getConfigManager().getSetting(Settings.EXTRACTION_MODE));
+            this.reshuffleAccess = (AccessRestriction) this.getUpgradeable().getConfigManager()
+                    .getSetting(Settings.RESHUFFLE_ACCESS);
 
             final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
             this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
@@ -308,6 +313,10 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
 
     public IAEStackType<?> getStackType() {
         return this.storageBus.getStackType();
+    }
+
+    public AccessRestriction getReshuffleAccess() {
+        return this.reshuffleAccess;
     }
 
     public IAEStackInventory getConfig() {

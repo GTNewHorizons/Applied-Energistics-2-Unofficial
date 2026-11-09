@@ -1,9 +1,11 @@
 package appeng.client.gui.implementations;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
@@ -14,7 +16,9 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.MEGuiTextField;
+import appeng.client.render.StackSizeRenderer;
 import appeng.container.implementations.ContainerAdvancedLevelEmitter;
+import appeng.core.AEConfig;
 import appeng.core.localization.ColorUtils;
 import appeng.core.localization.GuiText;
 import appeng.util.calculators.ArithHelper;
@@ -100,7 +104,27 @@ public class GuiAdvancedLevelEmitter extends AEBaseGui {
                             SLOT_Y + y,
                             this.container.configSync,
                             slot,
-                            GuiAdvancedLevelEmitter::acceptType));
+                            GuiAdvancedLevelEmitter::acceptType) {
+
+                        @Override
+                        public boolean drawStackAndOverlay(final Minecraft mc, final int mouseX, final int mouseY) {
+                            final boolean hovered = super.drawStackAndOverlay(mc, mouseX, mouseY);
+                            if (this.getAEStack() != null) {
+                                // the item icon is rendered with depth, so the text must skip the depth test
+                                GL11.glDisable(GL11.GL_LIGHTING);
+                                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                                StackSizeRenderer.drawStackSize(
+                                        this.getX(),
+                                        this.getY(),
+                                        GuiAdvancedLevelEmitter.this.container.getStoredAmount(s),
+                                        mc.fontRenderer,
+                                        AEConfig.instance.getTerminalFontSize());
+                                GL11.glEnable(GL11.GL_LIGHTING);
+                                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                            }
+                            return hovered;
+                        }
+                    });
         }
     }
 

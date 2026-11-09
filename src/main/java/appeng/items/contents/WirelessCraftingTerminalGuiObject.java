@@ -42,7 +42,9 @@ public class WirelessCraftingTerminalGuiObject extends WirelessTerminalGuiObject
     @Override
     public void onChangeInventory(IInventory inv, int slot, InvOperation mc, ItemStack removedStack,
             ItemStack newStack) {
-        if (mc != InvOperation.markDirty) writeInventory(); // couz spam
+        if (mc == InvOperation.markDirty) {
+            writeInventory();
+        }
     }
 
     @Override

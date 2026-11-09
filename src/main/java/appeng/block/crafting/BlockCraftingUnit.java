@@ -102,6 +102,7 @@ public class BlockCraftingUnit extends AEBaseTileBlock {
         final TileCraftingTile cp = this.getTileEntity(w, x, y, z);
         if (cp != null) {
             cp.breakCluster();
+            cp.spillPreviousState();
         }
 
         super.breakBlock(w, x, y, z, a, b);

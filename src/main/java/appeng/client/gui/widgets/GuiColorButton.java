@@ -31,9 +31,9 @@ public class GuiColorButton extends GuiAeButton {
                     && mouseY < this.yPosition + this.height;
             int color;
             if (this.field_146123_n) {
-                color = this.color.blackVariant - 16777216;
+                color = this.color.blackVariant | 0xFF000000;
             } else {
-                color = this.color.mediumVariant - 16777216;
+                color = this.color.mediumVariant | 0xFF000000;
             }
             drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, color);
 

@@ -33,6 +33,7 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
     private MEGuiTextField[] textFields;
 
     private final LongSyncHandler[] amountSync = new LongSyncHandler[IAdvancedLevelEmitter.SLOT_COUNT];
+    private final LongSyncHandler[] storedSync = new LongSyncHandler[IAdvancedLevelEmitter.SLOT_COUNT];
     private final BooleanSyncHandler[] activeSync = new BooleanSyncHandler[IAdvancedLevelEmitter.SLOT_COUNT];
     private final BooleanSyncHandler[] invertedSync = new BooleanSyncHandler[IAdvancedLevelEmitter.SLOT_COUNT];
     private final ConfigEnumSyncHandler<BooleanOperation> logicModeSync;
@@ -54,6 +55,8 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
                     field.setCursorPositionEnd();
                 }
             }).onServerChange((oldValue, newValue) -> this.lvlEmitter.setReportingValue(slot, newValue));
+
+            this.storedSync[slot] = sync.longS2C("stored" + slot);
 
             this.activeSync[slot] = sync.booleanSync("active" + slot)
                     .onServerChange((oldValue, newValue) -> this.lvlEmitter.setSlotActive(slot, newValue));
@@ -92,6 +95,7 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
         if (Platform.isServer()) {
             for (int slot = 0; slot < IAdvancedLevelEmitter.SLOT_COUNT; slot++) {
                 this.amountSync[slot].set(this.lvlEmitter.getReportingValue(slot));
+                this.storedSync[slot].set(this.lvlEmitter.getStoredAmount(slot));
                 this.activeSync[slot].set(this.lvlEmitter.isSlotActive(slot));
                 this.invertedSync[slot].set(this.lvlEmitter.isSlotInverted(slot));
             }
@@ -107,6 +111,10 @@ public class ContainerAdvancedLevelEmitter extends AEBaseContainer implements IC
 
     public void setLevel(final int slot, final long value) {
         this.amountSync[slot].set(value);
+    }
+
+    public long getStoredAmount(final int slot) {
+        return this.storedSync[slot].get();
     }
 
     public boolean isSlotActive(final int slot) {
