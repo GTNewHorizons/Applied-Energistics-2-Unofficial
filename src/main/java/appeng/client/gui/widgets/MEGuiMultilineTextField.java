@@ -101,9 +101,7 @@ public class MEGuiMultilineTextField extends MEGuiTextField {
     }
 
     public void scroll(int wheel) {
-        scrollLine = Math.max(
-                0,
-                Math.min(wrap(getText()).size() - visibleLines(), scrollLine - (wheel > 0 ? 3 : -3)));
+        scrollLine = Math.max(0, Math.min(wrap(getText()).size() - visibleLines(), scrollLine - (wheel > 0 ? 3 : -3)));
     }
 
     @Override
@@ -177,7 +175,8 @@ public class MEGuiMultilineTextField extends MEGuiTextField {
     private int positionInLine(Line line, int mouseX) {
         String text = getText();
         for (int position = line.start; position < line.end; position++) {
-            int midpoint = x + 3 + font.getStringWidth(text.substring(line.start, position))
+            int midpoint = x + 3
+                    + font.getStringWidth(text.substring(line.start, position))
                     + font.getCharWidth(text.charAt(position)) / 2;
             if (mouseX < midpoint) return position;
         }
