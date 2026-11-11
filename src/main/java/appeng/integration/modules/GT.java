@@ -54,7 +54,7 @@ public class GT implements IIntegrationModule, IGT {
 
         // PartStorageBus uses 0 to represent 'no hash' so we offset the numbers up one here. They just need to be
         // distinct. This controls when the item IO is reset.
-        return igte.canAccessData() ? 2 : 1;
+        return te.hashCode() ^ (igte.canAccessData() ? 2 : 1);
     }
 
     @Override
