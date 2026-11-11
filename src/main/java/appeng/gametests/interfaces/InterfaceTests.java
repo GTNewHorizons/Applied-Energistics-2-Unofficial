@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -56,10 +57,15 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AEColor;
 import appeng.container.ContainerNull;
 import appeng.container.implementations.ContainerInterfaceTerminal;
+import appeng.container.sync.AbstractSyncHandler;
+import appeng.container.sync.SyncEndpoint;
+import appeng.container.sync.SyncManager;
+import appeng.container.sync.SyncMode;
 import appeng.core.AppEng;
 import appeng.helpers.IInterfaceHost;
 import appeng.items.contents.NetworkToolViewer;
 import appeng.me.GridAccessException;
+import appeng.parts.automation.UpgradeInventory;
 import appeng.parts.misc.PartInterface;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.crafting.TileMolecularAssembler;
@@ -68,7 +74,10 @@ import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
 import appeng.tile.storage.TileDrive;
 import appeng.util.Platform;
+import appeng.util.inv.IUpgradeInventory;
 import appeng.util.inv.MEInventoryCrafting;
+import cpw.mods.fml.relauncher.ReflectionHelper;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 
@@ -193,12 +202,95 @@ public class InterfaceTests {
     }
 
     @GameTest(template = "interface_network", timeoutTicks = 160)
+    public static void terminalUpgradesClientMirrorEnforcesSelectedLimits(GameTestHelper helper) {
+        withInterfaceTerminal(helper, anchor -> {
+            FakePlayer player = terminalPlayer(helper, "upgrades_client_limits");
+            player.inventory.mainInventory[8] = AEApi.instance().definitions().items().networkTool().maybeStack(1)
+                    .get();
+            ContainerInterfaceTerminal server = openTerminal(helper, player, anchor, 0);
+            ContainerInterfaceTerminal receiver = new ContainerInterfaceTerminal(player.inventory, anchor);
+            UpgradeInventory mirror = ReflectionHelper
+                    .getPrivateValue(ContainerInterfaceTerminal.class, receiver, "clientUpgrades");
+            ItemStack crafting = AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get();
+            ItemStack speed = AEApi.instance().definitions().materials().cardSpeed().maybeStack(1).get();
+            helper.assertFalse(mirror.isItemValidForSlot(0, crafting), "No insertion before limits arrive");
+            for (long targetId = 0; targetId < 2; targetId++) {
+                if (targetId != 0) server.selectUpgrades(targetId);
+                receiveTerminalSelection(helper, server, receiver);
+                IUpgradeInventory actual = (IUpgradeInventory) server.getSlot(36).inventory;
+                for (Upgrades upgrade : Upgrades.values()) {
+                    helper.assertEquals(
+                            actual.getMaxInstalled(upgrade),
+                            mirror.getMaxInstalled(upgrade),
+                            "Mirror receives the selected host's actual limit for " + upgrade);
+                }
+                helper.assertFalse(mirror.isItemValidForSlot(0, speed), "Unsupported cards rejected locally");
+                helper.assertTrue(mirror.isItemValidForSlot(0, crafting), "First crafting card accepted locally");
+                mirror.setInventorySlotContents(0, crafting.copy());
+                helper.assertFalse(mirror.isItemValidForSlot(1, crafting), "Second crafting card rejected locally");
+                int capacityLimit = mirror.getMaxInstalled(Upgrades.PATTERN_CAPACITY);
+                helper.assertEquals(3, capacityLimit, "Fixture supports three capacity cards");
+                for (int slot = 1; slot <= capacityLimit; slot++) {
+                    helper.assertTrue(
+                            mirror.isItemValidForSlot(slot, capacityCards(1)),
+                            "Capacity below limit accepted");
+                    mirror.setInventorySlotContents(slot, capacityCards(1));
+                }
+                helper.assertFalse(mirror.isItemValidForSlot(1, capacityCards(1)), "Capacity limit enforced locally");
+                mirror.setInventorySlotContents(1, null);
+                helper.assertTrue(mirror.isItemValidForSlot(1, capacityCards(1)), "Removal frees upgrade capacity");
+
+                server.selectUpgrades(-1);
+                receiveTerminalSelection(helper, server, receiver);
+                for (Upgrades upgrade : Upgrades.values()) {
+                    helper.assertEquals(0, mirror.getMaxInstalled(upgrade), "Deselection clears every limit");
+                }
+                helper.assertFalse(mirror.isItemValidForSlot(1, crafting), "Deselection refuses insertion");
+                helper.assertEquals(
+                        0,
+                        mirror.getInstalledUpgrades(Upgrades.CRAFTING),
+                        "Zero limit clamps cached count");
+                server.selectUpgrades(targetId);
+                receiveTerminalSelection(helper, server, receiver);
+                // Check before applying new slot contents: changing limits must invalidate the cached counts too.
+                helper.assertFalse(mirror.isItemValidForSlot(1, crafting), "Reselection invalidates stale count cache");
+                for (int slot = 0; slot < 4; slot++) {
+                    mirror.setInventorySlotContents(
+                            slot,
+                            ItemStack.copyItemStack(server.getSlot(36 + slot).getStack()));
+                }
+                helper.assertTrue(mirror.isItemValidForSlot(0, crafting), "Empty target snapshot restores insertion");
+            }
+            player.inventory.setItemStack(speed.copy());
+            server.slotClick(36, 0, 0, player);
+            helper.assertNull(server.getSlot(36).getStack(), "Server still rejects unsupported insertion");
+            helper.assertEquals(1, player.inventory.getItemStack().stackSize, "Rejected insertion consumes nothing");
+            player.inventory.setItemStack(null);
+            server.getSlot(27).putStack(speed.copy());
+            server.swapSlotContents(36, 27);
+            helper.assertNotNull(server.getSlot(27).getStack(), "Rejected hotbar swap keeps its card");
+            server.slotClick(27, 0, 1, player);
+            helper.assertNotNull(server.getSlot(27).getStack(), "Shift-click cannot insert an unsupported card either");
+            server.swapSlotContents(40, 27);
+            helper.assertNull(
+                    server.getSlot(27).getStack(),
+                    "Hotbar swap can still move an unsupported card to toolbox");
+            helper.assertItemEqual(
+                    speed,
+                    server.getSlot(40).getStack(),
+                    "Toolbox is not restricted by interface limits");
+            assertNoTerminalDrops(helper);
+        });
+    }
+
+    @GameTest(template = "interface_network", timeoutTicks = 160)
     public static void terminalUpgradesDragSynchronizesOnlyAtCompletion(GameTestHelper helper) {
         withInterfaceTerminal(helper, anchor -> {
             FakePlayer player = terminalPlayer(helper, "upgrades_drag");
             for (long targetId = 0; targetId < 2; targetId++) {
                 ContainerInterfaceTerminal container = openTerminal(helper, player, anchor, targetId);
                 IInterfaceHost target = terminalTarget(helper, container);
+                // A stale client may have collected this target before another viewer filled its crafting limit.
                 container.getSlot(36)
                         .putStack(AEApi.instance().definitions().materials().cardCrafting().maybeStack(1).get());
                 player.inventory
@@ -550,6 +642,37 @@ public class InterfaceTests {
         container.selectUpgrades(targetId);
         helper.assertEquals(targetId, container.getSelectedUpgradeId(), "Tracked interface should be selectable");
         return container;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static void receiveTerminalSelection(GameTestHelper helper, ContainerInterfaceTerminal server,
+            ContainerInterfaceTerminal receiver) {
+        // Replay the real encoded actions without requiring a Forge network dispatcher on the fake connection.
+        List<?> actions = ReflectionHelper
+                .getPrivateValue(SyncManager.class, server.getSyncManager(), "pendingInitialActions");
+        Map<String, AbstractSyncHandler> handlers = ReflectionHelper
+                .getPrivateValue(SyncManager.class, receiver.getSyncManager(), "handlersByFullKey");
+        helper.assertEquals(2, actions.size(), "Selection sends limits followed by acknowledgement");
+        for (int index = 0; index < actions.size(); index++) {
+            Object action = actions.get(index);
+            AbstractSyncHandler handler = (AbstractSyncHandler) ReflectionHelper
+                    .getPrivateValue((Class) action.getClass(), action, "handler");
+            helper.assertEquals(
+                    index == 0 ? "interfaceUpgradeLimits" : "interfaceUpgrades",
+                    handler.getKey(),
+                    "Limits arrive before editing is enabled");
+            byte[] payload = (byte[]) ReflectionHelper.getPrivateValue((Class) action.getClass(), action, "payload");
+            ByteBuf data = Unpooled.wrappedBuffer(payload);
+            try {
+                handlers.get(handler.getFullKey()).readIncoming(SyncEndpoint.SERVER, SyncMode.FULL, data);
+            } catch (IOException e) {
+                throw new AssertionError("Cannot receive terminal selection", e);
+            } finally {
+                data.release();
+            }
+        }
+        actions.clear();
+        helper.assertEquals(server.getSelectedUpgradeId(), receiver.getSelectedUpgradeId(), "Selection acknowledged");
     }
 
     private static void assertTerminalSlotUpdates(GameTestHelper helper, FakePlayer player,

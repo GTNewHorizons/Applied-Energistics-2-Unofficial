@@ -11,6 +11,7 @@
 
 package appeng.container.implementations;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,9 +70,9 @@ import appeng.helpers.InventoryAction;
 import appeng.items.contents.NetworkToolViewer;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.AEBasePart;
+import appeng.parts.automation.UpgradeInventory;
 import appeng.parts.misc.PartPatternRepeater;
 import appeng.parts.p2p.PartP2PTunnel;
-import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
@@ -84,8 +85,16 @@ import cpw.mods.fml.relauncher.SideOnly;
 public final class ContainerInterfaceTerminal extends AEBaseContainer implements IContainerSubGui {
 
     private static final int UPGRADE_SLOTS = 4;
-    private final AppEngInternalInventory clientUpgrades = new AppEngInternalInventory(null, UPGRADE_SLOTS, 1);
+    private final int[] clientUpgradeLimits = new int[Upgrades.values().length];
+    private final UpgradeInventory clientUpgrades = new UpgradeInventory(null, UPGRADE_SLOTS) {
+
+        @Override
+        public int getMaxInstalled(Upgrades upgrade) {
+            return clientUpgradeLimits[upgrade.ordinal()];
+        }
+    };
     private final UpgradeSlotInventory upgradeSlotInventory = new UpgradeSlotInventory(clientUpgrades);
+    private final ActionHandler<int[]> upgradeLimits;
     private final ActionHandler<Long> upgradeSelection;
     private final int firstUpgradeSlot;
     private final Set<Integer> dragSlots = new HashSet<>();
@@ -148,6 +157,25 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                                 ip).setPlayerSide());
             }
         }
+        this.upgradeLimits = this.syncRegistrar()
+                .actionS2C(
+                        "interfaceUpgradeLimits",
+                        StreamCodecs.<int[]>of(
+                                int[].class.getName(),
+                                (buf, limits) -> { for (int limit : limits) buf.writeInt(limit); },
+                                buf -> {
+                                    final int[] limits = new int[Upgrades.values().length];
+                                    for (int index = 0; index < limits.length; index++) {
+                                        limits[index] = buf.readInt();
+                                        if (limits[index] < 0)
+                                            throw new IOException("Negative interface upgrade limit");
+                                    }
+                                    return limits;
+                                }))
+                .onClientAction(limits -> {
+                    System.arraycopy(limits, 0, clientUpgradeLimits, 0, limits.length);
+                    clientUpgrades.markDirty();
+                });
         this.upgradeSelection = this.syncRegistrar().action("interfaceUpgrades", StreamCodecs.longValue())
                 .onServerAction(this::selectUpgrades).onClientAction(id -> {
                     selectedUpgradeId = id;
@@ -200,6 +228,14 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer implements
                 ? host.getInterfaceDuality().getUpgrades()
                 : clientUpgrades;
         upgradeSlotInventory.setInventory(upgrades);
+        final int[] limits = new int[Upgrades.values().length];
+        if (selectedUpgradeId >= 0) {
+            for (Upgrades upgrade : Upgrades.values()) {
+                limits[upgrade.ordinal()] = upgradeSlotInventory.getMaxInstalled(upgrade);
+            }
+        }
+        // Install the target's limits before acknowledging the selection and enabling client prediction.
+        upgradeLimits.send(limits);
         // Acknowledge before sending contents so vanilla applies even empty/unchanged slots in the same order.
         upgradeSelection.send(selectedUpgradeId);
         for (int index = 0; index < UPGRADE_SLOTS; index++) {
