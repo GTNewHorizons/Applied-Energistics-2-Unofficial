@@ -607,6 +607,60 @@ public class IOPortTests {
                 }).thenSucceed();
     }
 
+    @GameTest(template = "ioport", timeoutTicks = 60)
+    @MethodSource("blockedRedstoneModes")
+    public static void removingRedstoneCardResumesWork(GameTestHelper helper, RedstoneMode mode, int strength) {
+        TileIOPort ioport = getIOPort(helper);
+        getDrive(helper);
+        TickCallbackHandle blockedCellStaysInInput = helper
+                .onEachTickDisabled("redstone control keeps the cell in input", () -> {
+                    helper.assertNotNull(ioport.getStackInSlot(0), "Blocked cell should remain in input");
+                    helper.assertNull(ioport.getStackInSlot(6), "Blocked cell should not reach output");
+                });
+
+        helper.startSequence()
+                .thenWaitUntilAtEnd("wait for IO port network activation", () -> assertIOPortActive(helper, ioport))
+                .thenIdle(1).thenExecuteAtStart("configure a redstone-blocked IO port", () -> {
+                    setRedstoneInput(helper, strength);
+                    installRedstoneUpgrade(ioport);
+                    installUpgrade(
+                            ioport,
+                            AEApi.instance().definitions().materials().cardSuperluminalSpeed().maybeStack(1).get(),
+                            1);
+                    configureRedstone(ioport, mode);
+                    helper.setSlot(IO_PORT_LABEL, 0, cell1k());
+                    blockedCellStaysInInput.enable();
+                }).thenIdle(5).thenExecute("remove the redstone card", () -> {
+                    blockedCellStaysInInput.disable();
+                    ioport.getInventoryByName("upgrades").decrStackSize(0, 1);
+                }).thenWaitUntil("wait for processing without the redstone card", 20, () -> {
+                    helper.assertNull(ioport.getStackInSlot(0), "Removing the card should unblock the input cell");
+                    helper.assertNotNull(
+                            ioport.getStackInSlot(6),
+                            "The cell should reach output without a signal change");
+                    helper.assertTrue(
+                            ioport.getConfigManager().getSetting(Settings.REDSTONE_CONTROLLED) == mode,
+                            "Removing the card should preserve the configured redstone mode");
+                    helper.assertEquals(
+                            1,
+                            ioport.getInstalledUpgrades(Upgrades.SUPERLUMINALSPEED),
+                            "The superluminal card should remain installed");
+                }).thenExecute("reinsert the redstone card and another cell", () -> {
+                    helper.clearSlot(IO_PORT_LABEL, 6);
+                    installRedstoneUpgrade(ioport);
+                    helper.setSlot(IO_PORT_LABEL, 0, cell1k());
+                    blockedCellStaysInInput.enable();
+                }).thenIdle(5).thenExecute("finish restored redstone control check", blockedCellStaysInInput::disable)
+                .thenSucceed();
+    }
+
+    public static List<GameTestArguments> blockedRedstoneModes() {
+        return Arrays.asList(
+                GameTestArguments.named("high-signal", RedstoneMode.HIGH_SIGNAL, 0),
+                GameTestArguments.named("low-signal", RedstoneMode.LOW_SIGNAL, 15),
+                GameTestArguments.named("pulse", RedstoneMode.SIGNAL_PULSE, 0));
+    }
+
     // Runs in LOW_SIGNAL mode only after redstone power is removed.
     @GameTest(template = "ioport", timeoutTicks = 60)
     public static void redstoneLowSignalRunsOnlyWithoutPower(GameTestHelper helper) {

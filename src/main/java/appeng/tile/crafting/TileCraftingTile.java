@@ -17,10 +17,12 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -184,8 +186,16 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileCraftingTile(final NBTTagCompound data) {
         data.setBoolean("core", this.isCoreBlock());
-        if (this.isCoreBlock() && this.cluster != null) {
-            this.cluster.writeToNBT(data);
+        if (this.isCoreBlock()) {
+            if (this.cluster != null) {
+                this.cluster.writeToNBT(data);
+            } else if (this.previousState != null) {
+                for (final String key : (Set<String>) this.previousState.func_150296_c()) {
+                    if (!data.hasKey(key)) {
+                        data.setTag(key, this.previousState.getTag(key).copy());
+                    }
+                }
+            }
         }
     }
 
@@ -249,80 +259,118 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
     }
 
     public void breakCluster() {
-        if (this.cluster != null) {
-            this.cluster.cancel();
-            final MECraftingInventory inv = this.cluster.getInventory();
+        if (this.cluster == null) {
+            return;
+        }
 
-            final LinkedList<WorldCoord> places = new LinkedList<>();
-
-            final Iterator<IGridHost> i = this.cluster.getTiles();
-            while (i.hasNext()) {
-                final IGridHost h = i.next();
-                if (h == this) {
-                    places.add(new WorldCoord(this));
-                } else {
-                    final TileEntity te = (TileEntity) h;
-
-                    for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
-                        final WorldCoord wc = new WorldCoord(te);
-                        wc.add(d, 1);
-                        if (this.worldObj.isAirBlock(wc.x, wc.y, wc.z)) {
-                            places.add(wc);
-                        }
-                    }
-                }
-            }
-
-            Collections.shuffle(places);
-
-            if (places.isEmpty()) {
-                throw new IllegalStateException(
-                        this.cluster + " does not contain any kind of blocks, which were destroyed.");
-            }
-
-            for (IAEItemStack ais : (IItemList<IAEItemStack>) inv
-                    .getAvailableItems(AEApi.instance().storage().createItemList())) {
-                ais = ais.copy();
-                ais.setStackSize(ais.getItemStack().getMaxStackSize());
-                while (!places.isEmpty()) {
-                    final IAEItemStack g = inv.extractItems(ais.copy(), Actionable.MODULATE);
-                    if (g == null) {
-                        break;
-                    }
-
-                    final WorldCoord wc = places.removeFirst();
-                    if (!AEConfig.instance.limitCraftingCPUSpill) {
-                        places.add(wc);
-                    }
-
-                    Platform.spawnDrops(this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList(g.getItemStack()));
-                }
-                if (places.isEmpty()) {
-                    break;
-                }
-            }
-
-            for (IAEFluidStack ifs : (IItemList<IAEFluidStack>) inv
-                    .getAvailableItems(AEApi.instance().storage().createFluidList())) {
-                while (!places.isEmpty()) {
-                    final IAEItemStack g = stackConvertPacket(inv.extractItems(ifs, Actionable.MODULATE));
-                    if (g == null) {
-                        break;
-                    }
-
-                    final WorldCoord wc = places.removeFirst();
-                    if (!AEConfig.instance.limitCraftingCPUSpill) {
-                        places.add(wc);
-                    }
-
-                    Platform.spawnDrops(this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList(g.getItemStack()));
-                }
-                if (places.isEmpty()) {
-                    break;
-                }
-            }
-
+        /*
+         * An invalidated core was unloaded or replaced (e.g. by a block mover) rather than broken, so the NBT it was
+         * saved to still holds the job and restores it once the core forms a cluster again. Cancelling and spilling the
+         * job here as well would duplicate it. The job is also kept on the core itself, for when the same tile is
+         * revalidated instead of being loaded from NBT.
+         */
+        if (this.cluster.isCoreInvalid()) {
+            this.cluster.storeJobInCore();
             this.cluster.destroy();
+            return;
+        }
+
+        this.cluster.cancel();
+
+        final LinkedList<WorldCoord> places = new LinkedList<>();
+
+        final Iterator<IGridHost> i = this.cluster.getTiles();
+        while (i.hasNext()) {
+            final IGridHost h = i.next();
+            if (h == this) {
+                places.add(new WorldCoord(this));
+            } else {
+                places.addAll(this.getAdjacentAir((TileEntity) h));
+            }
+        }
+
+        if (places.isEmpty()) {
+            throw new IllegalStateException(
+                    this.cluster + " does not contain any kind of blocks, which were destroyed.");
+        }
+
+        this.spillInventory(this.cluster.getInventory(), places);
+        this.cluster.destroy();
+    }
+
+    /// Drops the items of the job loaded from NBT, for when no cluster resumes it.
+    public void spillPreviousState() {
+        if (this.previousState == null) {
+            return;
+        }
+
+        final MECraftingInventory inv = new MECraftingInventory();
+        inv.readInventory((NBTTagList) this.previousState.getTag("inventory"));
+        this.previousState = null;
+
+        final LinkedList<WorldCoord> places = this.getAdjacentAir(this);
+        if (places.isEmpty()) {
+            places.add(new WorldCoord(this));
+        }
+
+        this.spillInventory(inv, places);
+    }
+
+    private LinkedList<WorldCoord> getAdjacentAir(final TileEntity te) {
+        final LinkedList<WorldCoord> places = new LinkedList<>();
+        for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
+            final WorldCoord wc = new WorldCoord(te);
+            wc.add(d, 1);
+            if (this.worldObj.isAirBlock(wc.x, wc.y, wc.z)) {
+                places.add(wc);
+            }
+        }
+        return places;
+    }
+
+    private void spillInventory(final MECraftingInventory inv, final LinkedList<WorldCoord> places) {
+        Collections.shuffle(places);
+
+        for (IAEItemStack ais : (IItemList<IAEItemStack>) inv
+                .getAvailableItems(AEApi.instance().storage().createItemList())) {
+            ais = ais.copy();
+            ais.setStackSize(ais.getItemStack().getMaxStackSize());
+            while (!places.isEmpty()) {
+                final IAEItemStack g = inv.extractItems(ais.copy(), Actionable.MODULATE);
+                if (g == null) {
+                    break;
+                }
+
+                final WorldCoord wc = places.removeFirst();
+                if (!AEConfig.instance.limitCraftingCPUSpill) {
+                    places.add(wc);
+                }
+
+                Platform.spawnDrops(this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList(g.getItemStack()));
+            }
+            if (places.isEmpty()) {
+                break;
+            }
+        }
+
+        for (IAEFluidStack ifs : (IItemList<IAEFluidStack>) inv
+                .getAvailableItems(AEApi.instance().storage().createFluidList())) {
+            while (!places.isEmpty()) {
+                final IAEItemStack g = stackConvertPacket(inv.extractItems(ifs, Actionable.MODULATE));
+                if (g == null) {
+                    break;
+                }
+
+                final WorldCoord wc = places.removeFirst();
+                if (!AEConfig.instance.limitCraftingCPUSpill) {
+                    places.add(wc);
+                }
+
+                Platform.spawnDrops(this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList(g.getItemStack()));
+            }
+            if (places.isEmpty()) {
+                break;
+            }
         }
     }
 
