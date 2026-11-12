@@ -13,6 +13,7 @@ package appeng.util;
 import static appeng.util.Platform.isEIOLoaded;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -64,11 +65,8 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
-    // Two flat maps keyed by packObjectIdentity(te)|packSideAndFlags(d,flags).
-    // ADAPTOR_CACHE_REFS stores the actual te reference for identity-hash collision safety.
-    // ADAPTOR_CACHE stores the resolved adaptor (may be null for cached null results).
-    private static final Long2ObjectOpenHashMap<Object> ADAPTOR_CACHE = new Long2ObjectOpenHashMap<>();
-    private static final Long2ObjectOpenHashMap<Object> ADAPTOR_CACHE_REFS = new Long2ObjectOpenHashMap<>();
+    // Entries retain the actual reference and inventory tiles to validate identity and chunk lifetime
+    private static final Long2ObjectOpenHashMap<CachedAdaptor> ADAPTOR_CACHE = new Long2ObjectOpenHashMap<>();
     private static int adaptorCacheTick = Integer.MIN_VALUE;
 
     private static int counter = 0;
@@ -136,23 +134,21 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
     private static void cacheInvalidateIfStale(int currentTick) {
         if (currentTick != adaptorCacheTick) {
             ADAPTOR_CACHE.clear();
-            ADAPTOR_CACHE_REFS.clear();
             adaptorCacheTick = currentTick;
         }
     }
 
     public static void clearCache() {
         ADAPTOR_CACHE.clear();
-        ADAPTOR_CACHE_REFS.clear();
     }
 
     /**
-     * Returns {@code true} iff the cache contains an entry for the given arguments and the stored reference matches the
-     * supplied {@code te}.
+     * Checks that a cache entry still refers to the supplied object and its current, loaded inventory tiles.
      */
     private static boolean isCached(Object te, ForgeDirection d, int flags) {
         final long key = makeCacheKey(te, d, flags);
-        return ADAPTOR_CACHE_REFS.get(key) == te;
+        final CachedAdaptor entry = ADAPTOR_CACHE.get(key);
+        return entry != null && entry.isValid(te);
     }
 
     /**
@@ -161,13 +157,29 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
      */
     private static InventoryAdaptor cacheGet(Object te, ForgeDirection d, int flags) {
         final long key = makeCacheKey(te, d, flags);
-        return (InventoryAdaptor) ADAPTOR_CACHE.get(key);
+        return ADAPTOR_CACHE.get(key).adaptor;
     }
 
     private static void cachePut(Object te, ForgeDirection d, int flags, InventoryAdaptor adaptor) {
         final long key = makeCacheKey(te, d, flags);
-        ADAPTOR_CACHE_REFS.put(key, te);
-        ADAPTOR_CACHE.put(key, adaptor);
+        ADAPTOR_CACHE.put(key, new CachedAdaptor(te, adaptor));
+    }
+
+    private static final class CachedAdaptor {
+
+        private final Object reference;
+        private final InventoryAdaptor adaptor;
+        private final List<TileEntity> tiles;
+
+        private CachedAdaptor(Object reference, InventoryAdaptor adaptor) {
+            this.reference = reference;
+            this.adaptor = adaptor;
+            this.tiles = reference instanceof TileEntity tile ? Platform.getInventoryTiles(tile) : null;
+        }
+
+        private boolean isValid(Object reference) {
+            return this.reference == reference && (this.tiles == null || Platform.areInventoryTilesLoaded(this.tiles));
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -224,7 +236,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         }
 
         if (invs && te instanceof TileEntityChest) {
-            return new AdaptorIInventory(Platform.GetChestInv(te));
+            IInventory inventory = Platform.GetChestInv(te);
+            return inventory == null ? null : new AdaptorIInventory(inventory);
         }
 
         if (te instanceof ISidedInventory sided) {
