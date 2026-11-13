@@ -272,7 +272,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                                 }
 
                                 if (t instanceof IInterfaceHost iHost) {
-                                    ToolMemoryCard.savePatterns(data, iHost);
+                                    ToolMemoryCard.savePatterns(data, player, iHost);
                                 }
 
                                 memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
