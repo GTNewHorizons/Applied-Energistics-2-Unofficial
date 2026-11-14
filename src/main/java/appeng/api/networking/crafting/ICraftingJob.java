@@ -13,6 +13,8 @@
 
 package appeng.api.networking.crafting;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import appeng.api.config.CraftingMode;
@@ -46,6 +48,22 @@ public interface ICraftingJob<StackType extends IAEStack<StackType>> {
      * @return the final output of the job.
      */
     StackType getOutput();
+
+    /**
+     * @return all final outputs of the job, for jobs that craft several items at once. The first entry is the same as
+     *         {@link #getOutput()}.
+     */
+    default List<StackType> getOutputs() {
+        return Collections.singletonList(getOutput());
+    }
+
+    /**
+     * @return the stack crafting CPUs show for this job instead of {@link #getOutput()}, for example the item the
+     *         requested outputs are ingredients for. null to show {@link #getOutput()}.
+     */
+    default IAEStack<?> getDisplayOutput() {
+        return null;
+    }
 
     /**
      * returns true if this needs more simulation.
