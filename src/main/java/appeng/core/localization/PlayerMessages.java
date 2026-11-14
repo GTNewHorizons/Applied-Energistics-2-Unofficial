@@ -71,7 +71,7 @@ public enum PlayerMessages implements Localization {
     WirelessHighlighterPrefix,
     WirelessHighlighterNetworkPrefix,
     WirelessHighlighterColorPrefix,
-    CableSwapped;
+    CableSwapped,
     InterfaceUpgradeRemovalBlocked;
 
     @Deprecated // kept for backward compat
