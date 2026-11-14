@@ -49,6 +49,7 @@ public class PacketNetworkVisualiserData extends AppEngPacket {
             int n1 = stream.readInt();
             int n2 = stream.readInt();
             int c = stream.readInt();
+            int free = stream.readInt();
             int flagsCount = stream.readInt();
 
             EnumSet<VLinkFlags> flags = EnumSet.noneOf(VLinkFlags.class);
@@ -56,7 +57,7 @@ public class PacketNetworkVisualiserData extends AppEngPacket {
                 int flag = stream.readInt();
                 flags.add(VLinkFlags.values()[flag]);
             }
-            this.vLinkSet.add(new VLink(this.vNodeSet.get(n1), this.vNodeSet.get(n2), c, flags));
+            this.vLinkSet.add(new VLink(this.vNodeSet.get(n1), this.vNodeSet.get(n2), c, free, flags));
         }
     }
 
@@ -101,6 +102,7 @@ public class PacketNetworkVisualiserData extends AppEngPacket {
             data.writeInt(node1Index);
             data.writeInt(node2Index);
             data.writeInt(vl.channels);
+            data.writeInt(vl.freeChannels);
             data.writeInt(vl.flags.size());
             for (VLinkFlags f : vl.flags) {
                 data.writeInt(f.ordinal());

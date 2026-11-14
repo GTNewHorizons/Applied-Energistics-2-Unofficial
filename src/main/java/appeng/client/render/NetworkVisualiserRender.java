@@ -51,6 +51,7 @@ public class NetworkVisualiserRender {
     final List<VisualisationModes> renderNodesModes = Arrays.asList(
             VisualisationModes.NODES,
             VisualisationModes.FULL,
+            VisualisationModes.FREE_CHANNELS,
             VisualisationModes.NONUM,
             VisualisationModes.NODES_ONE_CHANNEL,
             VisualisationModes.PROXY);
@@ -58,6 +59,7 @@ public class NetworkVisualiserRender {
     final List<VisualisationModes> renderLinksModes = Arrays.asList(
             VisualisationModes.CHANNELS,
             VisualisationModes.FULL,
+            VisualisationModes.FREE_CHANNELS,
             VisualisationModes.NONUM,
             VisualisationModes.NODES_ONE_CHANNEL,
             VisualisationModes.ONE_CHANNEL,
@@ -204,22 +206,26 @@ public class NetworkVisualiserRender {
 
         // Labels are rendered every frame because they need to face the camera
 
-        if (mode == VisualisationModes.FULL) {
+        if (mode == VisualisationModes.FULL || mode == VisualisationModes.FREE_CHANNELS) {
             for (VLink link : vLinkSet) {
-                if (link.channels > 0) {
-                    double linkX = (link.node1.x + link.node2.x) / 2d + 0.5d;
-                    double linkY = (link.node1.y + link.node2.y) / 2d + 0.5d;
-                    double linkZ = (link.node1.z + link.node2.z) / 2d + 0.5d;
-                    double distSq = (viewX - linkX) * (viewX - linkX) + (viewY - linkY) * (viewY - linkY)
-                            + (viewZ - linkZ) * (viewZ - linkZ);
-                    if (distSq < 256d) { // 16 blocks
-                        renderFloatingText(
-                                String.valueOf(link.channels),
-                                linkX,
-                                linkY,
-                                linkZ,
-                                ColorUtils.networkVisualiserFloatingText.getColor());
-                    }
+                // Proxy links are not ME channel connections and have no channel capacity.
+                if (link.flags.contains(VLinkFlags.PROXY) || (mode == VisualisationModes.FULL && link.channels <= 0)
+                        || (mode == VisualisationModes.FREE_CHANNELS && link.freeChannels < 0))
+                    continue;
+
+                double linkX = (link.node1.x + link.node2.x) / 2d + 0.5d;
+                double linkY = (link.node1.y + link.node2.y) / 2d + 0.5d;
+                double linkZ = (link.node1.z + link.node2.z) / 2d + 0.5d;
+                double distSq = (viewX - linkX) * (viewX - linkX) + (viewY - linkY) * (viewY - linkY)
+                        + (viewZ - linkZ) * (viewZ - linkZ);
+                if (distSq < 256d) { // 16 blocks
+                    int channels = mode == VisualisationModes.FREE_CHANNELS ? link.freeChannels : link.channels;
+                    renderFloatingText(
+                            String.valueOf(channels),
+                            linkX,
+                            linkY,
+                            linkZ,
+                            ColorUtils.networkVisualiserFloatingText.getColor());
                 }
             }
         }
