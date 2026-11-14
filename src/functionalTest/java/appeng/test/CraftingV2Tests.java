@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.ruling_0.materiallib.api.MaterialLibAPI;
+
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.crafting.v2.CraftingJobV2;
@@ -33,9 +35,9 @@ import appeng.util.item.AEItemStack;
 import appeng.util.item.ItemList;
 import cpw.mods.fml.common.registry.GameRegistry;
 import ggfab.GGItemList;
-import gregtech.api.enums.Materials;
-import gregtech.api.enums.OrePrefixes;
-import gregtech.api.util.GTOreDictUnificator;
+import gregtech.api.enums.materials.BlockShapes;
+import gregtech.api.enums.materials.Materials;
+import gregtech.api.enums.materials.Shapes;
 import gregtech.common.items.IDMetaTool01;
 import gregtech.common.items.MetaGeneratedTool01;
 
@@ -50,22 +52,22 @@ public class CraftingV2Tests {
     final ItemStack tinIngot, tinPlate, pigIronIngot, pigIronPlate;
 
     public CraftingV2Tests() {
-        bronzePlate = Materials.Bronze.getPlates(1);
-        bronzeDoublePlate = GTOreDictUnificator.get(OrePrefixes.plateDouble, Materials.Bronze, 1);
-        bronzeIngot = Materials.Bronze.getIngots(1);
+        bronzePlate = MaterialLibAPI.getStack(Materials.Bronze, Shapes.plate, 1);
+        bronzeDoublePlate = MaterialLibAPI.getStack(Materials.Bronze, Shapes.plateDouble, 1);
+        bronzeIngot = MaterialLibAPI.getStack(Materials.Bronze, Shapes.ingot, 1);
         gtHammer = MetaGeneratedTool01.INSTANCE
                 .getToolWithStats(IDMetaTool01.HARDHAMMER.ID, 1, Materials.VanadiumSteel, null, null);
         singleUseGtHammer = GGItemList.SingleUseHardHammer.get(1);
-        ironDust = Materials.Iron.getDust(1);
-        ironIngot = Materials.Iron.getIngots(1);
-        ironPlate = Materials.Iron.getPlates(1);
-        goldDust = Materials.Gold.getDust(1);
-        goldIngot = Materials.Gold.getIngots(1);
-        goldBlock = Materials.Gold.getBlocks(1);
-        tinIngot = Materials.Tin.getIngots(1);
-        tinPlate = Materials.Tin.getPlates(1);
-        pigIronIngot = Materials.PigIron.getIngots(1);
-        pigIronPlate = Materials.PigIron.getPlates(1);
+        ironDust = MaterialLibAPI.getStack(Materials.Iron, Shapes.dust, 1);
+        ironIngot = MaterialLibAPI.getStack(Materials.Iron, Shapes.ingot, 1);
+        ironPlate = MaterialLibAPI.getStack(Materials.Iron, Shapes.plate, 1);
+        goldDust = MaterialLibAPI.getStack(Materials.Gold, Shapes.dust, 1);
+        goldIngot = MaterialLibAPI.getStack(Materials.Gold, Shapes.ingot, 1);
+        goldBlock = MaterialLibAPI.getStack(Materials.Gold, BlockShapes.block, 1);
+        tinIngot = MaterialLibAPI.getStack(Materials.Tin, Shapes.ingot, 1);
+        tinPlate = MaterialLibAPI.getStack(Materials.Tin, Shapes.plate, 1);
+        pigIronIngot = MaterialLibAPI.getStack(Materials.PigIron, Shapes.ingot, 1);
+        pigIronPlate = MaterialLibAPI.getStack(Materials.PigIron, Shapes.plate, 1);
 
         if (!DimensionManager.isDimensionRegistered(256)) {
             DimensionManager.registerProviderType(256, WorldProviderSurface.class, false);
