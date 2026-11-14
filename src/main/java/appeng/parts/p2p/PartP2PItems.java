@@ -59,6 +59,7 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     private int oldSize = 0;
     private boolean requested;
     private IInventory cachedInv;
+    private List<TileEntity> cachedTargets = new LinkedList<>();
 
     public PartP2PItems(final ItemStack is) {
         super(is);
@@ -76,11 +77,12 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     private IInventory getDestination() {
         this.requested = true;
 
-        if (this.cachedInv != null) {
+        if (this.cachedInv != null && Platform.areInventoryTilesLoaded(this.cachedTargets)) {
             return this.cachedInv;
         }
 
         final List<IInventory> outs = new LinkedList<>();
+        this.cachedTargets = new LinkedList<>();
         final TunnelCollection<PartP2PItems> itemTunnels;
 
         try {
@@ -93,7 +95,7 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
             if (t.loopsBackTo(this, new HashSet<>())) {
                 continue;
             }
-            final IInventory inv = t.getOutputInv();
+            final IInventory inv = t.getOutputInv(this.cachedTargets);
             if (inv != null) {
                 if (Platform.getRandomInt() % 2 == 0) {
                     outs.add(inv);
@@ -106,14 +108,17 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         return this.cachedInv = new WrapperChainedInventory(outs);
     }
 
-    private IInventory getOutputInv() {
+    private IInventory getOutputInv(List<TileEntity> targets) {
         IInventory output = null;
 
         if (this.getProxy().isActive()) {
-            final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+            final TileEntity te = Platform.getLoadedTileEntity(
+                    this.getTile().getWorldObj(),
                     this.getTile().xCoord + this.getSide().offsetX,
                     this.getTile().yCoord + this.getSide().offsetY,
                     this.getTile().zCoord + this.getSide().offsetZ);
+            final List<TileEntity> inventoryTiles = Platform.getInventoryTiles(te);
+            if (inventoryTiles.isEmpty()) return null;
 
             if (this.which.contains(this)) {
                 return null;
@@ -148,6 +153,10 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
             }
 
             this.which.pop();
+            if (output != null) {
+                targets.add(this.getTile());
+                targets.addAll(inventoryTiles);
+            }
         }
 
         return output;
@@ -320,7 +329,8 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     }
 
     private boolean loopsBackTo(final PartP2PItems tunnel, final Set<PartP2PItems> visited) {
-        final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+        final TileEntity te = Platform.getLoadedTileEntity(
+                this.getTile().getWorldObj(),
                 this.getTile().xCoord + this.getSide().offsetX,
                 this.getTile().yCoord + this.getSide().offsetY,
                 this.getTile().zCoord + this.getSide().offsetZ);

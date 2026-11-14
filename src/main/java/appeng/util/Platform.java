@@ -726,6 +726,7 @@ public class Platform {
      * Utility function to get the full inventory for a Double Chest in the World.
      */
     public static IInventory GetChestInv(final Object te) {
+        if (!isInventoryTileLoaded((TileEntity) te)) return null;
         TileEntityChest teA = (TileEntityChest) te;
         TileEntity teB = null;
         final Block myBlockID = teA.getWorldObj().getBlock(teA.xCoord, teA.yCoord, teA.zCoord);
@@ -777,6 +778,59 @@ public class Platform {
         }
 
         return new InventoryLargeChest("", teA, (IInventory) teB);
+    }
+
+    /** Returns the current tile without loading its chunk. */
+    @Nullable
+    public static TileEntity getLoadedTileEntity(World world, int x, int y, int z) {
+        if (world == null || !world.blockExists(x, y, z)) return null;
+        TileEntity tile = world.getTileEntity(x, y, z);
+        return tile == null || tile.isInvalid() ? null : tile;
+    }
+
+    /** Captures the current inventory tiles, or an empty list if any required chunk is unloaded. */
+    public static List<TileEntity> getInventoryTiles(TileEntity target) {
+        final List<TileEntity> tiles = new ArrayList<>(2);
+        if (!isInventoryTileLoaded(target)) return tiles;
+        if (target instanceof TileEntityChest) {
+            final World world = target.getWorldObj();
+            for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+                if (side.offsetY != 0) continue;
+                final int x = target.xCoord + side.offsetX;
+                final int z = target.zCoord + side.offsetZ;
+                final TileEntity neighbor = getLoadedTileEntity(world, x, target.yCoord, z);
+                if (neighbor instanceof TileEntityChest && neighbor.getBlockType() == target.getBlockType()) {
+                    tiles.add(neighbor);
+                }
+            }
+        }
+        tiles.add(target);
+        return tiles;
+    }
+
+    /** Checks that the current target and neighboring chest chunks are already loaded. */
+    public static boolean isInventoryTileLoaded(TileEntity target) {
+        if (target == null
+                || getLoadedTileEntity(target.getWorldObj(), target.xCoord, target.yCoord, target.zCoord) != target) {
+            return false;
+        }
+        if (target instanceof TileEntityChest) {
+            for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+                if (side.offsetY == 0 && !target.getWorldObj()
+                        .blockExists(target.xCoord + side.offsetX, target.yCoord, target.zCoord + side.offsetZ))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    /** Checks that every captured tile still belongs to the loaded world. */
+    public static boolean areInventoryTilesLoaded(List<TileEntity> tiles) {
+        if (tiles.isEmpty()) return false;
+        for (TileEntity tile : tiles) {
+            if (getLoadedTileEntity(tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord) != tile) return false;
+        }
+        return true;
     }
 
     public static boolean isModLoaded(final String modid) {
@@ -1490,6 +1544,7 @@ public class Platform {
         } else if (target instanceof ITileStorageMonitorable) {
             return 0;
         } else if (target instanceof TileEntityChest chest) {
+            if (!isInventoryTileLoaded(chest)) return 0;
             chest.checkForAdjacentChests();
             if (chest.adjacentChestZNeg != null) {
                 hash ^= chest.adjacentChestZNeg.hashCode();

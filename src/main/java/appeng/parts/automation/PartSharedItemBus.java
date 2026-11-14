@@ -10,11 +10,14 @@
 
 package appeng.parts.automation;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Predicate;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -51,6 +54,8 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     private final IAEStackInventory config = new IAEStackInventory(this, 9);
     private int cachedAdaptorHash = 0;
     private InventoryAdaptor cachedAdaptor;
+    private List<TileEntity> cachedTargets = Collections.emptyList();
+    private boolean targetChunkUnloaded;
     private boolean lastRedstone = false;
     private boolean pendingStateUpdate = false;
     protected String oreFilterString = "";
@@ -117,17 +122,25 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
                 self.xCoord + this.getSide().offsetX,
                 self.yCoord + this.getSide().offsetY,
                 self.zCoord + this.getSide().offsetZ);
+        this.targetChunkUnloaded = !self.getWorldObj().blockExists(
+                self.xCoord + this.getSide().offsetX,
+                self.yCoord + this.getSide().offsetY,
+                self.zCoord + this.getSide().offsetZ)
+                || (target instanceof TileEntityChest && !Platform.isInventoryTileLoaded(target));
 
         final int newAdaptorHash = Platform.generateTileHash(target);
 
         // Some neighbors, such as GT tanks, expose inventories only after placement initialization.
-        if (this.cachedAdaptorHash == newAdaptorHash && newAdaptorHash != 0 && this.cachedAdaptor != null) {
+        if (this.cachedAdaptorHash == newAdaptorHash && newAdaptorHash != 0
+                && this.cachedAdaptor != null
+                && Platform.areInventoryTilesLoaded(this.cachedTargets)) {
             return this.cachedAdaptor;
         }
 
         // noinspection MagicConstant
         this.cachedAdaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite(), getAdaptorFlags());
         this.cachedAdaptorHash = this.cachedAdaptor == null ? 0 : newAdaptorHash;
+        this.cachedTargets = Platform.getInventoryTiles(target);
 
         return this.cachedAdaptor;
     }
@@ -143,11 +156,9 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     }
 
     /**
-     * Checks if the bus can actually do something.
-     * <p>
-     * Currently this tests if the chunk for the target is actually loaded.
+     * Checks whether the target and any other half of a vanilla chest can be accessed without loading chunks.
      *
-     * @return true, if the the bus should do its work.
+     * @return true if the target's chunks are loaded.
      */
     protected boolean canDoBusWork() {
         final TileEntity self = this.getHost().getTile();
@@ -155,7 +166,10 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         final int xCoordinate = self.xCoord + this.getSide().offsetX;
         final int zCoordinate = self.zCoord + this.getSide().offsetZ;
 
-        return world != null && world.getChunkProvider().chunkExists(xCoordinate >> 4, zCoordinate >> 4);
+        if (world == null || !world.getChunkProvider().chunkExists(xCoordinate >> 4, zCoordinate >> 4)) return false;
+        TileEntity target = Platform
+                .getLoadedTileEntity(world, xCoordinate, self.yCoord + this.getSide().offsetY, zCoordinate);
+        return !(target instanceof TileEntityChest) || Platform.isInventoryTileLoaded(target);
     }
 
     private void updateState() {
@@ -190,12 +204,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     protected TileEntity getTileEntity(final TileEntity self, final int x, final int y, final int z) {
         final World w = self.getWorldObj();
-
-        if (w.getChunkProvider().chunkExists(x >> 4, z >> 4)) {
-            return w.getTileEntity(x, y, z);
-        }
-
-        return null;
+        return Platform.getLoadedTileEntity(w, x, y, z);
     }
 
     protected abstract TickRateModulation doBusWork();
@@ -213,7 +222,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     @Override
     protected boolean isSleeping() {
-        return this.getTarget() == null || super.isSleeping();
+        return (this.getTarget() == null && !this.targetChunkUnloaded) || super.isSleeping();
     }
 
     @Override

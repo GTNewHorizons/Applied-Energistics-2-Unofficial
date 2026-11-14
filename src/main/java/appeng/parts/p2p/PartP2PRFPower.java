@@ -69,7 +69,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
             return 0;
         }
 
-        if (this.isActive()) {
+        if (this.getProxy().isActive()) {
             final Stack<PartP2PRFPower> stack = this.getDepth();
 
             for (final PartP2PRFPower t : stack) {
@@ -136,12 +136,13 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
 
     private IEnergyReceiver getOutput() {
         if (this.isOutput()) {
-            if (!this.cachedTarget) {
-                final TileEntity self = this.getTile();
-                final TileEntity te = self.getWorldObj().getTileEntity(
-                        self.xCoord + this.getSide().offsetX,
-                        self.yCoord + this.getSide().offsetY,
-                        self.zCoord + this.getSide().offsetZ);
+            final TileEntity self = this.getTile();
+            final TileEntity te = Platform.getLoadedTileEntity(
+                    self.getWorldObj(),
+                    self.xCoord + this.getSide().offsetX,
+                    self.yCoord + this.getSide().offsetY,
+                    self.zCoord + this.getSide().offsetZ);
+            if (!this.cachedTarget || this.outputTarget != te) {
                 this.outputTarget = te instanceof IEnergyReceiver ? (IEnergyReceiver) te : null;
                 this.cachedTarget = true;
             }
@@ -157,7 +158,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
 
     @Override
     public int getEnergyStored(final ForgeDirection from) {
-        if (this.isOutput() || !this.isActive()) {
+        if (this.isOutput() || !this.getProxy().isActive()) {
             return 0;
         }
 
@@ -189,7 +190,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
 
     @Override
     public int getMaxEnergyStored(final ForgeDirection from) {
-        if (this.isOutput() || !this.isActive()) {
+        if (this.isOutput() || !this.getProxy().isActive()) {
             return 0;
         }
 

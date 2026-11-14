@@ -28,6 +28,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -122,7 +123,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     private int priority = 0;
     private boolean cached = false;
     private IStorageBusMonitor<?> monitor = null;
-    private MEInventoryHandler handler = null;
+    private StorageBusInventoryHandler handler = null;
+    private boolean targetChunkUnloaded = false;
     private int handlerHash = 0;
     private boolean wasActive = false;
     private byte resetCacheLogic = 0;
@@ -526,12 +528,15 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         return new TickingRequest(
                 TickRates.StorageBus.getMin(),
                 TickRates.StorageBus.getMax(),
-                this.monitor == null,
+                this.monitor == null && !this.targetChunkUnloaded,
                 true);
     }
 
     @Override
     public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
+        if (this.targetChunkUnloaded || (this.handler != null && !this.handler.isValid())) {
+            this.resetCacheLogic = 2;
+        }
         if (this.resetCacheLogic != 0) {
             this.resetCache();
         }
@@ -540,7 +545,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
             return this.monitor.onTick();
         }
 
-        return TickRateModulation.SLEEP;
+        return this.targetChunkUnloaded ? TickRateModulation.SLOWER : TickRateModulation.SLEEP;
     }
 
     private void resetCache() {
@@ -605,11 +610,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     // Looks for interfaces for subnet
     private IMEInventory getConnectedInventory() {
-        final TileEntity self = this.getHost().getTile();
-        final TileEntity target = self.getWorldObj().getTileEntity(
-                self.xCoord + this.getSide().offsetX,
-                self.yCoord + this.getSide().offsetY,
-                self.zCoord + this.getSide().offsetZ);
+        final TileEntity target = this.getTarget();
 
         if (target != null) {
             final IExternalStorageHandler esh = AEApi.instance().registries().externalStorage()
@@ -621,23 +622,38 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         return null;
     }
 
+    private TileEntity getTarget() {
+        final TileEntity self = this.getHost().getTile();
+        final World world = self.getWorldObj();
+        final ForgeDirection side = this.getSide();
+        final int x = self.xCoord + side.offsetX;
+        final int y = self.yCoord + side.offsetY;
+        final int z = self.zCoord + side.offsetZ;
+        this.targetChunkUnloaded = !world.blockExists(x, y, z);
+        if (this.targetChunkUnloaded) return null;
+        final TileEntity target = Platform.getLoadedTileEntity(world, x, y, z);
+        if (target instanceof TileEntityChest && !Platform.isInventoryTileLoaded(target)) {
+            this.targetChunkUnloaded = true;
+            return null;
+        }
+        return target;
+    }
+
     public MEInventoryHandler getInternalHandler() {
-        if (this.cached) {
+        if (this.cached && !this.targetChunkUnloaded && (this.handler == null || this.handler.isValid())) {
             return this.handler;
         }
 
         final boolean wasSleeping = this.monitor == null;
 
         this.cached = true;
-        final TileEntity self = this.getHost().getTile();
-
-        final ForgeDirection side = this.getSide();
-        final TileEntity target = self.getWorldObj()
-                .getTileEntity(self.xCoord + side.offsetX, self.yCoord + side.offsetY, self.zCoord + side.offsetZ);
+        final TileEntity target = this.getTarget();
 
         final int newHandlerHash = Platform.generateTileHash(target);
 
-        if (this.handlerHash == newHandlerHash && this.handlerHash != 0 && this.handler != null) {
+        if (this.handlerHash == newHandlerHash && this.handlerHash != 0
+                && this.handler != null
+                && this.handler.isValid()) {
             return this.handler;
         }
 
@@ -665,7 +681,11 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                 if (inv != null) {
                     this.checkInterfaceVsStorageBus(target, this.getSide().getOpposite());
 
-                    this.handler = new StorageBusInventoryHandler<>(inv, this.getStackType(), this::getReshuffleAccess);
+                    this.handler = new StorageBusInventoryHandler<>(
+                            inv,
+                            this.getStackType(),
+                            this::getReshuffleAccess,
+                            target);
 
                     AccessRestriction currentAccess = (AccessRestriction) this.getConfigManager()
                             .getSetting(Settings.ACCESS);
@@ -740,7 +760,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         if (wasSleeping != (this.monitor == null)) {
             try {
                 final ITickManager tm = this.getProxy().getTick();
-                if (this.monitor == null) {
+                if (this.monitor == null && !this.targetChunkUnloaded) {
                     tm.sleepDevice(this.getProxy().getNode());
                 } else {
                     tm.wakeDevice(this.getProxy().getNode());
