@@ -15,7 +15,7 @@ public class PartPatternTerminalEx extends PartPatternTerminal implements IPatte
 
     public static final int exPatternInputsWidth = 4;
     public static final int exPatternInputsHeigh = 4;
-    public static final int exPatternInputsPages = 2;
+    public static final int exPatternInputsPages = 4;
 
     public static final int exPatternOutputsWidth = 4;
     public static final int exPatternOutputsHeigh = 4;
