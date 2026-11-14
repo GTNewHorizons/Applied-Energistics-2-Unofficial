@@ -252,6 +252,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public boolean p2pOutput;
         public boolean terminalVisible;
         public boolean isCraftingPatternProvider;
+        public boolean hasUpgrades;
         public IAEStackType<?>[] supportedStackTypes;
         public int priority;
         public ItemStack selfRep, dispRep;
@@ -279,6 +280,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
         public PacketAdd setIsCraftingPatternProvider(boolean isCraftingPatternProvider) {
             this.isCraftingPatternProvider = isCraftingPatternProvider;
+            return this;
+        }
+
+        public PacketAdd setHasUpgrades(boolean hasUpgrades) {
+            this.hasUpgrades = hasUpgrades;
             return this;
         }
 
@@ -365,6 +371,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                         wrapper.setTag("disp", dispRep.writeToNBT(new NBTTagCompound()));
                     }
                     wrapper.setInteger("priority", priority);
+                    wrapper.setBoolean("upgrades", hasUpgrades);
                     wrapper.setTag("data", items);
                     CompressedStreamTools.writeCompressed(wrapper, stream);
                 }
@@ -431,6 +438,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     this.dispRep = ItemStack.loadItemStackFromNBT(payload.getCompoundTag("disp"));
                 }
                 this.priority = payload.getInteger("priority");
+                this.hasUpgrades = payload.getBoolean("upgrades");
                 this.items = payload.getTagList("data", NBT.TAG_COMPOUND);
             }
         }
