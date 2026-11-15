@@ -10,17 +10,16 @@
 
 package appeng.parts.automation;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Predicate;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.RedstoneMode;
@@ -45,6 +44,8 @@ import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
+import appeng.util.target.TileTarget;
+import appeng.util.target.TileTargetCache;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -54,8 +55,8 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     private final IAEStackInventory config = new IAEStackInventory(this, 9);
     private int cachedAdaptorHash = 0;
     private InventoryAdaptor cachedAdaptor;
-    private List<TileEntity> cachedTargets = Collections.emptyList();
-    private boolean targetChunkUnloaded;
+    private final TileTargetCache targetCache = new TileTargetCache();
+    private @Nullable TileTarget cachedTarget;
     private boolean lastRedstone = false;
     private boolean pendingStateUpdate = false;
     protected String oreFilterString = "";
@@ -101,6 +102,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     @Override
     public void onNeighborChanged() {
+        this.targetCache.markStale();
         this.updateState();
         this.scheduleStateUpdate();
         if (this.lastRedstone != this.getHost().hasRedstone(this.getSide())) {
@@ -116,32 +118,18 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     }
 
     protected Object getTarget() {
-        final TileEntity self = this.getHost().getTile();
-        final TileEntity target = this.getTileEntity(
-                self,
-                self.xCoord + this.getSide().offsetX,
-                self.yCoord + this.getSide().offsetY,
-                self.zCoord + this.getSide().offsetZ);
-        this.targetChunkUnloaded = !self.getWorldObj().blockExists(
-                self.xCoord + this.getSide().offsetX,
-                self.yCoord + this.getSide().offsetY,
-                self.zCoord + this.getSide().offsetZ)
-                || (target instanceof TileEntityChest && !Platform.isInventoryTileLoaded(target));
-
-        final int newAdaptorHash = Platform.generateTileHash(target);
-
-        // Some neighbors, such as GT tanks, expose inventories only after placement initialization.
-        if (this.cachedAdaptorHash == newAdaptorHash && newAdaptorHash != 0
-                && this.cachedAdaptor != null
-                && Platform.areInventoryTilesLoaded(this.cachedTargets)) {
+        final TileTarget target = this.resolveTarget();
+        if (target == null) return null;
+        final int newAdaptorHash = Platform.generateTileHash(target.tile());
+        if (this.cachedTarget == target && this.cachedAdaptorHash == newAdaptorHash
+                && newAdaptorHash != 0
+                && this.cachedAdaptor != null)
             return this.cachedAdaptor;
-        }
 
-        // noinspection MagicConstant
-        this.cachedAdaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite(), getAdaptorFlags());
+        this.cachedAdaptor = InventoryAdaptor
+                .getAdaptorForTarget(target, this.getSide().getOpposite(), getAdaptorFlags());
         this.cachedAdaptorHash = this.cachedAdaptor == null ? 0 : newAdaptorHash;
-        this.cachedTargets = Platform.getInventoryTiles(target);
-
+        this.cachedTarget = target;
         return this.cachedAdaptor;
     }
 
@@ -156,20 +144,25 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     }
 
     /**
-     * Checks whether the target and any other half of a vanilla chest can be accessed without loading chunks.
+     * Checks whether the adjacent tile can be accessed without loading its chunk.
      *
-     * @return true if the target's chunks are loaded.
+     * @return true if the target is loaded.
      */
     protected boolean canDoBusWork() {
-        final TileEntity self = this.getHost().getTile();
-        final World world = self.getWorldObj();
-        final int xCoordinate = self.xCoord + this.getSide().offsetX;
-        final int zCoordinate = self.zCoord + this.getSide().offsetZ;
+        return this.resolveTarget() != null;
+    }
 
-        if (world == null || !world.getChunkProvider().chunkExists(xCoordinate >> 4, zCoordinate >> 4)) return false;
-        TileEntity target = Platform
-                .getLoadedTileEntity(world, xCoordinate, self.yCoord + this.getSide().offsetY, zCoordinate);
-        return !(target instanceof TileEntityChest) || Platform.isInventoryTileLoaded(target);
+    private @Nullable TileTarget resolveTarget() {
+        final boolean wasWaiting = this.targetCache.isWaitingForChunk();
+        final TileTarget target = this.targetCache.get(this.getHost().getTile(), this.getSide());
+        if (target == null) {
+            // Also release a target that went away while sleeping, so that it does not keep its chunk alive.
+            this.cachedAdaptor = null;
+            this.cachedTarget = null;
+            this.cachedAdaptorHash = 0;
+            if (wasWaiting && !this.targetCache.isWaitingForChunk()) this.scheduleStateUpdate();
+        }
+        return target;
     }
 
     private void updateState() {
@@ -197,7 +190,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         this.pendingStateUpdate = true;
         TickHandler.INSTANCE.addCallable(world, w -> {
             this.pendingStateUpdate = false;
-            this.updateState();
+            if (this.getProxy().getNode() != null) this.updateState();
             return true;
         });
     }
@@ -222,11 +215,13 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     @Override
     protected boolean isSleeping() {
-        return (this.getTarget() == null && !this.targetChunkUnloaded) || super.isSleeping();
+        // Nothing reports chunk loads to the bus, so it keeps polling while the target's chunk is not loaded.
+        return (this.getTarget() == null && !this.targetCache.isWaitingForChunk()) || super.isSleeping();
     }
 
     @Override
     public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
+        if (!this.canDoBusWork() && this.targetCache.isWaitingForChunk()) return TickRateModulation.SLOWER;
         return this.doBusWork();
     }
 
