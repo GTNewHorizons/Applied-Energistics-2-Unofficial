@@ -14,7 +14,6 @@ import java.util.Stack;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -25,6 +24,7 @@ import appeng.me.GridAccessException;
 import appeng.transformer.annotations.Integration.Interface;
 import appeng.transformer.annotations.Integration.InterfaceList;
 import appeng.util.Platform;
+import appeng.util.target.TileTargetCache;
 import cofh.api.energy.IEnergyReceiver;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -38,8 +38,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
      */
     private static final IEnergyReceiver NULL_HANDLER = new NullRFHandler();
 
-    private boolean cachedTarget = false;
-    private IEnergyReceiver outputTarget;
+    private final TileTargetCache targetCache = new TileTargetCache();
 
     public PartP2PRFPower(final ItemStack is) {
         super(is);
@@ -60,7 +59,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
     public void onNeighborChanged() {
         super.onNeighborChanged();
 
-        this.cachedTarget = false;
+        this.targetCache.markStale();
     }
 
     @Override
@@ -136,22 +135,15 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
 
     private IEnergyReceiver getOutput() {
         if (this.isOutput()) {
-            final TileEntity self = this.getTile();
-            final TileEntity te = Platform.getLoadedTileEntity(
-                    self.getWorldObj(),
-                    self.xCoord + this.getSide().offsetX,
-                    self.yCoord + this.getSide().offsetY,
-                    self.zCoord + this.getSide().offsetZ);
-            if (!this.cachedTarget || this.outputTarget != te) {
-                this.outputTarget = te instanceof IEnergyReceiver ? (IEnergyReceiver) te : null;
-                this.cachedTarget = true;
-            }
-
-            if (this.outputTarget == null || !this.outputTarget.canConnectEnergy(this.getSide().getOpposite())) {
+            var target = this.targetCache.get(this.getTile(), this.getSide());
+            IEnergyReceiver outputTarget = target != null && target.tile() instanceof IEnergyReceiver receiver
+                    ? receiver
+                    : null;
+            if (outputTarget == null || !outputTarget.canConnectEnergy(this.getSide().getOpposite())) {
                 return NULL_HANDLER;
             }
 
-            return this.outputTarget;
+            return outputTarget;
         }
         return NULL_HANDLER;
     }

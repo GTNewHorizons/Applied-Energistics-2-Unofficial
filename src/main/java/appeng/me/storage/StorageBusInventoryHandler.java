@@ -1,59 +1,106 @@
 package appeng.me.storage;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.chunk.Chunk;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
-import appeng.util.Platform;
+import appeng.me.cache.NetworkMonitor;
 import appeng.util.item.ItemFilterList;
 import appeng.util.item.NetworkItemList;
 import appeng.util.item.PrioritizedNetworkItemList;
+import appeng.util.target.TileTarget;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
     private final Supplier<AccessRestriction> reshuffleAccess;
-    private final TileEntity target;
-    private final Chunk targetChunk;
-    private final TileEntity[] otherTargets;
-    private final Chunk[] otherChunks;
+    private final TileTarget target;
+    private final IMEInventory<T> inventory;
+    private boolean retired;
 
-    public StorageBusInventoryHandler(IMEInventory<T> i, IAEStackType<T> type,
-            Supplier<AccessRestriction> reshuffleAccess, TileEntity target) {
-        super(i, type);
+    public StorageBusInventoryHandler(IMEInventory<T> inventory, IAEStackType<T> type,
+            Supplier<AccessRestriction> reshuffleAccess, TileTarget target) {
+        super(inventory, type);
         this.reshuffleAccess = reshuffleAccess;
-        List<TileEntity> targets = Platform.getInventoryTiles(target);
-        this.target = targets.isEmpty() ? null : targets.get(0);
-        this.targetChunk = this.target == null ? null
-                : this.target.getWorldObj().getChunkFromBlockCoords(this.target.xCoord, this.target.zCoord);
-        this.otherTargets = new TileEntity[Math.max(0, targets.size() - 1)];
-        this.otherChunks = new Chunk[this.otherTargets.length];
-        for (int index = 1; index < targets.size(); index++) {
-            TileEntity tile = targets.get(index);
-            this.otherTargets[index - 1] = tile;
-            this.otherChunks[index - 1] = tile.getWorldObj().getChunkFromBlockCoords(tile.xCoord, tile.zCoord);
-        }
+        this.target = target;
+        this.inventory = inventory;
     }
 
     public boolean isValid() {
-        if (this.target == null || this.target.isInvalid() || !this.targetChunk.isChunkLoaded) return false;
-        for (int index = 0; index < this.otherTargets.length; index++) {
-            if (this.otherTargets[index].isInvalid() || !this.otherChunks[index].isChunkLoaded) return false;
+        return !this.retired && this.target.isValid();
+    }
+
+    /** Called when the owner replaces this handler. A retired handler stays invalid even if its target is valid. */
+    public void invalidate() {
+        this.retired = true;
+    }
+
+    public TileTarget getTarget() {
+        return this.target;
+    }
+
+    public IMEInventory<T> getInventory() {
+        return this.inventory;
+    }
+
+    /**
+     * Returns the contents that the network was told about, to post their removal. Unlike
+     * {@link #getAvailableItems(IItemList, int)}, this prefers the published view even while the handler is valid.
+     */
+    public IItemList<T> getItemsForRemoval(IItemList<T> out, int iteration) {
+        final IItemList<T> published = this.getPublishedItems(out, iteration, Optional.empty());
+        if (published != null) return published;
+        return this.isValid() ? this.getAvailableItemsFromInventory(out, iteration, Optional.empty()) : out;
+    }
+
+    /**
+     * Reads the contents published to the network without touching the target's world, which may be unloaded.
+     *
+     * @return null if the inventory has no published view
+     */
+    private @Nullable IItemList<T> getPublishedItems(IItemList<T> out, int iteration,
+            Optional<Predicate<T>> requestFilter) {
+        // A pass-through forwards the changes of its internal inventory, so that inventory is the published view.
+        final IMEInventory<?> view = this.inventory instanceof MEMonitorPassThrough<?>passThrough
+                ? passThrough.getInternal()
+                : this.inventory;
+        if (view instanceof NetworkMonitor<?>) {
+            // The subnet may outlive the interface tile. If setInternal has already changed the view, the listener
+            // has forwarded its delta.
+            return this.getAvailableItemsFromInventory(out, iteration, requestFilter);
         }
-        return true;
+        if (view instanceof IMEMonitor<?>monitor) {
+            // The owner listens to this monitor, so its storage list is what has been forwarded to the network.
+            // Monitors such as MEMonitorHandler rebuild the list from the detached tile's in-memory state, which does
+            // not access the world.
+            if (!this.hasReadAccess && !this.isVisible()) return out;
+            final Predicate<T> filter = this.getStorageBusFilter();
+            final Predicate<T> combined = requestFilter.map(filter::and).orElse(filter);
+            for (T item : (IItemList<T>) monitor.getStorageList()) {
+                if (combined.test(item)) out.add(item);
+            }
+            return out;
+        }
+        // Reading a plain inventory may access the world around a detached tile.
+        return null;
+    }
+
+    private Predicate<T> getStorageBusFilter() {
+        return this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()
+                ? this.getExtractFilterCondition()
+                : item -> true;
     }
 
     @Override
@@ -84,17 +131,19 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
-        if (!this.isValid() || (!this.hasReadAccess && !isVisible())) {
-            return out;
-        }
+        if (this.isValid()) return this.getAvailableItemsFromInventory(out, iteration, filter);
+        // Keep reporting what was published, so the grid can post its removal when the storage bus leaves the grid.
+        final IItemList<T> published = this.getPublishedItems(out, iteration, filter);
+        return published == null ? out : published;
+    }
+
+    private IItemList<T> getAvailableItemsFromInventory(final IItemList<T> out, int iteration,
+            Optional<Predicate<T>> filter) {
+        if (!this.hasReadAccess && !isVisible()) return out;
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
-        Predicate<T> storageBusFilter = $ -> true;
-
-        if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
-            storageBusFilter = this.getExtractFilterCondition();
-        }
+        final Predicate<T> storageBusFilter = this.getStorageBusFilter();
 
         final IItemList<T> availableItems = this.getInternal()
                 .getAvailableItems((IItemList<T>) this.getStackType().createList(), iteration, filter);
@@ -121,10 +170,7 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
     @Override
     public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(int iteration) {
         if (!this.isValid()) return new PrioritizedNetworkItemList<>(this.getExternalNetworkInventory());
-        final Predicate<T> predicate = this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()
-                ? this.getExtractFilterCondition()
-                : e -> true;
-        return this.getAvailableItemsWithPriority(iteration, predicate);
+        return this.getAvailableItemsWithPriority(iteration, this.getStorageBusFilter());
     }
 
     private PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(int iteration, Predicate<T> filterCondition) {
