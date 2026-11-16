@@ -26,7 +26,15 @@ public final class ChiselFacadeRenderer {
         if (manager == null) {
             return false;
         }
-        final RenderBlocks context = manager.createRenderContext(renderer, block, world);
+        final RenderBlocks context;
+        final boolean lockBlockBounds = renderer.lockBlockBounds;
+        // Non-CTM managers may reuse this renderer and reset its thin, trimmed facade bounds.
+        renderer.lockBlockBounds = true;
+        try {
+            context = manager.createRenderContext(renderer, block, world);
+        } finally {
+            renderer.lockBlockBounds = lockBlockBounds;
+        }
         // Custom subclasses select additional per-face state in their render methods; their cached submaps may be
         // stale.
         if (!(context instanceof RenderBlocksCTM ctmRenderer) || context.getClass() != RenderBlocksCTM.class) {

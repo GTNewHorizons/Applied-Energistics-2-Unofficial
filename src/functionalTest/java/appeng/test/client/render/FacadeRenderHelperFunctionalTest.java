@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.cricketcraft.chisel.api.rendering.TextureType;
 import com.gtnewhorizon.gtnhlib.client.renderer.CapturingTessellator;
 import com.gtnewhorizon.gtnhlib.client.renderer.TessellatorManager;
 import com.gtnewhorizon.gtnhlib.client.renderer.cel.model.quad.ModelQuadViewMutable;
@@ -274,6 +275,28 @@ public class FacadeRenderHelperFunctionalTest {
         }
     }
 
+    @Test
+    public void nonCtmChiselManagersPreserveThinAndTrimmedFacadeBounds() {
+        final CtmBlock block = new CtmBlock(TextureType.NORMAL.createManagerFor(null, "test"));
+        final IBlockAccess world = world(block);
+        final ForgeDirection face = ForgeDirection.NORTH;
+        final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, face);
+        final RenderBlocksWorkaround renderer = new RenderBlocksWorkaround();
+        renderer.setRenderBounds(0.25, 0.25, 0, 0.75, 0.75, 0.125);
+        final double[] bounds = bounds(renderer);
+        final boolean partialRenderBounds = renderer.partialRenderBounds;
+
+        assertFalse(ChiselFacadeRenderer.renderFace(helper, renderer, block, world, 0, 0, 0, 2, face));
+        assertArrayEquals(bounds, bounds(renderer), 0);
+        assertEquals(partialRenderBounds, renderer.partialRenderBounds);
+        assertFalse(renderer.lockBlockBounds);
+    }
+
+    private static double[] bounds(final RenderBlocksWorkaround renderer) {
+        return new double[] { renderer.renderMinX, renderer.renderMinY, renderer.renderMinZ, renderer.renderMaxX,
+                renderer.renderMaxY, renderer.renderMaxZ };
+    }
+
     private static IBlockAccess world(final Block block) {
         return new StubBlockAccess() {
 
@@ -343,10 +366,15 @@ public class FacadeRenderHelperFunctionalTest {
 
     private static final class CtmBlock extends Block implements ICTMBlock<ISubmapManager> {
 
-        private final ISubmapManager manager = new SubmapManagerCTM("test");
+        private final ISubmapManager manager;
 
         private CtmBlock() {
+            this(new SubmapManagerCTM("test"));
+        }
+
+        private CtmBlock(final ISubmapManager manager) {
             super(Material.rock);
+            this.manager = manager;
         }
 
         @Override
