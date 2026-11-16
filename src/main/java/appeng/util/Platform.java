@@ -40,7 +40,6 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.inventory.InventoryCrafting;
-import net.minecraft.inventory.InventoryLargeChest;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -64,6 +63,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -144,6 +144,7 @@ import appeng.util.item.AEStack;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
+import appeng.util.target.TileTarget;
 import baubles.api.BaublesApi;
 import buildcraft.api.tools.IToolWrench;
 import cofh.api.item.IToolHammer;
@@ -725,58 +726,29 @@ public class Platform {
     /*
      * Utility function to get the full inventory for a Double Chest in the World.
      */
+    @Nullable
     public static IInventory GetChestInv(final Object te) {
-        TileEntityChest teA = (TileEntityChest) te;
-        TileEntity teB = null;
-        final Block myBlockID = teA.getWorldObj().getBlock(teA.xCoord, teA.yCoord, teA.zCoord);
+        final TileTarget target = te instanceof TileEntityChest chest ? TileTarget.capture(chest) : null;
+        return target == null ? null : target.chestInventory();
+    }
 
-        if (teA.getWorldObj().getBlock(teA.xCoord + 1, teA.yCoord, teA.zCoord) == myBlockID) {
-            teB = teA.getWorldObj().getTileEntity(teA.xCoord + 1, teA.yCoord, teA.zCoord);
-            if (!(teB instanceof TileEntityChest)) {
-                teB = null;
-            }
-        }
+    /** Looks up an already loaded chunk without loading it. */
+    @Nullable
+    public static Chunk getLoadedChunk(World world, int x, int z) {
+        if (world == null) return null;
+        final int chunkX = x >> 4;
+        final int chunkZ = z >> 4;
+        final IChunkProvider provider = world.getChunkProvider();
+        if (provider == null || !provider.chunkExists(chunkX, chunkZ)) return null;
+        return world.getChunkFromChunkCoords(chunkX, chunkZ);
+    }
 
-        if (teB == null) {
-            if (teA.getWorldObj().getBlock(teA.xCoord - 1, teA.yCoord, teA.zCoord) == myBlockID) {
-                teB = teA.getWorldObj().getTileEntity(teA.xCoord - 1, teA.yCoord, teA.zCoord);
-                if (!(teB instanceof TileEntityChest)) {
-                    teB = null;
-                } else {
-                    final TileEntityChest x = teA;
-                    teA = (TileEntityChest) teB;
-                    teB = x;
-                }
-            }
-        }
-
-        if (teB == null) {
-            if (teA.getWorldObj().getBlock(teA.xCoord, teA.yCoord, teA.zCoord + 1) == myBlockID) {
-                teB = teA.getWorldObj().getTileEntity(teA.xCoord, teA.yCoord, teA.zCoord + 1);
-                if (!(teB instanceof TileEntityChest)) {
-                    teB = null;
-                }
-            }
-        }
-
-        if (teB == null) {
-            if (teA.getWorldObj().getBlock(teA.xCoord, teA.yCoord, teA.zCoord - 1) == myBlockID) {
-                teB = teA.getWorldObj().getTileEntity(teA.xCoord, teA.yCoord, teA.zCoord - 1);
-                if (!(teB instanceof TileEntityChest)) {
-                    teB = null;
-                } else {
-                    final TileEntityChest x = teA;
-                    teA = (TileEntityChest) teB;
-                    teB = x;
-                }
-            }
-        }
-
-        if (teB == null) {
-            return teA;
-        }
-
-        return new InventoryLargeChest("", teA, (IInventory) teB);
+    /** Returns the current tile without loading its chunk. */
+    @Nullable
+    public static TileEntity getLoadedTileEntity(World world, int x, int y, int z) {
+        if (world == null || !world.blockExists(x, y, z)) return null;
+        TileEntity tile = world.getTileEntity(x, y, z);
+        return tile == null || tile.isInvalid() ? null : tile;
     }
 
     public static boolean isModLoaded(final String modid) {
@@ -1489,17 +1461,9 @@ public class Platform {
             return gt.getGTMachineHash(target);
         } else if (target instanceof ITileStorageMonitorable) {
             return 0;
-        } else if (target instanceof TileEntityChest chest) {
-            chest.checkForAdjacentChests();
-            if (chest.adjacentChestZNeg != null) {
-                hash ^= chest.adjacentChestZNeg.hashCode();
-            } else if (chest.adjacentChestZPos != null) {
-                hash ^= chest.adjacentChestZPos.hashCode();
-            } else if (chest.adjacentChestXPos != null) {
-                hash ^= chest.adjacentChestXPos.hashCode();
-            } else if (chest.adjacentChestXNeg != null) {
-                hash ^= chest.adjacentChestXNeg.hashCode();
-            }
+        } else if (target instanceof TileEntityChest) {
+            // The double chest pair is tracked by TileTarget, not by this hash.
+            return hash;
         } else if (target instanceof IInventory) {
             hash ^= ((IInventory) target).getSizeInventory();
 
