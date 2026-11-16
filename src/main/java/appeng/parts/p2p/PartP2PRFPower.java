@@ -109,7 +109,9 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
                     }
                 }
 
-                this.queueTunnelDrain(PowerUnits.RF, total);
+                if (!simulate) {
+                    this.queueTunnelDrain(PowerUnits.RF, total);
+                }
             } catch (final GridAccessException ignored) {}
 
             if (stack.pop() != this) {

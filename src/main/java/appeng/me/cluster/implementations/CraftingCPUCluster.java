@@ -341,7 +341,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     protected void addTile(final TileCraftingTile te) {
-        if (this.machineSrc == null || te.isCoreBlock()) {
+        if (this.machineSrc == null || te.isCoreBlock() && this.getCore().getPreviousState() == null) {
             this.machineSrc = new MachineSource(te);
         }
 
@@ -621,6 +621,18 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return (TileCraftingTile) this.machineSrc.via;
     }
 
+    /// Whether the core tile, which persists this CPU's job, has been unloaded or replaced.
+    public boolean isCoreInvalid() {
+        return this.getCore().isInvalid();
+    }
+
+    /// Saves this CPU's job to its core, to be resumed once the core forms a cluster again.
+    public void storeJobInCore() {
+        final NBTTagCompound job = new NBTTagCompound();
+        this.writeToNBT(job);
+        this.getCore().setPreviousState(job);
+    }
+
     public IGrid getGrid() {
         IGrid node;
         for (final TileCraftingTile r : this.tiles) {
@@ -722,6 +734,8 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         this.usedStorage = 0;
+        this.remainingItemCount = 0;
+        this.startItemCount = 0;
         this.isComplete = true;
         this.myLastLink = null;
         this.tasks.clear();
@@ -1645,6 +1659,10 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (core.getPreviousState() != null) {
             this.readFromNBT(core.getPreviousState());
             core.setPreviousState(null);
+        }
+
+        for (final TileCraftingTile te : this.tiles) {
+            te.spillPreviousState();
         }
 
         this.updateCPU();

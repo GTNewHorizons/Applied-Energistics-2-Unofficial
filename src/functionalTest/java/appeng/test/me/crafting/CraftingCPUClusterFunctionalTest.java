@@ -2,6 +2,7 @@ package appeng.test.me.crafting;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -200,6 +201,24 @@ public class CraftingCPUClusterFunctionalTest {
         withCraftingLog(this::tick);
 
         assertTrue(cpu.completed());
+    }
+
+    @Test
+    void breakingClusterWithInvalidatedCoreKeepsJob() {
+        cpu.prepare(pattern, 64, 128);
+        cpu.core.updateStatus(cpu);
+        cpu.core.invalidate();
+
+        cpu.breakCluster();
+
+        assertAll(
+                () -> assertTrue(cpu.isDestroyed()),
+                () -> assertFalse(cpu.completed(), "The job must not be cancelled"),
+                () -> assertEquals(512, cpu.storedInputs(), "The inventory must not be spilled"),
+                () -> assertEquals(
+                        cpu.getInventory().writeInventory(),
+                        cpu.core.getPreviousState().getTag("inventory"),
+                        "The core must keep the job"));
     }
 
     private void tick() {

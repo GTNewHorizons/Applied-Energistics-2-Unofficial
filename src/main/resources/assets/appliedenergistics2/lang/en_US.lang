@@ -155,11 +155,14 @@ chat.appliedenergistics2.ItemFlowInOtherDim=%s flow (%s) is located in dimension
 chat.appliedenergistics2.ItemFlowNotFound=No recent network flow found for %s
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - provides the pattern to the current system from the §5Accessor§r in front.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - provides the pattern to the §5Provider§r in front.
+chat.appliedenergistics2.PatternRepeaterRouteOutputTrue=Route pattern output.
+chat.appliedenergistics2.PatternRepeaterRouteOutputFalse=Ignore pattern output.
 chat.appliedenergistics2.WirelessHighlighted=%d §e"%d§e"§r is now highlighted at %d, %d, %d
 chat.appliedenergistics2.WirelessInOtherDim=%d §e"%d§e"§r located in dimension: %d and can't be highlighted
 chat.appliedenergistics2.WirelessHighlighterPrefix=Wireless
 chat.appliedenergistics2.WirelessHighlighterNetworkPrefix=Wireless of network §e"%s§e"§r -
 chat.appliedenergistics2.WirelessHighlighterColorPrefix=Wireless color §e"%s§e"§r of network §e"%s§e"§r -
+chat.appliedenergistics2.CableSwapped=Cable swapped: %s → %s
 chat.appliedenergistics2.ControllerAnimation=Controller animation: %s
 
 # Creative Tabs
@@ -324,6 +327,8 @@ gui.appliedenergistics2.StoredItems=Stored Items
 gui.appliedenergistics2.StoredStacks=Stored Stacks
 gui.appliedenergistics2.Terminal=Terminal
 gui.appliedenergistics2.InterfaceTerminal=Interface Terminal
+gui.appliedenergistics2.InterfaceUpgrades=Upgrades
+chat.appliedenergistics2.InterfaceUpgradeRemovalBlocked=Remove the patterns from the rows that would be disabled before removing this capacity card.
 gui.appliedenergistics2.InterfaceTerminalHint=Show or hide on Interface Terminal.
 gui.appliedenergistics2.PatternOptimization=Allow pattern optimization
 gui.appliedenergistics2.PatternOptimizationHint=Allows patterns from this interface to be modified by the pattern optimizer.
@@ -939,6 +944,8 @@ waila.appliedenergistics2.Disconnected=Disconnected
 waila.appliedenergistics2.Singularity=Singularity
 waila.appliedenergistics2.Provider=§5Provider§r
 waila.appliedenergistics2.Accessor=§5Accessor§r
+waila.appliedenergistics2.RouteOutputTrue=§5Route Output§r
+waila.appliedenergistics2.RouteOutputFalse=§5Ignore Output§r
 waila.appliedenergistics2.Waiting=Waiting:
 waila.appliedenergistics2.IOBusSpeed=Speed: %s %s/t
 

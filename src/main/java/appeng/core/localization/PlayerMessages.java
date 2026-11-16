@@ -60,6 +60,8 @@ public enum PlayerMessages implements Localization {
     ItemFlowNotFound,
     PatternRepeaterProvider,
     PatternRepeaterAccessor,
+    PatternRepeaterRouteOutputTrue,
+    PatternRepeaterRouteOutputFalse,
 
     WirelessHighlighted,
     WirelessInOtherDim,
@@ -68,7 +70,9 @@ public enum PlayerMessages implements Localization {
     WirelessGroupInOtherDim,
     WirelessHighlighterPrefix,
     WirelessHighlighterNetworkPrefix,
-    WirelessHighlighterColorPrefix;
+    WirelessHighlighterColorPrefix,
+    CableSwapped,
+    InterfaceUpgradeRemovalBlocked;
 
     @Deprecated // kept for backward compat
     public IChatComponent get() {

@@ -221,7 +221,22 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
 
     @Override
     public boolean canFill(final ForgeDirection from, final Fluid fluid) {
-        return from == this.getSide() && (!this.getOutputs(fluid).isEmpty() || inputAcceptsFluid(fluid));
+        if (from != this.getSide()) {
+            return false;
+        }
+
+        final Stack<PartP2PLiquids> stack = this.getDepth();
+        for (final PartP2PLiquids t : stack) {
+            if (t == this) {
+                return false;
+            }
+        }
+        stack.push(this);
+        try {
+            return !this.getOutputs(fluid).isEmpty() || inputAcceptsFluid(fluid);
+        } finally {
+            stack.pop();
+        }
     }
 
     @Override

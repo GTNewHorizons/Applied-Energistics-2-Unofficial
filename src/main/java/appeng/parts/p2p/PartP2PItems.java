@@ -10,8 +10,10 @@
 
 package appeng.parts.p2p;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -88,6 +90,9 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         }
 
         for (final PartP2PItems t : itemTunnels) {
+            if (t.loopsBackTo(this, new HashSet<>())) {
+                continue;
+            }
             final IInventory inv = t.getOutputInv();
             if (inv != null) {
                 if (Platform.getRandomInt() % 2 == 0) {
@@ -312,5 +317,30 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     @Method(iname = IntegrationType.BuildCraftTransport)
     public ConnectOverride overridePipeConnection(final PipeType type, final ForgeDirection with) {
         return this.getSide() == with && type == PipeType.ITEM ? ConnectOverride.CONNECT : ConnectOverride.DEFAULT;
+    }
+
+    private boolean loopsBackTo(final PartP2PItems tunnel, final Set<PartP2PItems> visited) {
+        final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+                this.getTile().xCoord + this.getSide().offsetX,
+                this.getTile().yCoord + this.getSide().offsetY,
+                this.getTile().zCoord + this.getSide().offsetZ);
+        if (Platform.getPartFromTE(te, this.getSide().getOpposite()) instanceof PartP2PItems next) {
+            if (next == tunnel) {
+                return true;
+            }
+            if (!visited.contains(next)) {
+                visited.add(next);
+                try {
+                    for (final PartP2PItems t : next.getOutputs()) {
+                        if (t.loopsBackTo(tunnel, visited)) {
+                            return true;
+                        }
+                    }
+                } catch (final GridAccessException ignored) {
+                    // :P
+                }
+            }
+        }
+        return false;
     }
 }
