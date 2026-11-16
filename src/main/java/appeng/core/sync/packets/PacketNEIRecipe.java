@@ -145,14 +145,13 @@ public class PacketNEIRecipe extends AppEngPacket {
         if (is == null) return;
 
         final IMEMonitor<IAEItemStack> storage = inv.getItemInventory();
-        final IItemList all = storage.getStorageList();
         final IPartitionList<IAEItemStack> filter = ItemViewCell.createFilter(cct.getViewCells());
 
+        // Return conflicting items first
         for (int x = 0; x < craftMatrix.getSizeInventory(); x++) {
-            final ItemStack patternItem = testInv.getStackInSlot(x);
-
-            ItemStack currentItem = craftMatrix.getStackInSlot(x);
+            final ItemStack currentItem = craftMatrix.getStackInSlot(x);
             if (currentItem != null) {
+                final ItemStack patternItem = testInv.getStackInSlot(x);
                 testInv.setInventorySlotContents(x, currentItem);
                 final ItemStack newItemStack = r.matches(testInv, pmp.worldObj) ? r.getCraftingResult(testInv) : null;
                 testInv.setInventorySlotContents(x, patternItem);
@@ -166,13 +165,21 @@ public class PacketNEIRecipe extends AppEngPacket {
                     } else {
                         craftMatrix.setInventorySlotContents(x, null);
                     }
-
-                    currentItem = craftMatrix.getStackInSlot(x);
                 }
             }
+        }
+
+        IItemList all = null;
+        for (int x = 0; x < craftMatrix.getSizeInventory(); x++) {
+            final ItemStack patternItem = testInv.getStackInSlot(x);
+            final ItemStack currentItem = craftMatrix.getStackInSlot(x);
 
             // True if we need to fetch an item for the recipe
             if (patternItem != null && currentItem == null) {
+                if (all == null) {
+                    all = storage.getStorageList();
+                }
+
                 // Grab from network by recipe
                 ItemStack whichItem = Platform.extractItemsByRecipe(
                         energy,
