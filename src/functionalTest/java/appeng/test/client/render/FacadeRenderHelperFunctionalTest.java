@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -19,15 +18,13 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.launchwrapper.Launch;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.cricketcraft.chisel.api.rendering.TextureType;
@@ -42,7 +39,6 @@ import appeng.facade.FacadeBlockAccess;
 import appeng.facade.FacadePart;
 import appeng.integration.modules.ChiselFacadeRenderer;
 import appeng.tile.networking.TileCableBus;
-import cpw.mods.fml.common.FMLCommonHandler;
 import team.chisel.ctmlib.CTM;
 import team.chisel.ctmlib.ICTMBlock;
 import team.chisel.ctmlib.ISubmapManager;
@@ -94,25 +90,17 @@ public class FacadeRenderHelperFunctionalTest {
     public void emittedFacadeUvsMatchChiselsOwnRendererOnAllSixFaces() {
         final CtmBlock block = new CtmBlock();
         final SubmapManagerCTM manager = (SubmapManagerCTM) block.manager;
-        manager.registerIcons("test", block, FacadeRenderHelperFunctionalTest::icon);
-        manager.getSubmap().texturesStitched();
-        manager.getSubmapSmall().texturesStitched();
         final IBlockAccess world = world(block);
         for (final ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
             final ReferenceRenderer reference = new ReferenceRenderer(manager, world);
             final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, face);
             final RenderBlocksWorkaround facade = new RenderBlocksWorkaround();
             facade.setFacade(true);
-            facade.setRenderBounds(
-                    face.offsetX > 0 ? 0.875 : 0,
-                    face.offsetY > 0 ? 0.875 : 0,
-                    face.offsetZ > 0 ? 0.875 : 0,
-                    face.offsetX < 0 ? 0.125 : 1,
-                    face.offsetY < 0 ? 0.125 : 1,
-                    face.offsetZ < 0 ? 0.125 : 1);
+            setFacadeBounds(facade, face, 0);
             final List<String> original = capture(() -> renderReferenceFace(reference, block, face));
             final List<String> imitated = capture(
                     () -> assertTrue(ChiselFacadeRenderer.renderFace(helper, facade, block, world, 0, 0, 0, 2, face)));
+            assertEquals(16, original.size(), face.name());
             assertEquals(original, imitated, face.name());
         }
     }
@@ -196,23 +184,15 @@ public class FacadeRenderHelperFunctionalTest {
         }
     }
 
-    @BeforeAll
-    public static void prepareLaunchBlackboard() {
-        Assumptions.assumeTrue(FMLCommonHandler.instance().getSide().isClient());
-        if (Launch.blackboard == null) {
-            Launch.blackboard = new HashMap<>();
-        }
-    }
-
     @Test
-    public void usesTheOriginalBlocksWorldTextureAndBiomeColor() {
+    public void resolvesWorldTextureAndColorUsingTheFacadeContext() {
         final IIcon worldIcon = icon("world");
         final IIcon itemIcon = icon("inventory");
         final Block block = new Block(Material.rock) {
 
             @Override
             public IIcon getIcon(final IBlockAccess world, final int x, final int y, final int z, final int side) {
-                assertTrue(world instanceof FacadeBlockAccess);
+                assertSame(this, world.getBlock(x, y, z));
                 assertEquals(2, world.getBlockMetadata(x, y, z));
                 return worldIcon;
             }
@@ -224,10 +204,12 @@ public class FacadeRenderHelperFunctionalTest {
 
             @Override
             public int colorMultiplier(final IBlockAccess world, final int x, final int y, final int z) {
+                assertSame(this, world.getBlock(x, y, z));
+                assertEquals(2, world.getBlockMetadata(x, y, z));
                 return 0x123456;
             }
         };
-        final IBlockAccess world = world(block);
+        final IBlockAccess world = world(Blocks.air);
         final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, ForgeDirection.SOUTH);
         final RecordingRenderer renderer = new RecordingRenderer();
         renderer.setRenderBounds(0, 0, 0.875, 1, 1, 1);
@@ -241,37 +223,39 @@ public class FacadeRenderHelperFunctionalTest {
     @Test
     public void chiselQuadrantsKeepTheirBlockCoordinatesAcrossTrimmedFacadesOnEverySide() {
         final CtmBlock block = new CtmBlock();
-        block.manager.registerIcons("test", block, FacadeRenderHelperFunctionalTest::icon);
-        ((SubmapManagerCTM) block.manager).getSubmap().texturesStitched();
-        ((SubmapManagerCTM) block.manager).getSubmapSmall().texturesStitched();
         final IBlockAccess world = world(block);
         for (final ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
             final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, face);
             final RecordingRenderer renderer = new RecordingRenderer();
-            final double minX = face.offsetX != 0 ? 0.875 : 0.25;
-            final double minY = face.offsetY != 0 ? 0.875 : 0.25;
-            final double minZ = face.offsetZ != 0 ? 0.875 : 0.25;
-            renderer.setRenderBounds(minX, minY, minZ, 1, 1, 1);
+            setFacadeBounds(renderer, face, 0);
+            assertTrue(ChiselFacadeRenderer.renderFace(helper, renderer, block, world, 0, 0, 0, 2, face));
+            final List<Slice> untrimmed = new ArrayList<>(renderer.slices);
+            renderer.slices.clear();
+            setFacadeBounds(renderer, face, 0.25);
+            final double[] bounds = bounds(renderer);
 
             assertTrue(ChiselFacadeRenderer.renderFace(helper, renderer, block, world, 0, 0, 0, 2, face));
             assertEquals(4, renderer.slices.size());
             double area = 0;
-            for (final Slice slice : renderer.slices) {
-                final double dx = slice.maxX - slice.minX;
-                final double dy = slice.maxY - slice.minY;
-                final double dz = slice.maxZ - slice.minZ;
+            for (int i = 0; i < renderer.slices.size(); i++) {
+                final Slice slice = renderer.slices.get(i);
+                final AxisAlignedBB box = slice.bounds;
+                final double dx = box.maxX - box.minX;
+                final double dy = box.maxY - box.minY;
+                final double dz = box.maxZ - box.minZ;
                 area += face.offsetX != 0 ? dy * dz : face.offsetY != 0 ? dx * dz : dx * dy;
-                assertTrue(slice.minX >= minX && slice.minY >= minY && slice.minZ >= minZ);
-                assertEquals(1, Math.max(slice.maxX, Math.max(slice.maxY, slice.maxZ)), 0);
-                assertTrue(slice.icon.getInterpolatedU(8) >= 0);
+                assertTrue(box.minX >= bounds[0] && box.minY >= bounds[1] && box.minZ >= bounds[2]);
+                assertTrue(box.maxX <= bounds[3] && box.maxY <= bounds[4] && box.maxZ <= bounds[5]);
+                assertEquals(0.125, face.offsetX != 0 ? dx : face.offsetY != 0 ? dy : dz, 0);
+                for (int j = 0; j < i; j++) {
+                    assertFalse(box.intersectsWith(renderer.slices.get(j).bounds));
+                }
+                final IIcon original = untrimmed.get(i).icon;
+                assertEquals(original.getInterpolatedU(8), slice.icon.getInterpolatedU(8), 0);
+                assertEquals(original.getInterpolatedV(8), slice.icon.getInterpolatedV(8), 0);
             }
             assertEquals(0.75 * 0.75, area, 0.00001);
-            assertEquals(minX, renderer.renderMinX, 0);
-            assertEquals(minY, renderer.renderMinY, 0);
-            assertEquals(minZ, renderer.renderMinZ, 0);
-            assertEquals(1, renderer.renderMaxX, 0);
-            assertEquals(1, renderer.renderMaxY, 0);
-            assertEquals(1, renderer.renderMaxZ, 0);
+            assertArrayEquals(bounds, bounds(renderer), 0, face.name());
         }
     }
 
@@ -290,6 +274,17 @@ public class FacadeRenderHelperFunctionalTest {
         assertArrayEquals(bounds, bounds(renderer), 0);
         assertEquals(partialRenderBounds, renderer.partialRenderBounds);
         assertFalse(renderer.lockBlockBounds);
+    }
+
+    private static void setFacadeBounds(final RenderBlocksWorkaround renderer, final ForgeDirection face,
+            final double trim) {
+        renderer.setRenderBounds(
+                face.offsetX == 0 ? trim : face.offsetX > 0 ? 0.875 : 0,
+                face.offsetY == 0 ? trim : face.offsetY > 0 ? 0.875 : 0,
+                face.offsetZ == 0 ? trim : face.offsetZ > 0 ? 0.875 : 0,
+                face.offsetX < 0 ? 0.125 : 1,
+                face.offsetY < 0 ? 0.125 : 1,
+                face.offsetZ < 0 ? 0.125 : 1);
     }
 
     private static double[] bounds(final RenderBlocksWorkaround renderer) {
@@ -370,6 +365,9 @@ public class FacadeRenderHelperFunctionalTest {
 
         private CtmBlock() {
             this(new SubmapManagerCTM("test"));
+            this.manager.registerIcons("test", this, FacadeRenderHelperFunctionalTest::icon);
+            ((SubmapManagerCTM) this.manager).getSubmap().texturesStitched();
+            ((SubmapManagerCTM) this.manager).getSubmapSmall().texturesStitched();
         }
 
         private CtmBlock(final ISubmapManager manager) {
@@ -392,21 +390,17 @@ public class FacadeRenderHelperFunctionalTest {
     private static final class Slice {
 
         private final IIcon icon;
-        private final double minX;
-        private final double minY;
-        private final double minZ;
-        private final double maxX;
-        private final double maxY;
-        private final double maxZ;
+        private final AxisAlignedBB bounds;
 
         private Slice(final RecordingRenderer renderer, final IIcon icon) {
             this.icon = icon;
-            this.minX = renderer.renderMinX;
-            this.minY = renderer.renderMinY;
-            this.minZ = renderer.renderMinZ;
-            this.maxX = renderer.renderMaxX;
-            this.maxY = renderer.renderMaxY;
-            this.maxZ = renderer.renderMaxZ;
+            this.bounds = AxisAlignedBB.getBoundingBox(
+                    renderer.renderMinX,
+                    renderer.renderMinY,
+                    renderer.renderMinZ,
+                    renderer.renderMaxX,
+                    renderer.renderMaxY,
+                    renderer.renderMaxZ);
         }
     }
 

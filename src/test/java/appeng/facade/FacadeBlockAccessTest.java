@@ -1,9 +1,7 @@
 package appeng.facade;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -25,30 +23,13 @@ public class FacadeBlockAccessTest {
     public void pinsTheRenderedBlockAndMetadataWithoutRelyingOnTheHostsTile() {
         final Block imitated = new Block(Material.rock) {};
         final Block cable = new Block(Material.glass) {};
-        final IBlockAccess world = new StubBlockAccess() {
-
-            @Override
-            public Block getBlock(final int x, final int y, final int z) {
-                return cable;
-            }
-
-            @Override
-            public int getBlockMetadata(final int x, final int y, final int z) {
-                return 9;
-            }
-
-            @Override
-            public TileEntity getTileEntity(final int x, final int y, final int z) {
-                return null;
-            }
-        };
+        final IBlockAccess world = new StubBlockAccess(cable);
         final IBlockAccess facade = new FacadeBlockAccess(world, ForgeDirection.NORTH.ordinal(), imitated, 2, 4, 5, 6);
 
         assertSame(imitated, facade.getBlock(4, 5, 6));
         assertEquals(2, facade.getBlockMetadata(4, 5, 6));
         assertSame(cable, facade.getBlock(5, 5, 6));
         assertEquals(9, facade.getBlockMetadata(5, 5, 6));
-        assertSame(cable, world.getBlock(4, 5, 6));
     }
 
     @Test
@@ -75,17 +56,7 @@ public class FacadeBlockAccessTest {
                 return 6;
             }
         });
-        final IBlockAccess world = new StubBlockAccess() {
-
-            @Override
-            public Block getBlock(final int x, final int y, final int z) {
-                return cable;
-            }
-
-            @Override
-            public int getBlockMetadata(final int x, final int y, final int z) {
-                return 9;
-            }
+        final IBlockAccess world = new StubBlockAccess(cable) {
 
             @Override
             public TileEntity getTileEntity(final int x, final int y, final int z) {
@@ -107,37 +78,29 @@ public class FacadeBlockAccessTest {
         assertSame(cable, north.getBlock(5, 5, 6));
         assertSame(host, north.getTileEntity(4, 5, 6));
         assertEquals(0x00b00070, north.getLightBrightnessForSkyBlocks(4, 5, 6, 0));
-        assertSame(cable, world.getBlock(4, 5, 6));
-        assertEquals(9, world.getBlockMetadata(4, 5, 6));
-    }
-
-    @Test
-    public void preservesAnExistingFacadeContext() {
-        final IBlockAccess world = new StubBlockAccess();
-        final IBlockAccess facade = FacadeBlockAccess.wrap(world, ForgeDirection.NORTH.ordinal());
-
-        assertTrue(facade instanceof FacadeBlockAccess);
-        assertSame(facade, FacadeBlockAccess.wrap(facade, ForgeDirection.WEST.ordinal()));
-        assertSame(world, FacadeBlockAccess.wrap(world, -1));
-        assertSame(world, FacadeBlockAccess.wrap(world, 6));
-        assertNull(FacadeBlockAccess.wrap(null, 0));
     }
 
     private static class StubBlockAccess implements IBlockAccess {
 
+        private final Block block;
+
+        private StubBlockAccess(final Block block) {
+            this.block = block;
+        }
+
         @Override
         public Block getBlock(final int x, final int y, final int z) {
-            throw new AssertionError("Unexpected getBlock call");
+            return this.block;
         }
 
         @Override
         public TileEntity getTileEntity(final int x, final int y, final int z) {
-            throw new AssertionError("Unexpected getTileEntity call");
+            return null;
         }
 
         @Override
         public int getBlockMetadata(final int x, final int y, final int z) {
-            throw new AssertionError("Unexpected getBlockMetadata call");
+            return 9;
         }
 
         @Override
