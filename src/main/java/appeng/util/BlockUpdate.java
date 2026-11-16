@@ -11,6 +11,7 @@
 package appeng.util;
 
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 
 public class BlockUpdate implements IWorldCallable<Boolean> {
 
@@ -27,7 +28,14 @@ public class BlockUpdate implements IWorldCallable<Boolean> {
     @Override
     public Boolean call(final World world) throws Exception {
         if (world.blockExists(this.x, this.y, this.z)) {
-            world.notifyBlocksOfNeighborChange(this.x, this.y, this.z, Platform.AIR_BLOCK);
+            for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+                final int x = this.x + side.offsetX;
+                final int y = this.y + side.offsetY;
+                final int z = this.z + side.offsetZ;
+                if (world.blockExists(x, y, z)) {
+                    world.notifyBlockOfNeighborChange(x, y, z, Platform.AIR_BLOCK);
+                }
+            }
         }
 
         return true;

@@ -93,6 +93,8 @@ import appeng.util.Platform;
 import appeng.util.prioitylist.FuzzyPriorityList;
 import appeng.util.prioitylist.OreFilteredList;
 import appeng.util.prioitylist.PrecisePriorityList;
+import appeng.util.target.TileTarget;
+import appeng.util.target.TileTargetCache;
 import buildcraft.api.transport.IPipeTile.PipeType;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -122,7 +124,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     private int priority = 0;
     private boolean cached = false;
     private IStorageBusMonitor<?> monitor = null;
-    private MEInventoryHandler handler = null;
+    private StorageBusInventoryHandler handler = null;
+    private final TileTargetCache targetCache = new TileTargetCache();
     private int handlerHash = 0;
     private boolean wasActive = false;
     private byte resetCacheLogic = 0;
@@ -470,6 +473,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     @Override
     public void onNeighborChanged() {
+        // Also called for every markDirty of the target. An unchanged target keeps its handler.
+        this.targetCache.markStale();
         this.resetCache(false);
     }
 
@@ -488,7 +493,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         this.pendingDelayedCacheReset = true;
         TickHandler.INSTANCE.addCallable(world, w -> {
             try {
-                this.resetCache(true);
+                if (this.getProxy().getNode() != null) this.resetCache(true);
             } finally {
                 this.pendingDelayedCacheReset = false;
             }
@@ -523,15 +528,22 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
-        return new TickingRequest(
-                TickRates.StorageBus.getMin(),
-                TickRates.StorageBus.getMax(),
-                this.monitor == null,
-                true);
+        return new TickingRequest(TickRates.StorageBus.getMin(), TickRates.StorageBus.getMax(), this.canSleep(), true);
+    }
+
+    /**
+     * Nothing reports chunk loads and unloads to this bus, so it keeps polling slowly while its target can expire or
+     * while the target's chunk is not loaded. A monitor ticks the bus anyway.
+     */
+    private boolean canSleep() {
+        return this.monitor == null && this.handler == null && !this.targetCache.isWaitingForChunk();
     }
 
     @Override
     public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
+        if (this.hasTargetChanged()) {
+            this.resetCacheLogic = 2;
+        }
         if (this.resetCacheLogic != 0) {
             this.resetCache();
         }
@@ -540,21 +552,28 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
             return this.monitor.onTick();
         }
 
-        return TickRateModulation.SLEEP;
+        return this.canSleep() ? TickRateModulation.SLEEP : TickRateModulation.SLOWER;
+    }
+
+    /**
+     * Detects the changes that nothing reports to this bus: the target expired, its double chest pair changed, or the
+     * chunk of an absent target has loaded.
+     */
+    private boolean hasTargetChanged() {
+        if (!this.targetCache.isCurrent() || this.handler != null && !this.handler.isValid()) return true;
+        return this.handler == null && this.targetCache.isWaitingForChunk()
+                && this.targetCache.get(this.getHost().getTile(), this.getSide()) != null;
     }
 
     private void resetCache() {
         final boolean fullReset = this.resetCacheLogic == 2;
         this.resetCacheLogic = 0;
 
-        final MEInventoryHandler previousHandler = this.handler;
+        final StorageBusInventoryHandler previousHandler = this.handler;
         final int previousHandlerHash = this.handlerHash;
-        final IMEInventory in = this.getInternalHandler();
-
         IItemList before = getItemList();
-
-        if (in != null) {
-            before = in.getAvailableItems(before, IterationCounter.fetchNewId());
+        if (previousHandler != null) {
+            before = previousHandler.getItemsForRemoval(before, IterationCounter.fetchNewId());
         }
 
         this.cached = false;
@@ -605,11 +624,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     // Looks for interfaces for subnet
     private IMEInventory getConnectedInventory() {
-        final TileEntity self = this.getHost().getTile();
-        final TileEntity target = self.getWorldObj().getTileEntity(
-                self.xCoord + this.getSide().offsetX,
-                self.yCoord + this.getSide().offsetY,
-                self.zCoord + this.getSide().offsetZ);
+        final TileEntity target = this.getTarget();
 
         if (target != null) {
             final IExternalStorageHandler esh = AEApi.instance().registries().externalStorage()
@@ -621,26 +636,52 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         return null;
     }
 
+    private TileEntity getTarget() {
+        TileTarget target = this.targetCache.get(this.getHost().getTile(), this.getSide());
+        return target == null ? null : target.tile();
+    }
+
+    @Override
+    public void removeFromWorld() {
+        // The grid reads the handler while removing this cell provider, so clear it afterwards.
+        super.removeFromWorld();
+        this.detachListener();
+        this.handler = null;
+        this.monitor = null;
+        this.cached = false;
+        this.handlerHash = 0;
+    }
+
+    private void detachListener() {
+        if (this.handler != null && this.handler.getInventory() instanceof IMEMonitor monitor) {
+            monitor.removeListener(this);
+        }
+    }
+
     public MEInventoryHandler getInternalHandler() {
         if (this.cached) {
+            if (this.handler != null && !this.handler.isValid() && this.resetCacheLogic != 2) this.resetCache(true);
             return this.handler;
         }
 
-        final boolean wasSleeping = this.monitor == null;
+        final boolean wasSleeping = this.canSleep();
 
         this.cached = true;
-        final TileEntity self = this.getHost().getTile();
-
-        final ForgeDirection side = this.getSide();
-        final TileEntity target = self.getWorldObj()
-                .getTileEntity(self.xCoord + side.offsetX, self.yCoord + side.offsetY, self.zCoord + side.offsetZ);
+        final TileTarget targetReference = this.targetCache.get(this.getHost().getTile(), this.getSide());
+        final TileEntity target = targetReference == null ? null : targetReference.tile();
 
         final int newHandlerHash = Platform.generateTileHash(target);
 
-        if (this.handlerHash == newHandlerHash && this.handlerHash != 0 && this.handler != null) {
+        if (this.handlerHash == newHandlerHash && this.handlerHash != 0
+                && this.handler != null
+                && this.handler.getTarget() == targetReference
+                && this.handler.isValid()) {
             return this.handler;
         }
 
+        this.detachListener();
+        if (this.handler != null) this.handler.invalidate();
+        // Retire the published wrapper even when only its access/filter settings changed.
         this.handlerHash = newHandlerHash;
         this.handler = null;
         this.monitor = null;
@@ -665,7 +706,11 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                 if (inv != null) {
                     this.checkInterfaceVsStorageBus(target, this.getSide().getOpposite());
 
-                    this.handler = new StorageBusInventoryHandler<>(inv, this.getStackType(), this::getReshuffleAccess);
+                    this.handler = new StorageBusInventoryHandler<>(
+                            inv,
+                            this.getStackType(),
+                            this::getReshuffleAccess,
+                            targetReference);
 
                     AccessRestriction currentAccess = (AccessRestriction) this.getConfigManager()
                             .getSetting(Settings.ACCESS);
@@ -732,15 +777,14 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         if (this.handler == null && target != null) {
             // The neighbor exists but may not expose storage until its placement initialization finishes.
-            this.cached = false;
             this.scheduleDelayedCacheReset();
         }
 
         // update sleep state...
-        if (wasSleeping != (this.monitor == null)) {
+        if (wasSleeping != this.canSleep()) {
             try {
                 final ITickManager tm = this.getProxy().getTick();
-                if (this.monitor == null) {
+                if (this.canSleep()) {
                     tm.sleepDevice(this.getProxy().getNode());
                 } else {
                     tm.wakeDevice(this.getProxy().getNode());

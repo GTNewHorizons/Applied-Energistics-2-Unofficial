@@ -25,6 +25,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
 
 import org.intellij.lang.annotations.MagicConstant;
+import org.jetbrains.annotations.Nullable;
 
 import com.gtnewhorizon.gtnhlib.capability.CapabilityProvider;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
@@ -59,16 +60,14 @@ import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.WrapperMCISidedInventory;
 import appeng.util.item.AEItemStack;
+import appeng.util.target.TileTarget;
 import crazypants.enderio.conduit.TileConduitBundle;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
-    // Two flat maps keyed by packObjectIdentity(te)|packSideAndFlags(d,flags).
-    // ADAPTOR_CACHE_REFS stores the actual te reference for identity-hash collision safety.
-    // ADAPTOR_CACHE stores the resolved adaptor (may be null for cached null results).
-    private static final Long2ObjectOpenHashMap<Object> ADAPTOR_CACHE = new Long2ObjectOpenHashMap<>();
-    private static final Long2ObjectOpenHashMap<Object> ADAPTOR_CACHE_REFS = new Long2ObjectOpenHashMap<>();
+    // Entries retain the actual reference and inventory tiles to validate identity and chunk lifetime
+    private static final Long2ObjectOpenHashMap<CachedAdaptor> ADAPTOR_CACHE = new Long2ObjectOpenHashMap<>();
     private static int adaptorCacheTick = Integer.MIN_VALUE;
 
     private static int counter = 0;
@@ -90,28 +89,44 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
     // returns an appropriate adaptor, or null
     public static InventoryAdaptor getAdaptor(Object te, final ForgeDirection d,
             @MagicConstant(flagsFromClass = InventoryAdaptor.class) int flags) {
-        if (te == null) {
-            return null;
-        }
-
-        if (d == null) {
-            return getAdaptorUncached(te, d, flags);
-        }
-
+        if (te == null) return null;
         final int currentTick = getCurrentServerTick();
-        if (currentTick != Integer.MIN_VALUE) {
+        if (d != null && currentTick != Integer.MIN_VALUE) {
             cacheInvalidateIfStale(currentTick);
-
-            if (isCached(te, d, flags)) {
-                return cacheGet(te, d, flags);
-            }
-
-            final InventoryAdaptor adaptor = getAdaptorUncached(te, d, flags);
-            cachePut(te, d, flags, adaptor);
-            return adaptor;
+            if (isCached(te, d, flags)) return cacheGet(te, d, flags);
         }
+        final TileTarget target = captureTarget(te);
+        if (target == null && isWorldTile(te)) return null;
+        final InventoryAdaptor adaptor = getAdaptorUncached(te, d, flags, target);
+        if (d != null && currentTick != Integer.MIN_VALUE) cachePut(te, d, flags, adaptor, target);
+        return adaptor;
+    }
 
-        return getAdaptorUncached(te, d, flags);
+    /** Uses the exact chest composition whose lifetime the caller is retaining. */
+    public static @Nullable InventoryAdaptor getAdaptorForTarget(TileTarget target, ForgeDirection side,
+            @MagicConstant(flagsFromClass = InventoryAdaptor.class) int flags) {
+        if (!target.isValid()) return null;
+        int tick = getCurrentServerTick();
+        if (side != null && tick != Integer.MIN_VALUE) {
+            cacheInvalidateIfStale(tick);
+            CachedAdaptor cached = ADAPTOR_CACHE.get(makeCacheKey(target.tile(), side, flags));
+            if (cached != null && cached.target == target) return cached.adaptor;
+        }
+        InventoryAdaptor adaptor = getAdaptorUncached(target.tile(), side, flags, target);
+        if (side != null && tick != Integer.MIN_VALUE) cachePut(target.tile(), side, flags, adaptor, target);
+        return adaptor;
+    }
+
+    /**
+     * A tile placed in a world must be read only while it is part of a loaded chunk. Tiles without a world, such as the
+     * ones some mods create for item-held inventories, have no chunk lifetime to track.
+     */
+    private static boolean isWorldTile(Object te) {
+        return te instanceof TileEntity tile && tile.getWorldObj() != null;
+    }
+
+    private static @Nullable TileTarget captureTarget(Object te) {
+        return isWorldTile(te) ? TileTarget.capture((TileEntity) te) : null;
     }
 
     // ---- Cache helpers -------------------------------------------------------
@@ -136,23 +151,21 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
     private static void cacheInvalidateIfStale(int currentTick) {
         if (currentTick != adaptorCacheTick) {
             ADAPTOR_CACHE.clear();
-            ADAPTOR_CACHE_REFS.clear();
             adaptorCacheTick = currentTick;
         }
     }
 
     public static void clearCache() {
         ADAPTOR_CACHE.clear();
-        ADAPTOR_CACHE_REFS.clear();
     }
 
     /**
-     * Returns {@code true} iff the cache contains an entry for the given arguments and the stored reference matches the
-     * supplied {@code te}.
+     * Checks that a cache entry still refers to the supplied object and its current, loaded inventory tiles.
      */
     private static boolean isCached(Object te, ForgeDirection d, int flags) {
         final long key = makeCacheKey(te, d, flags);
-        return ADAPTOR_CACHE_REFS.get(key) == te;
+        final CachedAdaptor entry = ADAPTOR_CACHE.get(key);
+        return entry != null && entry.isValid(te);
     }
 
     /**
@@ -161,13 +174,31 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
      */
     private static InventoryAdaptor cacheGet(Object te, ForgeDirection d, int flags) {
         final long key = makeCacheKey(te, d, flags);
-        return (InventoryAdaptor) ADAPTOR_CACHE.get(key);
+        return ADAPTOR_CACHE.get(key).adaptor;
     }
 
-    private static void cachePut(Object te, ForgeDirection d, int flags, InventoryAdaptor adaptor) {
+    private static void cachePut(Object te, ForgeDirection d, int flags, InventoryAdaptor adaptor,
+            @Nullable TileTarget target) {
         final long key = makeCacheKey(te, d, flags);
-        ADAPTOR_CACHE_REFS.put(key, te);
-        ADAPTOR_CACHE.put(key, adaptor);
+        ADAPTOR_CACHE.put(key, new CachedAdaptor(te, adaptor, target));
+    }
+
+    private static final class CachedAdaptor {
+
+        private final Object reference;
+        private final InventoryAdaptor adaptor;
+        private final @Nullable TileTarget target;
+
+        private CachedAdaptor(Object reference, InventoryAdaptor adaptor, @Nullable TileTarget target) {
+            this.reference = reference;
+            this.adaptor = adaptor;
+            this.target = target;
+        }
+
+        private boolean isValid(Object reference) {
+            // A cached chest adaptor must not outlive a change of its double chest pair within the tick.
+            return this.reference == reference && (this.target == null || this.target.isCompositionCurrent());
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -182,7 +213,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
     // returns an appropriate adaptor, or null
     private static InventoryAdaptor getAdaptorUncached(Object te, final ForgeDirection d,
-            @MagicConstant(flagsFromClass = InventoryAdaptor.class) int flags) {
+            @MagicConstant(flagsFromClass = InventoryAdaptor.class) int flags, @Nullable TileTarget target) {
         if (te == null) {
             return null;
         }
@@ -195,6 +226,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
         if (tt != null && tt.isTransvectorInterface(te)) {
             te = tt.getTile(te);
+            target = captureTarget(te);
+            if (target == null && isWorldTile(te)) return null;
         }
 
         if (te instanceof CapabilityProvider provider) {
@@ -224,7 +257,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         }
 
         if (invs && te instanceof TileEntityChest) {
-            return new AdaptorIInventory(Platform.GetChestInv(te));
+            final IInventory inventory = target == null ? (IInventory) te : target.chestInventory();
+            return inventory == null ? null : new AdaptorIInventory(inventory);
         }
 
         if (te instanceof ISidedInventory sided) {
