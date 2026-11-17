@@ -708,9 +708,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         final boolean couldDoWork = this.updateStorage();
         final boolean hasWorkToDo = this.hasWorkToDo();
-        return (hasWorkToDo || (sentItems && this.hasItemsToSend()))
-                ? (couldDoWork || sentItems ? TickRateModulation.URGENT : TickRateModulation.SLOWER)
-                : TickRateModulation.SLEEP;
+        if (hasWorkToDo || this.hasItemsToSend()) {
+            return couldDoWork || sentItems ? TickRateModulation.URGENT : TickRateModulation.SLOWER;
+        }
+        return TickRateModulation.SLEEP;
     }
 
     // Returns if it successfully sent some items
@@ -724,8 +725,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         boolean sentSomething = false;
         for (final ForgeDirection s : possibleDirections) {
-            final TileEntity te = w
-                    .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+            final TileEntity te = Platform
+                    .getLoadedTileEntity(w, tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
 
             if (te == null) continue;
 
@@ -1254,8 +1255,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final ArrayList<VerifiedAcceptors> verifiedSides = new ArrayList<>();
 
         for (final ForgeDirection s : possibleDirections) {
-            final TileEntity te = w
-                    .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+            final TileEntity te = Platform
+                    .getLoadedTileEntity(w, tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
 
             if (te == null) continue;
 
@@ -1403,8 +1404,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             boolean allAreBusy = true;
 
             for (final ForgeDirection s : possibleDirections) {
-                final TileEntity te = w
-                        .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+                final TileEntity te = Platform.getLoadedTileEntity(
+                        w,
+                        tile.xCoord + s.offsetX,
+                        tile.yCoord + s.offsetY,
+                        tile.zCoord + s.offsetZ);
                 if (te != null && te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
                 final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
                 if (ad != null) {

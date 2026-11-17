@@ -10,6 +10,8 @@
 
 package appeng.parts.p2p;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +26,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkBootingStatusChange;
@@ -43,9 +47,12 @@ import appeng.tile.inventory.AppEngNullInventory;
 import appeng.transformer.annotations.Integration.Interface;
 import appeng.transformer.annotations.Integration.Method;
 import appeng.util.Platform;
+import appeng.util.inv.GuardedInventory;
 import appeng.util.inv.WrapperBCPipe;
 import appeng.util.inv.WrapperChainedInventory;
 import appeng.util.inv.WrapperMCISidedInventory;
+import appeng.util.target.TileTarget;
+import appeng.util.target.TileTargetCache;
 import buildcraft.api.transport.IPipeConnection;
 import buildcraft.api.transport.IPipeTile.PipeType;
 import cpw.mods.fml.relauncher.Side;
@@ -58,7 +65,18 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     private final LinkedList<IInventory> which = new LinkedList<>();
     private int oldSize = 0;
     private boolean requested;
-    private IInventory cachedInv;
+    /** Input only: the destination, or null if it must be rebuilt on the next access. */
+    private @Nullable IInventory cachedInv;
+    /** Input only: the outputs included in {@link #cachedInv}. */
+    private final List<PartP2PItems> boundOutputs = new ArrayList<>();
+    /** Output only: the target wrapped into the input's destination, or null if none was. */
+    private @Nullable TileTarget boundTarget;
+    /**
+     * Output only: the slot layout that the wrapper of {@link #boundTarget} fixed, as {@link #readLayout} returns it.
+     * Null if the layout is not tracked.
+     */
+    private int @Nullable [] boundLayout;
+    private final TileTargetCache targetCache = new TileTargetCache();
 
     public PartP2PItems(final ItemStack is) {
         super(is);
@@ -66,21 +84,88 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     @Override
     public void onNeighborChanged() {
-        this.cachedInv = null;
+        this.targetCache.markStale();
+        if (!this.isOutput()) return;
         final PartP2PItems input = this.getInput();
-        if (input != null && this.isOutput()) {
-            input.onTunnelNetworkChange();
+        // Also called for every markDirty of the adjacent inventory, so the input is rebuilt only if what this output
+        // wrapped no longer matches.
+        if (input != null && input.cachedInv != null && this.hasTargetChanged()) input.invalidateDestination();
+    }
+
+    /** Rebuilds the destination now and tells the neighbors if its size changed. */
+    private void refreshDestination() {
+        this.cachedInv = null;
+        this.notifySizeChange();
+    }
+
+    /** Tells the neighbors, which cache the slot count of the cable bus, if the size of the destination changed. */
+    private void notifySizeChange() {
+        // A rebuild is not a request from outside, so it must not speed up the tick or cycle the order.
+        final int size = this.buildDestination().getSizeInventory();
+        if (size != this.oldSize) {
+            this.oldSize = size;
+            this.getHost().notifyNeighbors();
         }
+    }
+
+    /**
+     * Rebuilds the destination on its next access, so that a burst of changes reported by outputs, such as P2PCache
+     * notifying every output of a frequency, rebuilds once. Neighbors are told about a new size on the next tick.
+     */
+    private void invalidateDestination() {
+        if (this.cachedInv == null) return;
+        this.cachedInv = null;
+        try {
+            this.getProxy().getTick().alertDevice(this.getProxy().getNode());
+        } catch (final GridAccessException ignored) {}
+    }
+
+    /** Whether the adjacent tile or its slot layout differs from what was wrapped into the input's destination. */
+    private boolean hasTargetChanged() {
+        final TileTarget target = this.resolveOutputTarget();
+        if (target != this.boundTarget) return true;
+        return target != null && this.boundLayout != null
+                && target.tile() instanceof IInventory inventory
+                && !Arrays.equals(this.boundLayout, this.readLayout(inventory));
+    }
+
+    /**
+     * Detects the changes that nothing reports to the tunnel: the wrapped target expired or its double chest pair
+     * changed, or the chunk of an absent target has loaded.
+     */
+    private boolean hasTargetExpired() {
+        final TileTarget target = this.boundTarget;
+        if (target != null) return !target.isCompositionCurrent();
+        return this.targetCache.isWaitingForChunk() && this.resolveOutputTarget() != null;
+    }
+
+    /**
+     * The slot layout that the output wrapper fixes: the accessible slots of a sided inventory, or the size of another.
+     * The returned array may be owned by the tile.
+     */
+    private int[] readLayout(final IInventory inventory) {
+        if (inventory instanceof ISidedInventory sided) {
+            return sided.getAccessibleSlotsFromSide(this.getSide().getOpposite().ordinal());
+        }
+        return new int[] { inventory.getSizeInventory() };
+    }
+
+    private @Nullable TileTarget resolveOutputTarget() {
+        return this.getProxy().isActive() ? this.targetCache.get(this.getTile(), this.getSide()) : null;
     }
 
     private IInventory getDestination() {
         this.requested = true;
+        return this.buildDestination();
+    }
 
+    private IInventory buildDestination() {
         if (this.cachedInv != null) {
             return this.cachedInv;
         }
 
         final List<IInventory> outs = new LinkedList<>();
+        this.boundOutputs.clear();
         final TunnelCollection<PartP2PItems> itemTunnels;
 
         try {
@@ -93,6 +178,7 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
             if (t.loopsBackTo(this, new HashSet<>())) {
                 continue;
             }
+            this.boundOutputs.add(t);
             final IInventory inv = t.getOutputInv();
             if (inv != null) {
                 if (Platform.getRandomInt() % 2 == 0) {
@@ -106,14 +192,14 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         return this.cachedInv = new WrapperChainedInventory(outs);
     }
 
-    private IInventory getOutputInv() {
+    private @Nullable IInventory getOutputInv() {
         IInventory output = null;
+        final TileTarget target = this.resolveOutputTarget();
+        this.boundTarget = target;
+        this.boundLayout = null;
 
-        if (this.getProxy().isActive()) {
-            final TileEntity te = this.getTile().getWorldObj().getTileEntity(
-                    this.getTile().xCoord + this.getSide().offsetX,
-                    this.getTile().yCoord + this.getSide().offsetY,
-                    this.getTile().zCoord + this.getSide().offsetZ);
+        if (target != null) {
+            final TileEntity te = target.tile();
 
             if (this.which.contains(this)) {
                 return null;
@@ -139,15 +225,22 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
             if (output == null) {
                 if (te instanceof TileEntityChest) {
-                    output = Platform.GetChestInv(te);
-                } else if (te instanceof ISidedInventory) {
-                    output = new WrapperMCISidedInventory((ISidedInventory) te, this.getSide().getOpposite());
-                } else if (te instanceof IInventory) {
-                    output = (IInventory) te;
+                    output = target.chestInventory();
+                } else if (te instanceof IInventory inventory) {
+                    output = inventory instanceof ISidedInventory sided
+                            ? new WrapperMCISidedInventory(sided, this.getSide().getOpposite())
+                            : inventory;
+                    // The wrappers fix this layout. A double chest pair is tracked by the target instead.
+                    this.boundLayout = this.readLayout(inventory).clone();
                 }
             }
 
             this.which.pop();
+            if (output != null) {
+                final TileEntity self = this.getTile();
+                // Evaluated for every slot access, so only cheap checks belong here.
+                output = new GuardedInventory(output, () -> target.isValid() && !self.isInvalid());
+            }
         }
 
         return output;
@@ -155,12 +248,22 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
 
     @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
-        return new TickingRequest(TickRates.ItemTunnel.getMin(), TickRates.ItemTunnel.getMax(), false, false);
+        return new TickingRequest(TickRates.ItemTunnel.getMin(), TickRates.ItemTunnel.getMax(), false, true);
     }
 
     @Override
     public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
         final boolean wasReq = this.requested;
+        if (!this.isOutput()) {
+            for (final PartP2PItems output : this.boundOutputs) {
+                if (output.hasTargetExpired()) {
+                    this.cachedInv = null;
+                    break;
+                }
+            }
+            // Also covers a destination that was invalidated and then rebuilt by an access before this tick.
+            this.notifySizeChange();
+        }
 
         if (this.requested && this.cachedInv != null) {
             ((WrapperChainedInventory) this.cachedInv).cycleOrder();
@@ -173,36 +276,21 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     @MENetworkEventSubscribe
     public void changeStateA(final MENetworkBootingStatusChange bs) {
         if (!this.isOutput()) {
-            this.cachedInv = null;
-            final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
-            if (olderSize != this.oldSize) {
-                this.getHost().notifyNeighbors();
-            }
+            this.refreshDestination();
         }
     }
 
     @MENetworkEventSubscribe
     public void changeStateB(final MENetworkChannelsChanged bs) {
         if (!this.isOutput()) {
-            this.cachedInv = null;
-            final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
-            if (olderSize != this.oldSize) {
-                this.getHost().notifyNeighbors();
-            }
+            this.refreshDestination();
         }
     }
 
     @MENetworkEventSubscribe
     public void changeStateC(final MENetworkPowerStatusChange bs) {
         if (!this.isOutput()) {
-            this.cachedInv = null;
-            final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
-            if (olderSize != this.oldSize) {
-                this.getHost().notifyNeighbors();
-            }
+            this.refreshDestination();
         }
     }
 
@@ -215,18 +303,21 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     @Override
     public void onTunnelNetworkChange() {
         if (!this.isOutput()) {
-            this.cachedInv = null;
-            final int olderSize = this.oldSize;
-            this.oldSize = this.getDestination().getSizeInventory();
-            if (olderSize != this.oldSize) {
-                this.getHost().notifyNeighbors();
-            }
+            this.refreshDestination();
         } else {
+            // P2PCache tells only the output when it joins or leaves the frequency.
             final PartP2PItems input = this.getInput();
-            if (input != null) {
-                input.getHost().notifyNeighbors();
-            }
+            if (input != null) input.invalidateDestination();
         }
+    }
+
+    @Override
+    public void removeFromWorld() {
+        this.boundOutputs.clear();
+        this.boundTarget = null;
+        this.boundLayout = null;
+        this.cachedInv = null;
+        super.removeFromWorld();
     }
 
     @Override
@@ -320,7 +411,8 @@ public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
     }
 
     private boolean loopsBackTo(final PartP2PItems tunnel, final Set<PartP2PItems> visited) {
-        final TileEntity te = this.getTile().getWorldObj().getTileEntity(
+        final TileEntity te = Platform.getLoadedTileEntity(
+                this.getTile().getWorldObj(),
                 this.getTile().xCoord + this.getSide().offsetX,
                 this.getTile().yCoord + this.getSide().offsetY,
                 this.getTile().zCoord + this.getSide().offsetZ);
