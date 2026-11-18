@@ -44,8 +44,10 @@ public class LayerIEnergyHandler extends LayerBase implements IEnergyHandler {
     @Override
     public int getEnergyStored(final ForgeDirection from) {
         final IPart part = this.getPart(from);
-        if (part instanceof IEnergyProvider) {
-            return ((IEnergyProvider) part).getEnergyStored(from);
+        if (part instanceof IEnergyProvider provider) {
+            return provider.getEnergyStored(from);
+        } else if (part instanceof IEnergyReceiver receiver) {
+            return receiver.getEnergyStored(from);
         }
 
         return 0;
@@ -54,8 +56,10 @@ public class LayerIEnergyHandler extends LayerBase implements IEnergyHandler {
     @Override
     public int getMaxEnergyStored(final ForgeDirection from) {
         final IPart part = this.getPart(from);
-        if (part instanceof IEnergyProvider) {
-            return ((IEnergyProvider) part).getMaxEnergyStored(from);
+        if (part instanceof IEnergyProvider provider) {
+            return provider.getMaxEnergyStored(from);
+        } else if (part instanceof IEnergyReceiver receiver) {
+            return receiver.getMaxEnergyStored(from);
         }
 
         return 0;
