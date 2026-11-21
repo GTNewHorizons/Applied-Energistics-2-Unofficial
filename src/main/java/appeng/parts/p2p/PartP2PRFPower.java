@@ -134,7 +134,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
     }
 
     private IEnergyReceiver getOutput() {
-        if (this.isOutput()) {
+        if (this.isOutput() && this.getProxy().isActive()) {
             var target = this.targetCache.get(this.getTile(), this.getSide());
             IEnergyReceiver outputTarget = target != null && target.tile() instanceof IEnergyReceiver receiver
                     ? receiver

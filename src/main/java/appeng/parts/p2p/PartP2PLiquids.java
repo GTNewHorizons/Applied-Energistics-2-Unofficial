@@ -65,7 +65,7 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
 
     @Override
     public int fill(final ForgeDirection from, final FluidStack resource, final boolean doFill) {
-        if (resource == null || resource.getFluid() == null) return 0;
+        if (resource == null || resource.getFluid() == null || !this.getProxy().isActive()) return 0;
 
         final Stack<PartP2PLiquids> stack = this.getDepth();
 
@@ -210,7 +210,7 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
 
     @Override
     public boolean canFill(final ForgeDirection from, final Fluid fluid) {
-        if (from != this.getSide()) {
+        if (from != this.getSide() || !this.getProxy().isActive()) {
             return false;
         }
 
@@ -242,6 +242,9 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
     }
 
     private FluidTankInfo[] getTank() {
+        if (!this.getProxy().isActive()) {
+            return INACTIVE_TANK;
+        }
         if (this.isOutput()) {
             final PartP2PLiquids tun = this.getInput();
             if (tun != null) {
