@@ -1,5 +1,7 @@
 package appeng.integration.modules.NEIHelpers;
 
+import static appeng.parts.reporting.PartPatternTerminalEx.exPatternOutputPages;
+import static appeng.parts.reporting.PartPatternTerminalEx.exPatternOutputsHeigh;
 import static net.minecraft.util.EnumChatFormatting.GRAY;
 
 import java.text.NumberFormat;
@@ -78,6 +80,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
     public int arrowCenterY;
     public int craftingOutputY = SLOTS_OFFSET_Y;
     public int nonNullInputs;
+    public int nonNullOutputs;
 
     public final ArrayList<ViewItemStack> inputSlots = new ArrayList<>();
     public final ArrayList<ViewItemStack> outputSlots = new ArrayList<>();
@@ -179,14 +182,12 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     public void initializeLayout() {
         boolean isCraftable = patternDetails.isCraftable();
-        List<IAEStack<?>> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
-        int nonNullOutputs = (int) aeOutputs.stream().filter(Objects::nonNull).count();
-        this.nonNullInputs = (int) getFilteredStacks(patternDetails.getAEInputs()).stream().filter(Objects::nonNull)
-                .count();
+        this.nonNullInputs = countNonNull(getFilteredStacks(patternDetails.getAEInputs()));
+        this.nonNullOutputs = countNonNull(getFilteredStacks(patternDetails.getAEOutputs()));
 
         if (isCraftable) {
             setupCraftingLayout();
-        } else if (nonNullOutputs > 8) {
+        } else if (nonNullOutputs > exPatternOutputsHeigh * exPatternOutputPages) {
             setupReversedLayout();
         } else {
             setupProcessingLayout();
@@ -207,9 +208,8 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     public void setupReversedLayout() {
         inputsCols = REVERSED_INPUTS_COLS;
-        inputsRows = Math.max(REVERSED_INPUTS_ROWS, (nonNullInputs + inputsCols - 1) / inputsCols);
         outputsCols = REVERSED_OUTPUTS_COLS;
-        outputsRows = REVERSED_OUTPUTS_ROWS;
+        alignRows(REVERSED_INPUTS_ROWS, REVERSED_OUTPUTS_ROWS);
         inputsOffsetX = OFFSET_X + 10;
         arrowOffsetX = inputsOffsetX + inputsCols * 18 + 8;
         arrowCenterY = SLOTS_OFFSET_Y + (inputsRows * 18) / 2 - 16;
@@ -218,13 +218,32 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     public void setupProcessingLayout() {
         inputsCols = PROCESSING_INPUTS_COLS;
-        inputsRows = Math.max(PROCESSING_INPUTS_ROWS, (nonNullInputs + inputsCols - 1) / inputsCols);
         outputsCols = PROCESSING_OUTPUTS_COLS;
-        outputsRows = PROCESSING_OUTPUTS_ROWS;
+        alignRows(PROCESSING_INPUTS_ROWS, PROCESSING_OUTPUTS_ROWS);
         inputsOffsetX = OFFSET_X;
         arrowOffsetX = inputsOffsetX + inputsCols * 18 + 4;
         arrowCenterY = SLOTS_OFFSET_Y + (inputsRows * 18) / 2 - 16;
         outputsOffsetX = inputsOffsetX + inputsCols * 18 + 40;
+    }
+
+    /**
+     * Gives inputs and outputs the same row count: each side needs at least its minimum rows and enough rows to hold
+     * its stacks at its column count, and both sides then use the larger of the two. Columns must already be set.
+     */
+    private void alignRows(int inputsMinRows, int outputsMinRows) {
+        final int rows = Math.max(
+                rowsNeeded(nonNullInputs, inputsCols, inputsMinRows),
+                rowsNeeded(nonNullOutputs, outputsCols, outputsMinRows));
+        inputsRows = rows;
+        outputsRows = rows;
+    }
+
+    private static int rowsNeeded(int stackCount, int cols, int minRows) {
+        return Math.max(minRows, (stackCount + cols - 1) / cols);
+    }
+
+    private static int countNonNull(List<IAEStack<?>> stacks) {
+        return (int) stacks.stream().filter(Objects::nonNull).count();
     }
 
     public List<IAEStack<?>> getFilteredStacks(IAEStack<?>[] stacks) {

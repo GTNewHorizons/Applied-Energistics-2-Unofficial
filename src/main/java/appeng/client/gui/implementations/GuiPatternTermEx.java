@@ -215,8 +215,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
                     VirtualMEPhantomSlot slot = this.outputSlots[slotIndex];
 
                     slot.setHidden(
-                            !container.invertedSync.get()
-                                    ? y != container.activePageSync.get() || page != 0 || y >= outputSlotPages
+                            !container.invertedSync.get() ? y != container.activePageSync.get() || page != 0
                                     : page != container.activePageSync.get());
 
                     slot.setX(
