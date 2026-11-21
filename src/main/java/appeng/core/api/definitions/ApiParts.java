@@ -59,6 +59,10 @@ public final class ApiParts implements IParts {
     private final IItemDefinition p2PTunnelGregtech;
     private final IItemDefinition p2PTunnelInterface;
     private final IItemDefinition cableAnchor;
+    private final IItemDefinition wirelessConnectorFixture;
+    private final IItemDefinition wirelessHubFixture;
+    private final IItemDefinition wirelessConnectorFixtureOuter;
+    private final IItemDefinition wirelessHubFixtureOuter;
     private final IItemDefinition monitor;
     private final IItemDefinition semiDarkMonitor;
     private final IItemDefinition darkMonitor;
@@ -114,6 +118,13 @@ public final class ApiParts implements IParts {
         this.p2PTunnelGregtech = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelGT));
         this.p2PTunnelInterface = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelInterface));
         this.cableAnchor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.CableAnchor));
+        this.wirelessConnectorFixture = new DamagedItemDefinition(
+                itemMultiPart.createPart(PartType.WirelessConnectorFixture));
+        this.wirelessHubFixture = new DamagedItemDefinition(itemMultiPart.createPart(PartType.WirelessHubFixture));
+        this.wirelessConnectorFixtureOuter = new DamagedItemDefinition(
+                itemMultiPart.createPart(PartType.WirelessConnectorFixtureOuter));
+        this.wirelessHubFixtureOuter = new DamagedItemDefinition(
+                itemMultiPart.createPart(PartType.WirelessHubFixtureOuter));
         this.monitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.Monitor));
         this.semiDarkMonitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.SemiDarkMonitor));
         this.darkMonitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.DarkMonitor));
@@ -307,6 +318,26 @@ public final class ApiParts implements IParts {
     @Override
     public IItemDefinition cableAnchor() {
         return this.cableAnchor;
+    }
+
+    @Override
+    public IItemDefinition wirelessConnectorFixture() {
+        return this.wirelessConnectorFixture;
+    }
+
+    @Override
+    public IItemDefinition wirelessHubFixture() {
+        return this.wirelessHubFixture;
+    }
+
+    @Override
+    public IItemDefinition wirelessConnectorFixtureOuter() {
+        return this.wirelessConnectorFixtureOuter;
+    }
+
+    @Override
+    public IItemDefinition wirelessHubFixtureOuter() {
+        return this.wirelessHubFixtureOuter;
     }
 
     @Override

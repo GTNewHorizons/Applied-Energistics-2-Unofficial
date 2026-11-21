@@ -39,6 +39,10 @@ import appeng.parts.networking.PartCreativeEnergy;
 import appeng.parts.networking.PartDenseCable;
 import appeng.parts.networking.PartDenseCableCovered;
 import appeng.parts.networking.PartQuartzFiber;
+import appeng.parts.networking.PartWirelessConnector;
+import appeng.parts.networking.PartWirelessConnectorOuter;
+import appeng.parts.networking.PartWirelessHub;
+import appeng.parts.networking.PartWirelessHubOuter;
 import appeng.parts.p2p.PartP2PGT5Power;
 import appeng.parts.p2p.PartP2PIC2Power;
 import appeng.parts.p2p.PartP2PInterface;
@@ -209,6 +213,18 @@ public enum PartType {
     PatternTerminalEx(500, EnumSet.of(AEFeature.Patterns), EnumSet.noneOf(IntegrationType.class),
             PartPatternTerminalEx.class),
 
+    WirelessConnectorFixture(540, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartWirelessConnector.class, "WirelessFixture/PartWirelessConnectorOnTransparent"),
+
+    WirelessHubFixture(541, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartWirelessHub.class,
+            "WirelessFixture/PartWirelessHubOnTransparent"),
+
+    WirelessConnectorFixtureOuter(542, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartWirelessConnectorOuter.class, "WirelessFixture/PartWirelessConnectorOnTransparent"),
+
+    WirelessHubFixtureOuter(543, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartWirelessHubOuter.class, "WirelessFixture/PartWirelessHubOnTransparent"),
+
     PartCreativeEnergy(690, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
             PartCreativeEnergy.class),
     PatternRepeater(473, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartPatternRepeater.class),;
@@ -218,20 +234,32 @@ public enum PartType {
     private final Set<IntegrationType> integrations;
     private final Class<? extends IPart> myPart;
     private final GuiText extraName;
+    private final String iconName;
     public Constructor<? extends IPart> constructor;
 
     PartType(final int baseMetaValue, final Set<AEFeature> features, final Set<IntegrationType> integrations,
             final Class<? extends IPart> c) {
-        this(baseMetaValue, features, integrations, c, null);
+        this(baseMetaValue, features, integrations, c, null, null);
     }
 
     PartType(final int baseMetaValue, final Set<AEFeature> features, final Set<IntegrationType> integrations,
             final Class<? extends IPart> c, final GuiText en) {
+        this(baseMetaValue, features, integrations, c, en, null);
+    }
+
+    PartType(final int baseMetaValue, final Set<AEFeature> features, final Set<IntegrationType> integrations,
+            final Class<? extends IPart> c, final String iconName) {
+        this(baseMetaValue, features, integrations, c, null, iconName);
+    }
+
+    PartType(final int baseMetaValue, final Set<AEFeature> features, final Set<IntegrationType> integrations,
+            final Class<? extends IPart> c, final GuiText en, final String iconName) {
         this.features = Collections.unmodifiableSet(features);
         this.integrations = Collections.unmodifiableSet(integrations);
         this.myPart = c;
         this.extraName = en;
         this.baseDamage = baseMetaValue;
+        this.iconName = iconName;
     }
 
     public boolean isCable() {
@@ -264,5 +292,9 @@ public enum PartType {
 
     int getBaseDamage() {
         return this.baseDamage;
+    }
+
+    String getIconName() {
+        return this.iconName;
     }
 }
