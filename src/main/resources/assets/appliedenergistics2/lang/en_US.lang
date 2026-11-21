@@ -162,6 +162,7 @@ chat.appliedenergistics2.WirelessInOtherDim=%d §e"%d§e"§r located in dimensio
 chat.appliedenergistics2.WirelessHighlighterPrefix=Wireless
 chat.appliedenergistics2.WirelessHighlighterNetworkPrefix=Wireless of network §e"%s§e"§r -
 chat.appliedenergistics2.WirelessHighlighterColorPrefix=Wireless color §e"%s§e"§r of network §e"%s§e"§r -
+chat.appliedenergistics2.CableSwapped=Cable swapped: %s → %s
 chat.appliedenergistics2.ControllerAnimation=Controller animation: %s
 
 # Creative Tabs
@@ -326,6 +327,8 @@ gui.appliedenergistics2.StoredItems=Stored Items
 gui.appliedenergistics2.StoredStacks=Stored Stacks
 gui.appliedenergistics2.Terminal=Terminal
 gui.appliedenergistics2.InterfaceTerminal=Interface Terminal
+gui.appliedenergistics2.InterfaceUpgrades=Upgrades
+chat.appliedenergistics2.InterfaceUpgradeRemovalBlocked=Remove the patterns from the rows that would be disabled before removing this capacity card.
 gui.appliedenergistics2.InterfaceTerminalHint=Show or hide on Interface Terminal.
 gui.appliedenergistics2.PatternOptimization=Allow pattern optimization
 gui.appliedenergistics2.PatternOptimizationHint=Allows patterns from this interface to be modified by the pattern optimizer.

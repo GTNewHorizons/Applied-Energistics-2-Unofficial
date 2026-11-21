@@ -18,6 +18,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.core.AEConfig;
 import appeng.me.GridAccessException;
+import appeng.util.target.TileTargetCache;
 import cofh.api.energy.IEnergyReceiver;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -30,8 +31,7 @@ import ic2.api.energy.tile.IEnergySink;
 
 public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implements IPartGT5Power {
 
-    private TileEntity cachedTarget;
-    private boolean isCachedTargetValid;
+    private final TileTargetCache targetCache = new TileTargetCache();
     private int restRF = 0;
 
     public PartP2PGT5Power(ItemStack is) {
@@ -50,15 +50,13 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
     @Override
     public void onTunnelNetworkChange() {
         super.onTunnelNetworkChange();
-        this.isCachedTargetValid = false;
-        this.cachedTarget = null;
+        this.targetCache.markStale();
     }
 
     @Override
     public void onNeighborChanged() {
         super.onNeighborChanged();
-        this.isCachedTargetValid = false;
-        this.cachedTarget = null;
+        this.targetCache.markStale();
     }
 
     @Override
@@ -127,19 +125,8 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
 
     @Nullable
     private TileEntity getTarget() {
-        TileEntity te;
-        if (this.isCachedTargetValid) {
-            te = this.cachedTarget;
-            if (te == null || !te.isInvalid()) {
-                return te;
-            }
-        }
-
-        this.isCachedTargetValid = true;
-        te = this.getTile();
-        ForgeDirection side = this.getSide();
-        return this.cachedTarget = te.getWorldObj()
-                .getTileEntity(te.xCoord + side.offsetX, te.yCoord + side.offsetY, te.zCoord + side.offsetZ);
+        var target = this.targetCache.get(this.getTile(), this.getSide());
+        return target == null ? null : target.tile();
     }
 
     private long injectEnergy(IEnergyConnected te, ForgeDirection oppositeSide, long aVoltage, long aAmperage) {

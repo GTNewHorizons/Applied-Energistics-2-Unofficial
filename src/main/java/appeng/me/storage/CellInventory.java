@@ -98,6 +98,10 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         this.restrictionTypes = this.tagCompound.getByte("cellRestrictionTypes");
         this.restrictionLong = this.tagCompound.getLong("cellRestrictionAmount");
 
+        if (this.restrictionTypes > this.maxTypes) {
+            this.restrictionTypes = (byte) (this.maxTypes & 0x7F);
+        }
+
         this.cellStacks = (IItemList<StackType>) this.getStackType().createPrimitiveList();
         this.loadCellStacks();
 

@@ -14,7 +14,6 @@ import java.util.Stack;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -25,6 +24,7 @@ import appeng.me.GridAccessException;
 import appeng.transformer.annotations.Integration.Interface;
 import appeng.transformer.annotations.Integration.InterfaceList;
 import appeng.util.Platform;
+import appeng.util.target.TileTargetCache;
 import cofh.api.energy.IEnergyReceiver;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -38,8 +38,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
      */
     private static final IEnergyReceiver NULL_HANDLER = new NullRFHandler();
 
-    private boolean cachedTarget = false;
-    private IEnergyReceiver outputTarget;
+    private final TileTargetCache targetCache = new TileTargetCache();
 
     public PartP2PRFPower(final ItemStack is) {
         super(is);
@@ -60,7 +59,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
     public void onNeighborChanged() {
         super.onNeighborChanged();
 
-        this.cachedTarget = false;
+        this.targetCache.markStale();
     }
 
     @Override
@@ -69,7 +68,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
             return 0;
         }
 
-        if (this.isActive()) {
+        if (this.getProxy().isActive()) {
             final Stack<PartP2PRFPower> stack = this.getDepth();
 
             for (final PartP2PRFPower t : stack) {
@@ -109,7 +108,9 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
                     }
                 }
 
-                this.queueTunnelDrain(PowerUnits.RF, total);
+                if (!simulate) {
+                    this.queueTunnelDrain(PowerUnits.RF, total);
+                }
             } catch (final GridAccessException ignored) {}
 
             if (stack.pop() != this) {
@@ -133,29 +134,23 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
     }
 
     private IEnergyReceiver getOutput() {
-        if (this.isOutput()) {
-            if (!this.cachedTarget) {
-                final TileEntity self = this.getTile();
-                final TileEntity te = self.getWorldObj().getTileEntity(
-                        self.xCoord + this.getSide().offsetX,
-                        self.yCoord + this.getSide().offsetY,
-                        self.zCoord + this.getSide().offsetZ);
-                this.outputTarget = te instanceof IEnergyReceiver ? (IEnergyReceiver) te : null;
-                this.cachedTarget = true;
-            }
-
-            if (this.outputTarget == null || !this.outputTarget.canConnectEnergy(this.getSide().getOpposite())) {
+        if (this.isOutput() && this.getProxy().isActive()) {
+            var target = this.targetCache.get(this.getTile(), this.getSide());
+            IEnergyReceiver outputTarget = target != null && target.tile() instanceof IEnergyReceiver receiver
+                    ? receiver
+                    : null;
+            if (outputTarget == null || !outputTarget.canConnectEnergy(this.getSide().getOpposite())) {
                 return NULL_HANDLER;
             }
 
-            return this.outputTarget;
+            return outputTarget;
         }
         return NULL_HANDLER;
     }
 
     @Override
     public int getEnergyStored(final ForgeDirection from) {
-        if (this.isOutput() || !this.isActive()) {
+        if (this.isOutput() || !this.getProxy().isActive()) {
             return 0;
         }
 
@@ -187,7 +182,7 @@ public final class PartP2PRFPower extends PartP2PTunnelNormal<PartP2PRFPower> im
 
     @Override
     public int getMaxEnergyStored(final ForgeDirection from) {
-        if (this.isOutput() || !this.isActive()) {
+        if (this.isOutput() || !this.getProxy().isActive()) {
             return 0;
         }
 

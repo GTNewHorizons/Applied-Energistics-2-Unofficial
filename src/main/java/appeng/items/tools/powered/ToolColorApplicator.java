@@ -420,6 +420,21 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     public void setColor(final ItemStack is, final AEColor newColor) {
+        final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
+                .getCellInventory(is, null, StorageChannel.ITEMS);
+        if (inv != null) {
+            final IItemList<IAEItemStack> itemList = inv.getAvailableItems(
+                    AEApi.instance().storage().createSortedItemList(),
+                    IterationCounter.fetchNewId());
+            for (final IAEItemStack item : itemList) {
+                final ItemStack paintSource = item.getItemStack();
+                if (this.getColorFromItem(paintSource) == newColor) {
+                    this.setColor(is, paintSource);
+                    return;
+                }
+            }
+        }
+
         this.setColor(is, this.getColorStack(newColor));
     }
 

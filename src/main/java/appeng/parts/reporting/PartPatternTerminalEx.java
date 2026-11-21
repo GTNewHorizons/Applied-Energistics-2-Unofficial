@@ -15,11 +15,11 @@ public class PartPatternTerminalEx extends PartPatternTerminal implements IPatte
 
     public static final int exPatternInputsWidth = 4;
     public static final int exPatternInputsHeigh = 4;
-    public static final int exPatternInputsPages = 2;
+    public static final int exPatternInputsPages = 4;
 
     public static final int exPatternOutputsWidth = 4;
     public static final int exPatternOutputsHeigh = 4;
-    public static final int exPatternOutputPages = 2;
+    public static final int exPatternOutputPages = 4;
 
     private boolean inverted = false;
     private int activePage = 0;
@@ -66,7 +66,9 @@ public class PartPatternTerminalEx extends PartPatternTerminal implements IPatte
             }
         }
 
-        this.setInverted(inputsCount <= 8 && outputCount >= 8);
+        final int invertedInputCapacity = getPatternInputsHeigh() * getPatternInputPages();
+        final int normalOutputCapacity = getPatternOutputsHeigh() * getPatternOutputPages();
+        this.setInverted(inputsCount <= invertedInputCapacity && outputCount >= normalOutputCapacity);
         this.setActivePage(0);
     }
 

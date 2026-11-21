@@ -97,6 +97,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int InterfaceTerminalSmallSize = 6;
     public boolean highlightWhenSomethingStuckInInterface = true;
     public boolean highlightPatternTypeMismatchInGUI = true;
+    public boolean memoryCardCopiesPatterns = false;
     public int screenColor = 0xFFFFFF;
     private boolean useLiteCraftingMode = false;
 
@@ -403,6 +404,9 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .get("Client", "highlightPatternTypeMismatchInGUI", true);
         highlightPatternTypeMismatchInGUI.comment = "Highlight pattern slots in red when the pattern uses unsupported stack types.";
         this.highlightPatternTypeMismatchInGUI = highlightPatternTypeMismatchInGUI.getBoolean(true);
+        final Property memoryCardCopiesPatterns = this.get("Client", "memoryCardCopiesPatterns", false);
+        memoryCardCopiesPatterns.comment = "Memory cards copy interface patterns, using blank patterns from your inventory on paste.";
+        this.memoryCardCopiesPatterns = memoryCardCopiesPatterns.getBoolean(false);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
         Property screenColorProperty = this.get("Client", "screenColor", this.screenColor);
