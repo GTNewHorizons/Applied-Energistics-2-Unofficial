@@ -226,10 +226,6 @@ public class NEIPatternViewHandler implements IUsageHandler {
         outputsOffsetX = inputsOffsetX + inputsCols * 18 + 40;
     }
 
-    /**
-     * Gives inputs and outputs the same row count: each side needs at least its minimum rows and enough rows to hold
-     * its stacks at its column count, and both sides then use the larger of the two. Columns must already be set.
-     */
     private void alignRows(int inputsMinRows, int outputsMinRows) {
         final int rows = Math.max(
                 rowsNeeded(nonNullInputs, inputsCols, inputsMinRows),
