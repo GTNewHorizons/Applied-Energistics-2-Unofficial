@@ -32,16 +32,21 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IGridStorage;
 import appeng.api.networking.pathing.IPathingGrid;
+import appeng.api.networking.security.MachineSource;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AEColor;
 import appeng.core.AppEng;
 import appeng.core.settings.ControllerAnimation;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.helpers.WireLessToolHelper;
+import appeng.helpers.WireLessToolHelper.BindResult;
 import appeng.me.GridStorage;
 import appeng.me.cache.PathGridCache;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileController;
+import appeng.tile.networking.TileWirelessConnector;
+import appeng.tile.networking.TileWirelessHub;
 import appeng.tile.storage.TileDrive;
 
 @GameTestHolder(AppEng.MOD_ID)
@@ -105,6 +110,92 @@ public class NetworkCoreTests {
                         other.getProxy().getNode().getGrid(),
                         "Different-colored controllers should not connect"));
         helper.succeedAtTimeout();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 80)
+    public static void unloadingWirelessConnectorKeepsHubGrid(GameTestHelper helper) {
+        var blocks = AEApi.instance().definitions().blocks();
+        helper.setBlock("cable_3", blocks.wirelessHub().maybeBlock().get());
+        helper.setBlock("cable_7", blocks.wirelessConnector().maybeBlock().get());
+        var hub = helper.assertTileEntityPresent(TileWirelessHub.class, "cable_3");
+        var connector = helper.assertTileEntityPresent(TileWirelessConnector.class, "cable_7");
+
+        helper.startSequence().thenWaitUntil("wait for both wireless nodes", 20, () -> {
+            helper.assertNotNull(hub.getActionableNode(), "Hub should have a grid node");
+            helper.assertNotNull(connector.getActionableNode(), "Connector should have a grid node");
+        }).thenExecute("link connector to hub", () -> {
+            helper.assertEquals(
+                    BindResult.SUCCESS,
+                    WireLessToolHelper.performConnection(connector, hub, new MachineSource(hub)),
+                    "The wireless nodes should connect");
+            helper.assertSame(
+                    connector.getActionableNode(),
+                    hub.getActionableNode().getGrid().getPivot(),
+                    "The isolated connector should be the initial grid pivot");
+            placeCable(helper, "cable_2");
+        }).thenWaitUntil("wait for the cable to join", 20, () -> {
+            var cable = helper.assertTileEntityPresent(TileCableBus.class, "cable_2");
+            var cableNode = cable.getGridNode(ForgeDirection.UNKNOWN);
+            helper.assertNotNull(cableNode, "The cable should have a grid node");
+            helper.assertSame(
+                    hub.getActionableNode().getGrid(),
+                    cableNode.getGrid(),
+                    "The cable should join the hub's grid");
+        }).thenExecute("reload connector", () -> {
+            IGrid survivingGrid = hub.getActionableNode().getGrid();
+            connector.onChunkUnload();
+            helper.assertTrue(hub.getConnectedTiles().isEmpty(), "Unloading must drop the active link");
+            helper.assertTrue(hub.isLinked() && connector.isLinked(), "Unloading must not unpair the wireless link");
+            helper.assertSame(survivingGrid, hub.getActionableNode().getGrid(), "The surviving grid must not migrate");
+            connector.onChunkLoad();
+        }).thenWaitUntil("wait for the link to reconnect", 20, () -> {
+            helper.assertTrue(hub.isConnectedTo(connector), "The paired link should restore after reload");
+            helper.assertEquals(1, hub.getConnectedTiles().size(), "The hub should have exactly one active link");
+        }).thenSucceed();
+    }
+
+    @GameTest(template = "network_core", timeoutTicks = 80)
+    public static void unloadingWirelessConnectorKeepsWiredPivot(GameTestHelper helper) {
+        var blocks = AEApi.instance().definitions().blocks();
+        helper.setBlock("cable_6", blocks.wirelessConnector().maybeBlock().get());
+        helper.setBlock("cable_9", blocks.wirelessHub().maybeBlock().get());
+        var connector = helper.assertTileEntityPresent(TileWirelessConnector.class, "cable_6");
+        var hub = helper.assertTileEntityPresent(TileWirelessHub.class, "cable_9");
+        var controller = getController(helper);
+        installCableLine(helper, "cable_1", "cable_2", "cable_3", "cable_4");
+
+        helper.startSequence().thenWaitUntil("wait for the wired grid and wireless nodes", 20, () -> {
+            var cable = helper.assertTileEntityPresent(TileCableBus.class, "cable_4");
+            var cableNode = cable.getGridNode(ForgeDirection.UNKNOWN);
+            var controllerNode = controller.getActionableNode();
+            helper.assertNotNull(cableNode, "The cable should have a grid node");
+            helper.assertNotNull(controllerNode, "The controller should have a grid node");
+            helper.assertSame(controllerNode.getGrid(), cableNode.getGrid(), "The wired grid should be connected");
+            helper.assertNotNull(connector.getActionableNode(), "Connector should have a grid node");
+            helper.assertNotNull(hub.getActionableNode(), "Hub should have a grid node");
+        }).thenExecute("link connector before attaching it to the cable", () -> {
+            helper.assertEquals(
+                    BindResult.SUCCESS,
+                    WireLessToolHelper.performConnection(connector, hub, new MachineSource(hub)),
+                    "The wireless nodes should connect");
+            placeCable(helper, "cable_5");
+        }).thenWaitUntil("wait for the connector to join the wired grid", 20, () -> {
+            helper.assertSame(
+                    controller.getActionableNode().getGrid(),
+                    connector.getActionableNode().getGrid(),
+                    "The connector should join the controller's grid");
+        }).thenExecute("unload connector", () -> {
+            IGrid wiredGrid = controller.getActionableNode().getGrid();
+            IGridNode wiredPivot = wiredGrid.getPivot();
+            helper.assertNotSame(connector.getActionableNode(), wiredPivot, "The connector should not be the pivot");
+            helper.assertNotSame(hub.getActionableNode(), wiredPivot, "The hub should not be the pivot");
+
+            connector.onChunkUnload();
+
+            helper.assertSame(wiredGrid, controller.getActionableNode().getGrid(), "The wired grid should survive");
+            helper.assertSame(wiredPivot, wiredGrid.getPivot(), "The wired grid should keep its pivot");
+            helper.assertNotSame(wiredGrid, hub.getActionableNode().getGrid(), "The hub should split off");
+        }).thenSucceed();
     }
 
     // Splits the drive off the controller, then reconnects it without losing stored cell contents.

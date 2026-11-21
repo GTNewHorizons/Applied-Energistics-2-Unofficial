@@ -17,6 +17,10 @@ import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.ChunkPosition;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.ImmutableList;
@@ -35,6 +39,7 @@ import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
+import appeng.block.networking.BlockWirelessConnector;
 import appeng.core.AEConfig;
 import appeng.helpers.WireLessToolHelper.BindResult;
 import appeng.helpers.WirelessToolDataObject;
@@ -272,18 +277,38 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     protected abstract void tryRestoreConnection(Iterable<DimensionalCoord> linkedTargets);
 
     @Nullable
+    private Chunk getLoadedChunk(int x, int z) {
+        if (worldObj == null || !(worldObj.getChunkProvider() instanceof ChunkProviderServer provider)) return null;
+
+        // Unlike provideChunk/getTileEntity, a cache lookup cannot load a chunk or keep it hot on Cauldron forks.
+        Chunk chunk = (Chunk) provider.loadedChunkHashMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(x >> 4, z >> 4));
+        return chunk != null && chunk.isChunkLoaded ? chunk : null;
+    }
+
+    @Nullable
     protected TileWirelessBase getTargetOrRemoveLink(DimensionalCoord target) {
         if (target.getDimension() != worldObj.provider.dimensionId) {
             removeLinkedTarget(target);
             return null;
         }
+        if (target.y < 0 || target.y >= worldObj.getHeight()) return null;
 
-        if (!worldObj.blockExists(target.x, target.y, target.z)) return null;
+        Chunk chunk = getLoadedChunk(target.x, target.z);
+        if (chunk == null) return null;
+
+        int localX = target.x & 15;
+        int localZ = target.z & 15;
+        Object targetTile = chunk.chunkTileEntityMap.get(new ChunkPosition(localX, target.y, localZ));
+
+        if (targetTile == null) {
+            // A wireless block can be present before its tile has been registered. Keep the saved link in that case.
+            if (chunk.getBlock(localX, target.y, localZ) instanceof BlockWirelessConnector) return null;
+        }
 
         // ae2stuff persisted hub links only on the connector side.
-        if (worldObj.getTileEntity(target.x, target.y, target.z) instanceof TileWirelessBase tile
-                && (tile.isHub() || tile.hasLinkedTarget(getLocation()))) {
-            return tile;
+        if (targetTile instanceof TileWirelessBase tile) {
+            if (tile.isInvalid()) return null;
+            if (tile.isHub() || tile.hasLinkedTarget(getLocation())) return tile;
         }
 
         removeLinkedTarget(target);
@@ -376,15 +401,23 @@ public abstract class TileWirelessBase extends AENetworkTile implements IColorab
     }
 
     @Override
-    public void onChunkUnload() {
-        breakAllActiveConnections();
-        super.onChunkUnload();
-    }
-
-    @Override
     public void invalidate() {
-        breakAllActiveConnections();
+        // Let GridNode.destroy() handle the split so the unloading node isn't used as the pivot.
+        List<TileWirelessBase> peers = getConnectedTiles();
+        for (TileWirelessBase peer : peers) {
+            removeActiveConnection(peer);
+            peer.removeActiveConnection(this);
+        }
+
         super.invalidate();
+
+        if (!peers.isEmpty()) setConnectionsPowerDraw();
+        for (TileWirelessBase peer : peers) {
+            // Link metadata is based on saved coordinates and is unchanged by unloading. Only power changes.
+            if (!peer.isInvalid() && peer.getLoadedChunk(peer.xCoord, peer.zCoord) != null) {
+                peer.setConnectionsPowerDraw();
+            }
+        }
     }
 
     @Override

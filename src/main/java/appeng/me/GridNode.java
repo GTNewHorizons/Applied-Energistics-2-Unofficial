@@ -254,8 +254,11 @@ public class GridNode implements IGridNode, IPathItem {
             }
 
             final IGridConnection c = this.connections.listIterator().next();
-            final GridNode otherSide = (GridNode) c.getOtherSide(this);
-            otherSide.getInternalGrid().setPivot(otherSide);
+            final Grid grid = this.getInternalGrid();
+            // Keep the existing pivot in its component when the connection splits the grid.
+            if (grid.getPivot() == this) {
+                grid.setPivot((GridNode) c.getOtherSide(this));
+            }
             c.destroy();
         }
 
