@@ -39,6 +39,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.ISimplifiedBundle;
 import appeng.client.render.BusRenderHelper;
+import appeng.client.render.FacadeRenderHelper;
 import appeng.client.render.RenderBlocksWorkaround;
 import appeng.core.AELog;
 import appeng.integration.IntegrationRegistry;
@@ -146,10 +147,19 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                             }
                         }
 
+                        final int metadata = ib.getMetadata(randomItem.getItemDamage());
+                        final FacadeRenderHelper facadeRendering = new FacadeRenderHelper(
+                                blk,
+                                metadata,
+                                renderer.blockAccess,
+                                x,
+                                y,
+                                z,
+                                this.side);
                         int color = 0xffffff;
 
                         try {
-                            color = ib.getColorFromItemStack(randomItem, 0);
+                            color = facadeRendering.getColor();
                         } catch (final Throwable ignored) {}
 
                         renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
@@ -175,45 +185,35 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                             rbw.setCalculations(false);
                             rbw.setFaces(this.calculateFaceOpenFaces(rbw.blockAccess, fc, x, y, z, this.side));
 
-                            ((RenderBlocksWorkaround) renderer).setTexture(
-                                    blk.getIcon(
-                                            ForgeDirection.DOWN.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.UP.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.NORTH.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.SOUTH.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.WEST.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.EAST.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())));
+                            rbw.setFacadeRenderHelper(facadeRendering);
+                        }
+
+                        final IIcon[] textures = new IIcon[6];
+                        for (final ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
+                            textures[face.ordinal()] = blk.getIcon(face.ordinal(), metadata);
+                        }
+                        if (rbw != null) {
+                            rbw.setTexture(
+                                    textures[0],
+                                    textures[1],
+                                    textures[2],
+                                    textures[3],
+                                    textures[4],
+                                    textures[5]);
                         } else {
+                            final IBlockAccess textureWorld = FacadeBlockAccess
+                                    .wrap(renderer.blockAccess, this.side.ordinal());
+                            for (final ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
+                                textures[face.ordinal()] = renderer
+                                        .getBlockIcon(blk, textureWorld, x, y, z, face.ordinal());
+                            }
                             instance.setTexture(
-                                    blk.getIcon(
-                                            ForgeDirection.DOWN.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.UP.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.NORTH.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.SOUTH.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.WEST.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())),
-                                    blk.getIcon(
-                                            ForgeDirection.EAST.ordinal(),
-                                            ib.getMetadata(randomItem.getItemDamage())));
+                                    textures[0],
+                                    textures[1],
+                                    textures[2],
+                                    textures[3],
+                                    textures[4],
+                                    textures[5]);
                         }
 
                         if (busBounds == null) {
@@ -435,6 +435,12 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                 }
             } catch (final Throwable t) {
                 AELog.debug(t);
+            } finally {
+                if (renderer instanceof RenderBlocksWorkaround rbw) {
+                    rbw.setFacadeRenderHelper(null);
+                    rbw.setOpacity(1.0f);
+                    rbw.setFaces(EnumSet.allOf(ForgeDirection.class));
+                }
             }
         }
     }

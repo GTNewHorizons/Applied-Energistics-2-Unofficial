@@ -9,6 +9,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
 import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.junit.platform.engine.discovery.ClassNameFilter;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
@@ -21,6 +22,7 @@ import org.junit.platform.launcher.listeners.TestExecutionSummary;
 import org.junit.platform.reporting.legacy.xml.LegacyXmlReportGeneratingListener;
 
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -65,8 +67,12 @@ public class AppengTestMod {
                 }
             }
         }
-        final LauncherDiscoveryRequest discovery = LauncherDiscoveryRequestBuilder.request()
-                .selectors(DiscoverySelectors.selectPackage("appeng.test")).build();
+        final LauncherDiscoveryRequestBuilder discoveryBuilder = LauncherDiscoveryRequestBuilder.request()
+                .selectors(DiscoverySelectors.selectPackage("appeng.test"));
+        if (!FMLCommonHandler.instance().getSide().isClient() || !Loader.isModLoaded("chisel")) {
+            discoveryBuilder.filters(ClassNameFilter.excludeClassNamePatterns(".*FacadeRenderHelperFunctionalTest.*"));
+        }
+        final LauncherDiscoveryRequest discovery = discoveryBuilder.build();
         final SummaryGeneratingListener summaryGenerator = new SummaryGeneratingListener();
         final TestExecutionSummary summary;
         try (PrintWriter stderrWriter = new PrintWriter(new CloseShieldOutputStream(System.err), true)) {

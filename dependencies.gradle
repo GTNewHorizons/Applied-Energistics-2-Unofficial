@@ -6,6 +6,7 @@ dependencies {
     implementation('curse.maven:cofh-core-69162:2388751')
 
     compileOnlyApi('com.github.GTNewHorizons:Angelica:2.2.26:dev')
+    compileOnly('com.github.GTNewHorizons:Chisel:2.17.33-GTNH:dev') { transitive = false }
     compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.15:dev') {transitive = false}
     compileOnly("com.github.GTNewHorizons:Postea:1.2.7:dev")
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.33:dev') {transitive = false}
@@ -57,6 +58,7 @@ dependencies {
     devOnlyNonPublishable("com.github.GTNewHorizons:Horizon-QA:0.15.0:dev")
 
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Postea:1.2.7:dev")
+    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:Chisel:2.17.33-GTNH:dev') { transitive = false }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.34:dev') {transitive = false}
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:DuraDisplay:1.4.6:dev")
 	runtimeOnlyNonPublishable('com.github.GTNewHorizons:RemoteIO:2.7.10:dev') { transitive = false }

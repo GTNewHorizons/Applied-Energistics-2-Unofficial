@@ -1,0 +1,447 @@
+package appeng.test.client.render;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraftforge.common.util.ForgeDirection;
+
+import org.junit.jupiter.api.Test;
+
+import com.cricketcraft.chisel.api.rendering.TextureType;
+import com.gtnewhorizon.gtnhlib.client.renderer.CapturingTessellator;
+import com.gtnewhorizon.gtnhlib.client.renderer.TessellatorManager;
+import com.gtnewhorizon.gtnhlib.client.renderer.cel.model.quad.ModelQuadViewMutable;
+
+import appeng.api.AEApi;
+import appeng.client.render.FacadeRenderHelper;
+import appeng.client.render.RenderBlocksWorkaround;
+import appeng.facade.FacadeBlockAccess;
+import appeng.facade.FacadePart;
+import appeng.integration.modules.ChiselFacadeRenderer;
+import appeng.tile.networking.TileCableBus;
+import team.chisel.ctmlib.CTM;
+import team.chisel.ctmlib.ICTMBlock;
+import team.chisel.ctmlib.ISubmapManager;
+import team.chisel.ctmlib.RenderBlocksCTM;
+import team.chisel.ctmlib.SubmapManagerCTM;
+
+public class FacadeRenderHelperFunctionalTest {
+
+    @Test
+    public void chiselConnectsRealBlocksAndFacadesInBothDirections() {
+        final Block imitated = Blocks.stone;
+        final Block cable = AEApi.instance().definitions().blocks().multiPart().maybeBlock().get();
+        final Item item = new ItemBlock(imitated) {
+
+            @Override
+            public int getMetadata(final int damage) {
+                return damage;
+            }
+        };
+        final TileCableBus host = new TileCableBus();
+        host.getFacadeContainer().addFacade(new FacadePart(new ItemStack(new Item()), ForgeDirection.NORTH) {
+
+            @Override
+            public Item getItem() {
+                return item;
+            }
+
+            @Override
+            public int getItemDamage() {
+                return 2;
+            }
+        });
+        final IBlockAccess actual = pairWorld(imitated, cable, host);
+        final IBlockAccess expected = pairWorld(imitated, imitated, null);
+        final CTM ctm = CTM.getInstance();
+        final int face = ForgeDirection.NORTH.ordinal();
+
+        assertArrayEquals(ctm.getSubmapIndices(expected, 0, 0, 0, face), ctm.getSubmapIndices(actual, 0, 0, 0, face));
+        assertArrayEquals(
+                ctm.getSubmapIndices(expected, 1, 0, 0, face),
+                ctm.getSubmapIndices(FacadeBlockAccess.wrap(actual, face), 1, 0, 0, face));
+        assertFalse(
+                Arrays.equals(
+                        ctm.getSubmapIndices(pairWorld(imitated, Blocks.air, null), 0, 0, 0, face),
+                        ctm.getSubmapIndices(actual, 0, 0, 0, face)));
+    }
+
+    @Test
+    public void emittedFacadeUvsMatchChiselsOwnRendererOnAllSixFaces() {
+        final CtmBlock block = new CtmBlock();
+        final SubmapManagerCTM manager = (SubmapManagerCTM) block.manager;
+        final IBlockAccess world = world(block);
+        for (final ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
+            final ReferenceRenderer reference = new ReferenceRenderer(manager, world);
+            final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, face);
+            final RenderBlocksWorkaround facade = new RenderBlocksWorkaround();
+            facade.setFacade(true);
+            setFacadeBounds(facade, face, 0);
+            final List<String> original = capture(() -> renderReferenceFace(reference, block, face));
+            final List<String> imitated = capture(
+                    () -> assertTrue(ChiselFacadeRenderer.renderFace(helper, facade, block, world, 0, 0, 0, 2, face)));
+            assertEquals(16, original.size(), face.name());
+            assertEquals(original, imitated, face.name());
+        }
+    }
+
+    private static IBlockAccess pairWorld(final Block block, final Block neighbor, final TileCableBus host) {
+        return new StubBlockAccess() {
+
+            @Override
+            public Block getBlock(final int x, final int y, final int z) {
+                if (x == 0 && y == 0 && z == 0) {
+                    return block;
+                }
+                return x == 1 && y == 0 && z == 0 ? neighbor : Blocks.air;
+            }
+
+            @Override
+            public int getBlockMetadata(final int x, final int y, final int z) {
+                final boolean origin = x == 0 && y == 0 && z == 0;
+                final boolean adjacent = x == 1 && y == 0 && z == 0;
+                return origin || adjacent && host == null ? 2 : 0;
+            }
+
+            @Override
+            public TileEntity getTileEntity(final int x, final int y, final int z) {
+                return x == 1 && y == 0 && z == 0 ? host : null;
+            }
+        };
+    }
+
+    private static List<String> capture(final Runnable render) {
+        final CapturingTessellator tessellator = TessellatorManager.startCapturingAndGet();
+        tessellator.startDrawingQuads();
+        final List<String> vertices = new ArrayList<>();
+        try {
+            render.run();
+        } finally {
+            final List<ModelQuadViewMutable> quads = TessellatorManager.stopCapturingToPooledQuads();
+            for (final ModelQuadViewMutable quad : quads) {
+                for (int vertex = 0; vertex < 4; vertex++) {
+                    vertices.add(
+                            Math.round(quad.getX(vertex) * 1_000_000) + ","
+                                    + Math.round(quad.getY(vertex) * 1_000_000)
+                                    + ","
+                                    + Math.round(quad.getZ(vertex) * 1_000_000)
+                                    + ","
+                                    + Math.round(quad.getTexU(vertex) * 1_000_000)
+                                    + ","
+                                    + Math.round(quad.getTexV(vertex) * 1_000_000));
+                }
+            }
+            tessellator.clearQuads();
+        }
+        Collections.sort(vertices);
+        return vertices;
+    }
+
+    private static void renderReferenceFace(final RenderBlocksCTM renderer, final Block block,
+            final ForgeDirection face) {
+        final IIcon icon = block.getIcon(face.ordinal(), 2);
+        switch (face) {
+            case DOWN -> renderer.renderFaceYNeg(block, 0, 0, 0, icon);
+            case UP -> renderer.renderFaceYPos(block, 0, 0, 0, icon);
+            case NORTH -> renderer.renderFaceZNeg(block, 0, 0, 0, icon);
+            case SOUTH -> renderer.renderFaceZPos(block, 0, 0, 0, icon);
+            case WEST -> renderer.renderFaceXNeg(block, 0, 0, 0, icon);
+            case EAST -> renderer.renderFaceXPos(block, 0, 0, 0, icon);
+            default -> {}
+        }
+    }
+
+    private static final class ReferenceRenderer extends RenderBlocksCTM {
+
+        private ReferenceRenderer(final SubmapManagerCTM manager, final IBlockAccess world) {
+            this.manager = manager;
+            this.submap = manager.getSubmap();
+            this.submapSmall = manager.getSubmapSmall();
+            this.blockAccess = world;
+            this.inWorld = true;
+            this.meta = 2;
+            this.setRenderBounds(0, 0, 0, 1, 1, 1);
+        }
+    }
+
+    @Test
+    public void resolvesWorldTextureAndColorUsingTheFacadeContext() {
+        final IIcon worldIcon = icon("world");
+        final IIcon itemIcon = icon("inventory");
+        final Block block = new Block(Material.rock) {
+
+            @Override
+            public IIcon getIcon(final IBlockAccess world, final int x, final int y, final int z, final int side) {
+                assertSame(this, world.getBlock(x, y, z));
+                assertEquals(2, world.getBlockMetadata(x, y, z));
+                return worldIcon;
+            }
+
+            @Override
+            public IIcon getIcon(final int side, final int metadata) {
+                return itemIcon;
+            }
+
+            @Override
+            public int colorMultiplier(final IBlockAccess world, final int x, final int y, final int z) {
+                assertSame(this, world.getBlock(x, y, z));
+                assertEquals(2, world.getBlockMetadata(x, y, z));
+                return 0x123456;
+            }
+        };
+        final IBlockAccess world = world(Blocks.air);
+        final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, ForgeDirection.SOUTH);
+        final RecordingRenderer renderer = new RecordingRenderer();
+        renderer.setRenderBounds(0, 0, 0.875, 1, 1, 1);
+
+        assertEquals(0x123456, helper.getColor());
+        assertTrue(helper.renderFace(renderer, ForgeDirection.SOUTH));
+        assertEquals(1, renderer.slices.size());
+        assertSame(worldIcon, renderer.slices.get(0).icon);
+    }
+
+    @Test
+    public void chiselQuadrantsKeepTheirBlockCoordinatesAcrossTrimmedFacadesOnEverySide() {
+        final CtmBlock block = new CtmBlock();
+        final IBlockAccess world = world(block);
+        for (final ForgeDirection face : ForgeDirection.VALID_DIRECTIONS) {
+            final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, face);
+            final RecordingRenderer renderer = new RecordingRenderer();
+            setFacadeBounds(renderer, face, 0);
+            assertTrue(ChiselFacadeRenderer.renderFace(helper, renderer, block, world, 0, 0, 0, 2, face));
+            final List<Slice> untrimmed = new ArrayList<>(renderer.slices);
+            renderer.slices.clear();
+            setFacadeBounds(renderer, face, 0.25);
+            final double[] bounds = bounds(renderer);
+
+            assertTrue(ChiselFacadeRenderer.renderFace(helper, renderer, block, world, 0, 0, 0, 2, face));
+            assertEquals(4, renderer.slices.size());
+            double area = 0;
+            for (int i = 0; i < renderer.slices.size(); i++) {
+                final Slice slice = renderer.slices.get(i);
+                final AxisAlignedBB box = slice.bounds;
+                final double dx = box.maxX - box.minX;
+                final double dy = box.maxY - box.minY;
+                final double dz = box.maxZ - box.minZ;
+                area += face.offsetX != 0 ? dy * dz : face.offsetY != 0 ? dx * dz : dx * dy;
+                assertTrue(box.minX >= bounds[0] && box.minY >= bounds[1] && box.minZ >= bounds[2]);
+                assertTrue(box.maxX <= bounds[3] && box.maxY <= bounds[4] && box.maxZ <= bounds[5]);
+                assertEquals(0.125, face.offsetX != 0 ? dx : face.offsetY != 0 ? dy : dz, 0);
+                for (int j = 0; j < i; j++) {
+                    assertFalse(box.intersectsWith(renderer.slices.get(j).bounds));
+                }
+                final IIcon original = untrimmed.get(i).icon;
+                assertEquals(original.getInterpolatedU(8), slice.icon.getInterpolatedU(8), 0);
+                assertEquals(original.getInterpolatedV(8), slice.icon.getInterpolatedV(8), 0);
+            }
+            assertEquals(0.75 * 0.75, area, 0.00001);
+            assertArrayEquals(bounds, bounds(renderer), 0, face.name());
+        }
+    }
+
+    @Test
+    public void nonCtmChiselManagersPreserveThinAndTrimmedFacadeBounds() {
+        final CtmBlock block = new CtmBlock(TextureType.NORMAL.createManagerFor(null, "test"));
+        final IBlockAccess world = world(block);
+        final ForgeDirection face = ForgeDirection.NORTH;
+        final FacadeRenderHelper helper = new FacadeRenderHelper(block, 2, world, 0, 0, 0, face);
+        final RenderBlocksWorkaround renderer = new RenderBlocksWorkaround();
+        renderer.setRenderBounds(0.25, 0.25, 0, 0.75, 0.75, 0.125);
+        final double[] bounds = bounds(renderer);
+        final boolean partialRenderBounds = renderer.partialRenderBounds;
+
+        assertFalse(ChiselFacadeRenderer.renderFace(helper, renderer, block, world, 0, 0, 0, 2, face));
+        assertArrayEquals(bounds, bounds(renderer), 0);
+        assertEquals(partialRenderBounds, renderer.partialRenderBounds);
+        assertFalse(renderer.lockBlockBounds);
+    }
+
+    private static void setFacadeBounds(final RenderBlocksWorkaround renderer, final ForgeDirection face,
+            final double trim) {
+        renderer.setRenderBounds(
+                face.offsetX == 0 ? trim : face.offsetX > 0 ? 0.875 : 0,
+                face.offsetY == 0 ? trim : face.offsetY > 0 ? 0.875 : 0,
+                face.offsetZ == 0 ? trim : face.offsetZ > 0 ? 0.875 : 0,
+                face.offsetX < 0 ? 0.125 : 1,
+                face.offsetY < 0 ? 0.125 : 1,
+                face.offsetZ < 0 ? 0.125 : 1);
+    }
+
+    private static double[] bounds(final RenderBlocksWorkaround renderer) {
+        return new double[] { renderer.renderMinX, renderer.renderMinY, renderer.renderMinZ, renderer.renderMaxX,
+                renderer.renderMaxY, renderer.renderMaxZ };
+    }
+
+    private static IBlockAccess world(final Block block) {
+        return new StubBlockAccess() {
+
+            @Override
+            public Block getBlock(final int x, final int y, final int z) {
+                return block;
+            }
+        };
+    }
+
+    private abstract static class StubBlockAccess implements IBlockAccess {
+
+        @Override
+        public int getBlockMetadata(final int x, final int y, final int z) {
+            return 2;
+        }
+
+        @Override
+        public TileEntity getTileEntity(final int x, final int y, final int z) {
+            return null;
+        }
+
+        @Override
+        public int getLightBrightnessForSkyBlocks(final int x, final int y, final int z, final int minimum) {
+            throw new AssertionError("Unexpected getLightBrightnessForSkyBlocks call");
+        }
+
+        @Override
+        public boolean isAirBlock(final int x, final int y, final int z) {
+            throw new AssertionError("Unexpected isAirBlock call");
+        }
+
+        @Override
+        public BiomeGenBase getBiomeGenForCoords(final int x, final int z) {
+            throw new AssertionError("Unexpected getBiomeGenForCoords call");
+        }
+
+        @Override
+        public int getHeight() {
+            throw new AssertionError("Unexpected getHeight call");
+        }
+
+        @Override
+        public boolean extendedLevelsInChunkCache() {
+            throw new AssertionError("Unexpected extendedLevelsInChunkCache call");
+        }
+
+        @Override
+        public int isBlockProvidingPowerTo(final int x, final int y, final int z, final int side) {
+            throw new AssertionError("Unexpected isBlockProvidingPowerTo call");
+        }
+
+        @Override
+        public boolean isSideSolid(final int x, final int y, final int z, final ForgeDirection side,
+                final boolean fallback) {
+            throw new AssertionError("Unexpected isSideSolid call");
+        }
+    }
+
+    private static IIcon icon(final String name) {
+        final TextureAtlasSprite sprite = new TextureAtlasSprite(name) {};
+        sprite.setIconWidth(16);
+        sprite.setIconHeight(16);
+        sprite.initSprite(16, 16, 0, 0, false);
+        return sprite;
+    }
+
+    private static final class CtmBlock extends Block implements ICTMBlock<ISubmapManager> {
+
+        private final ISubmapManager manager;
+
+        private CtmBlock() {
+            this(new SubmapManagerCTM("test"));
+            this.manager.registerIcons("test", this, FacadeRenderHelperFunctionalTest::icon);
+            ((SubmapManagerCTM) this.manager).getSubmap().texturesStitched();
+            ((SubmapManagerCTM) this.manager).getSubmapSmall().texturesStitched();
+        }
+
+        private CtmBlock(final ISubmapManager manager) {
+            super(Material.rock);
+            this.manager = manager;
+        }
+
+        @Override
+        public ISubmapManager getManager(final IBlockAccess world, final int x, final int y, final int z,
+                final int meta) {
+            return this.manager;
+        }
+
+        @Override
+        public ISubmapManager getManager(final int meta) {
+            return this.manager;
+        }
+    }
+
+    private static final class Slice {
+
+        private final IIcon icon;
+        private final AxisAlignedBB bounds;
+
+        private Slice(final RecordingRenderer renderer, final IIcon icon) {
+            this.icon = icon;
+            this.bounds = AxisAlignedBB.getBoundingBox(
+                    renderer.renderMinX,
+                    renderer.renderMinY,
+                    renderer.renderMinZ,
+                    renderer.renderMaxX,
+                    renderer.renderMaxY,
+                    renderer.renderMaxZ);
+        }
+    }
+
+    private static final class RecordingRenderer extends RenderBlocksWorkaround {
+
+        private final List<Slice> slices = new ArrayList<>();
+
+        @Override
+        public void renderFaceYNeg(final Block block, final double x, final double y, final double z,
+                final IIcon icon) {
+            this.slices.add(new Slice(this, icon));
+        }
+
+        @Override
+        public void renderFaceYPos(final Block block, final double x, final double y, final double z,
+                final IIcon icon) {
+            this.slices.add(new Slice(this, icon));
+        }
+
+        @Override
+        public void renderFaceZNeg(final Block block, final double x, final double y, final double z,
+                final IIcon icon) {
+            this.slices.add(new Slice(this, icon));
+        }
+
+        @Override
+        public void renderFaceZPos(final Block block, final double x, final double y, final double z,
+                final IIcon icon) {
+            this.slices.add(new Slice(this, icon));
+        }
+
+        @Override
+        public void renderFaceXNeg(final Block block, final double x, final double y, final double z,
+                final IIcon icon) {
+            this.slices.add(new Slice(this, icon));
+        }
+
+        @Override
+        public void renderFaceXPos(final Block block, final double x, final double y, final double z,
+                final IIcon icon) {
+            this.slices.add(new Slice(this, icon));
+        }
+    }
+}

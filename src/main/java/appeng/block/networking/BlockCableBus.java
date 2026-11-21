@@ -32,6 +32,9 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.cricketcraft.chisel.api.IFacade;
+
+import appeng.api.parts.IFacadePart;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.PartItemStack;
@@ -46,6 +49,7 @@ import appeng.core.Api;
 import appeng.core.CommonHelper;
 import appeng.core.features.AECableBusFeatureHandler;
 import appeng.core.features.AEFeature;
+import appeng.facade.FacadeBlockAccess;
 import appeng.helpers.AEGlassMaterial;
 import appeng.helpers.Reflected;
 import appeng.integration.IntegrationRegistry;
@@ -57,6 +61,7 @@ import appeng.tile.AEBaseTile;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.networking.TileCableBusTESR;
 import appeng.transformer.annotations.Integration.Interface;
+import appeng.transformer.annotations.Integration.InterfaceList;
 import appeng.transformer.annotations.Integration.Method;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -65,10 +70,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 import powercrystals.minefactoryreloaded.api.rednet.connectivity.IRedNetConnection;
 import powercrystals.minefactoryreloaded.api.rednet.connectivity.RedNetConnectionType;
 
-@Interface(
-        iface = "powercrystals.minefactoryreloaded.api.rednet.connectivity.IRedNetConnection",
-        iname = IntegrationType.MFR)
-public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection {
+@InterfaceList({
+        @Interface(
+                iface = "powercrystals.minefactoryreloaded.api.rednet.connectivity.IRedNetConnection",
+                iname = IntegrationType.MFR),
+        @Interface(iface = "com.cricketcraft.chisel.api.IFacade", iname = IntegrationType.Chisel) })
+public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection, IFacade {
 
     private static final ForgeDirection[] FORGE_DIRECTIONS = ForgeDirection.values();
     private static final ICableBusContainer NULL_CABLE_BUS = new NullCableBusContainer();
@@ -361,6 +368,21 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
         }
 
         return out == null ? NULL_CABLE_BUS : out;
+    }
+
+    @Override
+    @Method(iname = IntegrationType.Chisel)
+    public Block getFacade(final IBlockAccess world, final int x, final int y, final int z, final int side) {
+        final Block facade = FacadeBlockAccess.getFacadeBlock(FacadeBlockAccess.getFacade(world, x, y, z, side));
+        return facade == null ? this : facade;
+    }
+
+    @Override
+    @Method(iname = IntegrationType.Chisel)
+    public int getFacadeMetadata(final IBlockAccess world, final int x, final int y, final int z, final int side) {
+        final IFacadePart facade = FacadeBlockAccess.getFacade(world, x, y, z, side);
+        return FacadeBlockAccess.getFacadeBlock(facade) == null ? world.getBlockMetadata(x, y, z)
+                : FacadeBlockAccess.getFacadeMetadata(facade);
     }
 
     @Override
