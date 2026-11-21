@@ -132,6 +132,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                             dc.getCustomName(),
                             PlayerMessages.MachineHighlighted.getUnlocalized(),
                             PlayerMessages.MachineInOtherDim.getUnlocalized());
+                    BlockPosHighlighter.lookAtHighlightedBlocks(mc.thePlayer);
                     GuiNetworkStatus.this.closeGui();
                 } else NetworkHandler.instance
                         .sendToServer(new PacketClick(dc.x, dc.y, dc.z, ForgeDirection.UP.ordinal(), 0, 0, 0));
@@ -195,6 +196,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                                             PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
                 }
                 BlockPosHighlighter.highlightNamedBlocks(mc.thePlayer, namedCoordsMessage, is.getDisplayName());
+                BlockPosHighlighter.lookAtHighlightedBlocks(mc.thePlayer);
                 this.closeGui();
             }
 
