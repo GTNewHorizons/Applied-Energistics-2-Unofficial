@@ -273,7 +273,7 @@ public class AEJSONConfig {
         int cumulitive = 0;
         for (int i = 0; i < totalWeights.length; i++) {
             cumulitive += totalWeights[i];
-            if (randomWeight <= cumulitive) {
+            if (randomWeight < cumulitive) {
                 return loot_tables.get(i);
             }
         }
