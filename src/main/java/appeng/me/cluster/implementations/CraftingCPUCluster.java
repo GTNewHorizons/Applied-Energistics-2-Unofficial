@@ -1753,7 +1753,9 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     for (int j = 0; j < notificationsTag.tagCount(); j++) {
                         final CraftNotification notification = new CraftNotification();
                         notification.readFromNBT(notificationsTag.getCompoundTagAt(j));
-                        notifications.add(notification);
+                        if (notification.getFinalOutput() != null) {
+                            notifications.add(notification);
+                        }
                     }
                 }
                 if (!notifications.isEmpty()) {
@@ -2315,9 +2317,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         public void writeToNBT(NBTTagCompound tag) {
             if (this.finalOutput != null) {
-                NBTTagCompound finalOutputTag = new NBTTagCompound();
-                this.finalOutput.writeToNBT(finalOutputTag);
-                tag.setTag("finalOutput", finalOutputTag);
+                tag.setTag("finalOutput", this.finalOutput.toNBTGeneric());
             }
             tag.setLong("outputsCount", this.outputsCount);
             tag.setLong("elapsedTime", this.elapsedTime);
