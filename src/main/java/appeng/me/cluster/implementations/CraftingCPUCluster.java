@@ -63,6 +63,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -188,7 +189,7 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     protected final List<CraftCompleteListener> defaultOnComplete = Arrays
             .asList((finalOutput, numsOfOutput, elapsedTime) -> {
-                if (!this.playersFollowingCurrentCraft.isEmpty()) {
+                if (finalOutput != null && !this.playersFollowingCurrentCraft.isEmpty()) {
                     final CraftNotification notification = new CraftNotification(
                             finalOutput,
                             numsOfOutput,
@@ -1751,9 +1752,9 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 List<CraftNotification> notifications = new ArrayList<>();
                 if (playerTag.getTag("notifications") instanceof NBTTagList notificationsTag) {
                     for (int j = 0; j < notificationsTag.tagCount(); j++) {
-                        final CraftNotification notification = new CraftNotification();
-                        notification.readFromNBT(notificationsTag.getCompoundTagAt(j));
-                        if (notification.getFinalOutput() != null) {
+                        final CraftNotification notification = CraftNotification
+                                .fromNBT(notificationsTag.getCompoundTagAt(j));
+                        if (notification != null) {
                             notifications.add(notification);
                         }
                     }
@@ -2266,24 +2267,19 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    public static class CraftNotification {
+    public static final class CraftNotification {
 
-        private IAEStack<?> finalOutput;
-        private long outputsCount;
-        private long elapsedTime;
+        private final IAEStack<?> finalOutput;
+        private final long outputsCount;
+        private final long elapsedTime;
 
-        public CraftNotification() {
-            this.finalOutput = null;
-            this.outputsCount = 0L;
-            this.elapsedTime = 0L;
-        }
-
-        public CraftNotification(IAEStack<?> finalOutput, long outputsCount, long elapsedTime) {
-            this.finalOutput = finalOutput;
+        public CraftNotification(@NotNull IAEStack<?> finalOutput, long outputsCount, long elapsedTime) {
+            this.finalOutput = Objects.requireNonNull(finalOutput, "finalOutput");
             this.outputsCount = outputsCount;
             this.elapsedTime = elapsedTime;
         }
 
+        @NotNull
         public IAEStack<?> getFinalOutput() {
             return finalOutput;
         }
@@ -2307,18 +2303,20 @@ public class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return PlayerMessages.FinishCraftingRemind.toChat(countComponent, itemComponent, timeComponent);
         }
 
-        public void readFromNBT(NBTTagCompound tag) {
-            if (tag.hasKey("finalOutput")) {
-                this.finalOutput = readStackNBT(tag.getCompoundTag("finalOutput"), true);
+        @Nullable
+        public static CraftNotification fromNBT(NBTTagCompound tag) {
+            if (!(tag.getTag("finalOutput") instanceof NBTTagCompound outputTag)) {
+                return null;
             }
-            this.outputsCount = tag.getLong("outputsCount");
-            this.elapsedTime = tag.getLong("elapsedTime");
+            final IAEStack<?> output = readStackNBT(outputTag, true);
+            if (output == null) {
+                return null;
+            }
+            return new CraftNotification(output, tag.getLong("outputsCount"), tag.getLong("elapsedTime"));
         }
 
         public void writeToNBT(NBTTagCompound tag) {
-            if (this.finalOutput != null) {
-                tag.setTag("finalOutput", this.finalOutput.toNBTGeneric());
-            }
+            tag.setTag("finalOutput", this.finalOutput.toNBTGeneric());
             tag.setLong("outputsCount", this.outputsCount);
             tag.setLong("elapsedTime", this.elapsedTime);
         }
